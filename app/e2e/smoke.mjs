@@ -2156,6 +2156,12 @@ try {
   assert((await page.locator('[data-testid="app-name"]').innerText()) === 'Breccia', 'about: name')
   assert((await page.locator('[data-testid="app-developer"]').innerText()) === 'Stefan Härtel', 'about: developer')
   assert((await page.locator('[data-testid="app-license"]').innerText()) === 'MIT License', 'about: license')
+  // The source link is an external link (class ext), so a click opens the system browser, never
+  // the webview. Not clicked here: that would open a browser on the machine running e2e.
+  const repo = page.locator('[data-testid="app-source"] a')
+  assert((await repo.innerText()) === 'github.com/EightBitBoy/breccia', `about: source text ${await repo.innerText().catch(() => '(none)')}`)
+  assert((await repo.getAttribute('href')) === 'https://github.com/EightBitBoy/breccia', 'about: source href')
+  assert((await repo.getAttribute('class'))?.split(/\s+/).includes('ext'), 'about: source link is not class ext')
   assert(await page.locator('[data-testid="app-icon"]').evaluate((e) => e.complete && e.naturalWidth > 0), 'about: icon not loaded')
   // The icon is shown large (32 px was too small).
   const iconSize = await page.locator('[data-testid="app-icon"]').evaluate((e) => [e.clientWidth, e.clientHeight])

@@ -157,6 +157,9 @@
       <dd data-testid="app-developer">Stefan Härtel</dd>
       <dt>License</dt>
       <dd data-testid="app-license">MIT License</dd>
+      <dt>Source code</dt>
+      <!-- Class ext: the app's link handler opens it in the system browser, never in the webview. -->
+      <dd data-testid="app-source"><a class="ext" href="https://github.com/EightBitBoy/breccia">github.com/EightBitBoy/breccia</a></dd>
     </dl>
   </section>
 </div>

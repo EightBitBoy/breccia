@@ -28,12 +28,9 @@ No plan yet. Plans go in `docs/plans/` (see `CLAUDE.md`).
 1.0.0 is out: the owner released the current version as it was, with "First public release." as its changelog
 section. The next plan is not chosen yet; to settle with the owner. Candidates:
 
-- the by-hand checks in `docs/review.md` (items 1 to 23);
+- the by-hand checks in `docs/review.md` (items 1 to 24);
 - backlog items the owner picks (`docs/backlog.md`, 70 items);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
-
-One `just e2e` run before the release failed after step 109 (a board's WAITING column did not appear within 30 s); a
-second e2e run had been started over it by mistake, and the rerun passed with 142 PASS lines. Watch for it again.
 
 ## Test baseline
 

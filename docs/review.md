@@ -55,3 +55,8 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 23. [ ] **First release text:** with no `v*` tag yet, `just release 1.0.0` writes "First public release." as the
    `## [1.0.0]` section of `CHANGELOG.md` (instead of "No user-visible changes."). Check it at the pause; it becomes
    the GitHub release text.
+
+## After 1.0.0
+
+24. [ ] **Source code link in Settings:** Settings, About has a "Source code" row with the link
+   github.com/EightBitBoy/breccia. A click opens it in your browser; the app window stays where it was.
