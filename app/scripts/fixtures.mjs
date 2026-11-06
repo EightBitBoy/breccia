@@ -85,7 +85,7 @@ export const PKG_LOCK = at(PKG_LOCK_T, '0.1.0')
 export const CHANGELOG = [
   '# Changelog',
   '',
-  'User-visible changes to Breccia, newest first. Generated from commit subjects by git-cliff, then edited by hand.',
+  'User-visible changes to Breccia, newest first.',
   '',
   '## [0.1.0] - 2026-10-31',
   '',
