@@ -409,7 +409,7 @@ An unused field in the link test helper (`app/src/lib/links.test.ts`); "go to da
 `CHANGELOG` comment; smaller review notes from the pages build were only kept in an old run log and not carried (to
 check: whether any are wanted).
 
-## 71. Dev runs share the installed app's settings and notes folder (Tests)
+## 71. Dev runs share the installed app's settings and notes folder (Tests) (done 2026-11-06, no plan: `just dev` part)
 
 Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:
 
@@ -431,3 +431,6 @@ title "Breccia (test)" so a stray window is easy to tell apart. The installed ap
 
 Owner decisions (2026-11-06): each dev run opens a fresh copy of `docs/demo/` in a temp folder, and starts with fresh
 settings in a temp config dir, like e2e; nothing a dev run does is kept.
+
+Done for `just dev` and `just dev-debug` (`app/scripts/dev.mjs`, identifier `dev.breccia.app.dev`, title
+"Breccia (dev)"). Still open: the "Breccia (test)" title for e2e, screenshot and graph-scale runs.
