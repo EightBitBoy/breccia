@@ -428,3 +428,6 @@ Proposal: the dev recipes run with their own identity, for example `tauri dev --
 `dev.breccia.app.dev` and the title "Breccia (dev)", so their config dir, cache and WebView2 profile are their own,
 and point them at a sample notes folder (a copy of `docs/demo/`) unless one is given. Optionally give test runs the
 title "Breccia (test)" so a stray window is easy to tell apart. The installed app and its data stay as they are.
+
+Owner decisions (2026-11-06): each dev run opens a fresh copy of `docs/demo/` in a temp folder, and starts with fresh
+settings in a temp config dir, like e2e; nothing a dev run does is kept.

@@ -51,7 +51,9 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
   releases (`docs/releasing.md`).
 - `just changelog`: previews the next `CHANGELOG.md` section and writes nothing.
 - `just screenshots`: retakes the README images from `docs/demo/`.
-- `just dev` runs the app in dev mode. `just dev-debug` does the same with DevTools on port 9222.
+- `just dev` runs the app in dev mode, kept apart from an installed Breccia (`app/scripts/dev.mjs`): each run opens a
+  fresh copy of `docs/demo/` with fresh settings and its own WebView2 profile, titled "Breccia (dev)", and deletes them
+  when the app exits. `just dev-debug` does the same with DevTools on port 9222.
 - The justfile uses PowerShell. Use a POSIX shell only for one-off commands.
 - Environment variables:
   - `BRECCIA_CONFIG_DIR` replaces the app config dir. e2e always uses a temp dir, so it never touches the user's real

@@ -6,15 +6,14 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-NoProfile", "-Command"]
 default:
     @just --list
 
-# Run Breccia in dev mode (frontend hot reload)
-[working-directory: 'app']
+# Run Breccia in dev mode (frontend hot reload), kept apart from an installed Breccia: a fresh copy of docs/demo,
+# fresh settings, its own WebView2 profile, title "Breccia (dev)" (app/scripts/dev.mjs)
 dev:
-    npm run tauri dev
+    node app/scripts/dev.mjs
 
 # Run dev mode with the DevTools protocol on port 9222
-[working-directory: 'app']
 dev-debug:
-    $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'; npm run tauri dev
+    node app/scripts/dev.mjs --debug
 
 # Build the release exe (no installer)
 [working-directory: 'app']

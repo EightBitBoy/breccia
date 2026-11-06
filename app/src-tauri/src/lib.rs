@@ -913,9 +913,9 @@ pub fn run() {
 }
 
 /// `BRECCIA_FOLDER` (the test hook), or else the last folder, if any. A
-/// startup folder that opens is remembered like any other, so a `just dev` run
-/// with `BRECCIA_FOLDER` on the real config dir sets the last folder and the
-/// recent list to that folder.
+/// startup folder that opens is remembered like any other, so a run with
+/// `BRECCIA_FOLDER` on the real config dir sets the last folder and the recent
+/// list to that folder (`just dev` uses a temp config dir for this reason).
 fn startup_folder(config_dir: &std::path::Path) -> Option<PathBuf> {
     match std::env::var_os("BRECCIA_FOLDER") {
         Some(p) if !p.is_empty() => Some(PathBuf::from(p)),

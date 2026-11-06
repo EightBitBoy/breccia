@@ -86,7 +86,7 @@ You need Windows 11, Rust 1.90, Node 24, [just](https://github.com/casey/just) a
 cd app
 npm install
 cd ..
-just dev       # run the app in dev mode
+just dev       # run the app in dev mode, on a fresh copy of docs/demo (your settings stay untouched)
 just test      # frontend build, Vitest, cargo test
 just lint      # cargo fmt --check, clippy, svelte-check
 just e2e       # build the release exe and drive it end to end
