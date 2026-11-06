@@ -408,3 +408,23 @@ An unused field in the link test helper (`app/src/lib/links.test.ts`); "go to da
 `app/scripts/docs.test.mjs` walks from the drive root; `PKG` and `PKG_LOCK` in `app/scripts/fixtures.mjs` sit under the
 `CHANGELOG` comment; smaller review notes from the pages build were only kept in an old run log and not carried (to
 check: whether any are wanted).
+
+## 71. Dev runs share the installed app's settings and notes folder (Tests)
+
+Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:
+
+- `just e2e`, `just screenshots` and `just graph-scale` are already kept apart. Each run sets `BRECCIA_CONFIG_DIR`
+  to a temp dir (settings, window state and the search index cache go there), its own WebView2 profile
+  (`WEBVIEW2_USER_DATA_FOLDER`), a temp notes folder (`BRECCIA_FOLDER`) and its own Git identity, starts the window
+  off-screen and unfocused, and ends the app by its process id only, never by name. While a run lasts, a second
+  Breccia tray icon shows (e2e needs the tray: it tests the close-to-tray path); the window title is "Breccia" too.
+- `just dev` and `just dev-debug` are not kept apart. They use the same identifier (`dev.breccia.app`), so they read
+  and write the installed app's config dir (`settings.json`: the notes folder, recent folders, theme, hidden columns,
+  window state), its search index cache and its WebView2 profile. A dev run therefore opens the real notes folder, can
+  edit it and run Git sync on it, and can change the installed app's settings. With the installed app open,
+  `just dev-debug` passes other WebView2 arguments for the same profile, which WebView2 can refuse.
+
+Proposal: the dev recipes run with their own identity, for example `tauri dev --config` with the identifier
+`dev.breccia.app.dev` and the title "Breccia (dev)", so their config dir, cache and WebView2 profile are their own,
+and point them at a sample notes folder (a copy of `docs/demo/`) unless one is given. Optionally give test runs the
+title "Breccia (test)" so a stray window is easy to tell apart. The installed app and its data stay as they are.
