@@ -49,3 +49,9 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 22. [ ] **Install on a clean machine:** on a second PC or in Windows Sandbox with internet, check the SmartScreen
    warning, no admin prompt, the version in Settings, that a notes folder opens, and that uninstalling keeps the notes
    (never recorded as done; you install releases on your own PC).
+
+## Release 1.0.0
+
+23. [ ] **First release text:** with no `v*` tag yet, `just release 1.0.0` writes "First public release." as the
+   `## [1.0.0]` section of `CHANGELOG.md` (instead of "No user-visible changes."). Check it at the pause; it becomes
+   the GitHub release text.

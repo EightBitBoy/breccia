@@ -169,6 +169,17 @@ describe('changelog sections', () => {
     expect(newSection(full.replaceAll('\n', '\r\n'))).toBe(full)
   })
 
+  it('an_empty_first_section_says_first_public_release', () => {
+    expect(newSection('## [1.0.0] - 2026-11-06\n\n', { first: true })).toBe(
+      '## [1.0.0] - 2026-11-06\n\nFirst public release.\n\n',
+    )
+    expect(newSection('## [1.0.0] - 2026-11-06\n\n', { first: false })).toBe(
+      '## [1.0.0] - 2026-11-06\n\nNo user-visible changes.\n\n',
+    )
+    const full = '## [1.0.0] - 2026-11-06\n\n### Fixes\n\n- Broken thing\n\n'
+    expect(newSection(full, { first: true })).toBe(full)
+  })
+
   it('notes_keep_a_prose_section', () => {
     const prose = CHANGELOG.split('\n')[6]
     expect(prose.startsWith('The first release')).toBe(true)

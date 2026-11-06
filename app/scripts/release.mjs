@@ -23,6 +23,7 @@ export const CLIFF_MISSING =
   'git-cliff is not installed: winget install git-cliff, or cargo install git-cliff --version 2.14.2 --locked'
 const CLIFF_VERSION = '2.14.2'
 const NO_CHANGES = 'No user-visible changes.'
+const FIRST_RELEASE = 'First public release.'
 
 // The problems that stop a release, in the order they are reported; empty when it can go ahead.
 export function releaseProblems(f) {
@@ -63,12 +64,13 @@ export function hasSection(changelog, version) {
   return lines(changelog).some((l) => re.test(l))
 }
 
-// git-cliff's text for the new section; a heading with nothing under it gets a one-line body.
-export function newSection(cliffOutput) {
+// git-cliff's text for the new section; a heading with nothing under it gets a one-line body
+// (`first`: no `v*` tag exists yet, so this is the first release).
+export function newSection(cliffOutput, { first = false } = {}) {
   const text = cliffOutput.replace(/\r\n/g, '\n')
   const nl = text.indexOf('\n')
   const heading = nl < 0 ? text : text.slice(0, nl)
-  if (text.slice(heading.length).trim() === '') return `${heading}\n\n${NO_CHANGES}\n\n`
+  if (text.slice(heading.length).trim() === '') return `${heading}\n\n${first ? FIRST_RELEASE : NO_CHANGES}\n\n`
   return text
 }
 
@@ -306,7 +308,7 @@ async function cut(root, args) {
     // 6. The CHANGELOG section.
     const generated = cliff('--unreleased', '--tag', `v${version}`, '--strip', 'all')
     if (!generated.ok) return stop('git-cliff failed:', generated.err.trim())
-    const section = newSection(generated.out)
+    const section = newSection(generated.out, { first: latest === null })
     written = insertSection(changelog, section)
     writeFileSync(changelogPath, written)
     process.stdout.write('\n' + section)

@@ -32,8 +32,8 @@ The owner cuts it (`docs/releasing.md`):
 
 1. `just e2e`.
 2. `just release 1.0.0`. With only the initial commit, git-cliff lists nothing, so the script writes
-   "No user-visible changes." under `## [1.0.0]`. At the pause, replace that line with "First public release." and
-   press Enter. Do not use `--yes`: it skips the pause.
+   "First public release." under `## [1.0.0]` (it does so whenever no `v*` tag exists yet and nothing is listed).
+   Check the section at the pause and press Enter.
 3. Watch the "Release" run on GitHub Actions, then make the repository public.
 
 After 1.0.0, candidates for the first plan: the by-hand checks in `docs/review.md` (items 1 to 22), backlog items the

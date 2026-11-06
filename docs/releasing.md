@@ -43,7 +43,7 @@
 - `just changelog` previews: it prints what git-cliff would list for the commits since the last tag and writes nothing.
 - `just release` writes the real section. The workflow takes the release text from that section in the tagged `CHANGELOG.md` (the run fails if the section is missing), so what you edited at the pause is what the release says.
 - Pre-releases: `just release 1.1.0-rc.1`. git-cliff counts a pre-release tag as a version, so after an rc the final release lists only the commits since the rc. Merge the two sections by hand at the pause.
-- The first release, 1.0.0, has no earlier tag, so its section lists every commit since the start. Shorten it by hand at the pause if you like.
+- The first release, 1.0.0, has no earlier tag, so its section lists every commit since the start. Shorten it by hand at the pause if you like. If no commit is listed (as with only the initial commit), the section says "First public release." instead of "No user-visible changes.".
 
 ## Trying the pipeline without a release
 
