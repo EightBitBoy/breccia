@@ -969,6 +969,17 @@ try {
   await hideIcon('WAITING').click()
   await marker('WAITING').waitFor()
   await column('WAITING').waitFor({ state: 'detached' }) // the narrowing has ended
+  // The board is wider than the main view, and the hovers and clicks before scroll it sideways by varying amounts;
+  // scrolled far enough, the card's left part is under the sidebar and the press below misses it.
+  await page.evaluate(() => { document.querySelector('.main').scrollLeft = 0 })
+  const inView110 = () =>
+    page.evaluate(() => {
+      const main = document.querySelector('.main').getBoundingClientRect()
+      const card = [...document.querySelectorAll('[data-card]')].find((c) => c.textContent.includes('Peek card'))
+      const r = card.getBoundingClientRect()
+      return r.left >= main.left && r.right <= main.right
+    })
+  await waitFor('110 the card is in view', inView110, true)
   const from = await cardTitled('Peek card').boundingBox()
   await page.mouse.move(from.x + 20, from.y + 10)
   await page.mouse.down()
