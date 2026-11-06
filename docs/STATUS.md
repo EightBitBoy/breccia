@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-05. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-06. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -25,13 +25,20 @@ No plan yet. Plans go in `docs/plans/` (see `CLAUDE.md`).
 
 ## The way to 1.0.0
 
-Not decided yet; to settle with the owner in the first plan. Candidates:
+Decided by the owner on 2026-11-06: the current version is released as 1.0.0 as it is, with no plan before it. Its
+`CHANGELOG.md` section says only that this is the first public release.
 
-- the by-hand checks in `docs/review.md` (items 1 to 22);
-- backlog items the owner picks for 1.0.0 (`docs/backlog.md`, 70 items);
-- automatic updates (backlog #52), which need the repository to be public;
-- a GitHub Pages site (backlog #64), after the repository is public;
-- the 1.0.0 changelog entry, written by hand (`CHANGELOG.md` starts empty).
+The owner cuts it (`docs/releasing.md`):
+
+1. `just e2e`.
+2. `just release 1.0.0`. With only the initial commit, git-cliff lists nothing, so the script writes
+   "No user-visible changes." under `## [1.0.0]`. At the pause, replace that line with "First public release." and
+   press Enter. Do not use `--yes`: it skips the pause.
+3. Watch the "Release" run on GitHub Actions, then make the repository public.
+
+After 1.0.0, candidates for the first plan: the by-hand checks in `docs/review.md` (items 1 to 22), backlog items the
+owner picks (`docs/backlog.md`, 70 items), automatic updates (backlog #52) and a GitHub Pages site (backlog #64), both
+of which need the repository to be public.
 
 ## Test baseline
 
