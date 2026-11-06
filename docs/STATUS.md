@@ -13,8 +13,8 @@ block, with priority by dragging, hidden columns and automatic archiving; the Ar
 forward between views; the `F1` shortcut overlay; the graph; a tray icon; a Windows installer built by the release
 workflow.
 
-This repository starts from a prototype, without its history. No release has been made from it yet: the first one
-will be 1.0.0, and the repository becomes public with it.
+This repository starts from a prototype, without its history. Breccia 1.0.0, the first public release, was published
+on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and the repository is public since then.
 
 ## Plans
 
@@ -23,22 +23,17 @@ will be 1.0.0, and the repository becomes public with it.
 
 No plan yet. Plans go in `docs/plans/` (see `CLAUDE.md`).
 
-## The way to 1.0.0
+## Next
 
-Decided by the owner on 2026-11-06: the current version is released as 1.0.0 as it is, with no plan before it. Its
-`CHANGELOG.md` section says only that this is the first public release.
+1.0.0 is out: the owner released the current version as it was, with "First public release." as its changelog
+section. The next plan is not chosen yet; to settle with the owner. Candidates:
 
-The owner cuts it (`docs/releasing.md`):
+- the by-hand checks in `docs/review.md` (items 1 to 23);
+- backlog items the owner picks (`docs/backlog.md`, 70 items);
+- automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
-1. `just e2e`.
-2. `just release 1.0.0`. With only the initial commit, git-cliff lists nothing, so the script writes
-   "First public release." under `## [1.0.0]` (it does so whenever no `v*` tag exists yet and nothing is listed).
-   Check the section at the pause and press Enter.
-3. Watch the "Release" run on GitHub Actions, then make the repository public.
-
-After 1.0.0, candidates for the first plan: the by-hand checks in `docs/review.md` (items 1 to 22), backlog items the
-owner picks (`docs/backlog.md`, 70 items), automatic updates (backlog #52) and a GitHub Pages site (backlog #64), both
-of which need the repository to be public.
+One `just e2e` run before the release failed after step 109 (a board's WAITING column did not appear within 30 s); a
+second e2e run had been started over it by mistake, and the rerun passed with 142 PASS lines. Watch for it again.
 
 ## Test baseline
 
