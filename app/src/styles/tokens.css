@@ -1,0 +1,223 @@
+/* Every colour of the app comes from these tokens. A theme is one block of
+   values on an attribute selector; with no data-theme the OS decides. */
+:root, [data-theme="light"] {
+  color-scheme: light;
+  --bg: #fbfaf8;
+  --side: #f1efeb;
+  --line: #e2dfd9;
+  --faded: #bdb8b0;
+  --text: #2b2a28;
+  --muted: #85817a;
+  --hover: #e8e5df;
+  --accent: #5b5bd6;
+  --link: #4b4bc4;
+  --tag: #2f7d6d;
+  --card: #ffffff;
+  --edit: #f4f2ee;
+  --select: #d7d4f0;
+  --on-accent: #ffffff;
+  --shadow: rgba(0, 0, 0, .15);
+  --shadow-strong: rgba(0, 0, 0, .25);
+  --overlay: rgba(0, 0, 0, .25);
+  --c-grey: #7a7a7a;
+  --c-amber: #c27c0e;
+  --c-violet: #8b5cf6;
+  --c-green: #3f8f4f;
+  --c-dim: #85817a;
+  --c-blue: #2f6fd0;
+  --c-red: #c4423b;
+  --c-teal: #1f8a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    color-scheme: dark;
+    --bg: #1b1b1d;
+    --side: #141415;
+    --line: #2c2c30;
+    --faded: #4a4a52;
+    --text: #d9d9dc;
+    --muted: #7c7c84;
+    --hover: #26262a;
+    --accent: #7aa2f7;
+    --link: #8fb0f9;
+    --tag: #5fc4a8;
+    --card: #232326;
+    --edit: #242428;
+    --select: #3b4261;
+    --on-accent: #141415;
+    --shadow: rgba(0, 0, 0, .4);
+    --shadow-strong: rgba(0, 0, 0, .5);
+    --overlay: rgba(0, 0, 0, .45);
+    --c-grey: #9a9aa2;
+    --c-amber: #e0a33a;
+    --c-violet: #b49cff;
+    --c-green: #6cc07c;
+    --c-dim: #7c7c84;
+    --c-blue: #6fa0f0;
+    --c-red: #ef7a73;
+    --c-teal: #5cc4c4;
+  }
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #1b1b1d;
+  --side: #141415;
+  --line: #2c2c30;
+  --faded: #4a4a52;
+  --text: #d9d9dc;
+  --muted: #7c7c84;
+  --hover: #26262a;
+  --accent: #7aa2f7;
+  --link: #8fb0f9;
+  --tag: #5fc4a8;
+  --card: #232326;
+  --edit: #242428;
+  --select: #3b4261;
+  --on-accent: #141415;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #9a9aa2;
+  --c-amber: #e0a33a;
+  --c-violet: #b49cff;
+  --c-green: #6cc07c;
+  --c-dim: #7c7c84;
+  --c-blue: #6fa0f0;
+  --c-red: #ef7a73;
+  --c-teal: #5cc4c4;
+}
+
+[data-theme="violet"] {
+  color-scheme: dark;
+  --bg: #1e1a2c;
+  --side: #171425;
+  --line: #2f2944;
+  --faded: #51476f;
+  --text: #ddd7f2;
+  --muted: #8a82a8;
+  --hover: #2a2440;
+  --accent: #b39dff;
+  --link: #c3b1ff;
+  --tag: #f0a3d8;
+  --card: #262038;
+  --edit: #2a2440;
+  --select: #3d3360;
+  --on-accent: #171425;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #a39cbf;
+  --c-amber: #f2b45f;
+  --c-violet: #8fd0ff;
+  --c-green: #7fd6a0;
+  --c-dim: #8a82a8;
+  --c-blue: #8fb4ff;
+  --c-red: #ff8a9a;
+  --c-teal: #6fd6d0;
+}
+
+[data-theme="graphite"] {
+  color-scheme: dark;
+  --bg: #2c2f33;
+  --side: #25272b;
+  --line: #3a3e44;
+  --faded: #5a5f67;
+  --text: #d4d7db;
+  --muted: #8b9198;
+  --hover: #363a40;
+  --accent: #6fb3b8;
+  --link: #8cc6ca;
+  --tag: #c9b37a;
+  --card: #33373c;
+  --edit: #353940;
+  --select: #3d4a52;
+  --on-accent: #1f2124;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #a0a6ad;
+  --c-amber: #e2a85a;
+  --c-violet: #a99be0;
+  --c-green: #7cc08a;
+  --c-dim: #8b9198;
+  --c-blue: #7fa8e0;
+  --c-red: #e58080;
+  --c-teal: #5fc0b0;
+}
+
+[data-theme="teal"] {
+  color-scheme: dark;
+  --bg: #002b36;
+  --side: #023643;
+  --line: #0e4a59;
+  --faded: #1f5a69;
+  --text: #93a1a1;
+  --muted: #6f8a91;
+  --hover: #0a4150;
+  --accent: #2aa198;
+  --link: #4aa8e0;
+  --tag: #c9a227;
+  --card: #073a48;
+  --edit: #0a4452;
+  --select: #145568;
+  --on-accent: #002b36;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #839496;
+  --c-amber: #d9a521;
+  --c-violet: #8a8fe0;
+  --c-green: #9bb31a;
+  --c-dim: #5d767d;
+  --c-blue: #4b9fe0;
+  --c-red: #ec6a67;
+  --c-teal: #2aa198;
+}
+
+[data-theme="taupe"] {
+  color-scheme: light;
+  --bg: #f1ebe3;
+  --side: #e6ddd1;
+  --line: #d6cbbd;
+  --faded: #b3a593;
+  --text: #3d352d;
+  --muted: #8c7f70;
+  --hover: #dcd1c3;
+  --accent: #8a6f55;
+  --link: #7a5c42;
+  --tag: #5f7a5a;
+  --card: #f8f4ee;
+  --edit: #e9e1d6;
+  --select: #e0d2bf;
+  --on-accent: #ffffff;
+  --shadow: rgba(0, 0, 0, .15);
+  --shadow-strong: rgba(0, 0, 0, .25);
+  --overlay: rgba(0, 0, 0, .25);
+  --c-grey: #8c7f70;
+  --c-amber: #b0702a;
+  --c-violet: #7d6aa8;
+  --c-green: #5e8a52;
+  --c-dim: #a89c8e;
+  --c-blue: #4f6f9a;
+  --c-red: #a8473a;
+  --c-teal: #3f7f78;
+}
+
+/* Links and tags inside a finished task: dimmed toward the muted text colour, in every theme. */
+:root {
+  --link-done: color-mix(in srgb, var(--link) 55%, var(--muted));
+  --tag-done: color-mix(in srgb, var(--tag) 55%, var(--muted));
+}
+
+/* Date picker: the tint of a day that has a journal note. */
+:root {
+  --dp-note: color-mix(in srgb, var(--accent) 22%, transparent);
+  --dp-note-strong: color-mix(in srgb, var(--accent) 36%, transparent);
+}
+
+/* The thumb of the scrollbars that hide when the pointer rests (.autohide in app.css). */
+:root {
+  --scroll-thumb: color-mix(in srgb, var(--muted) 60%, transparent);
+}

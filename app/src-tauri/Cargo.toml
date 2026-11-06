@@ -1,0 +1,24 @@
+[package]
+name = "breccia"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+name = "breccia_lib"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+breccia-core = { path = "../../crates/core" }
+chrono = "0.4"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order"] }
+tauri = { version = "2", features = ["tray-icon"] }
+tauri-plugin-dialog = "2"
+tauri-plugin-opener = "2"
+tauri-plugin-window-state = "2"
+
+[dev-dependencies]
+tempfile = "3"

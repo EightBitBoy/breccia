@@ -1,0 +1,3 @@
+- New version of the team's public status page
+- WAITING Final texts from marketing
+- TODO Move the page to the new cluster after [[Project X]]

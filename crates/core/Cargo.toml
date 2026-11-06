@@ -1,0 +1,25 @@
+[package]
+name = "breccia-core"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[lib]
+name = "breccia_core"
+
+[dependencies]
+serde = { version = "1.0.185", features = ["derive"] }
+toml = "0.9"
+chrono = "0.4"
+thiserror = "2"
+pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
+notify = "8"
+notify-debouncer-full = "0.5"
+toml_edit = "0.25.17"
+rusqlite = { version = "0.41.1", features = ["bundled"] }
+unicode-normalization = "0.1.26"
+serde_json = "1"
+
+[dev-dependencies]
+tempfile = "3"
+proptest = "1"

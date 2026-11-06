@@ -1,0 +1,5 @@
+*
+!.gitignore
+!*/
+!*/progress.md
+!*/plan-path

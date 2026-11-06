@@ -1,0 +1,36 @@
+[[states]]
+keyword = "TODO"
+color = "grey"
+finished = false
+in_cycle = true
+
+[[states]]
+keyword = "DOING"
+color = "amber"
+finished = false
+in_cycle = true
+
+[[states]]
+keyword = "WAITING"
+color = "violet"
+finished = false
+in_cycle = false
+
+[[states]]
+keyword = "DONE"
+color = "green"
+finished = true
+in_cycle = true
+
+[[boards]]
+name = "Tasks"
+columns = ["TODO", "DOING", "WAITING", "DONE"]
+
+[board]
+archive_after_days = 14
+auto_archive = false
+
+[git]
+enabled = true
+commit_delay_minutes = 5
+pull_interval_minutes = 5

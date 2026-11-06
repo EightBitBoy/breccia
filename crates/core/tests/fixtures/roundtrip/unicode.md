@@ -1,0 +1,3 @@
+- Schöne Grüße, Ärger über Öl
+	- emoji 🎉🚀 and ZWJ 👩‍💻
+	- 漢字 かな 한국어
