@@ -9,6 +9,7 @@ use std::path::Path;
 use super::files::{is_within, names_in_dir, path_taken};
 use super::{JOURNALS, PAGES, Page, PageError, PageKind, RenameReport, Workspace};
 use crate::aliases::realias;
+use crate::color::{canonical_color, recolor};
 use crate::inline::{LinkKind, heading_base, links, title_line};
 use crate::naming::{
     file_stem_for, is_linkable_name, is_valid_folder_path, is_valid_page_name, page_key,
@@ -416,6 +417,34 @@ impl Workspace {
         self.reorder_aliases();
         self.tree_version += 1;
         Ok(create)
+    }
+
+    /// The color of the page's `color::` line; none for a journal or an
+    /// unknown key.
+    pub fn page_color(&self, key: &str) -> Option<&'static str> {
+        let page = self.pages.get(key)?;
+        match page.kind {
+            PageKind::Journal(_) => None,
+            PageKind::Page => crate::color::page_color(page.doc.preamble()),
+        }
+    }
+
+    /// The preamble the page gets with `color` (`None` removes the color),
+    /// and whether the caller must write a new file afterwards (the page has
+    /// no file and gets a color). Changes nothing itself: the caller applies
+    /// the preamble as an edit.
+    pub fn color_change(
+        &self,
+        key: &str,
+        color: Option<&str>,
+    ) -> Result<(String, bool), PageError> {
+        let color = color
+            .map(|c| canonical_color(c).ok_or_else(|| PageError::UnknownColor(c.to_string())))
+            .transpose()?;
+        let page = self.movable(key)?;
+        self.check_on_disk(page)?;
+        let preamble = recolor(page.doc.preamble(), color, page.doc.line_ending());
+        Ok((preamble, !page.has_file() && color.is_some()))
     }
 
     /// Deletes a page's file and the page. Links to it stay. Journals may

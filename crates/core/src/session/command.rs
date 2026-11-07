@@ -85,6 +85,8 @@ pub enum Command {
     DirCreate { path: String },
     #[serde(rename = "page.rename")]
     PageRename { key: String, name: String },
+    #[serde(rename = "page.setColor")]
+    PageSetColor { key: String, color: Option<String> },
     #[serde(rename = "page.move")]
     PageMove { key: String, folder: String },
     #[serde(rename = "page.delete")]

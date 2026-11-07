@@ -24,6 +24,7 @@ mod graph;
 mod inline;
 mod journal;
 mod naming;
+mod page_color;
 mod place;
 mod relink;
 mod rename;

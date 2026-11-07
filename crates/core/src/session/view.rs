@@ -136,6 +136,9 @@ pub struct PageView {
     pub blocks: Vec<BlockView>,
     /// Whether the page has a file; a moved page's file may be empty.
     pub has_file: bool,
+    /// The page's own color; none for a journal.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<&'static str>,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -286,6 +289,7 @@ impl From<PageError> for CommandError {
             PageError::UnknownFolder(_) => "unknownFolder",
             PageError::FolderExists(_) => "folderExists",
             PageError::Journal(_) => "journal",
+            PageError::UnknownColor(_) => "unknownColor",
             PageError::UnknownPage(_) => "unknownPage",
             PageError::FolderNotEmpty(_) => "folderNotEmpty",
             PageError::IntoItself(_) => "intoItself",
@@ -326,6 +330,10 @@ impl PageView {
             preamble_html: preamble_html(page.doc.preamble()),
             blocks: BlockView::list(blocks, cfg),
             has_file: page.has_file(),
+            color: match page.kind {
+                PageKind::Journal(_) => None,
+                PageKind::Page => crate::color::page_color(page.doc.preamble()),
+            },
         }
     }
 }

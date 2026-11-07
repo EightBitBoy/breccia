@@ -331,6 +331,27 @@ impl Session {
                 }
                 Ok(out)
             }
+            Command::PageSetColor { key, color } => {
+                self.load_linked(&key)?;
+                let (preamble, create) = self.ws()?.color_change(&key, color.as_deref())?;
+                let out = self.mutate(
+                    &key,
+                    false,
+                    Box::new(move |d, _, _| {
+                        d.set_preamble(&preamble)?;
+                        Ok(None)
+                    }),
+                )?;
+                if !create {
+                    return Ok(out);
+                }
+                // `mutate` skips the blank page without a file; a page with a
+                // color gets its file now.
+                let result = self.ws_mut()?.create_file(&key);
+                let mut notices = out.notices;
+                notices.extend(self.note_save(&key, result));
+                self.page_output(&key, None, notices)
+            }
             Command::PageMove { key, folder } => {
                 // A page only linked to is made in memory first, as for a rename.
                 self.load_linked(&key)?;

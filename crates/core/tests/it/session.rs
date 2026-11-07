@@ -61,6 +61,8 @@ fn command_names_deserialize() {
         json!({"type":"blocks.setState","ids":[1],"keyword":null}),
         json!({"type": "search.query", "text": "x"}),
         json!({"type":"page.today"}),
+        json!({"type":"page.setColor","key":"p","color":"red"}),
+        json!({"type":"page.setColor","key":"p","color":null}),
         json!({"type":"journal.feed"}),
         json!({"type":"pages.get","keys":["a"]}),
         json!({"type": "board.get", "index": 0}),

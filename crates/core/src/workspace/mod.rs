@@ -247,8 +247,10 @@ pub enum PageError {
     UnknownFolder(String),
     #[error("a folder with this name exists: {0}")]
     FolderExists(String),
-    #[error("journals cannot be renamed or moved: {0}")]
+    #[error("journal days cannot be renamed, moved or colored: {0}")]
     Journal(String),
+    #[error("unknown page color: {0:?}")]
+    UnknownColor(String),
     #[error("unknown page: {0}")]
     UnknownPage(String),
     #[error("folder is not empty: {0}")]
