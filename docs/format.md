@@ -599,13 +599,13 @@ title "Q&A: hiring"
 
 **Page color (`color::`).** The first preamble property line with the key `color` (ASCII case ignored) whose value is
 one of the names below (case ignored), or a custom hue, gives the page its color. A custom hue is `hue <h>`: the word
-`hue` (case ignored), whitespace, and a whole number `<h>` from 0 to 359 (leading zeros allowed), an angle on the color
-wheel. Breccia writes `hue <h>` in lower case with one space and no leading zeros. Lines inside front matter and a
-`color` key in YAML do not count. Other values (`hue 360`, `hue 12.5`, `hue x`) are no color and are kept as written. In
-journals `color::` is not read. Breccia writes a name in lower case: choosing a color replaces the first `color::` line
-or adds one, and "no color" removes every `color::` line. What the color does in the app is described in
-[`docs/spec.md`](spec.md) section 7.4, and how a hue becomes a color in each theme is the app's business (section 7.3
-and 7.10). The names, row by row:
+`hue` (case ignored), ASCII whitespace, and a whole number `<h>` from 0 to 359 (leading zeros allowed), an angle on the
+color wheel. Lines inside front matter and a `color` key in YAML do not count. Other values (`hue 360`, `hue 12.5`,
+`hue x`) are no color and are kept as written. In journals `color::` is not read. Breccia writes a name, or `hue <h>`
+with one space and no leading zeros, in lower case: choosing a color replaces the first `color::` line or adds one, and
+"no color" removes every `color::` line. What the color does in the app is described in [`docs/spec.md`](spec.md)
+section 7.4, and how a hue becomes a color in each theme is the app's business (sections 7.3 and 7.10). The names, row
+by row:
 
 ```text page-colors
 crimson red coral orange amber

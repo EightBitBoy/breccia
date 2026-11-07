@@ -101,3 +101,8 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 38. [ ] **Undo:** one `Ctrl Z` takes back one whole drag or one Enter on the slider.
 39. [ ] **In the file:** `color:: hue 212`; `hue 360` and `hue x` stay visible as text and give no color; older
    Breccia versions read a hue as no color and keep the line.
+40. [ ] **Custom color outside the slider:** on a page with a custom hue the swatch is filled with that color and its
+   screen-reader label says "Page color: Custom (hue 212)"; the journal's right-click "Color…" picker has the
+   same slider and preview; after `Ctrl Z` the slider (opened again) sits at the hue that is saved now.
+41. [ ] **Screen readers name the picker:** with Narrator on, opening the page color picker announces "Page color", and
+   the journal's right-click picker announces "Color of <page>".
