@@ -60,3 +60,11 @@ Task 6: review approved (spec ✅; no leak to non-journal views; editor transpar
 Task 6: minor (deferred): .block.flash on a washed row animates to transparent then the wash snaps back; 4px corners while it plays (app.css:410-411) — end frame var(--wash, transparent)
 Task 6: minor (deferred): .block.selected 4px radius cuts a blob's 8px corner on its top/bottom row (app.css:140)
 Task 6: complete (commits 59010f7..6a02de3, review clean)
+Task 7: dispatched (opus), BASE f642938
+Task 7: implementer DONE_WITH_CONCERNS (db4a6d0); for Task 11: PageColorGrid has ondone?(), called after every choice; do not prevent the popover onOpenAutoFocus
+Task 7: review approved (spec ✅; no double undo; layout intact; invalid names unreachable)
+- Ruling: Task 7 ⚠️ (pick = own undo step; undo from a block editor takes the pick back) resolved by Task 2 core tests a_pick_is_its_own_undo_step & co., and Task 8 step 112 asserts it in the app — cost if wrong: caught in Task 8.
+Task 7: minor (deferred): third copy of the mac-detection line (PageColorPicker.svelte:22, App.svelte:224, blockEditor.ts:46); export one isMac
+Task 7: minor (deferred): "No color" uses aria-pressed, cells aria-selected; Task 8 should assert data-current
+Task 7: minor (deferred): Esc inside the popover bubbles to sel.onKey; check in Task 8 it does not clear a selection
+Task 7: complete (commits f642938..db4a6d0, review clean)
