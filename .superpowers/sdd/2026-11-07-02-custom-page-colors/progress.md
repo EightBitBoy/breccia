@@ -26,3 +26,8 @@ Task 2: implementer DONE (e0b9f67)
 Task 2: review approved (spec ✅; every §8 claim matches parse_color/recolor); ⚠️ spec §7.3/§7.10 references resolved: both sections exist (plan 1 Task 9)
 Task 2: minor (deferred): format.md §8 slightly repetitive "lower case" sentences; §13 bullet over 120 cols (old)
 Task 2: complete (commits 9fd3487..e0b9f67, review clean)
+Task 3: dispatched (sonnet), BASE 67caa1d
+Task 3: implementer DONE (11a3e9f); picker state rules (slider sets preview, saved value marked, grid tab stop at No color, drag saves on release) are component work -> carry into Tasks 5/6
+Task 3: review approved (spec ✅); TS parseHue is stricter than the core (core accepts HUE/leading zeros) — fine, the wire value is the core's canonical Display
+Task 3: minor (deferred): parseHue rejection list lacks 'hue 1000', 'hue -1', trailing/double spaces
+Task 3: complete (commits 67caa1d..11a3e9f, review clean)
