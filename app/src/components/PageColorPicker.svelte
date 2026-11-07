@@ -52,6 +52,7 @@
     <Popover.Content
       class="menu page-color-picker"
       data-testid="page-color-picker"
+      role="dialog"
       aria-label="Page color"
       side="bottom"
       align="end"

@@ -92,6 +92,7 @@
     <Popover.Content
       class="menu page-color-picker"
       data-testid="page-color-picker"
+      role="dialog"
       aria-label={picking ? `Color of ${picking.name}` : undefined}
       customAnchor={anchor}
       side="bottom"
