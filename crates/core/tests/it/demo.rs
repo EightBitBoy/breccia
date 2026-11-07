@@ -191,5 +191,8 @@ fn the_demo_shows_page_colors() {
     assert_eq!(topic_of(&d28, "Restarted the queue"), "on call/amber");
 
     let (ws, _) = Workspace::open(tmp.path()).unwrap();
-    assert_eq!(ws.page_color("project x"), Some("blue"));
+    assert_eq!(
+        ws.page_color("project x"),
+        Some(breccia_core::color::PageColor::Named("blue"))
+    );
 }

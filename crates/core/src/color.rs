@@ -3,6 +3,9 @@
 
 use crate::inline::{property, title_line};
 use crate::outline::{LineEnding, front_matter_len};
+use crate::workspace::{Page, PageKind};
+use serde::{Serialize, Serializer};
+use std::fmt;
 
 /// The page colors, row by row in the order of the picker's grid.
 pub const PAGE_COLORS: [&str; 25] = [
@@ -19,7 +22,65 @@ pub fn canonical_color(name: &str) -> Option<&'static str> {
         .find(|c| c.eq_ignore_ascii_case(name))
 }
 
-/// Whether `line` (no terminator needed) is a property line with key `color`.
+/// What a page's `color::` line gives it: one of [`PAGE_COLORS`] or a hue
+/// (0 to 359 degrees), written `hue 212`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum PageColor {
+    Named(&'static str),
+    Hue(u16),
+}
+
+impl fmt::Display for PageColor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            PageColor::Named(n) => f.write_str(n),
+            PageColor::Hue(h) => write!(f, "hue {h}"),
+        }
+    }
+}
+
+impl Serialize for PageColor {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.collect_str(self)
+    }
+}
+
+/// A page color from its text: a name from [`PAGE_COLORS`] (any ASCII case),
+/// or `hue` (any ASCII case) and a number from 0 to 359 made of ASCII digits
+/// only (leading zeros allowed), separated by ASCII whitespace.
+pub fn parse_color(value: &str) -> Option<PageColor> {
+    if let Some(n) = canonical_color(value) {
+        return Some(PageColor::Named(n));
+    }
+    let mut words = value.split_ascii_whitespace();
+    let (word, num) = (words.next()?, words.next()?);
+    if words.next().is_some()
+        || !word.eq_ignore_ascii_case("hue")
+        || !num.bytes().all(|b| b.is_ascii_digit())
+    {
+        return None;
+    }
+    let mut hue = 0u32;
+    for b in num.bytes() {
+        hue = hue * 10 + u32::from(b - b'0');
+        if hue > 359 {
+            return None;
+        }
+    }
+    Some(PageColor::Hue(hue as u16))
+}
+
+/// The color a page has of its own: none for a journal, else what its
+/// preamble gives it.
+pub fn own_color(page: &Page) -> Option<PageColor> {
+    match page.kind {
+        PageKind::Journal(_) => None,
+        PageKind::Page => page_color(page.doc.preamble()),
+    }
+}
+
+/// The value of `line` (no terminator needed) when it is a property line with
+/// key `color`, whatever the value.
 fn is_color_property(line: &str) -> Option<String> {
     let (k, v) = property(line.trim_end_matches(['\r', '\n']))?;
     k.eq_ignore_ascii_case("color").then_some(v)
@@ -27,8 +88,8 @@ fn is_color_property(line: &str) -> Option<String> {
 
 /// The first property line of `preamble` after the front matter whose key is
 /// `color` (ASCII case-insensitive) and whose value is a page color: its index
-/// among `preamble.split('\n')` and the canonical color name.
-pub fn color_line(preamble: &str) -> Option<(usize, &'static str)> {
+/// among `preamble.split('\n')` and the color.
+pub fn color_line(preamble: &str) -> Option<(usize, PageColor)> {
     let skip = front_matter_len(preamble).map_or(0, |n| preamble[..n].matches('\n').count());
     preamble
         .split('\n')
@@ -36,12 +97,12 @@ pub fn color_line(preamble: &str) -> Option<(usize, &'static str)> {
         .skip(skip)
         .find_map(|(i, l)| {
             let v = is_color_property(l)?;
-            canonical_color(&v).map(|c| (i, c))
+            parse_color(&v).map(|c| (i, c))
         })
 }
 
 /// The color the page's preamble gives it.
-pub fn page_color(preamble: &str) -> Option<&'static str> {
+pub fn page_color(preamble: &str) -> Option<PageColor> {
     color_line(preamble).map(|(_, c)| c)
 }
 
@@ -49,7 +110,8 @@ pub fn page_color(preamble: &str) -> Option<&'static str> {
 /// value) after the front matter becomes `color:: c`; without one, the line is
 /// added after the first valid `title::` line, else as the first line after the
 /// front matter. With `None` every `color::` line after the front matter is
-/// removed. Front matter is never changed. The caller passes canonical names.
+/// removed. Front matter is never changed. The caller passes the canonical text
+/// of a [`PageColor`].
 pub fn recolor(preamble: &str, color: Option<&str>, le: LineEnding) -> String {
     let (front, body) = preamble.split_at(front_matter_len(preamble).unwrap_or(0));
     let mut lines: Vec<String> = body.split_inclusive('\n').map(str::to_string).collect();
@@ -69,6 +131,7 @@ pub fn recolor(preamble: &str, color: Option<&str>, le: LineEnding) -> String {
         return format!("{front}{}", lines.concat());
     }
     let new = format!("color:: {c}{}", le.as_str());
+    // `title_line` indexes `body` by line, as `split_inclusive` does.
     match title_line(body) {
         Some((i, _)) => {
             if !lines[i].ends_with('\n') {

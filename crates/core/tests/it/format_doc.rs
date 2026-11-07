@@ -93,7 +93,7 @@ fn describe(src: &str) -> String {
         out += &format!("title {title:?}\n");
     }
     if let Some(color) = page_color(pre) {
-        out += &format!("color {color:?}\n");
+        out += &format!("color \"{color}\"\n");
     }
     for alias in aliases(pre) {
         out += &format!("alias {alias:?}\n");

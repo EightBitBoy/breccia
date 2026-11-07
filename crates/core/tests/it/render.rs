@@ -317,3 +317,23 @@ fn preamble_html_hides_the_color_line() {
     assert_eq!(preamble_html("title:: t\ncolor:: red\n"), "");
     assert!(preamble_html("color:: banana\n").contains("banana"));
 }
+
+#[test]
+fn preamble_html_shows_an_invalid_hue() {
+    use breccia_core::render::preamble_html;
+    assert!(
+        !preamble_html(
+            "color:: hue 212
+note
+"
+        )
+        .contains("color::")
+    );
+    assert!(
+        preamble_html(
+            "color:: hue 360
+"
+        )
+        .contains("hue 360")
+    );
+}

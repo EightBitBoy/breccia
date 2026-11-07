@@ -331,7 +331,7 @@ pub struct Workspace {
     /// link targets, its content or the aliases changed.
     link_version: u64,
     /// Page key → color, for the non-journal pages with a valid `color::`.
-    colors: HashMap<String, &'static str>,
+    colors: HashMap<String, crate::color::PageColor>,
     /// Keys whose color, existence or alias winner changed since the last
     /// [`take_topic_changes`](Workspace::take_topic_changes): the journal
     /// blocks linking to them may need another wash.

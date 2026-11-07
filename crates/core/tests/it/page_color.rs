@@ -1,3 +1,4 @@
+use breccia_core::color::PageColor;
 use breccia_core::{Clock, CommandError, Output, Session};
 use chrono::NaiveDate;
 use serde_json::{Value, json};
@@ -61,7 +62,7 @@ fn set_color_writes_only_the_color_line() {
     let (t, mut s) = folder(&[("pages/Garden.md", "- a\n\t- b\n")]);
     let out = pick(&mut s, "garden", json!("red"));
     assert_eq!(read(&t, "pages/Garden.md"), "color:: red\n- a\n\t- b\n");
-    assert_eq!(out.page.unwrap().color, Some("red"));
+    assert_eq!(out.page.unwrap().color, Some(PageColor::Named("red")));
     pick(&mut s, "garden", json!("blue"));
     assert_eq!(read(&t, "pages/Garden.md"), "color:: blue\n- a\n\t- b\n");
     let out = pick(&mut s, "garden", Value::Null);
@@ -130,7 +131,7 @@ fn page_view_carries_the_page_color() {
         ("journals/2026-10-29.md", "color:: red\n- j\n"),
     ]);
     let out = ok(&mut s, json!({"type": "page.get", "key": "garden"}), 0);
-    assert_eq!(out.page.unwrap().color, Some("red"));
+    assert_eq!(out.page.unwrap().color, Some(PageColor::Named("red")));
     let out = ok(&mut s, json!({"type": "page.get", "key": "2026-10-29"}), 0);
     assert_eq!(out.page.unwrap().color, None);
 }
@@ -155,7 +156,7 @@ fn a_pick_is_its_own_undo_step() {
         read(&t, "pages/Garden.md"),
         "color:: red\n- a typed\n\t- b\n"
     );
-    assert_eq!(out.page.unwrap().color, Some("red"));
+    assert_eq!(out.page.unwrap().color, Some(PageColor::Named("red")));
     undo(&mut s, "garden");
     assert_eq!(read(&t, "pages/Garden.md"), "- a typed\n\t- b\n");
     undo(&mut s, "garden");
@@ -487,4 +488,87 @@ fn adding_and_removing_an_alias_updates_the_journal_days() {
         0,
     );
     assert_eq!(pairs(day(&out)), vec![None]);
+}
+
+#[test]
+fn set_color_with_a_hue() {
+    let (t, mut s) = folder(&[(
+        "pages/Garden.md",
+        "- a
+	- b
+",
+    )]);
+    let out = pick(&mut s, "garden", json!("hue 212"));
+    assert_eq!(
+        read(&t, "pages/Garden.md"),
+        "color:: hue 212
+- a
+	- b
+"
+    );
+    let view = serde_json::to_value(out.page.unwrap()).unwrap();
+    assert_eq!(view["color"], "hue 212");
+    pick(&mut s, "garden", json!("HUE 012"));
+    assert!(read(&t, "pages/Garden.md").starts_with(
+        "color:: hue 12
+"
+    ));
+    pick(&mut s, "garden", json!("red"));
+    assert!(read(&t, "pages/Garden.md").starts_with(
+        "color:: red
+"
+    ));
+    let before = read(&t, "pages/Garden.md");
+    for bad in ["hue 360", "hue x"] {
+        let e = cmd(
+            &mut s,
+            json!({"type": "page.setColor", "key": "garden", "color": bad}),
+            0,
+        )
+        .unwrap_err();
+        assert_eq!(e.code, "unknownColor", "{bad}");
+        assert_eq!(read(&t, "pages/Garden.md"), before);
+    }
+}
+
+#[test]
+fn a_pick_of_the_saved_hue_records_no_step() {
+    let (t, mut s) = folder(&[(
+        "pages/Garden.md",
+        "- a
+	- b
+",
+    )]);
+    pick(&mut s, "garden", json!("hue 40"));
+    pick(&mut s, "garden", json!("hue 40"));
+    undo(&mut s, "garden");
+    assert_eq!(
+        read(&t, "pages/Garden.md"),
+        "- a
+	- b
+"
+    );
+}
+
+#[test]
+fn journal_blocks_carry_a_hue() {
+    let (_t, mut s) = topics_folder();
+    let out = pick(&mut s, "hiring", json!("hue 300"));
+    let pr = pairs(day(&out));
+    for i in [3, 6, 9] {
+        assert_eq!(pr[i], p("hiring", "hue 300"), "block {}", i + 1);
+    }
+    let out = pick(&mut s, "hiring", json!("hue 301"));
+    let pr = pairs(day(&out));
+    for i in [3, 6, 9] {
+        assert_eq!(pr[i], p("hiring", "hue 301"), "block {}", i + 1);
+    }
+    let v = serde_json::to_value(day(&out)).unwrap();
+    let t = v["targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|t| t["key"] == "hiring")
+        .unwrap();
+    assert_eq!(t["color"], "hue 301");
 }

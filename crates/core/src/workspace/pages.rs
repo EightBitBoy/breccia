@@ -9,7 +9,7 @@ use std::path::Path;
 use super::files::{is_within, names_in_dir, path_taken};
 use super::{JOURNALS, PAGES, Page, PageError, PageKind, RenameReport, Workspace};
 use crate::aliases::realias;
-use crate::color::{canonical_color, recolor};
+use crate::color::{PageColor, own_color, parse_color, recolor};
 use crate::inline::{LinkKind, heading_base, links, title_line};
 use crate::naming::{
     file_stem_for, is_linkable_name, is_valid_folder_path, is_valid_page_name, page_key,
@@ -421,12 +421,8 @@ impl Workspace {
 
     /// The color of the page's `color::` line; none for a journal or an
     /// unknown key.
-    pub fn page_color(&self, key: &str) -> Option<&'static str> {
-        let page = self.pages.get(key)?;
-        match page.kind {
-            PageKind::Journal(_) => None,
-            PageKind::Page => crate::color::page_color(page.doc.preamble()),
-        }
+    pub fn page_color(&self, key: &str) -> Option<PageColor> {
+        own_color(self.pages.get(key)?)
     }
 
     /// The preamble the page gets with `color` (`None` removes the color),
@@ -439,11 +435,16 @@ impl Workspace {
         color: Option<&str>,
     ) -> Result<(String, bool), PageError> {
         let color = color
-            .map(|c| canonical_color(c).ok_or_else(|| PageError::UnknownColor(c.to_string())))
-            .transpose()?;
+            .map(|c| parse_color(c).ok_or_else(|| PageError::UnknownColor(c.to_string())))
+            .transpose()?
+            .map(|c| c.to_string());
         let page = self.movable(key)?;
         self.check_on_disk(page)?;
-        let preamble = recolor(page.doc.preamble(), color, page.doc.line_ending());
+        let preamble = recolor(
+            page.doc.preamble(),
+            color.as_deref(),
+            page.doc.line_ending(),
+        );
         Ok((preamble, !page.has_file() && color.is_some()))
     }
 

@@ -1,16 +1,22 @@
 use breccia_core::LineEnding;
-use breccia_core::color::{PAGE_COLORS, color_line, page_color, recolor};
+use breccia_core::color::{PAGE_COLORS, PageColor, color_line, page_color, parse_color, recolor};
 
 #[test]
 fn page_color_reads_the_first_known_color_line() {
-    assert_eq!(page_color("color:: red\n"), Some("red"));
-    assert_eq!(page_color("Color:: Red\n"), Some("red"));
-    assert_eq!(page_color("color:: banana\ncolor:: blue\n"), Some("blue"));
+    assert_eq!(page_color("color:: red\n"), Some(PageColor::Named("red")));
+    assert_eq!(page_color("Color:: Red\n"), Some(PageColor::Named("red")));
+    assert_eq!(
+        page_color("color:: banana\ncolor:: blue\n"),
+        Some(PageColor::Named("blue"))
+    );
     assert_eq!(page_color("color:: banana\n"), None);
     assert_eq!(page_color("color::red\n"), None);
     assert_eq!(page_color("---\ncolor:: red\n---\n"), None);
     assert_eq!(page_color("---\ncolor: red\n---\n"), None);
-    assert_eq!(color_line("title:: x\ncolor:: teal\n"), Some((1, "teal")));
+    assert_eq!(
+        color_line("title:: x\ncolor:: teal\n"),
+        Some((1, PageColor::Named("teal")))
+    );
     assert_eq!(PAGE_COLORS.len(), 25);
 }
 
@@ -71,4 +77,107 @@ fn recolor_none_removes_every_color_line() {
         "---\ncolor:: red\n---\n"
     );
     assert_eq!(recolor("x\ncolor:: red", None, lf), "x\n");
+}
+
+#[test]
+fn parse_color_reads_names_and_hues() {
+    use PageColor::{Hue, Named};
+    assert_eq!(parse_color("Red"), Some(Named("red")));
+    assert_eq!(parse_color("hue 212"), Some(Hue(212)));
+    assert_eq!(parse_color("HUE 0212"), Some(Hue(212)));
+    assert_eq!(parse_color("Hue  7"), Some(Hue(7)));
+    assert_eq!(parse_color("hue	7"), Some(Hue(7)));
+    assert_eq!(parse_color("hue 0"), Some(Hue(0)));
+    assert_eq!(parse_color("hue 359"), Some(Hue(359)));
+    for bad in [
+        "hue 360",
+        "hue 999",
+        "hue -1",
+        "hue +5",
+        "hue 12.5",
+        "hue",
+        "hue212",
+        "hue 1 2",
+        "hue x",
+        "hue 99999999999999999999",
+    ] {
+        assert_eq!(parse_color(bad), None, "{bad}");
+    }
+    assert_eq!(Hue(7).to_string(), "hue 7");
+    assert_eq!(serde_json::to_string(&Hue(212)).unwrap(), "\"hue 212\"");
+    assert_eq!(serde_json::to_string(&Named("red")).unwrap(), "\"red\"");
+}
+
+#[test]
+fn page_color_reads_a_hue_line() {
+    assert_eq!(
+        page_color(
+            "color:: HUE 012
+"
+        ),
+        Some(PageColor::Hue(12))
+    );
+    assert_eq!(
+        page_color(
+            "color:: hue 999
+color:: hue 5
+"
+        ),
+        Some(PageColor::Hue(5))
+    );
+    assert_eq!(
+        color_line(
+            "title:: x
+color:: hue 40
+"
+        ),
+        Some((1, PageColor::Hue(40)))
+    );
+}
+
+#[test]
+fn recolor_writes_and_replaces_a_hue() {
+    let lf = LineEnding::Lf;
+    assert_eq!(
+        recolor(
+            "- a
+",
+            Some("hue 212"),
+            lf
+        ),
+        "color:: hue 212
+- a
+"
+    );
+    assert_eq!(
+        recolor(
+            "color:: red
+x
+",
+            Some("hue 9"),
+            lf
+        ),
+        "color:: hue 9
+x
+"
+    );
+    assert_eq!(
+        recolor(
+            "color:: hue 9
+",
+            Some("teal"),
+            lf
+        ),
+        "color:: teal
+"
+    );
+    assert_eq!(
+        recolor(
+            "color:: hue 999
+",
+            None,
+            lf
+        ),
+        ""
+    );
 }
