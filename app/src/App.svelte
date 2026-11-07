@@ -1763,6 +1763,7 @@
                 ontarget={() => journal.targetReached()}
                 onopen={(key) => void exec({ type: 'page.open', name: key })}
                 onstart={(key) => void exec({ type: 'block.insert', page: key, after: null, text: '' })}
+                onsetcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
               />
             {:else if page}
               <PageView
@@ -1778,6 +1779,7 @@
                 onrename={(name) => void flows.rename(page!.key, page!.name, name)}
                 onopen={(name) => void exec({ type: 'page.open', name })}
                 onsetcolor={(color) => void exec({ type: 'page.setColor', key: page!.key, color })}
+                onlinkcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
                 onhistory={(redo) => void exec({ type: redo ? 'history.redo' : 'history.undo', page: page!.key })}
               />
             {/if}

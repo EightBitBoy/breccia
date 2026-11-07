@@ -2,6 +2,7 @@
   import type { Action } from 'svelte/action'
   import type { JournalDay, PageView } from '../lib/types'
   import Outline from './Outline.svelte'
+  import LinkColorMenu from './LinkColorMenu.svelte'
 
   let {
     day,
@@ -13,6 +14,7 @@
     ontoggle,
     onopen,
     onstart,
+    onsetcolor,
     index,
     style,
     measure,
@@ -27,6 +29,8 @@
     ontoggle: (id: number) => void
     onopen: (key: string) => void
     onstart: (key: string) => void
+    /** Give the page `key` a color, or remove it with null (from a right-click on a link or tag). */
+    onsetcolor: (key: string, color: string | null) => void
     /** The feed's row, position and size registration (set by `JournalFeed`). */
     index?: number
     style?: string
@@ -44,15 +48,17 @@
     {#if page.preambleHtml}
       <div class="preamble">{@html page.preambleHtml}</div>
     {/if}
-    <Outline
-      blocks={page.blocks}
-      {folded}
-      {editingId}
-      {selected}
-      {onedit}
-      {ontoggle}
-      onstart={() => onstart(day.key)}
-    />
+    <LinkColorMenu targets={page.targets ?? []} {onsetcolor}>
+      <Outline
+        blocks={page.blocks}
+        {folded}
+        {editingId}
+        {selected}
+        {onedit}
+        {ontoggle}
+        onstart={() => onstart(day.key)}
+      />
+    </LinkColorMenu>
   {:else}
     <div class="day-loading">…</div>
   {/if}

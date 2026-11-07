@@ -31,6 +31,20 @@ export interface PageView {
   hasFile: boolean
   /** The page's own color name; absent for a journal or an uncolored page. */
   color?: string
+  /** Journals only: the links and tags of its blocks whose page can be given a color; absent when there are none. */
+  targets?: TargetView[]
+}
+
+/** A link or tag in a journal whose page can be given a color. */
+export interface TargetView {
+  /** The link's key, as the rendered anchor's `data-page` holds it. */
+  raw: string
+  kind: 'link' | 'tag'
+  /** The page the link goes to. */
+  key: string
+  name: string
+  /** That page's color name; absent when it has none. */
+  color?: string
 }
 
 /** Where the caret goes: a block and a UTF-8 byte offset in its text. */

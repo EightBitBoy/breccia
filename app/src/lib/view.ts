@@ -13,7 +13,7 @@ export type Place = 'navigate' | 'page' | 'day' | 'none'
  *
  * Only navigation (`page.*`, `folder.*`) may switch to another page; a late
  * answer to typing or an edit on the page the user just left must not pull them
- * back. A rename, a move and a `page.get` (a queued refresh) replace the view
+ * back. A rename, a move, a color pick (made from a link too) and a `page.get` (a queued refresh) replace the view
  * only if they are about the shown page.
  */
 export function placeOf(
@@ -46,6 +46,7 @@ export function placeOf(
     case 'page.rename':
     case 'page.move':
     case 'page.get':
+    case 'page.setColor':
       return cmd.key === shown.page ? 'page' : 'none'
     default:
       return cmd.type.startsWith('page.') || cmd.type.startsWith('folder.') ? 'navigate' : 'none'

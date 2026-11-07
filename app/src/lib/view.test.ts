@@ -39,6 +39,14 @@ test('page.get shows the shown page only', () => {
   expect(placeOf({ type: 'page.get', key: 'a' }, page('a'), 'a')).toBe('page')
 })
 
+test('coloring another page from a link stays on the shown page or the feed', () => {
+  const set = (key: string) => ({ type: 'page.setColor', key, color: 'red' }) as Command
+  expect(placeOf(set('hiring'), page('2026-10-29'), 'hiring')).toBe('none')
+  expect(placeOf(set('a'), page('a'), 'a')).toBe('page')
+  const feed = { page: null, days: new Set(['2026-10-29']), board: false, allPages: false }
+  expect(placeOf(set('hiring'), feed, 'hiring')).toBe('none')
+})
+
 test('outputs for a loaded day update the day', () => {
   const shown = { page: null, days: new Set(['d1']), board: false, allPages: false }
   expect(placeOf(cmd('block.setText'), shown, 'd1')).toBe('day')

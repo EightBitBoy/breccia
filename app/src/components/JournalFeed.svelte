@@ -21,6 +21,7 @@
     ontoggle,
     onopen,
     onstart,
+    onsetcolor,
     onrange,
     target,
     ontarget,
@@ -35,6 +36,8 @@
     ontoggle: (id: number) => void
     onopen: (key: string) => void
     onstart: (key: string) => void
+    /** Give the page `key` a color, or remove it with null (from a right-click on a link or tag). */
+    onsetcolor: (key: string, color: string | null) => void
     /** The virtualizer's own rows (with overscan, without the pinned day); called when they change. */
     onrange: (from: number, to: number) => void
     /** A day to scroll to once (jump to a date), or null. */
@@ -152,6 +155,7 @@
         {ontoggle}
         {onopen}
         {onstart}
+        {onsetcolor}
         index={it.index}
         style="transform: translateY({it.start - margin}px)"
         {measure}

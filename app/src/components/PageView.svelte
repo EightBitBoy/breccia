@@ -3,6 +3,7 @@
   import Outline from './Outline.svelte'
   import LinkedRefs from './LinkedRefs.svelte'
   import PageColorPicker from './PageColorPicker.svelte'
+  import LinkColorMenu from './LinkColorMenu.svelte'
 
   let {
     page,
@@ -17,6 +18,7 @@
     onrename,
     onopen,
     onsetcolor,
+    onlinkcolor,
     onhistory,
   }: {
     page: PageView
@@ -37,6 +39,8 @@
     onopen: (name: string) => void
     /** Set the page's color, or remove it with null (pages only; journal days have none). */
     onsetcolor: (color: string | null) => void
+    /** Give the page `key` a color, or remove it with null (journal days: a right-click on a link or tag). */
+    onlinkcolor: (key: string, color: string | null) => void
     /** Undo (false) or redo (true) on the page, from the color swatch. */
     onhistory: (redo: boolean) => void
   } = $props()
@@ -88,7 +92,13 @@
   {#if page.preambleHtml}
     <div class="preamble">{@html page.preambleHtml}</div>
   {/if}
-  <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
+  {#if page.kind === 'journal'}
+    <LinkColorMenu targets={page.targets ?? []} onsetcolor={onlinkcolor}>
+      <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
+    </LinkColorMenu>
+  {:else}
+    <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
+  {/if}
   {#if refs}
     <LinkedRefs {refs} {folded} {editingId} {onedit} {ontoggle} {onopen} />
   {/if}
