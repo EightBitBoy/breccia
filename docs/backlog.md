@@ -434,3 +434,9 @@ settings in a temp config dir, like e2e; nothing a dev run does is kept.
 
 Done for `just dev` and `just dev-debug` (`app/scripts/dev.mjs`, identifier `dev.breccia.app.dev`, title
 "Breccia (dev)"). Still open: the "Breccia (test)" title for e2e, screenshot and graph-scale runs.
+
+## 72. Custom page colors: a strength slider too (Page colors)
+
+Owner, 2026-11-07: custom page colors start with a hue slider only (lightness and vividness come from the theme). If
+that proves too limited, add a second slider for vividness. The app would still lower it per theme wherever text
+readability needs that, so the slider can seem to stop at some point; the picker's preview line shows why.
