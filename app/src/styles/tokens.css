@@ -53,6 +53,9 @@
   --pc-slate: #77889b;
   --pc-grey: #929292;
   --pc-wash: 28%;
+  --pc-l: 0.66;
+  --pc-cs: 1;
+  --pc-ds: 1;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -109,6 +112,9 @@
     --pc-slate: #7d8d9e;
     --pc-grey: #929292;
     --pc-wash: 34%;
+    --pc-l: 0.66;
+    --pc-cs: 0.9;
+    --pc-ds: 0.6;
   }
 }
 
@@ -165,6 +171,9 @@
   --pc-slate: #7d8d9e;
   --pc-grey: #929292;
   --pc-wash: 34%;
+  --pc-l: 0.66;
+  --pc-cs: 0.9;
+  --pc-ds: 0.6;
 }
 
 [data-theme="violet"] {
@@ -220,6 +229,9 @@
   --pc-slate: #8393a4;
   --pc-grey: #989898;
   --pc-wash: 34%;
+  --pc-l: 0.68;
+  --pc-cs: 0.9;
+  --pc-ds: 0.6;
 }
 
 [data-theme="graphite"] {
@@ -275,6 +287,9 @@
   --pc-slate: #74818f;
   --pc-grey: #868686;
   --pc-wash: 34%;
+  --pc-l: 0.62;
+  --pc-cs: 0.75;
+  --pc-ds: 0.6;
 }
 
 [data-theme="teal"] {
@@ -330,6 +345,9 @@
   --pc-slate: #3f4d5c;
   --pc-grey: #505050;
   --pc-wash: 30%;
+  --pc-l: 0.43;
+  --pc-cs: 0.9;
+  --pc-ds: 0.4;
 }
 
 [data-theme="taupe"] {
@@ -385,6 +403,9 @@
   --pc-slate: #8b99a9;
   --pc-grey: #a1a1a1;
   --pc-wash: 28%;
+  --pc-l: 0.71;
+  --pc-cs: 0.8;
+  --pc-ds: 0.8;
 }
 
 /* Links and tags inside a finished task: dimmed toward the muted text colour, in every theme. */

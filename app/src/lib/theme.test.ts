@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
 import { PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
+import { customShade, hueTrack, readThemeTokens, ruleShade, swatchValue, washValue, type ThemeTokens } from './customColor'
 
 import tokensCss from '../styles/tokens.css?raw'
 
@@ -212,4 +213,134 @@ test('neighbouring page colors differ', () => {
       }),
     )
   }
+})
+
+// ---- custom page colors ----
+
+const PARAMS: Record<string, [number, number, number]> = {
+  ':root, [data-theme="light"]': [0.66, 1, 1],
+  '[data-theme="taupe"]': [0.71, 0.8, 0.8],
+  '[data-theme="dark"]': [0.66, 0.9, 0.6],
+  '[data-theme="violet"]': [0.68, 0.9, 0.6],
+  '[data-theme="graphite"]': [0.62, 0.75, 0.6],
+  '[data-theme="teal"]': [0.43, 0.9, 0.4],
+  ':root:not([data-theme])': [0.66, 0.9, 0.6],
+}
+
+function tokensOf(s: string): ThemeTokens {
+  const b = block(s)
+  return readThemeTokens((n) => b[n] ?? '')
+}
+
+/** [L, C, h in degrees] of a #rrggbb colour. */
+function lchOf(hex: string): [number, number, number] {
+  const [l, a, b] = oklab(hex)
+  return [l, Math.hypot(a, b), ((Math.atan2(b, a) * 180) / Math.PI + 360) % 360]
+}
+
+function near(a: string, b: string, tol = 1): boolean {
+  const [x, y] = [rgb(a), rgb(b)]
+  return x.every((v, i) => Math.abs(v - y[i]) <= tol)
+}
+
+test('theme blocks carry the shade parameters', () => {
+  expect(THEME_SELECTORS.length).toBe(Object.keys(PARAMS).length)
+  for (const s of THEME_SELECTORS) {
+    const b = block(s)
+    expect([b['--pc-l'], b['--pc-cs'], b['--pc-ds']].map(Number), s).toEqual(PARAMS[s])
+  }
+})
+
+test('the shade rule reproduces the 25 fixed shades', () => {
+  const light = block(THEME_SELECTORS[0])
+  for (const s of THEME_SELECTORS) {
+    const t = tokensOf(s)
+    const b = block(s)
+    for (const n of PAGE_COLORS) {
+      const [l, c, h] = lchOf(light[`--pc-${n}`])
+      const dl = l - 0.66
+      const got = ruleShade(t.l + dl * t.ds, c * t.cs, h).hex
+      expect(near(got, b[`--pc-${n}`]), `${s} ${n}: ${got} vs ${b[`--pc-${n}`]}`).toBe(true)
+    }
+  }
+})
+
+test('custom shades: pinned values', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  const teal = tokensOf('[data-theme="teal"]')
+  const dark = tokensOf('[data-theme="dark"]')
+  const pins: [ThemeTokens, number, string, string][] = [
+    [light, 212, '#08a4bb', '#b7e2e7'],
+    [light, 0, '#d16e8f', '#efd3db'],
+    [teal, 212, '#005a68', '#003945'],
+    [dark, 100, '#a39332', '#494424'],
+  ]
+  for (const [t, h, shade, wash] of pins) {
+    const r = customShade(h, t)
+    expect(near(r.shade, shade), `hue ${h} shade ${r.shade}`).toBe(true)
+    expect(near(r.wash, wash), `hue ${h} wash ${r.wash}`).toBe(true)
+  }
+})
+
+test('every custom hue is readable in every theme', () => {
+  const lowest: string[] = []
+  for (const s of THEME_SELECTORS) {
+    const t = tokensOf(s)
+    let min = t.wash
+    for (let h = 0; h < 360; h++) {
+      const r = customShade(h, t)
+      expect(r.shade, `${s} hue ${h}`).toMatch(/^#[0-9a-f]{6}$/)
+      expect(r.wash, `${s} hue ${h} wash`).toBe(r.strength === 0 ? t.bg : over(r.shade, t.bg, r.strength))
+      expect(contrast(t.text, r.wash), `${s} hue ${h} text`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(t.link, r.wash), `${s} hue ${h} link`).toBeGreaterThanOrEqual(3)
+      expect(contrast(t.tag, r.wash), `${s} hue ${h} tag`).toBeGreaterThanOrEqual(3)
+      expect(r.strength, `${s} hue ${h} strength`).toBeLessThanOrEqual(t.wash)
+      min = Math.min(min, r.strength)
+    }
+    lowest.push(`${Math.round(min * 100)}/${Math.round(t.wash * 100)}`)
+  }
+  // lowest wash strength needed / the theme's strength, in theme order (for re-tuning; no bar)
+  console.info(`custom hue lowest wash strength per theme: ${lowest.join(' ')}`)
+})
+
+test('custom shades step down only when needed', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  const white = { ...light, bg: '#ffffff' }
+  const plain = customShade(212, light)
+  expect(plain.strength).toBe(0.28)
+  expect(plain.chroma).toBe(ruleShade(0.66, 0.13, 212).chroma)
+  const stepped = customShade(212, { ...white, text: '#686868' })
+  expect(stepped.strength).toBe(0.2)
+  expect(stepped.chroma).toBe(plain.chroma)
+  for (const text of ['#767676', '#787878']) {
+    // 4.54:1 and 4.42:1 on white: no wash can help, the bare background is the answer
+    const r = customShade(212, { ...white, text })
+    expect(r.strength, text).toBe(0)
+    expect(r.wash, text).toBe('#ffffff')
+  }
+})
+
+test('readThemeTokens', () => {
+  const t = tokensOf(THEME_SELECTORS[0])
+  expect(t.bg).toBe('#fbfaf8')
+  expect(t.wash).toBe(0.28)
+  expect(t.l).toBe(0.66)
+  const b = block(THEME_SELECTORS[0])
+  expect(() => readThemeTokens((n) => (n === '--pc-l' ? '' : b[n]))).toThrow('--pc-l')
+})
+
+test('washValue and swatchValue', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  expect(washValue('red', null)).toBe('var(--pc-red-wash)')
+  expect(swatchValue('red', null)).toBe('var(--pc-red)')
+  expect(washValue('hue 212', null)).toBeUndefined()
+  expect(washValue('hue 212', light)).toBe('#b7e2e7')
+  expect(washValue('banana', light)).toBeUndefined()
+  const track = hueTrack(light)
+  expect(track.startsWith('linear-gradient(to right, ')).toBe(true)
+  expect(track.match(/#/g)?.length).toBe(13)
+})
+
+test('the literal scan still covers the shade code', () => {
+  expect(Object.keys(sources)).toContain('/src/lib/customColor.ts')
 })
