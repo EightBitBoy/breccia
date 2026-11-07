@@ -26,3 +26,10 @@ Task 1: minor (deferred): color.rs:78-110 relies on title_line indexes matching 
 Task 1: fix round 1/5 (1 addressed, 0 open — mutation check: 4 mutations each caught; no code change, so no diff to re-review; evidence checked by controller in task-1-report.md)
 - Ruling: Task 1 fix round 1 closed without a scoped re-review — the round changed no code (empty diff) and the evidence (4 mutations, failing tests named with output) is in the report — cost if wrong: none to the code; only the evidence's honesty, which the final review can spot-check.
 Task 1: complete (commits 152f95c..ab00813, review clean after fix round 1)
+Task 2: dispatched (sonnet), BASE 37a0fe0
+- Owner decision (2026-11-07, mid-plan): right-click on a link or tag in journal days opens a menu with "Color…" -> the same picker; added to the plan as Task 11 (opus), run after Task 7 and before Task 8.
+Task 2: implementer DONE (8561ff0)
+Task 2: review approved (spec ✅); ⚠️ blank-fileless save/undo path resolved by controller: covered by set_color_on_a_tag_only_page_creates_its_file and undoing_a_pick_on_a_tag_only_page_empties_its_file (pass per report)
+Task 2: minor (deferred): view.rs:152-155 and pages.rs:235-241 repeat the journal->None / page->page_color match; share a helper
+Task 2: minor (deferred): page_color.rs:402-403 null pick on "other" would pass even if null did nothing
+Task 2: complete (commits 37a0fe0..8561ff0, review clean)
