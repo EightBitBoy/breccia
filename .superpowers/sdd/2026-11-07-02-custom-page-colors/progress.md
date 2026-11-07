@@ -53,3 +53,11 @@ Task 6: minor (deferred): focus relies on frame ordering vs bits-ui open auto-fo
 Task 6: minor (deferred): thumb hangs 4 px outside the track at 0/359 (app.css:414-417); track 140 px vs grid 136 px
 Task 6: carried to Task 7: assert bytes for Enter (one write), a drag (exactly one write), Esc after arrows (no write)
 Task 6: complete (commits c841284..b09ac49, review clean)
+Task 7: dispatched (sonnet), BASE 33c5d44
+Task 7: implementer DONE_WITH_CONCERNS (a09c85c): 162 PASS twice (161 + the Esc-after-arrows expectFile the controller asked for)
+- Ruling: e2e expected count is 162 (the extra expectFile is the controller's own Esc-no-write check) — cost: none.
+Task 7: review Needs fixes: Important "exactly one write" mtime check cannot fail (snapshot after the 1 s settle) and adds a sleep
+- Ruling: Task 7 — drop the mtime/sleep check; prove "one drag = one undo step" by undo: one Ctrl Z restores the pre-drag bytes exactly, a second goes to the state before the Enter save (redo after if needed). An identical duplicate save writes the same bytes and records no step (plan 1 Task 2 test), so it is invisible to the user — cost if wrong: a harmless duplicate write goes unnoticed.
+Task 7: fix round 1 dispatched (resume implementer)
+Task 7: fix round 1/5 (1 addressed, 0 open — undo-count proof replaces mtime+sleep; 164 PASS twice; commits a09c85c..438505a)
+Task 7: complete (commits 33c5d44..438505a, review clean after fix round 1)
