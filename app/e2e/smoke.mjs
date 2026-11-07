@@ -2407,6 +2407,215 @@ try {
   await page.locator('[data-testid="nav-journal"]').click() // steps 45-50 start from the journal
   console.log('PASS 80 the Tags section counts, opens and renames a tag without writing a page')
 
+  // Page colors (steps 112 to 116): each starts and ends at the journal. The pages are outside edits, as in step 69.
+  const swatch = page.locator('[data-testid="page-color"]')
+  const picker = page.locator('[data-testid="page-color-picker"]')
+  const option = (c) => picker.locator(`[data-testid="page-color-option"][data-color="${c}"]`)
+  const focusedTestId = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
+  /** The computed background of a probe whose background is `value`, e.g. `var(--pc-red-wash)` (as step 79). */
+  const bgProbe = (value) =>
+    page.evaluate((v) => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = v
+      document.body.append(probe)
+      const c = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return c
+    }, value)
+  const bgOf = (loc) => loc.evaluate((el) => getComputedStyle(el).backgroundColor)
+  /** The wash of each row (`-` for none), and the indexes of the rows with a class, as one text each. */
+  const washesOf = (rows) => rows.evaluateAll((els) => els.map((e) => e.getAttribute('data-wash') ?? '-').join(' '))
+  const rowsWith = (rows, cls) => rows.evaluateAll((els, c) => els.flatMap((e, i) => (e.classList.contains(c) ? [i] : [])).join(), cls)
+  /** Scrolls the feed until the day is drawn, then brings it into view with `text` shown. */
+  const showDay = async (key, text) => {
+    const day = page.locator(`[data-day="${key}"]`)
+    await feed.waitFor()
+    await page.locator('.main').evaluate((el) => (el.scrollTop = 0))
+    await waitFor(`${key} drawn`, async () => {
+      if ((await day.count()) > 0) return true
+      await page.locator('.main').evaluate((el) => (el.scrollTop += el.clientHeight / 2))
+      return false
+    }, true)
+    await day.scrollIntoViewIfNeeded()
+    await day.getByText(text).first().waitFor({ timeout: 10_000 })
+    return day
+  }
+  /** A click on a row away from its links: the right end of its text. */
+  const clickRow = async (row, modifiers = []) => {
+    const box = await row.locator('.content').boundingBox()
+    await row.locator('.content').click({ position: { x: box.width - 4, y: box.height / 2 }, modifiers })
+  }
+  const frames = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+
+  // 112: the swatch beside the title picks a color; the file gets only the color line; undo and redo on the swatch
+  const hue112 = join(pagesDir, 'Hue 112.md')
+  writeFileSync(hue112, '- about hue\n\t- detail\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  const hueRow = side.locator('[data-row="p:hue 112"]')
+  await hueRow.waitFor({ timeout: 10_000 })
+  await hueRow.click()
+  await waitFor('112 opens Hue 112', () => title.innerText(), 'Hue 112')
+  await page.locator('.block .content', { hasText: 'detail' }).waitFor()
+  assert((await swatch.getAttribute('data-color')) === '', '112 the swatch has a color before a pick')
+  await swatch.click()
+  await picker.waitFor()
+  assert((await picker.locator('[data-testid="page-color-option"]').count()) === 25, '112 the picker has not 25 colors')
+  assert((await picker.locator('[data-testid="page-color-none"]').count()) === 1, '112 the picker has no "No color"')
+  assert((await picker.locator('[data-testid="page-color-none"][data-current]').count()) === 1, '112 "No color" is not current')
+  await option('red').click()
+  await picker.waitFor({ state: 'detached' })
+  await expectFile('112 a pick writes the color line', 'color:: red\n- about hue\n\t- detail\n', hue112)
+  await waitFor('112 swatch red', () => swatch.getAttribute('data-color'), 'red')
+  assert(!(await page.locator('.main').innerText()).includes('color::'), '112 the page shows the color line')
+  await waitFor('112 focus back on the swatch', focusedTestId, 'page-color')
+  await kb.press('Control+z')
+  await expectFile('112 undo takes the pick back', '- about hue\n\t- detail\n', hue112)
+  await waitFor('112 swatch empty after undo', () => swatch.getAttribute('data-color'), '')
+  await kb.press('Control+Shift+z')
+  await expectFile('112 redo puts it back', 'color:: red\n- about hue\n\t- detail\n', hue112)
+  await waitFor('112 swatch red after redo', () => swatch.getAttribute('data-color'), 'red')
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 112 the swatch picks a page color, writes only its line, and undo and redo work')
+
+  // 113: journal blocks take their topic's wash; same-topic neighbours merge into one blob, a new topic starts its own
+  // after a gap; a typed link joins the blob; a fold leaves only the shown rows in the blob. Day 6 holds the fold.
+  writeFileSync(join(pagesDir, 'Tone 113.md'), 'color:: blue\n- t\n')
+  writeFileSync(join(pagesDir, 'Crimson 113.md'), 'color:: red\n- c\n')
+  await side.locator('[data-row="p:tone 113"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:crimson 113"]').waitFor({ timeout: 10_000 })
+  const day113 = join(folder, 'journals', `${dayKey(5)}.md`)
+  const journal113 = `- [[Hue 112]] first\n\t- [[Tone 113]] child\n- [[${older}]] then [[Hue 112]]\n- [[Crimson 113]] other page\n- [[Tone 113]] blue\n- plain words\n`
+  writeFileSync(day113, journal113)
+  writeFileSync(join(folder, 'journals', `${dayKey(6)}.md`), '- [[Crimson 113]] folded\n\t- under\n- plain\n')
+  const day5 = await showDay(dayKey(5), 'plain words')
+  const rows5 = day5.locator('.block[data-block-id]')
+  await waitFor('113 washes', () => washesOf(rows5), 'red red red red blue -')
+  assert((await rowsWith(rows5, 'wash-top')) === '0,3,4', `113 wash-top on ${await rowsWith(rows5, 'wash-top')}`)
+  assert((await rowsWith(rows5, 'wash-bottom')) === '2,3,4', `113 wash-bottom on ${await rowsWith(rows5, 'wash-bottom')}`)
+  assert((await rowsWith(rows5, 'wash-gap')) === '3,4', `113 wash-gap on ${await rowsWith(rows5, 'wash-gap')}`)
+  const redWash = await bgProbe('var(--pc-red-wash)')
+  assert((await bgOf(rows5.nth(0))) === redWash, `113 row 0 background ${await bgOf(rows5.nth(0))}, not ${redWash}`)
+  assert((await bgOf(rows5.nth(5))) === 'rgba(0, 0, 0, 0)', `113 row 5 background ${await bgOf(rows5.nth(5))}`)
+  // A fold: the blob covers only the shown rows and keeps both rounded ends.
+  const day6 = await showDay(dayKey(6), 'under')
+  const rows6 = day6.locator('.block[data-block-id]')
+  await waitFor('113 day 6 washes', () => washesOf(rows6), 'red red -')
+  assert((await rowsWith(rows6, 'wash-top')) === '0' && (await rowsWith(rows6, 'wash-bottom')) === '1', '113 day 6 blob ends')
+  await rows6.nth(0).hover() // the fold arrow shows on hover
+  await rows6.nth(0).locator('button.arrow').click()
+  await waitFor('113 folded washes', () => washesOf(rows6), 'red -')
+  assert((await rowsWith(rows6, 'wash-top')) === '0' && (await rowsWith(rows6, 'wash-bottom')) === '0', '113 the folded row lost a rounded end')
+  await rows6.nth(0).locator('button.arrow').click()
+  await waitFor('113 unfolded washes', () => washesOf(rows6), 'red red -')
+  // Typing a link joins the blob above.
+  await showDay(dayKey(5), 'plain words')
+  await rows5.nth(5).locator('.content').click()
+  await page.locator('.cm-content').waitFor()
+  await kb.press('End')
+  await kb.type(' [[Tone 113]]')
+  await waitFor('113 typed row washed', async () => (await rows5.nth(5).getAttribute('data-wash')) === 'blue' && (await rowsWith(rows5, 'wash-bottom')) === '2,3,5', true)
+  assert(!(await rowsWith(rows5, 'wash-gap')).split(',').includes('5'), '113 the typed row starts a new blob')
+  await expectFile('113 typed link', journal113.replace('- plain words\n', '- plain words [[Tone 113]]\n'), day113)
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await day5.locator('[data-testid="day-title"]').click()
+  const dayRows = page.locator('.main .block[data-block-id]')
+  await waitFor('113 the day page shows the washes', () => washesOf(dayRows), 'red red red red blue blue')
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 113 journal blocks show their topic\'s wash, merge and follow typing')
+
+  // 114: "No color" removes the line; the journal's washes for the page go
+  await hueRow.click()
+  await waitFor('114 opens Hue 112', () => title.innerText(), 'Hue 112')
+  // A block selection stays while the swatch takes the focus and opens the picker by keyboard. Esc in the picker
+  // clears it today as well (reported with plan 1, task 8); this step does not pin either way.
+  const hueRows = page.locator('.main .block[data-block-id]')
+  await clickRow(hueRows.nth(0))
+  await page.locator('.cm-content').waitFor()
+  await clickRow(hueRows.nth(1), ['Shift'])
+  await waitFor('114 two blocks selected', () => page.locator('.block.selected').count(), 2)
+  await swatch.focus()
+  await kb.press('Enter')
+  await picker.waitFor()
+  assert((await page.locator('.block.selected').count()) === 2, '114 opening the picker cleared the selection')
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  await kb.press('Escape')
+  await waitFor('114 selection cleared', () => page.locator('.block.selected').count(), 0)
+  await swatch.click()
+  await picker.waitFor()
+  assert((await picker.locator('[data-testid="page-color-option"][data-current]').getAttribute('data-color')) === 'red', '114 red is not current')
+  await picker.locator('[data-testid="page-color-none"]').click()
+  await expectFile('114 no color removes the line', '- about hue\n\t- detail\n', hue112)
+  await page.locator('[data-testid="nav-journal"]').click()
+  await showDay(dayKey(5), 'plain words')
+  await waitFor('114 washes', () => washesOf(rows5), '- - - red blue blue')
+  console.log('PASS 114 removing a color clears the washes in the journal')
+
+  // 115: the picker by keyboard on a tag-only page; Esc writes nothing; a pick writes the page's file
+  writeFileSync(join(pagesDir, 'Tagged 115.md'), '- one #hue115\n')
+  const tag115 = side.locator('[data-row="t:hue115"]')
+  await tag115.waitFor({ timeout: 10_000 })
+  await tag115.click()
+  await waitFor('115 opens the tag', () => title.innerText(), 'hue115')
+  await swatch.focus()
+  const before115 = notesFiles()
+  await kb.press('Enter')
+  await picker.waitFor()
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  await waitFor('115 focus back on the swatch', focusedTestId, 'page-color')
+  assert(JSON.stringify(notesFiles()) === JSON.stringify(before115), '115 Esc wrote a notes file')
+  await kb.press('Enter')
+  await picker.waitFor()
+  // The focus starts on "No color" (index 25): up four rows to 5, right three to 8.
+  await waitFor('115 focus on "No color"', focusedTestId, 'page-color-none')
+  for (let i = 0; i < 4; i++) await kb.press('ArrowUp')
+  for (let i = 0; i < 3; i++) await kb.press('ArrowRight')
+  assert((await page.evaluate(() => document.activeElement?.getAttribute('data-color'))) === 'green', '115 the keys did not reach green')
+  await kb.press('Enter')
+  await expectFile('115 a tag-only page gets its file', 'color:: green\n', join(pagesDir, 'hue115.md'))
+  await waitFor('115 swatch green', () => swatch.getAttribute('data-color'), 'green')
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 115 the picker works by keyboard and a tag-only page gets a file with its color')
+
+  // 116: a right-click on a journal link colors its page; a link to a page that cannot take a color gets no menu;
+  // the journal file and the shown view stay as they are
+  const tone116 = join(pagesDir, 'Tone 113.md')
+  const day5b = await showDay(dayKey(5), 'plain words')
+  const rows116 = day5b.locator('.block[data-block-id]')
+  await waitFor('116 one blue blob', async () => `${await washesOf(rows116)} ${await rowsWith(rows116, 'wash-top')}`, '- - - red blue blue 3,4')
+  const journal116 = readAt(day113)
+  const url116 = page.url()
+  await rows116.nth(2).locator('a.link').first().click({ button: 'right' })
+  await frames()
+  assert((await page.locator('[data-testid="link-color"]').count()) === 0, '116 a day link got the color menu')
+  // A selection over a wash shows the selection colour.
+  await clickRow(rows116.nth(4))
+  await page.locator('.cm-content').waitFor()
+  await clickRow(rows116.nth(5), ['Shift'])
+  await waitFor('116 two blocks selected', () => day5b.locator('.block.selected').count(), 2)
+  const blueWash = await bgProbe('var(--pc-blue-wash)')
+  assert((await bgOf(rows116.nth(5))) !== blueWash, '116 the selection does not show over the wash')
+  await kb.press('Escape')
+  await waitFor('116 selection cleared', () => day5b.locator('.block.selected').count(), 0)
+  const toneLink = rows116.nth(4).locator('a.link', { hasText: 'Tone 113' })
+  await toneLink.click({ button: 'right' })
+  await linkMenu.waitFor()
+  const items116 = await linkMenu.locator('[role="menuitem"]').allInnerTexts()
+  assert(items116.length === 1 && (await page.locator('[data-testid="link-color"]').count()) === 1, `116 menu items: ${items116}`)
+  assert((await page.locator('[data-testid="link-color"]').innerText()).trim() === 'Color…', '116 the entry is not "Color…"')
+  await page.locator('[data-testid="link-color"]').click()
+  await picker.waitFor()
+  assert((await picker.locator('[data-testid="page-color-option"][data-current]').getAttribute('data-color')) === 'blue', '116 blue is not marked')
+  await option('green').click()
+  await expectFile('116 a pick from a link writes the page', 'color:: green\n- t\n', tone116)
+  await waitFor('116 green blob', async () => `${await washesOf(rows116)} ${await rowsWith(rows116, 'wash-top')} ${await rowsWith(rows116, 'wash-bottom')}`, '- - - red green green 3,4 3,5')
+  assert(readAt(day113) === journal116, '116 the journal file changed')
+  assert(page.url() === url116, `116 the webview navigated to ${page.url()}`)
+  assert(await feed.isVisible(), '116 the journal is no longer shown')
+  console.log('PASS 116 a right-click on a link colors its page from the journal')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
