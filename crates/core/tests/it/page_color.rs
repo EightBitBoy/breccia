@@ -460,3 +460,31 @@ fn journal_views_list_their_colorable_targets() {
         ]
     );
 }
+
+#[test]
+fn adding_and_removing_an_alias_updates_the_journal_days() {
+    let (t, mut s) = folder(&[
+        ("pages/Hiring.md", "color:: blue\n- h\n"),
+        ("journals/2026-10-29.md", "- meet [[Recruiting]]\n"),
+    ]);
+    let out = ok(&mut s, json!({"type": "page.get", "key": "2026-10-29"}), 0);
+    assert_eq!(pairs(&out.page.unwrap()), vec![None]);
+    put(
+        t.path(),
+        "pages/Hiring.md",
+        "---\naliases:\n  - Recruiting\n---\ncolor:: blue\n- h\n",
+    );
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": ["pages/Hiring.md"]}),
+        0,
+    );
+    assert_eq!(pairs(day(&out)), vec![p("hiring", "blue")]);
+    put(t.path(), "pages/Hiring.md", "color:: blue\n- h\n");
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": ["pages/Hiring.md"]}),
+        0,
+    );
+    assert_eq!(pairs(day(&out)), vec![None]);
+}
