@@ -68,7 +68,7 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 26. [ ] **Washes in the journal:** first-link rule, sub-blocks following their parent, merging of consecutive blocks,
    the gap between two pages of the same color, and that a day page looks the same as the feed.
 27. [ ] **Every theme:** the 25 colors and their washes in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
-   Windows modes); text, links and tags readable. Teal uses a 30 % wash instead of 34 %.
+   Windows modes); text, links and tags readable. Light and Taupe use a 28 % wash, Teal 30 %, the others 34 %.
 28. [ ] **The color names:** crimson, red, coral, orange, amber / yellow, olive, lime, green, emerald / teal, cyan,
    sky, blue, indigo / violet, purple, magenta, pink, rose / brown, tan, sand, slate, grey. They are written into
    files and cannot easily change later.
@@ -79,5 +79,5 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 31. [ ] **Color from a link in the journal:** right-click a link or tag in the feed and on a day page, choose
    "Color…" and pick; the linked page gets the color and the washes follow. An alias link colors the aliased page,
    a tag without a page gets its file, and links to days or to missing pages show no menu. Inside an open block
-   editor and on selected text the normal browser menu stays, so copy and paste keep working; say if you want the
+   editor, and on selected text that is not a link or tag, the normal browser menu stays, so copy and paste keep working; say if you want the
    color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.
