@@ -1,10 +1,16 @@
 import { describe, expect, test } from 'vitest'
 import {
+  CUSTOM,
   NO_COLOR,
   PAGE_COLORS,
   PAGE_COLOR_ROWS,
   colorLabel,
   colorPickerKey,
+  hueAt,
+  hueColor,
+  hueSliderKey,
+  indexColor,
+  parseHue,
   pickerStart,
   swatchKey,
   washRows,
@@ -48,7 +54,7 @@ describe('picker keys', () => {
     expect(colorPickerKey(k('ArrowRight'), 4)).toBe(5)
     expect(colorPickerKey(k('ArrowDown'), 22)).toBe(25)
     expect(colorPickerKey(k('ArrowUp'), 25)).toBe(20)
-    expect(colorPickerKey(k('ArrowDown'), 25)).toBe(25)
+    expect(colorPickerKey(k('ArrowDown'), 25)).toBe(CUSTOM)
     expect(colorPickerKey(k('ArrowRight'), 25)).toBe(25)
   })
   test('Home and End go to the row ends', () => {
@@ -135,4 +141,59 @@ test('a selected row shows its selection over a wash', () => {
     expect.arrayContaining(['.block.wash {', '.block.wash-top {', '.block.wash-bottom {', '.block.wash-gap {']),
   )
   for (const m of washRules) expect(m.index, m[0]).toBeLessThan(selection)
+})
+
+describe('hues', () => {
+  test('parseHue reads only what the core writes', () => {
+    expect(parseHue('hue 212')).toBe(212)
+    expect(parseHue('hue 0')).toBe(0)
+    expect(parseHue('hue 359')).toBe(359)
+    for (const bad of ['hue 360', 'hue 07', 'HUE 7', 'red', null]) expect(parseHue(bad)).toBeNull()
+  })
+  test('labels, start and index colors', () => {
+    expect(hueColor(7)).toBe('hue 7')
+    expect(colorLabel('hue 212')).toBe('Custom (hue 212)')
+    expect(pickerStart('hue 5')).toBe(CUSTOM)
+    expect(CUSTOM).toBe(26)
+    expect(indexColor(1, 9)).toBe('red')
+    expect(indexColor(NO_COLOR, 9)).toBeNull()
+    expect(indexColor(CUSTOM, 9)).toBe('hue 9')
+  })
+})
+
+describe('hue slider keys', () => {
+  test('arrows by 1, Page keys by 10, Home and End to the ends', () => {
+    expect(hueSliderKey(k('ArrowRight'), 100)).toBe(101)
+    expect(hueSliderKey(k('ArrowUp'), 100)).toBe(101)
+    expect(hueSliderKey(k('ArrowLeft'), 100)).toBe(99)
+    expect(hueSliderKey(k('ArrowDown'), 100)).toBe(99)
+    expect(hueSliderKey(k('PageUp'), 100)).toBe(110)
+    expect(hueSliderKey(k('PageDown'), 100)).toBe(90)
+    expect(hueSliderKey(k('Home'), 100)).toBe(0)
+    expect(hueSliderKey(k('End'), 100)).toBe(359)
+  })
+  test('clamped to 0..359', () => {
+    expect(hueSliderKey(k('PageUp'), 355)).toBe(359)
+    expect(hueSliderKey(k('PageDown'), 3)).toBe(0)
+    expect(hueSliderKey(k('ArrowLeft'), 0)).toBe(0)
+    expect(hueSliderKey(k('ArrowRight'), 359)).toBe(359)
+  })
+  test('Enter saves, Tab leaves, the rest does nothing', () => {
+    expect(hueSliderKey(k('Enter'), 100)).toBe('save')
+    expect(hueSliderKey(k('Tab'), 100)).toBe('leave')
+    expect(hueSliderKey(k('Tab', { shift: true }), 100)).toBe('leave')
+    expect(hueSliderKey(k('ArrowRight', { ctrl: true }), 100)).toBeNull()
+    expect(hueSliderKey(k('ArrowRight', { shift: true }), 100)).toBeNull()
+    expect(hueSliderKey(k('a'), 100)).toBeNull()
+    expect(hueSliderKey(k(' '), 100)).toBeNull()
+  })
+})
+
+test('hueAt maps a pointer position to a hue', () => {
+  expect(hueAt(0, 100)).toBe(0)
+  expect(hueAt(50, 100)).toBe(180)
+  expect(hueAt(100, 100)).toBe(359)
+  expect(hueAt(-20, 100)).toBe(0)
+  expect(hueAt(140, 100)).toBe(359)
+  expect(hueAt(10, 0)).toBe(0)
 })
