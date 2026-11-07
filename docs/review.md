@@ -60,3 +60,24 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 
 24. [ ] **Source code link in Settings:** Settings, About has a "Source code" row with the link
    github.com/EightBitBoy/breccia. A click opens it in your browser; the app window stays where it was.
+
+## Page colors
+
+25. [ ] **Swatch and picker:** the swatch's look with and without a color, the grid's order and marking of the current
+   color, keys, and that a pick writes only the `color::` line.
+26. [ ] **Washes in the journal:** first-link rule, sub-blocks following their parent, merging of consecutive blocks,
+   the gap between two pages of the same color, and that a day page looks the same as the feed.
+27. [ ] **Every theme:** the 25 colors and their washes in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
+   Windows modes); text, links and tags readable. Teal uses a 30 % wash instead of 34 %.
+28. [ ] **The color names:** crimson, red, coral, orange, amber / yellow, olive, lime, green, emerald / teal, cyan,
+   sky, blue, indigo / violet, purple, magenta, pink, rose / brown, tan, sand, slate, grey. They are written into
+   files and cannot easily change later.
+29. [ ] **Undo after a pick:** `Ctrl Z` right after a pick brings the old color back (or removes the line), redo puts
+   it back, and earlier typing on the page stays undoable. Undoing the first pick on a tag-only page leaves its
+   new file empty.
+30. [ ] **Tag-only page:** picking a color for a tag without a page writes `pages/<tag>.md` holding only the line.
+31. [ ] **Color from a link in the journal:** right-click a link or tag in the feed and on a day page, choose
+   "Color…" and pick; the linked page gets the color and the washes follow. An alias link colors the aliased page,
+   a tag without a page gets its file, and links to days or to missing pages show no menu. Inside an open block
+   editor and on selected text the normal browser menu stays, so copy and paste keep working; say if you want the
+   color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.

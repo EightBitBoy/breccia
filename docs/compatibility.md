@@ -3,7 +3,7 @@
 Breccia keeps notes as Markdown files in a folder, and so do Obsidian and Logseq. This page says how far the three
 agree, how to set Obsidian or Logseq up to open a Breccia folder, and what does not carry over.
 
-Breccia's side is described exactly in [the notes format](format.md) (format version 5); this page links to its sections
+Breccia's side is described exactly in [the notes format](format.md) (format version 6); this page links to its sections
 instead of repeating them. For the other two apps:
 
 - Statements about Obsidian were checked against Obsidian's help pages (obsidian.md/help) on 2026-10-31. The ones about
@@ -93,6 +93,10 @@ block links and embeds are not read yet.
 
 **Decision:** Breccia reads front matter as page-level text, reads `aliases` from it and otherwise leaves it untouched; reading `tags` and `title` may come later.
 
+Page colors use the same syntax: a `color:: <name>` line in the page's preamble ([§8](format.md#8-properties)). In Obsidian it is plain text (not verified). In Logseq a `key:: value` line before the first bullet is a page property, so it shows as one (not verified). Neither app colors anything with it.
+
+**Decision:** The color lives in the file as a name, so each app (and each theme) can decide how to show it.
+
 ### Tasks
 
 | Breccia | Obsidian | Logseq | What carries over |
@@ -137,7 +141,7 @@ What to expect:
 
 - Pages, journals and `[[links]]` work, including `[[x|y]]`, `[[x#heading]]` and links to days (`[[2026-10-29]]`).
 - Task keywords (`TODO`, `DONE`, …) are plain words; Obsidian's task features do not see them.
-- `done::`, `created::`, `priority::`, `archived::`, `title::` and other `key:: value` lines are text (not verified).
+- `done::`, `created::`, `priority::`, `archived::`, `title::`, `color::` and other `key:: value` lines are text (not verified).
 - `#[[two words]]` is no tag, and a page named by `title::` shows its file name. For pages Breccia creates, the
   alias block lets Obsidian resolve a link such as `[[Q&A: hiring]]` to that page (not verified for a typed link).
   Pages without an alias block (made by another app, or before format version 2) have none; a link to them by their
@@ -171,6 +175,7 @@ What to expect:
 - Logseq may add `id::` properties (when a block is referenced) and `collapsed:: true` (when a block is folded) to
   blocks (not verified). Breccia keeps them as text and does not need them ([§13](format.md#13-for-other-apps)).
 - `[[x|y]]` links are not read by Logseq (not verified).
+- A `color::` line before the first bullet shows as a page property; Logseq does not color the page with it (not verified).
 - Tasks in `TODO`, `DOING`, `WAITING` and `DONE` show as tasks in both apps; Breccia's `done::` lines show as block
   properties in Logseq (not verified).
 

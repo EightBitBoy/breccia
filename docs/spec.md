@@ -148,7 +148,7 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
 - **Task state.** A block is a task when its text starts with a configured state keyword followed by a space
   (`TODO …`). Only the keyword at the very start counts.
 - **Properties.** `key:: value` lines directly after the block's first line. Breccia itself writes only `created::`,
-  `done::`, `archived::` and `priority::` on blocks (`docs/format.md` §8), and `title::` on pages (§4); any other
+  `done::`, `archived::` and `priority::` on blocks (`docs/format.md` §8), and `title::` and `color::` on pages (§4, §8); any other
   properties are kept as they are and shown dimmed.
 - **Done date.** When a block enters a *finished* state (DONE or any state marked finished), Breccia adds
   `done:: [[YYYY-MM-DD]]` (today) if it is not there yet. When it leaves the finished states, Breccia removes the
@@ -241,6 +241,13 @@ reference shows the block with its children and a small breadcrumb of its parent
 Renaming a page (title or tree) renames the file and, after confirmation, **rewrites every link to it** in all files.
 *(my call; Logseq does the same)*
 
+**Page color.** Every page shows a swatch at the right of its title: an empty outline, or filled with the page's color.
+A click opens 25 colors in a 5 × 5 grid (reds and oranges, yellows and greens, teals and blues, violets and pinks,
+browns and greys) and "No color". A pick saves at once as `color:: <name>` (`docs/format.md` §8). Arrows, Home / End,
+Enter and Esc work in the picker. A tag-only page gets its file when a color is picked. Journal days have no swatch.
+A pick is its own undo step: `Ctrl Z` with the swatch focused (right after a pick) or while editing a block of the page
+takes it back, and earlier typing stays undoable.
+
 ### 7.4 Journal
 
 - One continuous, scrollable feed: **today at the top**, and scrolling down goes back in time day by day.
@@ -250,6 +257,15 @@ Renaming a page (title or tree) renames the file and, after confirmation, **rewr
 - Older days load as the user scrolls (virtualised), so years of notes stay fast.
 - Clicking a day's title opens that day as a normal page, with its linked references (e.g. tasks finished that day via
   `done::`). The feed itself shows no linked references, to stay compact.
+- **Page color washes.** Each top-level block gets a faint wash of the color of the first link or tag in it that goes to
+  a topic page with a color. Journal days and missing pages are skipped, aliases are followed, and sub-blocks follow
+  their parent. Consecutive blocks of the same color merge into one band; a small gap separates different pages. The
+  feed and a day page look the same. Washes follow edits after the typing pause and any change of a page's color, from
+  anywhere.
+- **Color from a link.** A right-click on a link or tag in a journal day opens a menu with "Color…", which opens the
+  same picker for the page the link goes to (aliases followed, tag-only pages included). Links to journal days and to
+  pages that do not exist get no menu. Inside an open block editor and on selected text the normal browser menu stays,
+  so copy and paste keep working.
 - **Jump to a date** through search (§7.8): typing a date (`12 Mar`, `12.3.`, `2026-03-12`, `yesterday`, …) offers "Go to ‹day›" first. A day with an entry (or today) opens the feed scrolled to that day. Any other day, past or future, opens as its day page with the "start writing…" placeholder; its file is created when the user types, and from then on the day is in the feed in its place. A date without a year means the most recent such day not after today.
 - **Date picker**: a calendar icon right of the sidebar's "Journal" entry, or `Ctrl Shift D` from anywhere (also while editing), opens a month below the icon. Weeks start on Monday; days with a journal file have a dot, today is outlined; it opens at the journal day shown, else at today. Arrows move by day and week, Page Up / Page Down by month, Home / End to the week's start and end, Enter or a click picks, Esc closes (the focus goes back where it was); ‹ › change the month and "Today" shows today. A picked day, past or future, jumps exactly as a typed date does (above): nothing is written until the user types.
 
@@ -392,7 +408,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 - The choice (or "System") is a setting of this computer (§4). Each theme is a token set on `[data-theme="…"]`; the
   window's title bar follows its light or dark.
 - Every colour in the UI comes from a token (CSS variable): backgrounds, sidebar, lines, text, muted text, accent, link,
-  tag, card, and one colour per task state. A theme is a set of token values. Switching applies instantly.
+  tag, card, one colour per task state, the 25 page colors (§7.3) and the strength of the page-color wash (§7.4). A theme is a set of token values. Switching applies instantly.
 - User-made themes (e.g. a `breccia/themes/*.css` file with token overrides) are later, but the token structure must
   allow them.
 
