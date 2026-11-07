@@ -44,3 +44,12 @@ Task 5: minor (deferred): preview font-size 15px/1.5 copied from body (app.css:7
 Task 5: minor (deferred): preview keeps the last hovered cell when the pointer moves into gaps or onto the preview box (PageColorGrid.svelte:281)
 Task 5: carried to Task 6: `hue` is seeded once (untrack); decide whether it follows `color` after a save with the picker open; picker opens with nothing focused for a saved hue until the slider exists
 Task 5: complete (commits e852776..42bd452, review clean)
+Task 6: dispatched (opus), BASE c841284
+Task 6: implementer DONE (b09ac49): e2e 154; slider hooks page-color-hue (role=slider, data-index=26, aria-valuenow/valuetext, data-current)
+- Ruling (implementer): the slider's hue follows a new saved hue except during a drag; a saved name/none leaves it — cost: none known.
+Task 6: concern: slider takes focus via a one-frame refocus after mount, guarded once any key/press reached the picker (bits-ui auto-focus otherwise lands on No color)
+Task 6: review approved (spec ✅; drag saves once incl. release outside / cancel; arrows only preview until Enter; focus workaround guarded); ⚠️ look in Teal/Dark and the link-menu picker -> Task 7 e2e + owner review
+Task 6: minor (deferred): focus relies on frame ordering vs bits-ui open auto-focus; sturdier: onOpenAutoFocus preventDefault in both hosts (PageColorGrid.svelte:125-132)
+Task 6: minor (deferred): thumb hangs 4 px outside the track at 0/359 (app.css:414-417); track 140 px vs grid 136 px
+Task 6: carried to Task 7: assert bytes for Enter (one write), a drag (exactly one write), Esc after arrows (no write)
+Task 6: complete (commits c841284..b09ac49, review clean)
