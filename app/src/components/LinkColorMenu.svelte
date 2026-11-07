@@ -71,7 +71,7 @@
   <ContextMenu.Portal>
     <ContextMenu.Content
       class="menu"
-      data-testid="link-menu"
+      data-testid="link-color-menu"
       onCloseAutoFocus={(e) => {
         e.preventDefault()
         if (!pending) return
