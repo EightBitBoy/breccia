@@ -101,3 +101,10 @@ Task 10: review approved (spec ✅; screenshots.mjs tray:exit change judged just
 Task 10: minor (deferred): screenshots.mjs:109 .catch swallows an emit failure (ends as "did not close")
 Task 10: complete (commits bf33b6a..dbb12a5, review clean)
 All tasks complete. Final review next (opus), range 152f95c..HEAD.
+Final review (opus): ready to merge with fixes; 1 Important (spec.md:262 says same color merges, design/code say same page). Fix-now minors: duplicate link-menu test id; "no menu" wording vs native menu on selection; no alias re-send test. Resolved deferred minors: Task 4 drift (both sides tested against the format.md fence), Task 5 System dark (theme.test.ts:29-30).
+- Ruling: include the Escape-clears-selection fix (stopPropagation in the picker) in the fix wave although the reviewer called it a follow-up — it is a user-visible bug with a cheap fix, and an e2e assertion can pin it — cost if wrong: one extra fix commit.
+- Ruling: include the README feature-list line in the fix wave — the repo is public and the README is the first thing people see — cost: none.
+Final fix wave dispatched (opus), FIX_BASE bbd0dc5
+Final fix wave: DONE (b0e8bbd, 8ff177e, 07fba0c, d8fc898, c8964ee); just test/lint green, e2e 154; picker grid now closes on Esc itself and swallows bubble-phase keys while focused
+Final re-review (opus): all 5 findings addressed, no new Critical/Important. Minor: no review.md item for the Escape fix -> added as item 33 by the controller.
+Finish: controller ran just test (Vitest 866, core 704 + 41 + 49), just lint clean, just e2e 154 PASS, 0 FAIL. Follow-ups doc written; STATUS updated. Plan 1 done.

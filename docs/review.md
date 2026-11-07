@@ -83,3 +83,5 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    page), the normal browser menu stays, so copy and paste keep working; say if you want the color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.
 32. [ ] **Demo and README:** the demo pages Q&A: hiring, Release 2, on call and Project X have colors, the
    2026-10-29 journal has one new block, and the README journal screenshot shows the washes.
+33. [ ] **Escape in the color picker:** select a few blocks, open a page's color picker with the keyboard (focus the
+   swatch, Enter) and press Escape: the picker closes and the blocks stay selected.
