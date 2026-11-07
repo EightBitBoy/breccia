@@ -379,19 +379,8 @@ fn deleting_a_page_removes_the_wash_of_a_heading_link() {
 fn opening_a_folder_sends_no_stale_journals() {
     let (_t, mut s) = topics_folder();
     let other = tempfile::tempdir().unwrap();
-    put(
-        other.path(),
-        "pages/Other.md",
-        "color:: red
-- o
-",
-    );
-    put(
-        other.path(),
-        "journals/2026-10-29.md",
-        "- [[Other]]
-",
-    );
+    put(other.path(), "pages/Other.md", "color:: red\n- o\n");
+    put(other.path(), "journals/2026-10-29.md", "- [[Other]]\n");
     let out = ok(
         &mut s,
         json!({"type": "folder.open", "path": other.path()}),

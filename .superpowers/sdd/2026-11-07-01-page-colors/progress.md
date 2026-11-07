@@ -33,3 +33,10 @@ Task 2: review approved (spec ✅); ⚠️ blank-fileless save/undo path resolve
 Task 2: minor (deferred): view.rs:152-155 and pages.rs:235-241 repeat the journal->None / page->page_color match; share a helper
 Task 2: minor (deferred): page_color.rs:402-403 null pick on "other" would pass even if null did nothing
 Task 2: complete (commits 37a0fe0..8561ff0, review clean)
+- Plan amended (Task 11 added, Task 7 extracts PageColorGrid.svelte, Task 8 step 116, e2e count 154, review items renumbered; Task 10 demo item is 32). Plan writer's call: undo of a pick made from a link is on the linked page, not in the journal.
+Task 3: dispatched (sonnet), BASE 556f8ec
+Task 3: implementer DONE_WITH_CONCERNS (f6df5bc): relaxed rename_reports_links_it_cannot_write; 2 guard tests green before impl; block.setText scale noisy (5.2 -> 6.0-14.1 ms, budget 16)
+Task 3: review Needs fixes (spec ✅): Important guard test opening_a_folder_sends_no_stale_journals cannot fail; ⚠️ block.setText scale confirmed as gap (brief: >20 % median must be fixed) -> fix round 1 (resume implementer)
+Task 3: minor (deferred): rename.rs:830 relaxed assertion vacuous if changed is empty; tighten to keys == ["2026-10-29"]
+Task 3: minor (deferred): no test for the recompute_aliases path (alias added/removed on a coloured page recolours #alias blocks), names.rs:595-600
+Task 3: minor (deferred): PageView::of parses inline::links for every top-level block of a journal per keystroke (view.rs:331); index_page allocates colors.insert per coloured page (names.rs:542)
