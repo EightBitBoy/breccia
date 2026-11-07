@@ -1,4 +1,4 @@
-# Breccia notes format, version 6
+# Breccia notes format, version 7
 
 ## 1. About this document
 
@@ -20,7 +20,7 @@ line, with strings written in Rust's debug form (`\n` is a line break inside a b
 - `preamble "…"`: the page-level text before the first block, without the front matter (only when there is some);
 - `front-matter N lines`: the file starts with front matter of N lines, both `---` lines included;
 - `title "…"`: the page name the `title::` line gives;
-- `color "…"`: the page color the `color::` line gives (section 8);
+- `color "…"`: the page color the `color::` line gives, a name or `hue <h>` (section 8);
 - `alias "…"`: an alias the front matter gives (section 4);
 - one line per block: its depth (0 is the top level), its task state or `-`, and its text;
 - under a block, indented: each `link` (with `shown "…"` when it has its own shown text) and `tag` in text order, each
@@ -598,10 +598,14 @@ title "Q&A: hiring"
 ```
 
 **Page color (`color::`).** The first preamble property line with the key `color` (ASCII case ignored) whose value is
-one of the names below (case ignored) gives the page its color. Lines inside front matter and a `color` key in YAML do
-not count. Other values are no color and are kept as written. In journals `color::` is not read. Breccia writes the name
-in lower case: choosing a color replaces the first `color::` line or adds one, and "no color" removes every `color::`
-line. What the color does in the app is described in [`docs/spec.md`](spec.md) section 7.4. The names, row by row:
+one of the names below (case ignored), or a custom hue, gives the page its color. A custom hue is `hue <h>`: the word
+`hue` (case ignored), whitespace, and a whole number `<h>` from 0 to 359 (leading zeros allowed), an angle on the color
+wheel. Breccia writes `hue <h>` in lower case with one space and no leading zeros. Lines inside front matter and a
+`color` key in YAML do not count. Other values (`hue 360`, `hue 12.5`, `hue x`) are no color and are kept as written. In
+journals `color::` is not read. Breccia writes a name in lower case: choosing a color replaces the first `color::` line
+or adds one, and "no color" removes every `color::` line. What the color does in the app is described in
+[`docs/spec.md`](spec.md) section 7.4, and how a hue becomes a color in each theme is the app's business (section 7.3
+and 7.10). The names, row by row:
 
 ```text page-colors
 crimson red coral orange amber
@@ -636,6 +640,17 @@ color:: banana
 ```text reads
 preamble "color:: banana\n"
 front-matter 3 lines
+0 - "a"
+```
+
+```markdown example
+Color:: HUE 0212
+- a
+```
+
+```text reads
+preamble "Color:: HUE 0212\n"
+color "hue 212"
 0 - "a"
 ```
 
@@ -681,6 +696,39 @@ color:: red
 
 ```markdown after-none
 title:: x
+- a
+```
+
+```markdown before
+- a
+```
+
+```markdown after-hue-212
+color:: hue 212
+- a
+```
+
+```markdown before
+color:: red
+notes
+- a
+```
+
+```markdown after-hue-7
+color:: hue 7
+notes
+- a
+```
+
+```markdown before
+title:: x
+color:: hue 360
+- a
+```
+
+```markdown after-teal
+title:: x
+color:: teal
 - a
 ```
 
@@ -961,7 +1009,7 @@ To work well with Breccia on the same folder:
   use them. It keeps them as text if they are there.
 - When you rename a page file, keep its `title::` line, or add one when the new file name differs from the page name,
   and keep Breccia's alias block (or the `aliases` entry that names the page).
-- Keep a page's `color::` line; write one only with a name from section 8.
+- Keep a page's `color::` line; write one only with a name or a `hue <h>` from section 8.
 - Leave the comments and unknown keys in `breccia/config.toml` alone.
 - Write files atomically (write a temporary file, then rename it), so Breccia never reads half a file.
 
@@ -998,3 +1046,6 @@ To work well with Breccia on the same folder:
 
 - **Version 6**: a `color::` line in a page's preamble gives the page a color (section 8), which journal days show
   behind the blocks that link to it. Before, it was plain page-level text.
+
+- **Version 7**: a `color::` line may hold a custom hue, `hue <h>` (section 8). Before, such a value was no color and
+  was kept as text; older Breccia versions still read it that way.

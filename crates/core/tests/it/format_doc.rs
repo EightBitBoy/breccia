@@ -7,11 +7,11 @@
 //! - ```` ```text file-names ```` holds `name → stem` lines for `file_stem_for`;
 //! - ```` ```text page-colors ```` is `PAGE_COLORS`, five to a line;
 //! - a ```` ```markdown before ```` fence is followed by a ```` ```markdown after-<name> ````
-//!   fence (`<name>` a page color or `none`): the `after` text is the `before` text with
-//!   its preamble recolored with that color.
+//!   fence (`<name>` a page color, `hue-<h>` or `none`): the `after` text is the `before`
+//!   text with its preamble recolored with that color.
 
 use breccia_core::aliases::aliases;
-use breccia_core::color::{PAGE_COLORS, page_color, recolor};
+use breccia_core::color::{PAGE_COLORS, PageColor, page_color, parse_color, recolor};
 use breccia_core::config::PALETTE;
 use breccia_core::inline::{LinkKind, links, properties, title_line};
 use breccia_core::naming::file_stem_for;
@@ -256,6 +256,7 @@ fn format_doc_recolor_examples() {
     let fences = fences(&doc());
     let mut failures = Vec::new();
     let mut pairs = 0;
+    let mut hue_pairs = 0;
     for (i, f) in fences.iter().enumerate() {
         if f.info != "markdown before" {
             continue;
@@ -268,9 +269,14 @@ fn format_doc_recolor_examples() {
             continue;
         };
         pairs += 1;
+        if name.starts_with("hue-") {
+            hue_pairs += 1;
+        }
+        let hue = hue_value(name);
         let color = match name {
             "none" => None,
             n if PAGE_COLORS.contains(&n) => Some(n),
+            _ if hue.is_some() => hue.as_deref(),
             n => {
                 failures.push(format!("line {}: unknown color {n:?}", after.line));
                 continue;
@@ -294,7 +300,18 @@ fn format_doc_recolor_examples() {
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
-    assert!(pairs >= 4, "only {pairs} recolor pairs, want at least 4");
+    assert!(pairs >= 6, "only {pairs} recolor pairs, want at least 6");
+    assert!(
+        hue_pairs >= 2,
+        "only {hue_pairs} hue recolor pairs, want at least 2"
+    );
+}
+
+/// `hue-<h>` as the value `hue <h>`, when `<h>` is a canonical hue (no leading zeros).
+fn hue_value(name: &str) -> Option<String> {
+    let h = name.strip_prefix("hue-")?;
+    let value = format!("hue {h}");
+    matches!(parse_color(&value), Some(PageColor::Hue(n)) if n.to_string() == h).then_some(value)
 }
 
 const KNOWN_PAIRS: [&str; 7] = [
@@ -307,10 +324,10 @@ const KNOWN_PAIRS: [&str; 7] = [
     "text file-names",
 ];
 
-/// `markdown after-<x>` with `<x>` a page color or `none`.
+/// `markdown after-<x>` with `<x>` a page color, `hue-<h>` or `none`.
 fn is_after(info: &str) -> bool {
     info.strip_prefix("markdown after-")
-        .is_some_and(|x| x == "none" || PAGE_COLORS.contains(&x))
+        .is_some_and(|x| x == "none" || PAGE_COLORS.contains(&x) || hue_value(x).is_some())
 }
 
 /// Lines of fences whose info string has two words but is not a known pair.
@@ -327,12 +344,18 @@ fn unknown_pairs(fences: &[Fence]) -> Vec<String> {
 fn format_doc_fence_info_strings_are_known() {
     let bad = unknown_pairs(&fences(&doc()));
     assert!(bad.is_empty(), "{}", bad.join("\n"));
-    let sample = fences("```text raeds\nx\n```\n```markdown after-banana\nx\n```\n");
+    let sample = fences(
+        "```text raeds\nx\n```\n```markdown after-banana\nx\n```\n\
+         ```markdown after-hue-212\nx\n```\n```markdown after-hue-360\nx\n```\n\
+         ```markdown after-hue-07\nx\n```\n",
+    );
     assert_eq!(
         unknown_pairs(&sample),
         [
             "line 1: unknown fence info \"text raeds\"",
-            "line 4: unknown fence info \"markdown after-banana\""
+            "line 4: unknown fence info \"markdown after-banana\"",
+            "line 10: unknown fence info \"markdown after-hue-360\"",
+            "line 13: unknown fence info \"markdown after-hue-07\""
         ]
     );
 }
