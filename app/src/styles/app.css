@@ -129,6 +129,13 @@ a.ext { color: var(--link); }
 .editor-slot .cm-line { padding: 0 8px; }
 .editor-slot .cm-dim { color: var(--muted); }
 
+/* ---------- page color washes (journal only); before the selection rule, so a selection shows over them ---------- */
+.block.wash { background: var(--wash); padding-right: 8px; }
+.block.wash-top { border-top-left-radius: 8px; border-top-right-radius: 8px; padding-top: 4px; }
+.block.wash-bottom { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; padding-bottom: 4px; }
+.block.wash-gap { margin-top: 6px; }
+.block.wash .editor-slot { --editor-bg: transparent; }
+
 /* ---------- multi-select and the caret menus ---------- */
 .block.selected { background: var(--hover); outline: 1px solid var(--accent); border-radius: 4px; }
 .slash-menu {

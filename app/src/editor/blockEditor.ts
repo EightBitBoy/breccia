@@ -47,7 +47,7 @@ const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator
 
 /** Colours from the tokens; a theme beats CodeMirror's base theme, plain CSS does not. */
 const theme = EditorView.theme({
-  '&': { color: 'var(--text)', backgroundColor: 'var(--edit)' },
+  '&': { color: 'var(--text)', backgroundColor: 'var(--editor-bg, var(--edit))' },
   '.cm-content': { caretColor: 'var(--text)' },
   '.cm-cursor, .cm-dropCursor': { borderLeftColor: 'var(--text)' },
   '.cm-selectionBackground': { backgroundColor: 'var(--hover)' },

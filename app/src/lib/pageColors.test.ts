@@ -9,6 +9,7 @@ import {
   swatchKey,
   washRows,
 } from './pageColors'
+import appCss from '../styles/app.css?raw'
 
 const k = (key: string, over: Partial<{ shift: boolean; alt: boolean; ctrl: boolean; meta: boolean }> = {}) => ({
   key,
@@ -123,4 +124,15 @@ describe('washRows', () => {
   test('a topic without a color is not washed', () => {
     expect(washRows([r('p')])).toEqual([null])
   })
+})
+
+test('a selected row shows its selection over a wash', () => {
+  // Same specificity, so the rule that comes later wins: every wash rule must come before the selection rule.
+  const selection = appCss.indexOf('.block.selected {')
+  const washRules = [...appCss.matchAll(/\.block\.wash[\w-]*[^{]*\{/g)]
+  expect(selection).toBeGreaterThan(0)
+  expect(washRules.map((m) => m[0])).toEqual(
+    expect.arrayContaining(['.block.wash {', '.block.wash-top {', '.block.wash-bottom {', '.block.wash-gap {']),
+  )
+  for (const m of washRules) expect(m.index, m[0]).toBeLessThan(selection)
 })

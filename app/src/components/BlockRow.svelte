@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { BlockView } from '../lib/types'
+  import type { RowWash } from '../lib/pageColors'
 
   let {
     block,
@@ -7,6 +8,7 @@
     selected,
     folded,
     flash = false,
+    wash = null,
     onedit,
     ontoggle,
   }: {
@@ -16,13 +18,28 @@
     folded: boolean
     /** Highlighted briefly (the jump from a card). */
     flash?: boolean
+    /** The row's part of a page color wash (journal only). */
+    wash?: RowWash | null
     /** A click on the rendered block; `shift` extends a selection. */
     onedit: (id: number, shift: boolean) => void
     ontoggle: (id: number) => void
   } = $props()
 </script>
 
-<div class="block" class:editing class:selected class:flash data-block-id={block.id} style:--depth={block.depth}>
+<div
+  class="block"
+  class:editing
+  class:selected
+  class:flash
+  class:wash={wash !== null}
+  class:wash-top={wash?.top}
+  class:wash-bottom={wash?.bottom}
+  class:wash-gap={wash?.gap}
+  data-block-id={block.id}
+  data-wash={wash?.color}
+  style:--depth={block.depth}
+  style:--wash={wash ? `var(--pc-${wash.color}-wash)` : undefined}
+>
   <span class="fold">
     {#if block.hasChildren}
       <button

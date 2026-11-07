@@ -2,6 +2,7 @@
   import type { BlockView } from '../lib/types'
   import { visible } from '../lib/tree'
   import { emptyPageText } from '../lib/emptyPage'
+  import { washRows } from '../lib/pageColors'
   import BlockRow from './BlockRow.svelte'
 
   let {
@@ -31,19 +32,22 @@
   } = $props()
 
   const shown = $derived(visible(blocks, folded))
+  /** Page color washes over the shown rows; only journal blocks have a topic, so other pages get none. */
+  const washes = $derived(washRows(shown))
 </script>
 
 {#if blocks.length === 0}
   <button class="start" data-testid="start-writing" onclick={onstart}>{emptyPageText(hasFile)}</button>
 {:else}
   <div class="outline">
-    {#each shown as b (b.id)}
+    {#each shown as b, i (b.id)}
       <BlockRow
         block={b}
         editing={b.id === editingId}
         selected={selected.includes(b.id)}
         folded={folded.has(b.id)}
         flash={b.id === flash}
+        wash={washes[i]}
         {onedit}
         {ontoggle}
       />
