@@ -457,7 +457,8 @@ pub fn card_html(text: &str, cfg: &Config) -> String {
 }
 
 /// HTML for a page preamble: Markdown and links only; the line that names
-/// the page (`inline::title_line`) is hidden.
+/// the page (`inline::title_line`) and the line that colors it
+/// (`color::color_line`) are hidden.
 pub fn preamble_html(text: &str) -> String {
     let text = &clean(text);
     let (front, text) = text.split_at(front_matter_len(text).unwrap_or(0));
@@ -470,11 +471,14 @@ pub fn preamble_html(text: &str) -> String {
             esc(shown)
         ));
     }
-    let hidden = inline::title_line(text).map(|(i, _)| i);
+    let hidden = [
+        inline::title_line(text).map(|(i, _)| i),
+        crate::color::color_line(text).map(|(i, _)| i),
+    ];
     let kept: Vec<&str> = text
         .split('\n')
         .enumerate()
-        .filter(|(i, _)| Some(*i) != hidden)
+        .filter(|(i, _)| !hidden.contains(&Some(*i)))
         .map(|(_, l)| l)
         .collect();
     let mut slots = Slots::default();

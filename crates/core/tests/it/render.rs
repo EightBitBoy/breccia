@@ -308,3 +308,12 @@ fn a_bare_url_next_to_page_links_and_tags() {
     let html = h("https://e.com/a#frag");
     assert!(!html.contains("class=\"tag\""), "{html}");
 }
+
+#[test]
+fn preamble_html_hides_the_color_line() {
+    use breccia_core::render::preamble_html;
+    let h = preamble_html("color:: red\nnote\n");
+    assert!(!h.contains("color::") && h.contains("note"), "{h}");
+    assert_eq!(preamble_html("title:: t\ncolor:: red\n"), "");
+    assert!(preamble_html("color:: banana\n").contains("banana"));
+}

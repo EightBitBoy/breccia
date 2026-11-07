@@ -4,9 +4,14 @@
 //!   fence after it must equal [`describe`] of that file;
 //! - ```` ```toml default-config ```` is `Config::default_toml()`;
 //! - ```` ```text colours ```` is `PALETTE` joined by spaces;
-//! - ```` ```text file-names ```` holds `name → stem` lines for `file_stem_for`.
+//! - ```` ```text file-names ```` holds `name → stem` lines for `file_stem_for`;
+//! - ```` ```text page-colors ```` is `PAGE_COLORS`, five to a line;
+//! - a ```` ```markdown before ```` fence is followed by a ```` ```markdown after-<name> ````
+//!   fence (`<name>` a page color or `none`): the `after` text is the `before` text with
+//!   its preamble recolored with that color.
 
 use breccia_core::aliases::aliases;
+use breccia_core::color::{PAGE_COLORS, page_color, recolor};
 use breccia_core::config::PALETTE;
 use breccia_core::inline::{LinkKind, links, properties, title_line};
 use breccia_core::naming::file_stem_for;
@@ -86,6 +91,9 @@ fn describe(src: &str) -> String {
     }
     if let Some((_, title)) = title_line(pre) {
         out += &format!("title {title:?}\n");
+    }
+    if let Some(color) = page_color(pre) {
+        out += &format!("color {color:?}\n");
     }
     for alias in aliases(pre) {
         out += &format!("alias {alias:?}\n");
@@ -225,7 +233,73 @@ fn format_doc_file_names() {
     assert!(count >= 6, "only {count} file-name lines, want at least 6");
 }
 
-const KNOWN_PAIRS: [&str; 5] = [
+#[test]
+fn format_doc_page_colors() {
+    let fences = fences(&doc());
+    let found = with_info(&fences, "text page-colors");
+    assert_eq!(found.len(), 1, "want one `text page-colors` fence");
+    let want = PAGE_COLORS
+        .chunks(5)
+        .map(|r| r.join(" "))
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert_eq!(
+        found[0].body.trim_end_matches('\n'),
+        want,
+        "line {}: the page colors differ",
+        found[0].line
+    );
+}
+
+#[test]
+fn format_doc_recolor_examples() {
+    let fences = fences(&doc());
+    let mut failures = Vec::new();
+    let mut pairs = 0;
+    for (i, f) in fences.iter().enumerate() {
+        if f.info != "markdown before" {
+            continue;
+        }
+        let Some((after, name)) = fences
+            .get(i + 1)
+            .and_then(|a| a.info.strip_prefix("markdown after-").map(|name| (a, name)))
+        else {
+            failures.push(format!("line {}: `before` has no `after-…` fence", f.line));
+            continue;
+        };
+        pairs += 1;
+        let color = match name {
+            "none" => None,
+            n if PAGE_COLORS.contains(&n) => Some(n),
+            n => {
+                failures.push(format!("line {}: unknown color {n:?}", after.line));
+                continue;
+            }
+        };
+        for fence in [f, after] {
+            let rendered = parse(&fence.body, &mut IdGen::new()).render();
+            if rendered != fence.body {
+                failures.push(format!("line {}: does not round-trip", fence.line));
+            }
+        }
+        let doc = parse(&f.body, &mut IdGen::new());
+        let pre = doc.preamble();
+        let rest = doc.render().strip_prefix(pre).unwrap().to_string();
+        let got = format!("{}{rest}", recolor(pre, color, doc.line_ending()));
+        if got != after.body {
+            failures.push(format!(
+                "line {}: recolor to {name} gives {got:?}, documented {:?}",
+                f.line, after.body
+            ));
+        }
+    }
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+    assert!(pairs >= 4, "only {pairs} recolor pairs, want at least 4");
+}
+
+const KNOWN_PAIRS: [&str; 7] = [
+    "text page-colors",
+    "markdown before",
     "markdown example",
     "text reads",
     "toml default-config",
@@ -233,12 +307,18 @@ const KNOWN_PAIRS: [&str; 5] = [
     "text file-names",
 ];
 
+/// `markdown after-<x>` with `<x>` a page color or `none`.
+fn is_after(info: &str) -> bool {
+    info.strip_prefix("markdown after-")
+        .is_some_and(|x| x == "none" || PAGE_COLORS.contains(&x))
+}
+
 /// Lines of fences whose info string has two words but is not a known pair.
 fn unknown_pairs(fences: &[Fence]) -> Vec<String> {
     fences
         .iter()
         .filter(|f| f.info.split_whitespace().count() == 2)
-        .filter(|f| !KNOWN_PAIRS.contains(&f.info.as_str()))
+        .filter(|f| !KNOWN_PAIRS.contains(&f.info.as_str()) && !is_after(&f.info))
         .map(|f| format!("line {}: unknown fence info {:?}", f.line, f.info))
         .collect()
 }
@@ -247,9 +327,12 @@ fn unknown_pairs(fences: &[Fence]) -> Vec<String> {
 fn format_doc_fence_info_strings_are_known() {
     let bad = unknown_pairs(&fences(&doc()));
     assert!(bad.is_empty(), "{}", bad.join("\n"));
-    let sample = fences("```text raeds\nx\n```\n");
+    let sample = fences("```text raeds\nx\n```\n```markdown after-banana\nx\n```\n");
     assert_eq!(
         unknown_pairs(&sample),
-        ["line 1: unknown fence info \"text raeds\""]
+        [
+            "line 1: unknown fence info \"text raeds\"",
+            "line 4: unknown fence info \"markdown after-banana\""
+        ]
     );
 }

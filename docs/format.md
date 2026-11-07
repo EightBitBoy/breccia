@@ -1,4 +1,4 @@
-# Breccia notes format, version 5
+# Breccia notes format, version 6
 
 ## 1. About this document
 
@@ -20,6 +20,7 @@ line, with strings written in Rust's debug form (`\n` is a line break inside a b
 - `preamble "…"`: the page-level text before the first block, without the front matter (only when there is some);
 - `front-matter N lines`: the file starts with front matter of N lines, both `---` lines included;
 - `title "…"`: the page name the `title::` line gives;
+- `color "…"`: the page color the `color::` line gives (section 8);
 - `alias "…"`: an alias the front matter gives (section 4);
 - one line per block: its depth (0 is the top level), its task state or `-`, and its text;
 - under a block, indented: each `link` (with `shown "…"` when it has its own shown text) and `tag` in text order, each
@@ -341,7 +342,7 @@ A fence that is never closed runs to the end of the file:
 ### The preamble and front matter
 
 The lines before the first bullet line are the preamble: page-level text that belongs to no block. A preamble may hold
-`title::` (section 4), other text, and front matter.
+`title::` (section 4), `color::` (section 8), other text, and front matter.
 
 The file starts with **front matter** (Obsidian's properties, in YAML) when:
 
@@ -355,7 +356,8 @@ lines, fence lines or `title::` lines, so an indented YAML list (`  - item`, as 
 Breccia shows it as read-only text and reads one value from it, `aliases` (section 4). It never changes it (apart from
 line endings, section 3), with two exceptions: when a page is renamed, a `[[link]]` to it inside front matter is
 rewritten like any other (section 7), and a rename replaces or removes Breccia's own alias block (section 4). A
-`title::` line that Breccia adds goes after the front matter.
+`title::` line that Breccia adds goes after the front matter, and so does a `color::` line it adds when the page has no
+`title::` line (it goes after the `title::` line when there is one).
 
 ```markdown example
 ---
@@ -426,7 +428,7 @@ preamble "---\n\nSome text\n---\n"
 ### What Breccia writes
 
 Apart from line endings (section 3), Breccia keeps the bytes of every block it did not change exactly as read. It
-changes the preamble only to set or remove `title::`, to write, replace or remove its own alias block (section 4) and to
+changes the preamble only to set or remove `title::`, to set or remove `color::`, to write, replace or remove its own alias block (section 4) and to
 rewrite links on a rename (section 7). A block
 it changed (its text, its state or its depth) is written in this form:
 
@@ -546,9 +548,9 @@ the line or a space and the value. The value is trimmed. Only the first `::` spl
 A block's properties are the property lines directly after its first line (in its text, so after the continuation
 prefix is removed). The first line that is not a property line ends them; property lines after it are plain text.
 Keys keep their case. Breccia itself writes only `created::`, `done::`, `archived::` and `priority::` on blocks
-(sections 9 and 10) and `title::` in the preamble (section 4); it keeps every other property as it is. The `created`,
-`done`, `archived` and `priority` keys are matched exactly: `Done::` and `DONE::` are plain properties. Only `title::` is matched ignoring
-case (section 4).
+(sections 9 and 10) and `title::` and `color::` in the preamble (sections 4 and 8); it keeps every other property as it is. The `created`,
+`done`, `archived` and `priority` keys are matched exactly: `Done::` and `DONE::` are plain properties. Only `title::` and `color::` are matched ignoring
+case (sections 4 and 8).
 
 ```markdown example
 - Meeting
@@ -567,8 +569,8 @@ case (section 4).
   property "empty" ""
 ```
 
-**Preamble properties.** Property lines in the preamble are page-level text. Breccia reads only `title::` from them
-(section 4) and shows the others as text.
+**Preamble properties.** Property lines in the preamble are page-level text. Breccia reads only `title::` and `color::` from
+them (sections 4 and 8) and shows the others as text.
 
 ```markdown example
 TITLE::
@@ -593,6 +595,93 @@ title "Q&A: hiring"
   property "owner" "[[Anna]]"
   property "done" "[[2026-10-28]]"
   done 2026-10-28
+```
+
+**Page color (`color::`).** The first preamble property line with the key `color` (ASCII case ignored) whose value is
+one of the names below (case ignored) gives the page its color. Lines inside front matter and a `color` key in YAML do
+not count. Other values are no color and are kept as written. In journals `color::` is not read. Breccia writes the name
+in lower case: choosing a color replaces the first `color::` line or adds one, and "no color" removes every `color::`
+line. What the color does in the app is described in [`docs/spec.md`](spec.md) section 7.4. The names, row by row:
+
+```text page-colors
+crimson red coral orange amber
+yellow olive lime green emerald
+teal cyan sky blue indigo
+violet purple magenta pink rose
+brown tan sand slate grey
+```
+
+```markdown example
+title:: Garden
+Color:: Green
+color:: blue
+- a
+```
+
+```text reads
+preamble "title:: Garden\nColor:: Green\ncolor:: blue\n"
+title "Garden"
+color "green"
+0 - "a"
+```
+
+```markdown example
+---
+color: red
+---
+color:: banana
+- a
+```
+
+```text reads
+preamble "color:: banana\n"
+front-matter 3 lines
+0 - "a"
+```
+
+Setting a color on a page changes only its preamble:
+
+```markdown before
+- a
+```
+
+```markdown after-red
+color:: red
+- a
+```
+
+```markdown before
+title:: Q&A: hiring
+- a
+```
+
+```markdown after-teal
+title:: Q&A: hiring
+color:: teal
+- a
+```
+
+```markdown before
+color:: banana
+notes
+- a
+```
+
+```markdown after-blue
+color:: blue
+notes
+- a
+```
+
+```markdown before
+title:: x
+color:: red
+- a
+```
+
+```markdown after-none
+title:: x
+- a
 ```
 
 **`created::`.** When a task got its state: the first `created::` property, written by Breccia as
@@ -865,13 +954,14 @@ again, and the settings go back to their defaults.
 
 To work well with Breccia on the same folder:
 
-- Keep text you do not understand exactly as it is, including properties, `title::` lines, front matter, blank lines
+- Keep text you do not understand exactly as it is, including properties, `title::` lines, `color::` lines, front matter, blank lines
   and indentation.
 - Write UTF-8 with LF line endings.
 - Do not write block ids (such as Logseq's `id::` properties) into files for Breccia's sake; Breccia does not need or
   use them. It keeps them as text if they are there.
 - When you rename a page file, keep its `title::` line, or add one when the new file name differs from the page name,
   and keep Breccia's alias block (or the `aliases` entry that names the page).
+- Keep a page's `color::` line; write one only with a name from section 8.
 - Leave the comments and unknown keys in `breccia/config.toml` alone.
 - Write files atomically (write a temporary file, then rename it), so Breccia never reads half a file.
 
@@ -905,3 +995,6 @@ To work well with Breccia on the same folder:
 - **Version 5**: a `created::` property records when a task got its state (sections 8 and 9): giving a
   block a state adds it, also when the keyword is typed by hand, and removing the state removes it. Tasks that have none
   are left as they are. Before, `created::` was a plain property.
+
+- **Version 6**: a `color::` line in a page's preamble gives the page a color (section 8), which journal days show
+  behind the blocks that link to it. Before, it was plain page-level text.

@@ -5,6 +5,7 @@ mod aliases;
 mod auto_archive;
 mod backlinks;
 mod board;
+mod color;
 mod config;
 mod dates;
 mod demo;
