@@ -6,15 +6,29 @@
   // there stays: Esc, Tab or Delete are the picker's own. That also keeps the keys from the popover's own handlers, so
   // the grid closes on Esc itself, and Tab stays put (the grid has one tab stop, which the popover would loop to).
   // It knows nothing about where it is shown: the page's swatch puts it in a popover, a link menu can too.
+  // Below the choices, a preview shows a line of text with a link and a tag on the color under the pointer, else on
+  // the focused one, in the current theme.
   import { onMount, untrack } from 'svelte'
-  import { NO_COLOR, PAGE_COLORS, PAGE_COLOR_ROWS, colorLabel, colorPickerKey, pickerStart } from '../lib/pageColors'
+  import { washValue } from '../lib/customColor'
+  import {
+    DEFAULT_HUE,
+    NO_COLOR,
+    PAGE_COLORS,
+    PAGE_COLOR_ROWS,
+    colorLabel,
+    colorPickerKey,
+    parseHue,
+    pickerStart,
+    previewColor,
+  } from '../lib/pageColors'
+  import { themeTokens } from '../lib/themeTokens.svelte'
 
   let {
     color,
     onpick,
     ondone,
   }: {
-    /** The page's color name now, or null. */
+    /** The page's color now (a name or `hue <h>`), or null. */
     color: string | null
     /** A choice other than `color`: a color name, or null for "No color". */
     onpick: (color: string | null) => void
@@ -26,6 +40,16 @@
   let at = $state(untrack(() => pickerStart(color)))
   let root = $state<HTMLElement | null>(null)
   const current = $derived(pickerStart(color))
+  /**
+   * The picker index under the pointer, null when the pointer is outside the choices; any key clears it, so the
+   * preview follows the arrow keys. A custom part sets it to `CUSTOM` when pointed at or pressed.
+   */
+  let hover = $state<number | null>(null)
+  /** The hue the custom part stands for: the saved hue, else the default. A custom part moves it. */
+  let hue = $state(untrack(() => parseHue(color) ?? DEFAULT_HUE))
+  /** The color the preview shows (null: no color). */
+  const preview = $derived(previewColor(hover, at, hue))
+  const previewWash = $derived(preview === null ? undefined : washValue(preview, themeTokens.current))
 
   function focusAt(i: number) {
     at = i
@@ -42,6 +66,7 @@
 
   function onKey(e: KeyboardEvent) {
     e.stopPropagation()
+    hover = null
     if (e.key === 'Escape' || e.key === 'Tab') {
       e.preventDefault()
       if (e.key === 'Escape') ondone?.()
@@ -56,7 +81,7 @@
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="pc-choice" bind:this={root} onkeydown={onKey}>
+<div class="pc-choice" bind:this={root} onkeydown={onKey} onpointerleave={() => (hover = null)}>
   <div class="pc-grid" role="grid" aria-label="Page colors">
     {#each PAGE_COLOR_ROWS as row, r (r)}
       <div class="pc-row" role="row">
@@ -75,6 +100,7 @@
               title={colorLabel(name)}
               tabindex={i === at ? 0 : -1}
               onfocus={() => (at = i)}
+              onpointerenter={() => (hover = i)}
               onclick={() => choose(i)}
             ></button>
           </span>
@@ -91,6 +117,12 @@
     aria-pressed={current === NO_COLOR}
     tabindex={at === NO_COLOR ? 0 : -1}
     onfocus={() => (at = NO_COLOR)}
+    onpointerenter={() => (hover = NO_COLOR)}
     onclick={() => choose(NO_COLOR)}>{colorLabel(null)}</button
   >
+  <div class="pc-preview" data-testid="page-color-preview" data-preview={preview ?? ''} aria-hidden="true">
+    <div class="pc-preview-wash" data-testid="page-color-preview-wash" style:background={previewWash}>
+      Notes with <span class="pc-preview-link">a link</span> and <span class="pc-preview-tag">#tag</span>
+    </div>
+  </div>
 </div>

@@ -12,6 +12,7 @@ import {
   indexColor,
   parseHue,
   pickerStart,
+  previewColor,
   swatchKey,
   washRows,
 } from './pageColors'
@@ -158,6 +159,15 @@ describe('hues', () => {
     expect(indexColor(1, 9)).toBe('red')
     expect(indexColor(NO_COLOR, 9)).toBeNull()
     expect(indexColor(CUSTOM, 9)).toBe('hue 9')
+  })
+
+  test('the preview shows the index under the pointer, else the focused one', () => {
+    expect(previewColor(1, 2, 9)).toBe('red')
+    expect(previewColor(null, 2, 9)).toBe('coral')
+    expect(previewColor(NO_COLOR, 2, 9)).toBeNull()
+    expect(previewColor(null, NO_COLOR, 9)).toBeNull()
+    expect(previewColor(CUSTOM, 0, 9)).toBe('hue 9')
+    expect(previewColor(null, CUSTOM, 212)).toBe('hue 212')
   })
 })
 

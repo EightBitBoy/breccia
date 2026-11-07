@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { colorTarget, linkMenuAction } from './linkColor'
+import { colorTarget, linkMenuAction, pickingColor } from './linkColor'
 import type { TargetView } from './types'
 
 const targets: TargetView[] = [
@@ -49,4 +49,18 @@ test('a right-click elsewhere shows no menu at all', () => {
   expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null }, targets)).toEqual({ kind: 'none' })
   const missing = { className: 'link', dataPage: 'missing' }
   expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: missing }, targets)).toEqual({ kind: 'none' })
+})
+
+test('the open picker marks the color the list holds now for its page', () => {
+  const picking = targets[0]
+  expect(pickingColor(targets, picking)).toBe('blue')
+  const saved = targets.map((t) => (t.key === 'hiring' ? { ...t, color: 'hue 212' } : t))
+  expect(pickingColor(saved, picking)).toBe('hue 212')
+  const removed = targets.map((t) => (t.key === 'hiring' ? { ...t, color: undefined } : t))
+  expect(pickingColor(removed, picking)).toBeNull()
+})
+
+test('a page the list no longer holds keeps the color it had when the picker opened', () => {
+  expect(pickingColor([], targets[1])).toBe('teal')
+  expect(pickingColor([], targets[2])).toBeNull()
 })

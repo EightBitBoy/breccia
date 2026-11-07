@@ -57,6 +57,11 @@ export function indexColor(i: number, hue: number): string | null {
   return i < NO_COLOR ? PAGE_COLORS[i] : null
 }
 
+/** The color the picker previews: the index under the pointer, else the focused one (`hue` for the custom part). */
+export function previewColor(hover: number | null, focused: number, hue: number): string | null {
+  return indexColor(hover ?? focused, hue)
+}
+
 /** The hue under a pointer at `x` on a slider `width` wide. */
 export function hueAt(x: number, width: number): number {
   if (width <= 0) return 0

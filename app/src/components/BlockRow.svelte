@@ -1,6 +1,8 @@
 <script lang="ts">
   import type { BlockView } from '../lib/types'
   import type { RowWash } from '../lib/pageColors'
+  import { washValue } from '../lib/customColor'
+  import { themeTokens } from '../lib/themeTokens.svelte'
 
   let {
     block,
@@ -38,7 +40,7 @@
   data-block-id={block.id}
   data-wash={wash?.color}
   style:--depth={block.depth}
-  style:--wash={wash ? `var(--pc-${wash.color}-wash)` : undefined}
+  style:--wash={wash ? washValue(wash.color, themeTokens.current) : undefined}
 >
   <span class="fold">
     {#if block.hasChildren}

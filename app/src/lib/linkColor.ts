@@ -36,3 +36,12 @@ export function linkMenuAction(
   if (target) return { kind: 'menu', target }
   return e.onSelection ? { kind: 'native' } : { kind: 'none' }
 }
+
+/**
+ * The color an open picker marks for the page of `picking`: the list's entry for that page now, so the mark follows a
+ * save while the picker stays open; the color it had when the picker opened if the list no longer holds the page.
+ */
+export function pickingColor(targets: readonly TargetView[], picking: TargetView): string | null {
+  const now = targets.find((t) => t.key === picking.key) ?? picking
+  return now.color ?? null
+}

@@ -5,7 +5,7 @@
   import type { Snippet } from 'svelte'
   import type { Action } from 'svelte/action'
   import { ContextMenu, Popover } from 'bits-ui'
-  import { linkMenuAction } from '../lib/linkColor'
+  import { linkMenuAction, pickingColor } from '../lib/linkColor'
   import type { TargetView } from '../lib/types'
   import PageColorGrid from './PageColorGrid.svelte'
 
@@ -92,6 +92,7 @@
     <Popover.Content
       class="menu page-color-picker"
       data-testid="page-color-picker"
+      aria-label={picking ? `Color of ${picking.name}` : undefined}
       customAnchor={anchor}
       side="bottom"
       align="start"
@@ -102,7 +103,7 @@
       {#if picking}
         {@const page = picking}
         <PageColorGrid
-          color={page.color ?? null}
+          color={pickingColor(targets, page)}
           onpick={(color) => onsetcolor(page.key, color)}
           ondone={() => (pickerOpen = false)}
         />

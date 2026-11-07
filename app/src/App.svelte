@@ -83,6 +83,7 @@
   import { configShift, isNewerConfig } from './lib/configChange'
   import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './lib/configWrite'
   import { missingFolder, pickFolder, recentRows, switchCheck } from './lib/folderSwitch'
+  import { watchThemeTokens } from './lib/themeTokens.svelte'
   import type {
     BlockId,
     BoardSummary,
@@ -1360,6 +1361,7 @@
   }
 
   onMount(() => {
+    const stopThemeTokens = watchThemeTokens(document.documentElement)
     const removeDom = installDom({
       click: onAnchorClick,
       pointerDown: onPointerDown,
@@ -1542,6 +1544,7 @@
       ready = true
     })()
     return () => {
+      stopThemeTokens()
       stopMidnight()
       clearInterval(gitClock)
       stopArchive()

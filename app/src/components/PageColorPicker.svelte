@@ -3,7 +3,9 @@
   // Esc or a click outside closes it and sends the focus back to the swatch, so undo works on it right away: while
   // it is focused, Ctrl Z takes the page's newest step back and Ctrl Shift Z or Ctrl Y redoes it (`swatchKey`).
   import { Popover } from 'bits-ui'
+  import { swatchValue } from '../lib/customColor'
   import { colorLabel, swatchKey } from '../lib/pageColors'
+  import { themeTokens } from '../lib/themeTokens.svelte'
   import PageColorGrid from './PageColorGrid.svelte'
 
   let {
@@ -11,7 +13,7 @@
     onpick,
     onhistory,
   }: {
-    /** The page's color name, or null. */
+    /** The page's color (a name or `hue <h>`), or null. */
     color: string | null
     /** A new color for the page, or null to remove it. */
     onpick: (color: string | null) => void
@@ -20,6 +22,8 @@
   } = $props()
 
   const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
+
+  const fill = $derived(color === null ? undefined : swatchValue(color, themeTokens.current))
 
   let open = $state(false)
   let trigger = $state<HTMLElement | null>(null)
@@ -37,7 +41,7 @@
   <Popover.Trigger
     bind:ref={trigger}
     class={color === null ? 'page-color-btn none' : 'page-color-btn'}
-    style={color === null ? undefined : `background: var(--pc-${color})`}
+    style={fill === undefined ? undefined : `background: ${fill}`}
     data-testid="page-color"
     data-color={color ?? ''}
     aria-label={`Page color: ${color === null ? 'none' : colorLabel(color)}`}
@@ -48,6 +52,7 @@
     <Popover.Content
       class="menu page-color-picker"
       data-testid="page-color-picker"
+      aria-label="Page color"
       side="bottom"
       align="end"
       sideOffset={4}
