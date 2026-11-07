@@ -16,3 +16,13 @@ Rulings (carried into the task dispatches):
 - Ruling: P9 (T1–T3) commit type chore(core), not refactor (new behaviour, not yet visible as a feature; changelog skips both) — cost: none, changelog identical.
 - Ruling: P10 (T10) the demo test copies docs/demo to a tempdir before opening a Session — never let a test write into the repo's demo — cost: none.
 - Ruling: P11 (T9) new review.md items use the "N. [ ] **Title:** …" form with the box — cost: none.
+
+Task 1: dispatched (sonnet), BASE 152f95c
+Task 1: implementer DONE_WITH_CONCERNS (ab00813); note for Task 9: compatibility.md:6 still says format version 5
+Task 1: review approved, 1 Important (no RED for color:: tests) -> fix round 1 (mutation check)
+Task 1: minor (deferred): docs/format.md lines over ~120 cols (What Breccia writes; §8 two lines; §13 bullet)
+Task 1: minor (deferred): color.rs:46 is_color_property doc says "Whether" but returns Option<String>
+Task 1: minor (deferred): color.rs:78-110 relies on title_line indexes matching split_inclusive; add a comment
+Task 1: fix round 1/5 (1 addressed, 0 open — mutation check: 4 mutations each caught; no code change, so no diff to re-review; evidence checked by controller in task-1-report.md)
+- Ruling: Task 1 fix round 1 closed without a scoped re-review — the round changed no code (empty diff) and the evidence (4 mutations, failing tests named with output) is in the report — cost if wrong: none to the code; only the evidence's honesty, which the final review can spot-check.
+Task 1: complete (commits 152f95c..ab00813, review clean after fix round 1)
