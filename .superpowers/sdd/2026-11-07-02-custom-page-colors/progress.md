@@ -14,3 +14,10 @@ Rulings (carried into the task dispatches):
 - Ruling: Q7 (T5) the preview's wash layer gets data-testid="page-color-preview-wash"; Task 7 uses it — cost: none.
 - Ruling: Q8 (T5, T6) the "check in just dev" steps are replaced by the e2e steps of Task 7 and the owner's review items; an implementer may drive `just dev-debug` with a scratch script if it helps, never `just dev` by hand — cost: a visual flaw found later by the owner.
 - Ruling: Q9 minors: commit types chore (not refactor) in Tasks 1 and 3; Task 4's #787878 note is 4.42:1; use $state.raw for the theme-tokens object; Task 8 also rewords docs/compatibility.md:98 (color stored as a name or a hue); plan 1 follow-up 2 (stale link-picker anchor) stays a follow-up, noted for the final report since the picker now stays open after a drag — cost: none.
+Task 1: dispatched (sonnet), BASE 4c5f9e3
+Task 1: implementer DONE (b0f2210)
+Task 1: review approved (spec ✅; names.rs needs no edit; shell untouched; suite green per report: 711 + 41)
+Task 1: minor (deferred): test strings use literal newline/tab characters instead of \n/\t (color.rs, page_color.rs, render.rs tests)
+Task 1: minor (deferred): view.rs spells crate::color::PageColor four times
+Task 1: minor (deferred): no read test for a lone invalid `color:: hue 999` line returning None
+Task 1: complete (commits 4c5f9e3..b0f2210, review clean)
