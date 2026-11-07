@@ -42,3 +42,9 @@ Task 3: minor (deferred): no test for the recompute_aliases path (alias added/re
 Task 3: minor (deferred): PageView::of parses inline::links for every top-level block of a journal per keystroke (view.rs:331); index_page allocates colors.insert per coloured page (names.rs:542)
 Task 3: fix round 1/5 (2 addressed, 0 open — guard test fixture now reaches the generation guard, RED with guard removed; scale re-measured: parent median 12.37 ms, HEAD 11.95 ms, no fix needed; commits f6df5bc..98f76d1)
 Task 3: complete (commits 556f8ec..98f76d1, review clean after fix round 1)
+Task 4: dispatched (sonnet), BASE 129db91
+Task 4: implementer DONE (9168708)
+Task 4: review approved (spec ✅, wire names/order match core)
+Task 4: minor (deferred): 25-name table hand-copied in TS and test; no guard against drift from Rust PAGE_COLORS
+Task 4: minor (deferred): pageColors.ts:229 line ~120 chars
+Task 4: complete (commits 129db91..9168708, review clean)
