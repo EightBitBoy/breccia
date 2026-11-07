@@ -61,3 +61,9 @@ Task 7: review Needs fixes: Important "exactly one write" mtime check cannot fai
 Task 7: fix round 1 dispatched (resume implementer)
 Task 7: fix round 1/5 (1 addressed, 0 open — undo-count proof replaces mtime+sleep; 164 PASS twice; commits a09c85c..438505a)
 Task 7: complete (commits 33c5d44..438505a, review clean after fix round 1)
+Task 8: dispatched (sonnet), BASE 57abda7
+Task 8: implementer DONE (887e9c7)
+Task 8: review approved (spec ✅; claims match code); ⚠️ old-version claim rests on the name-only parser of plan 1 (unknown value = no color, line kept) — resolved: plan 1's design and parse rules say so
+Task 8: minor (for final fix wave): spec §7.10 omits the chroma -> grey -> no-wash fallbacks of compute(); §7.4 line over 120 cols; §7.3 "arrow keys only preview" should say "on the slider"
+Task 8: complete (commits 57abda7..887e9c7, review clean)
+All tasks complete. Final review next (opus), range 4c5f9e3..HEAD.
