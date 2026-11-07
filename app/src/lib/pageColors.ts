@@ -51,6 +51,16 @@ export function pickerStart(color: string | null): number {
   return i < 0 ? NO_COLOR : i
 }
 
+/** The grid's own tab stop for a picker start: the start itself, or "No color" when the start is the custom part. */
+export function gridStop(start: number): number {
+  return Math.min(start, NO_COLOR)
+}
+
+/** The hue the custom part shows after the saved color changes: a saved hue, else the one it had. */
+export function followHue(hue: number, color: string | null): number {
+  return parseHue(color) ?? hue
+}
+
 /** The color a picker index stands for: a name, a hue for the custom part, null for "No color". */
 export function indexColor(i: number, hue: number): string | null {
   if (i === CUSTOM) return hueColor(hue)

@@ -6,6 +6,8 @@ import {
   PAGE_COLOR_ROWS,
   colorLabel,
   colorPickerKey,
+  followHue,
+  gridStop,
   hueAt,
   hueColor,
   hueSliderKey,
@@ -206,4 +208,19 @@ test('hueAt maps a pointer position to a hue', () => {
   expect(hueAt(-20, 100)).toBe(0)
   expect(hueAt(140, 100)).toBe(359)
   expect(hueAt(10, 0)).toBe(0)
+})
+
+describe('the picker with a hue slider', () => {
+  test('the grid keeps its own tab stop: "No color" when the start is the slider', () => {
+    expect(gridStop(CUSTOM)).toBe(NO_COLOR)
+    expect(gridStop(NO_COLOR)).toBe(NO_COLOR)
+    expect(gridStop(13)).toBe(13)
+    expect(gridStop(0)).toBe(0)
+  })
+  test('the slider follows a new saved hue and keeps its own for a name or no color', () => {
+    expect(followHue(100, 'hue 212')).toBe(212)
+    expect(followHue(100, 'red')).toBe(100)
+    expect(followHue(100, null)).toBe(100)
+    expect(followHue(100, 'hue 999')).toBe(100)
+  })
 })
