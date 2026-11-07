@@ -79,3 +79,10 @@ Task 11: review approved (spec ✅; all 4 implementer rulings accepted by review
 Task 11: minor (deferred): LinkColorMenu anchor goes stale if the day is re-sent while the picker is open (LinkColorMenu.svelte:236, 305)
 Task 11: minor (deferred): selection check uses partial containment (LinkColorMenu.svelte:252); a right-click between blocks with any selection gives the native menu
 Task 11: complete (commits 87c1363..5cd2941, review clean)
+Task 8: dispatched (opus), BASE bebd186
+Task 8: implementer DONE_WITH_CONCERNS (ae59f84): 154 PASS on 4 runs
+Task 8: minor (deferred, for final fix wave): Esc inside the picker opened by keyboard clears a block selection (app bug, small)
+Task 8: minor (deferred, for final fix wave): test id link-menu used both by the [[ suggestion menu and the right-click Color… menu; give the latter its own id
+Task 8: review approved (spec ✅; day 5/6 overwrites safe; count 154 adds up)
+Task 8: minor (deferred): selection check only asserts background != wash (smoke.mjs:2599); probe the selection token instead
+Task 8: complete (commits bebd186..ae59f84, review clean)
