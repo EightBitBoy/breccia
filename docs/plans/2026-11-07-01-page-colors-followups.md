@@ -18,7 +18,7 @@ reviews and the final whole-plan review (2026-11-07).
    `var(--wash, transparent)`.
 6. **Selection corners:** `.block.selected` sets a 4 px radius, so a selected row at a blob's top or bottom loses the
    blob's 8 px corner (`app.css`).
-7. **Accessible name:** the picker popover has no accessible name of its own (the grid has "Page colors").
+7. ~~**Accessible name:** the picker popover has no accessible name of its own (the grid has "Page colors").~~ Done in plan 2 (the pickers are dialogs named "Page color" / "Color of <name>").
 
 ## Tests
 
@@ -34,15 +34,15 @@ reviews and the final whole-plan review (2026-11-07).
 
 ## Code tidy-ups
 
-14. The journal → none / page → `page_color` match is written twice (`session/view.rs` and `workspace/pages.rs`);
-    share one helper.
+14. ~~The journal → none / page → `page_color` match is written twice (`session/view.rs` and `workspace/pages.rs`);
+    share one helper.~~ Done in plan 2 (`own_color`).
 15. Per keystroke on a journal, `PageView::of` parses the links of every top-level block again, and `index_page`
     allocates a key for every colored page on every re-index. Measured cost is within noise today (scale
     `block.setText` median 11.95 ms against 12.37 ms before).
 16. The Mac detection line is copied three times (`PageColorPicker.svelte`, `App.svelte`, `blockEditor.ts`); export
     one `isMac` from `app/src/lib/`.
-17. `crates/core/src/color.rs`: the doc comment of `is_color_property` says "Whether" though it returns the value;
-    `recolor` relies on `title_line` indexes matching `split_inclusive` indexes, worth a comment.
+17. ~~`crates/core/src/color.rs`: the doc comment of `is_color_property` says "Whether" though it returns the value;
+    `recolor` relies on `title_line` indexes matching `split_inclusive` indexes, worth a comment.~~ Done in plan 2 (doc comment and `title_line` comment).
 18. Lines over the docs' ~120-column wrap in `docs/format.md`, `docs/spec.md` (§7.4, §7.10) and `docs/review.md`
     (item 31); `app/src/lib/pageColors.ts` has one ~120-character line.
 

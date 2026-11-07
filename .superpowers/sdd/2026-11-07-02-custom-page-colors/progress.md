@@ -67,3 +67,8 @@ Task 8: review approved (spec ✅; claims match code); ⚠️ old-version claim 
 Task 8: minor (for final fix wave): spec §7.10 omits the chroma -> grey -> no-wash fallbacks of compute(); §7.4 line over 120 cols; §7.3 "arrow keys only preview" should say "on the slider"
 Task 8: complete (commits 57abda7..887e9c7, review clean)
 All tasks complete. Final review next (opus), range 4c5f9e3..HEAD.
+Final review (opus): ready with fixes; 1 Important (picker popovers have aria-label but no role, so the name is ignored; plan 1 follow-up 7 not really closed). Fix-now minors: review item for custom swatch / link-menu slider+preview / slider after undo; format.md 601-604 wording; spec §7.10 fallbacks, §7.4/§7.10 wrap, §7.3 "on the slider"; STATUS Vitest count (controller, finish step).
+Final fix wave dispatched (opus, per CLAUDE.md), FIX_BASE 601da3b
+Final fix wave: DONE (5cd016c fix(app) role=dialog + e2e asserts; 632a125 docs: review items 40-41, format/spec wording); just test 890 Vitest + 801 cargo, lint clean, e2e 164
+Final re-review (sonnet): all 4 findings addressed, no new Critical/Important.
+Finish: controller ran just test (Vitest 890, core 711 + 41 + 49), just lint clean, just e2e 164 PASS, 0 FAIL. Follow-ups doc written; plan 1 follow-ups 7, 14, 17 marked done; STATUS updated. Plan 2 done.
