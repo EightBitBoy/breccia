@@ -68,3 +68,14 @@ Task 7: minor (deferred): third copy of the mac-detection line (PageColorPicker.
 Task 7: minor (deferred): "No color" uses aria-pressed, cells aria-selected; Task 8 should assert data-current
 Task 7: minor (deferred): Esc inside the popover bubbles to sel.onKey; check in Task 8 it does not clear a selection
 Task 7: complete (commits f642938..db4a6d0, review clean)
+Task 11: dispatched (opus), BASE 87c1363 (runs before Task 8)
+Task 11: implementer DONE_WITH_CONCERNS (57467f6, 5cd2941)
+- Ruling (implementer, accepted pending review): the native context menu stays inside an open block editor and on selected text; only spots with nothing to color get no menu — keeps copy/paste — cost if wrong: owner expects Color… in the editor too.
+- Ruling (implementer): placeOf fixed so a pick from a journal stays on the feed/day instead of jumping to the linked page — cost if wrong: none known.
+- Ruling (implementer): journal-date tags (#2026-11-01) get no menu entry, as date links — cost: none.
+- Ruling (implementer): PageView prop named onlinkcolor (onsetcolor exists) — cost: none.
+Task 11: review approved (spec ✅; all 4 implementer rulings accepted by reviewer; placeOf change does not move other commands)
+- Ruling: Task 11 ⚠️ (no review.md item) resolved: Task 9's item 31 must name the native-menu-in-editor ruling — carried into Task 9 dispatch — cost: none.
+Task 11: minor (deferred): LinkColorMenu anchor goes stale if the day is re-sent while the picker is open (LinkColorMenu.svelte:236, 305)
+Task 11: minor (deferred): selection check uses partial containment (LinkColorMenu.svelte:252); a right-click between blocks with any selection gives the native menu
+Task 11: complete (commits 87c1363..5cd2941, review clean)
