@@ -1,5 +1,6 @@
 //! What the frontend gets back: views of pages and settings, notices, errors.
 
+use std::collections::HashSet;
 use std::fmt;
 use std::path::PathBuf;
 
@@ -8,7 +9,8 @@ use serde::Serialize;
 use crate::config::Config;
 use crate::error::EditError;
 use crate::git::{GitLogView, GitView};
-use crate::naming::journal_display;
+use crate::inline::{LinkKind, links};
+use crate::naming::{journal_display, parse_journal_name};
 use crate::outline::{Block, BlockId};
 use crate::render::{block_html, crumb, preamble_html};
 use crate::task::task_state;
@@ -139,6 +141,31 @@ pub struct PageView {
     /// The page's own color; none for a journal.
     #[serde(skip_serializing_if = "Option::is_none")]
     pub color: Option<&'static str>,
+    /// Journals only: the links and tags of its blocks that can be given a color.
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub targets: Vec<TargetView>,
+}
+
+/// A link or tag in a journal whose page can be given a color: one that goes
+/// to an existing page that is not a journal, or a tag without a page yet.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TargetView {
+    /// The link's key as the rendered anchor's `data-page` holds it.
+    pub raw: String,
+    pub kind: TargetKind,
+    /// The page the link goes to.
+    pub key: String,
+    pub name: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<&'static str>,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum TargetKind {
+    Link,
+    Tag,
 }
 
 #[derive(Clone, Debug, Serialize)]
@@ -329,7 +356,9 @@ impl PageView {
         let (kind, title) = title_of(page);
         let blocks = page.doc.blocks();
         let mut views = BlockView::list(blocks, &ws.config);
+        let mut targets = Vec::new();
         if kind == PageViewKind::Journal {
+            targets = TargetView::list(blocks, ws);
             // A top-level block takes its topic's color; deeper blocks keep their ancestor's.
             let mut current: Option<(String, &'static str)> = None;
             for (v, b) in views.iter_mut().zip(blocks) {
@@ -356,7 +385,46 @@ impl PageView {
                 PageKind::Journal(_) => None,
                 PageKind::Page => crate::color::page_color(page.doc.preamble()),
             },
+            targets,
         }
+    }
+}
+
+impl TargetView {
+    /// The colorable targets of `blocks`, one per raw key and kind, in the
+    /// order they first appear.
+    fn list(blocks: &[Block], ws: &Workspace) -> Vec<TargetView> {
+        let mut seen = HashSet::new();
+        let mut out = Vec::new();
+        for l in blocks.iter().flat_map(|b| links(b.text())) {
+            let kind = match l.kind {
+                LinkKind::Page => TargetKind::Link,
+                LinkKind::Tag => TargetKind::Tag,
+            };
+            if !seen.insert((l.key.clone(), kind)) {
+                continue;
+            }
+            let t = ws.link_target(&l.target, l.kind);
+            let journal = match ws.page(&t.key) {
+                Some(p) => matches!(p.kind, PageKind::Journal(_)),
+                None => parse_journal_name(&t.key).is_some(),
+            };
+            if journal {
+                continue;
+            }
+            // A tag may name a page that has no content yet: the color gives it its file.
+            if !t.exists && kind == TargetKind::Link {
+                continue;
+            }
+            out.push(TargetView {
+                raw: l.key,
+                kind,
+                color: ws.page_color(&t.key),
+                key: t.key,
+                name: t.name,
+            });
+        }
+        out
     }
 }
 
