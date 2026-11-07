@@ -78,8 +78,8 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 30. [ ] **Tag-only page:** picking a color for a tag without a page writes `pages/<tag>.md` holding only the line.
 31. [ ] **Color from a link in the journal:** right-click a link or tag in the feed and on a day page, choose
    "Color…" and pick; the linked page gets the color and the washes follow. An alias link colors the aliased page,
-   a tag without a page gets its file, and links to days or to missing pages show no menu. Inside an open block
-   editor, and on selected text that is not a link or tag, the normal browser menu stays, so copy and paste keep working; say if you want the
-   color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.
+   a tag without a page gets its file, and links to days or to missing pages show no "Color…" entry. Inside an open
+   block editor, and on selected text that is not a link to a colorable page (including a link to a day or a missing
+   page), the normal browser menu stays, so copy and paste keep working; say if you want the color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.
 32. [ ] **Demo and README:** the demo pages Q&A: hiring, Release 2, on call and Project X have colors, the
    2026-10-29 journal has one new block, and the README journal screenshot shows the washes.

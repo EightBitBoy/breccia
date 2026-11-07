@@ -259,13 +259,14 @@ takes it back, and earlier typing stays undoable.
   `done::`). The feed itself shows no linked references, to stay compact.
 - **Page color washes.** Each top-level block gets a faint wash of the color of the first link or tag in it that goes to
   a topic page with a color. Journal days and missing pages are skipped, aliases are followed, and sub-blocks follow
-  their parent. Consecutive blocks of the same color merge into one band; a small gap separates different pages. The
-  feed and a day page look the same. Washes follow edits after the typing pause and any change of a page's color, from
+  their parent. Consecutive blocks whose topic is the same page merge into one band; blocks of different pages stay
+  separate, with a small gap, even in the same color. The feed and a day page look the same. Washes follow edits after the typing pause and any change of a page's color, from
   anywhere.
 - **Color from a link.** A right-click on a link or tag in a journal day opens a menu with "Color…", which opens the
   same picker for the page the link goes to (aliases followed, tag-only pages included). Links to journal days and to
-  pages that do not exist get no menu. Inside an open block editor, and on selected text that is not a link or tag, the normal browser
-  menu stays, so copy and paste keep working; elsewhere no menu opens.
+  pages that do not exist get no "Color…" entry. Inside an open block editor, and on selected text that is not a link
+  to a colorable page (including a link to a day or a missing page), the normal browser menu stays, so copy and paste
+  keep working; elsewhere no menu opens.
 - **Jump to a date** through search (§7.8): typing a date (`12 Mar`, `12.3.`, `2026-03-12`, `yesterday`, …) offers "Go to ‹day›" first. A day with an entry (or today) opens the feed scrolled to that day. Any other day, past or future, opens as its day page with the "start writing…" placeholder; its file is created when the user types, and from then on the day is in the feed in its place. A date without a year means the most recent such day not after today.
 - **Date picker**: a calendar icon right of the sidebar's "Journal" entry, or `Ctrl Shift D` from anywhere (also while editing), opens a month below the icon. Weeks start on Monday; days with a journal file have a dot, today is outlined; it opens at the journal day shown, else at today. Arrows move by day and week, Page Up / Page Down by month, Home / End to the week's start and end, Enter or a click picks, Esc closes (the focus goes back where it was); ‹ › change the month and "Today" shows today. A picked day, past or future, jumps exactly as a typed date does (above): nothing is written until the user types.
 
