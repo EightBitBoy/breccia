@@ -561,7 +561,7 @@ impl Session {
             .iter()
             .filter(|k| **k != key)
             .filter_map(|k| ws.page(k))
-            .map(|p| PageView::of(p, &ws.config))
+            .map(|p| PageView::of(p, ws))
             .collect();
         Ok(out)
     }
@@ -630,7 +630,7 @@ impl Session {
             out.notices.extend(notices);
             let ws = self.ws()?;
             if let Some(page) = ws.page(&key) {
-                out.changed.push(PageView::of(page, &ws.config));
+                out.changed.push(PageView::of(page, ws));
             }
         }
         if count > 0 {

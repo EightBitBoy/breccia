@@ -236,6 +236,7 @@ impl Session {
         let before = self.tree_state();
         let mut out = self.dispatch(req, clock)?;
         out.saved = self.take_saved();
+        self.resend_journals(&mut out, before.map(|b| b.0));
         if let Some(ws) = self.ws.as_mut() {
             out.notices
                 .extend(ws.take_alias_warnings().iter().map(Notice::load_warning));
@@ -260,6 +261,28 @@ impl Session {
             self.link_lists = LinkLists::of(ws);
         }
         Ok(out)
+    }
+
+    /// Journal days with a block whose topic's color, existence or alias
+    /// changed travel with the command, unless the folder was switched
+    /// (the changes then belong to another folder, or to a fresh one).
+    fn resend_journals(&mut self, out: &mut Output, before: Option<u64>) {
+        let generation = self.generation;
+        let Some(ws) = self.ws.as_mut() else {
+            return;
+        };
+        let changes = ws.take_topic_changes();
+        if before != Some(generation) || changes.is_empty() {
+            return;
+        }
+        for key in ws.journals_linking(&changes) {
+            let sent = out.page.as_ref().is_some_and(|p| p.key == key)
+                || out.changed.iter().any(|p| p.key == key)
+                || out.removed.contains(&key);
+            if let (false, Some(page)) = (sent, ws.page(&key)) {
+                out.changed.push(PageView::of(page, ws));
+            }
+        }
     }
 
     /// The generation, tree version and link version, while a folder is open.
@@ -903,7 +926,7 @@ impl Session {
         let changed = rewritten
             .iter()
             .filter_map(|k| ws.page(k))
-            .map(|p| PageView::of(p, &ws.config))
+            .map(|p| PageView::of(p, ws))
             .collect();
         Ok(Output {
             config: Some(ConfigView::of(&ws.config, self.config_version)),
@@ -995,7 +1018,7 @@ impl Session {
             .iter()
             .filter(|k| **k != report.key)
             .filter_map(|k| ws.page(k))
-            .map(|p| PageView::of(p, &ws.config))
+            .map(|p| PageView::of(p, ws))
             .collect();
         Ok(out)
     }
@@ -1075,7 +1098,7 @@ impl Session {
             .map(|r| r.key.as_str())
             .chain(report.added.iter().map(String::as_str))
             .filter_map(|k| ws.page(k))
-            .map(|p| PageView::of(p, &ws.config))
+            .map(|p| PageView::of(p, ws))
             .collect();
         Ok(Output {
             notices,
@@ -1189,7 +1212,7 @@ impl Session {
             .page(key)
             .ok_or_else(|| CommandError::unknown_page(key))?;
         Ok(Output {
-            page: Some(PageView::of(page, &ws.config)),
+            page: Some(PageView::of(page, ws)),
             focus,
             notices,
             ..Output::default()
@@ -1324,7 +1347,7 @@ impl Session {
         out.changed = others
             .iter()
             .filter_map(|k| ws.page(k))
-            .map(|p| PageView::of(p, &ws.config))
+            .map(|p| PageView::of(p, ws))
             .collect();
         Ok(out)
     }

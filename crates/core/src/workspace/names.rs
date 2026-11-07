@@ -7,7 +7,7 @@
 //! before pages, then by path). Pages without content (a blank page made by
 //! a click) list no aliases and never beat an alias.
 
-use std::collections::{BTreeMap, HashMap, HashSet};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
 use super::{LoadWarning, Page, PageError, PageKind, TagEntry, Workspace};
@@ -294,6 +294,51 @@ impl Workspace {
             .collect()
     }
 
+    /// The page a block's wash comes from: the first page link or tag in
+    /// `text` that goes to an existing page that is not a journal.
+    pub fn topic_of(&self, text: &str) -> Option<String> {
+        crate::inline::links(text).into_iter().find_map(|l| {
+            let t = self.link_target(&l.target, l.kind);
+            let journal = matches!(self.pages.get(&t.key)?.kind, PageKind::Journal(_));
+            (t.exists && !journal).then_some(t.key)
+        })
+    }
+
+    /// The keys whose color, existence or alias winner changed since the
+    /// last call.
+    pub fn take_topic_changes(&mut self) -> BTreeSet<String> {
+        std::mem::take(&mut self.topic_changes)
+    }
+
+    /// The journal pages with a block linking to any of `keys`, or to a
+    /// spelling that goes to one: the key itself, its aliases, and every
+    /// `[[Key#Heading]]` (unfiltered, so a deleted page's headings count).
+    pub fn journals_linking(&self, keys: &BTreeSet<String>) -> BTreeSet<String> {
+        let mut out = BTreeSet::new();
+        for k in keys {
+            let raw = std::iter::once(k.clone())
+                .chain(self.link_keys(k))
+                .chain(self.links.heading_keys(k).into_iter().map(str::to_string));
+            for r in raw {
+                for src in self
+                    .links
+                    .sources_ref(&r)
+                    .into_iter()
+                    .flat_map(|m| m.keys())
+                {
+                    if self
+                        .pages
+                        .get(src)
+                        .is_some_and(|p| matches!(p.kind, PageKind::Journal(_)))
+                    {
+                        out.insert(src.clone());
+                    }
+                }
+            }
+        }
+        out
+    }
+
     /// Puts a page (already in the page map) into the link index and
     /// refreshes its alias list.
     pub(super) fn index_page(&mut self, key: &str) {
@@ -322,6 +367,16 @@ impl Workspace {
             self.names.clashes_dirty = true;
             self.link_version += 1;
         }
+        if page.kind == PageKind::Page {
+            let color = crate::color::page_color(page.doc.preamble());
+            let color_changed = match color {
+                Some(c) => self.colors.insert(key.to_string(), c) != Some(c),
+                None => self.colors.remove(key).is_some(),
+            };
+            if color_changed || content_changed {
+                self.topic_changes.insert(key.to_string());
+            }
+        }
         let changed = if list.is_empty() {
             self.names.lists.remove(key).is_some()
         } else if self.names.lists.get(key) != Some(&list) {
@@ -339,8 +394,12 @@ impl Workspace {
     pub(super) fn unindex_page(&mut self, key: &str) {
         self.links.remove_page(key);
         self.link_version += 1;
-        if self.names.contented.remove(key) {
+        let had_content = self.names.contented.remove(key);
+        if had_content {
             self.names.clashes_dirty = true;
+        }
+        if self.colors.remove(key).is_some() || had_content {
+            self.topic_changes.insert(key.to_string());
         }
         if self.names.lists.remove(key).is_some() {
             self.aliases_changed();
@@ -489,6 +548,12 @@ impl Workspace {
                 winners
                     .entry(page_key(a))
                     .or_insert_with(|| (key.to_string(), a.clone()));
+            }
+        }
+        for k in winners.keys().chain(self.names.winners.keys()) {
+            let before = self.names.winners.get(k).map(|w| &w.0);
+            if before != winners.get(k).map(|w| &w.0) {
+                self.topic_changes.insert(k.clone());
             }
         }
         self.names.winners = winners;

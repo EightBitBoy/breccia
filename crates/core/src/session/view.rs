@@ -153,6 +153,12 @@ pub struct BlockView {
     /// Whether that state counts as finished.
     pub finished: bool,
     pub has_children: bool,
+    /// Journal blocks only: the page the block's first topic link goes to.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub topic: Option<String>,
+    /// Journal blocks only: that page's color, when it has one.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub color: Option<&'static str>,
 }
 
 /// Where the caret goes: a block and a UTF-8 byte offset in its text.
@@ -319,16 +325,32 @@ impl From<EditError> for CommandError {
 }
 
 impl PageView {
-    pub(crate) fn of(page: &Page, cfg: &Config) -> PageView {
+    pub(crate) fn of(page: &Page, ws: &Workspace) -> PageView {
         let (kind, title) = title_of(page);
         let blocks = page.doc.blocks();
+        let mut views = BlockView::list(blocks, &ws.config);
+        if kind == PageViewKind::Journal {
+            // A top-level block takes its topic's color; deeper blocks keep their ancestor's.
+            let mut current: Option<(String, &'static str)> = None;
+            for (v, b) in views.iter_mut().zip(blocks) {
+                if b.depth() == 0 {
+                    current = ws
+                        .topic_of(b.text())
+                        .and_then(|t| ws.page_color(&t).map(|c| (t, c)));
+                }
+                if let Some((t, c)) = &current {
+                    v.topic = Some(t.clone());
+                    v.color = Some(c);
+                }
+            }
+        }
         PageView {
             key: page.key.clone(),
             name: page.name.clone(),
             kind,
             title,
             preamble_html: preamble_html(page.doc.preamble()),
-            blocks: BlockView::list(blocks, cfg),
+            blocks: views,
             has_file: page.has_file(),
             color: match page.kind {
                 PageKind::Journal(_) => None,
@@ -364,6 +386,8 @@ impl BlockView {
                     state: state.map(|s| s.keyword.clone()),
                     finished: state.is_some_and(|s| s.finished),
                     has_children: blocks.get(i + 1).is_some_and(|n| n.depth() > b.depth()),
+                    topic: None,
+                    color: None,
                 }
             })
             .collect()

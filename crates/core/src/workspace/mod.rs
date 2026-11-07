@@ -330,6 +330,12 @@ pub struct Workspace {
     /// Goes up whenever the linked-only pages may have changed: a page's
     /// link targets, its content or the aliases changed.
     link_version: u64,
+    /// Page key → color, for the non-journal pages with a valid `color::`.
+    colors: HashMap<String, &'static str>,
+    /// Keys whose color, existence or alias winner changed since the last
+    /// [`take_topic_changes`](Workspace::take_topic_changes): the journal
+    /// blocks linking to them may need another wash.
+    topic_changes: BTreeSet<String>,
     /// Keys of pages whose blocks, name, existence or file changed since
     /// the last [`take_touched`](Workspace::take_touched).
     touched: BTreeSet<String>,
@@ -422,6 +428,8 @@ impl Workspace {
             folders: BTreeSet::new(),
             tree_version: 0,
             link_version: 0,
+            colors: HashMap::new(),
+            topic_changes: BTreeSet::new(),
             touched: BTreeSet::new(),
             warned: HashSet::new(),
         }

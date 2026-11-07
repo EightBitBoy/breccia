@@ -68,7 +68,7 @@ impl Session {
                 continue;
             }
             if let Some(p) = ws.page(k) {
-                pages.push(PageView::of(p, &ws.config));
+                pages.push(PageView::of(p, ws));
             }
         }
         for p in &pages {

@@ -366,7 +366,8 @@ fn rename_reports_links_it_cannot_write() {
     assert_eq!(read(&t, "pages/a`b.md"), "- body\n");
     assert_eq!(read(&t, "pages/B.md"), b);
     assert_eq!(read(&t, J.0), j);
-    assert!(out.changed.is_empty());
+    // Only the journal day is re-sent: its topic page is gone (journal blocks take a topic's color).
+    assert!(out.changed.iter().all(|v| v.key == "2026-10-29"));
     assert_eq!(
         out.notices,
         [Notice::Refused {
