@@ -1,3 +1,4 @@
+color:: green
 - TODO Release version 2
 	- TODO Write release notes
 	- DONE Update the changelog

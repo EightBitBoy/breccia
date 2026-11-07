@@ -118,3 +118,78 @@ fn the_example_folder_opens_cleanly() {
     }
     assert_eq!(md, ws.pages().count(), "every .md file is a page");
 }
+
+/// Copies `src` to `dst`, so a test never writes into the repository's demo folder.
+fn copy_dir(src: &Path, dst: &Path) {
+    std::fs::create_dir_all(dst).unwrap();
+    for e in std::fs::read_dir(src).unwrap() {
+        let p = e.unwrap().path();
+        let to = dst.join(p.file_name().unwrap());
+        if p.is_dir() {
+            copy_dir(&p, &to);
+        } else {
+            std::fs::copy(&p, &to).unwrap();
+        }
+    }
+}
+
+/// `(topic, color)` of the journal blocks whose text starts with `prefix`.
+fn topic_of(day: &serde_json::Value, prefix: &str) -> String {
+    let b = day["blocks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|b| b["text"].as_str().is_some_and(|t| t.starts_with(prefix)))
+        .unwrap_or_else(|| panic!("no block starting with {prefix:?}"));
+    format!(
+        "{}/{}",
+        b["topic"].as_str().unwrap_or("-"),
+        b["color"].as_str().unwrap_or("-")
+    )
+}
+
+#[test]
+fn the_demo_shows_page_colors() {
+    let tmp = tempfile::tempdir().unwrap();
+    copy_dir(Path::new(FOLDER), tmp.path());
+    let mut s = breccia_core::Session::new();
+    let clock = breccia_core::Clock {
+        today: chrono::NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
+        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
+        ms: 0,
+    };
+    let mut run = |command: serde_json::Value| {
+        let req = serde_json::from_value(
+            serde_json::json!({"generation": s.generation(), "command": command}),
+        )
+        .unwrap();
+        s.run(req, clock).unwrap_or_else(|e| panic!("{e:?}"))
+    };
+    run(serde_json::json!({"type": "folder.open", "path": tmp.path()}));
+
+    let d29 = serde_json::to_value(
+        run(serde_json::json!({"type": "page.get", "key": "2026-10-29"}))
+            .page
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(topic_of(&d29, "TODO Book a room"), "q&a: hiring/violet");
+    assert_eq!(
+        topic_of(&d29, "[[Q&A: hiring]]: three candidates"),
+        "q&a: hiring/violet"
+    );
+
+    let d28 = serde_json::to_value(
+        run(serde_json::json!({"type": "page.get", "key": "2026-10-28"}))
+            .page
+            .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(topic_of(&d28, "Planning for"), "release 2/green");
+    assert_eq!(topic_of(&d28, "We ship on"), "release 2/green");
+    assert_eq!(topic_of(&d28, "Release notes go out"), "release 2/green");
+    assert_eq!(topic_of(&d28, "Restarted the queue"), "on call/amber");
+
+    let (ws, _) = Workspace::open(tmp.path()).unwrap();
+    assert_eq!(ws.page_color("project x"), Some("blue"));
+}

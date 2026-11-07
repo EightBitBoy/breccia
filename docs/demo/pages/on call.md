@@ -1,3 +1,4 @@
+color:: amber
 - The person on call answers alerts from 08:00 to 20:00
 - Handover is on Thursday at noon, in the standup
 - Runbook

@@ -3,6 +3,7 @@ aliases:
   - "Q&A: hiring"
 ---
 title:: Q&A: hiring
+color:: violet
 
 Questions and answers for the backend hiring round.
 - What does the first week look like?

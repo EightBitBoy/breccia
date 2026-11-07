@@ -1,3 +1,4 @@
+color:: blue
 Move the nightly import and export jobs off the old server.
 
 - Goals
