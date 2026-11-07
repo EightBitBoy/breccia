@@ -31,3 +31,8 @@ Task 3: implementer DONE (11a3e9f); picker state rules (slider sets preview, sav
 Task 3: review approved (spec ✅); TS parseHue is stricter than the core (core accepts HUE/leading zeros) — fine, the wire value is the core's canonical Display
 Task 3: minor (deferred): parseHue rejection list lacks 'hue 1000', 'hue -1', trailing/double spaces
 Task 3: complete (commits 67caa1d..11a3e9f, review clean)
+Task 4: dispatched (sonnet), BASE 3466955
+Task 4: implementer DONE (de6f53c); sweep: no stepping needed in any theme (28/28 34/34 34/34 34/34 28/28 30/30 34/34)
+Task 4: review approved (spec ✅; math cross-checked by independent test helpers; params in all 7 blocks); ⚠️ literal scan resolved: controller ran theme.test.ts, 18/18 pass
+Task 4: minor (deferred): the sweep's single console.info line in test output (borderline vs pristine output); float chroma loop and assignment-in-argument style nits in customColor.ts
+Task 4: complete (commits 3466955..de6f53c, review clean)
