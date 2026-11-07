@@ -1777,6 +1777,8 @@
                 {flash}
                 onrename={(name) => void flows.rename(page!.key, page!.name, name)}
                 onopen={(name) => void exec({ type: 'page.open', name })}
+                onsetcolor={(color) => void exec({ type: 'page.setColor', key: page!.key, color })}
+                onhistory={(redo) => void exec({ type: redo ? 'history.redo' : 'history.undo', page: page!.key })}
               />
             {/if}
           </div>

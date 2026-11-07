@@ -2,6 +2,7 @@
   import type { PageView, RefsView } from '../lib/types'
   import Outline from './Outline.svelte'
   import LinkedRefs from './LinkedRefs.svelte'
+  import PageColorPicker from './PageColorPicker.svelte'
 
   let {
     page,
@@ -15,6 +16,8 @@
     onstart,
     onrename,
     onopen,
+    onsetcolor,
+    onhistory,
   }: {
     page: PageView
     /** The linked references to the page, once loaded. */
@@ -32,6 +35,10 @@
     onrename: (name: string) => void
     /** Open a page by name (a reference's source). */
     onopen: (name: string) => void
+    /** Set the page's color, or remove it with null (pages only; journal days have none). */
+    onsetcolor: (color: string | null) => void
+    /** Undo (false) or redo (true) on the page, from the color swatch. */
+    onhistory: (redo: boolean) => void
   } = $props()
 
   let renaming = $state(false)
@@ -56,23 +63,28 @@
 </script>
 
 <article class="page">
-  {#if renaming}
-    <!-- svelte-ignore a11y_autofocus -->
-    <input
-      class="title-input"
-      data-testid="name-input"
-      aria-label="Page name"
-      bind:value={draft}
-      autofocus
-      onkeydown={titleKey}
-      onblur={() => (renaming = false)}
-    />
-  {:else if page.kind === 'page'}
-    <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
-    <h1 class="renamable" data-testid="page-title" title="Click to rename" onclick={startRename}>{page.title}</h1>
-  {:else}
-    <h1 data-testid="page-title">{page.title}</h1>
-  {/if}
+  <div class="title-row">
+    {#if renaming}
+      <!-- svelte-ignore a11y_autofocus -->
+      <input
+        class="title-input"
+        data-testid="name-input"
+        aria-label="Page name"
+        bind:value={draft}
+        autofocus
+        onkeydown={titleKey}
+        onblur={() => (renaming = false)}
+      />
+    {:else if page.kind === 'page'}
+      <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+      <h1 class="renamable" data-testid="page-title" title="Click to rename" onclick={startRename}>{page.title}</h1>
+    {:else}
+      <h1 data-testid="page-title">{page.title}</h1>
+    {/if}
+    {#if page.kind === 'page'}
+      <PageColorPicker color={page.color ?? null} onpick={onsetcolor} {onhistory} />
+    {/if}
+  </div>
   {#if page.preambleHtml}
     <div class="preamble">{@html page.preambleHtml}</div>
   {/if}
