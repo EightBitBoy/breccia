@@ -13,6 +13,10 @@ export interface BlockView {
   /** Whether that state counts as finished. */
   finished: boolean
   hasChildren: boolean
+  /** Journal blocks only: the page the block's first topic link goes to. */
+  topic?: string
+  /** Journal blocks only: that page's color name, when it has one. */
+  color?: string
 }
 
 export interface PageView {
@@ -25,6 +29,8 @@ export interface PageView {
   blocks: BlockView[]
   /** Whether the page has a file; a moved page's file may be empty. */
   hasFile: boolean
+  /** The page's own color name; absent for a journal or an uncolored page. */
+  color?: string
 }
 
 /** Where the caret goes: a block and a UTF-8 byte offset in its text. */
@@ -366,6 +372,8 @@ export type Command =
   | { type: 'page.rename'; key: string; name: string }
   | { type: 'page.move'; key: string; folder: string }
   | { type: 'page.delete'; key: string }
+  /** `null` removes the page's color. */
+  | { type: 'page.setColor'; key: string; color: string | null }
   | { type: 'dir.rename'; path: string; to: string }
   | { type: 'dir.delete'; path: string }
   | { type: 'page.refs'; key: string }
