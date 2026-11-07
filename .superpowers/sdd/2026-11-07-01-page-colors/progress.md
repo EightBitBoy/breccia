@@ -86,3 +86,12 @@ Task 8: minor (deferred, for final fix wave): test id link-menu used both by the
 Task 8: review approved (spec ✅; day 5/6 overwrites safe; count 154 adds up)
 Task 8: minor (deferred): selection check only asserts background != wash (smoke.mjs:2599); probe the selection token instead
 Task 8: complete (commits bebd186..ae59f84, review clean)
+Task 9: dispatched (sonnet), BASE e5f7d71
+Task 9: implementer DONE (e92db4d)
+Task 9: review Needs fixes: Important review item 27 wash strengths wrong for Light/Taupe (text came from the brief)
+- Ruling: Task 9 item 27 — the built tokens win over the plan text (Light/Taupe 28 %, Teal 30 %, others 34 %, as the Global Constraints say) — cost: none.
+Task 9: fix round 1 dispatched (item 27 + verify typing-pause and right-click claims)
+Task 9: minor (deferred): docs/spec.md:157 and :226 longer than ~120 cols; compatibility.md decision paragraph placement
+Task 9: fix round 1/5 (2 addressed, 0 open — item 27 and spec §7.10 wash strengths; right-click wording matches linkMenuAction; commits e92db4d..40bb37e)
+Task 9: minor (deferred): edited doc lines over ~120 cols (review.md item 31, spec §7.4/§7.10); "links to days/missing pages show no menu" not true with a selection (native menu)
+Task 9: complete (commits e5f7d71..40bb37e, review clean after fix round 1)
