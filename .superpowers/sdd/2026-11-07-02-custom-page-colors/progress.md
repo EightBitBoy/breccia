@@ -21,3 +21,8 @@ Task 1: minor (deferred): test strings use literal newline/tab characters instea
 Task 1: minor (deferred): view.rs spells crate::color::PageColor four times
 Task 1: minor (deferred): no read test for a lone invalid `color:: hue 999` line returning None
 Task 1: complete (commits 4c5f9e3..b0f2210, review clean)
+Task 2: dispatched (sonnet), BASE 9fd3487
+Task 2: implementer DONE (e0b9f67)
+Task 2: review approved (spec ✅; every §8 claim matches parse_color/recolor); ⚠️ spec §7.3/§7.10 references resolved: both sections exist (plan 1 Task 9)
+Task 2: minor (deferred): format.md §8 slightly repetitive "lower case" sentences; §13 bullet over 120 cols (old)
+Task 2: complete (commits 9fd3487..e0b9f67, review clean)
