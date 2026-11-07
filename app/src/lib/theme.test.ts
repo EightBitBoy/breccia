@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
+import { PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
 
 import tokensCss from '../styles/tokens.css?raw'
 
@@ -122,4 +123,93 @@ test('applyTheme sets or clears the attribute and the window theme', async () =>
     console.error = orig
   }
   expect(errs.length).toBe(1)
+})
+
+// ---- page colors ----
+
+const THEME_SELECTORS = [
+  ':root, [data-theme="light"]',
+  ...['dark', 'violet', 'graphite', 'taupe', 'teal'].map((t) => `[data-theme="${t}"]`),
+  ':root:not([data-theme])',
+]
+
+function rgb(hex: string): number[] {
+  if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`not a #rrggbb colour: ${hex}`)
+  return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16))
+}
+
+/** A straight sRGB alpha blend of `fg` over `bg`, rounded to #rrggbb. */
+function over(fg: string, bg: string, alpha: number): string {
+  const f = rgb(fg)
+  const b = rgb(bg)
+  return '#' + f.map((v, i) => Math.round(v * alpha + b[i] * (1 - alpha)).toString(16).padStart(2, '0')).join('')
+}
+
+function oklab(hex: string): number[] {
+  const [r, g, b] = rgb(hex).map((v) => {
+    const c = v / 255
+    return c <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4
+  })
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b)
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b)
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b)
+  return [
+    0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s,
+    1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s,
+    0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s,
+  ]
+}
+
+function distance(a: string, b: string): number {
+  const [x, y] = [oklab(a), oklab(b)]
+  return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2])
+}
+
+test('page colors have a shade in every theme', () => {
+  for (const s of THEME_SELECTORS) {
+    const b = block(s)
+    expect(b['--pc-wash'], s).toMatch(/^\d+%$/)
+    const shades = PAGE_COLORS.map((n) => {
+      expect(b[`--pc-${n}`], `${s} ${n}`).toMatch(/^#[0-9a-f]{6}$/)
+      return b[`--pc-${n}`]
+    })
+    expect(new Set(shades).size, s).toBe(PAGE_COLORS.length)
+  }
+  for (const n of PAGE_COLORS) {
+    expect(css, n).toContain(`--pc-${n}-wash: color-mix(in srgb, var(--pc-${n}) var(--pc-wash), transparent);`)
+  }
+})
+
+/** The wash of a page color over the theme's background. */
+function washes(s: string): Record<string, string> {
+  const b = block(s)
+  const alpha = parseInt(b['--pc-wash'], 10) / 100
+  return Object.fromEntries(PAGE_COLORS.map((n) => [n, over(b[`--pc-${n}`], b['--bg'], alpha)]))
+}
+
+test('page color washes keep text readable', () => {
+  for (const s of THEME_SELECTORS) {
+    const b = block(s)
+    for (const [n, w] of Object.entries(washes(s))) {
+      expect(contrast(b['--text'], w), `${s} ${n} text`).toBeGreaterThanOrEqual(4.5)
+      expect(contrast(b['--link'], w), `${s} ${n} link`).toBeGreaterThanOrEqual(3)
+      expect(contrast(b['--tag'], w), `${s} ${n} tag`).toBeGreaterThanOrEqual(3)
+    }
+  }
+})
+
+test('neighbouring page colors differ', () => {
+  for (const s of THEME_SELECTORS) {
+    const b = block(s)
+    const w = washes(s)
+    PAGE_COLOR_ROWS.forEach((row, y) =>
+      row.forEach((n, x) => {
+        const neighbours = [PAGE_COLOR_ROWS[y][x + 1], PAGE_COLOR_ROWS[y + 1]?.[x]].filter(Boolean)
+        for (const o of neighbours) {
+          expect(distance(w[n], w[o]), `${s} wash ${n}/${o}`).toBeGreaterThanOrEqual(0.008)
+          expect(distance(b[`--pc-${n}`], b[`--pc-${o}`]), `${s} shade ${n}/${o}`).toBeGreaterThanOrEqual(0.025)
+        }
+      }),
+    )
+  }
 })

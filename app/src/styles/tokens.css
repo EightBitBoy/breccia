@@ -27,6 +27,32 @@
   --c-blue: #2f6fd0;
   --c-red: #c4423b;
   --c-teal: #1f8a8a;
+  --pc-crimson: #d4556c;
+  --pc-red: #e86154;
+  --pc-coral: #e67e54;
+  --pc-orange: #db7d24;
+  --pc-amber: #d69727;
+  --pc-yellow: #c7b144;
+  --pc-olive: #888c40;
+  --pc-lime: #89b645;
+  --pc-green: #4ea253;
+  --pc-emerald: #45af81;
+  --pc-teal: #37a69a;
+  --pc-cyan: #2eb1c2;
+  --pc-sky: #4caad7;
+  --pc-blue: #4885df;
+  --pc-indigo: #6875d8;
+  --pc-violet: #8f78df;
+  --pc-purple: #9f6acb;
+  --pc-magenta: #ca66c3;
+  --pc-pink: #db7aa7;
+  --pc-rose: #d98aa0;
+  --pc-brown: #95694c;
+  --pc-tan: #b19270;
+  --pc-sand: #b8a98b;
+  --pc-slate: #77889b;
+  --pc-grey: #929292;
+  --pc-wash: 28%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -57,6 +83,32 @@
     --c-blue: #6fa0f0;
     --c-red: #ef7a73;
     --c-teal: #5cc4c4;
+    --pc-crimson: #d36173;
+    --pc-red: #e0685b;
+    --pc-coral: #da7d59;
+    --pc-orange: #d27e35;
+    --pc-amber: #ca9134;
+    --pc-yellow: #b8a546;
+    --pc-olive: #8c914e;
+    --pc-lime: #85ad4a;
+    --pc-green: #59a25c;
+    --pc-emerald: #4faa81;
+    --pc-teal: #46a499;
+    --pc-cyan: #3daab9;
+    --pc-sky: #52a4cc;
+    --pc-blue: #548bdc;
+    --pc-indigo: #707fd8;
+    --pc-violet: #917dd9;
+    --pc-purple: #a272c9;
+    --pc-magenta: #c56cbe;
+    --pc-pink: #d07aa1;
+    --pc-rose: #cc8599;
+    --pc-brown: #9e765c;
+    --pc-tan: #ad9072;
+    --pc-sand: #ad9f85;
+    --pc-slate: #7d8d9e;
+    --pc-grey: #929292;
+    --pc-wash: 34%;
   }
 }
 
@@ -87,6 +139,32 @@
   --c-blue: #6fa0f0;
   --c-red: #ef7a73;
   --c-teal: #5cc4c4;
+  --pc-crimson: #d36173;
+  --pc-red: #e0685b;
+  --pc-coral: #da7d59;
+  --pc-orange: #d27e35;
+  --pc-amber: #ca9134;
+  --pc-yellow: #b8a546;
+  --pc-olive: #8c914e;
+  --pc-lime: #85ad4a;
+  --pc-green: #59a25c;
+  --pc-emerald: #4faa81;
+  --pc-teal: #46a499;
+  --pc-cyan: #3daab9;
+  --pc-sky: #52a4cc;
+  --pc-blue: #548bdc;
+  --pc-indigo: #707fd8;
+  --pc-violet: #917dd9;
+  --pc-purple: #a272c9;
+  --pc-magenta: #c56cbe;
+  --pc-pink: #d07aa1;
+  --pc-rose: #cc8599;
+  --pc-brown: #9e765c;
+  --pc-tan: #ad9072;
+  --pc-sand: #ad9f85;
+  --pc-slate: #7d8d9e;
+  --pc-grey: #929292;
+  --pc-wash: 34%;
 }
 
 [data-theme="violet"] {
@@ -116,6 +194,32 @@
   --c-blue: #8fb4ff;
   --c-red: #ff8a9a;
   --c-teal: #6fd6d0;
+  --pc-crimson: #da6779;
+  --pc-red: #e76e61;
+  --pc-coral: #e1835f;
+  --pc-orange: #d9843c;
+  --pc-amber: #d0973b;
+  --pc-yellow: #beab4d;
+  --pc-olive: #929754;
+  --pc-lime: #8bb351;
+  --pc-green: #5fa962;
+  --pc-emerald: #55b187;
+  --pc-teal: #4daa9f;
+  --pc-cyan: #45b1c0;
+  --pc-sky: #59aad3;
+  --pc-blue: #5a91e2;
+  --pc-indigo: #7685df;
+  --pc-violet: #9784e0;
+  --pc-purple: #a879d0;
+  --pc-magenta: #cc72c5;
+  --pc-pink: #d780a7;
+  --pc-rose: #d38c9f;
+  --pc-brown: #a47c62;
+  --pc-tan: #b39678;
+  --pc-sand: #b3a68b;
+  --pc-slate: #8393a4;
+  --pc-grey: #989898;
+  --pc-wash: 34%;
 }
 
 [data-theme="graphite"] {
@@ -145,6 +249,32 @@
   --c-blue: #7fa8e0;
   --c-red: #e58080;
   --c-teal: #5fc0b0;
+  --pc-crimson: #bb5e6c;
+  --pc-red: #c7655a;
+  --pc-coral: #c37759;
+  --pc-orange: #bc773f;
+  --pc-amber: #b68840;
+  --pc-yellow: #a8994e;
+  --pc-olive: #80844e;
+  --pc-lime: #7d9e50;
+  --pc-green: #58935a;
+  --pc-emerald: #529b79;
+  --pc-teal: #4c958c;
+  --pc-cyan: #489ba8;
+  --pc-sky: #5696b7;
+  --pc-blue: #5380c1;
+  --pc-indigo: #6875be;
+  --pc-violet: #8475c0;
+  --pc-purple: #926cb2;
+  --pc-magenta: #b068aa;
+  --pc-pink: #bb7494;
+  --pc-rose: #b87e8d;
+  --pc-brown: #8d6d57;
+  --pc-tan: #9c856d;
+  --pc-sand: #9e937e;
+  --pc-slate: #74818f;
+  --pc-grey: #868686;
+  --pc-wash: 34%;
 }
 
 [data-theme="teal"] {
@@ -174,6 +304,32 @@
   --c-blue: #4b9fe0;
   --c-red: #ec6a67;
   --c-teal: #2aa198;
+  --pc-crimson: #871a36;
+  --pc-red: #911d18;
+  --pc-coral: #8b360d;
+  --pc-orange: #7b4000;
+  --pc-amber: #744e03;
+  --pc-yellow: #695b00;
+  --pc-olive: #4d5003;
+  --pc-lime: #436203;
+  --pc-green: #0c5e1a;
+  --pc-emerald: #006241;
+  --pc-teal: #065d55;
+  --pc-cyan: #065f6a;
+  --pc-sky: #005c7e;
+  --pc-blue: #124893;
+  --pc-indigo: #373e90;
+  --pc-violet: #513a90;
+  --pc-purple: #603183;
+  --pc-magenta: #7b2677;
+  --pc-pink: #82345b;
+  --pc-rose: #7e3f52;
+  --pc-brown: #5f3b22;
+  --pc-tan: #664c31;
+  --pc-sand: #63573e;
+  --pc-slate: #3f4d5c;
+  --pc-grey: #505050;
+  --pc-wash: 30%;
 }
 
 [data-theme="taupe"] {
@@ -203,6 +359,32 @@
   --c-blue: #4f6f9a;
   --c-red: #a8473a;
   --c-teal: #3f7f78;
+  --pc-crimson: #da7483;
+  --pc-red: #ea7e71;
+  --pc-coral: #e79372;
+  --pc-orange: #de9256;
+  --pc-amber: #d9a659;
+  --pc-yellow: #ccbb6a;
+  --pc-olive: #999d62;
+  --pc-lime: #9abf69;
+  --pc-green: #6eaf70;
+  --pc-emerald: #6bb994;
+  --pc-teal: #63b2a8;
+  --pc-cyan: #61bbc8;
+  --pc-sky: #6fb6da;
+  --pc-blue: #6899e1;
+  --pc-indigo: #7e8cdc;
+  --pc-violet: #9e8ee1;
+  --pc-purple: #ac83d1;
+  --pc-magenta: #d181ca;
+  --pc-pink: #de90b2;
+  --pc-rose: #dc9bac;
+  --pc-brown: #a48169;
+  --pc-tan: #bba187;
+  --pc-sand: #c0b49c;
+  --pc-slate: #8b99a9;
+  --pc-grey: #a1a1a1;
+  --pc-wash: 28%;
 }
 
 /* Links and tags inside a finished task: dimmed toward the muted text colour, in every theme. */
@@ -220,4 +402,33 @@
 /* The thumb of the scrollbars that hide when the pointer rests (.autohide in app.css). */
 :root {
   --scroll-thumb: color-mix(in srgb, var(--muted) 60%, transparent);
+}
+
+/* Page colors: the wash behind a journal block, the page color at the theme's wash strength. */
+:root {
+  --pc-crimson-wash: color-mix(in srgb, var(--pc-crimson) var(--pc-wash), transparent);
+  --pc-red-wash: color-mix(in srgb, var(--pc-red) var(--pc-wash), transparent);
+  --pc-coral-wash: color-mix(in srgb, var(--pc-coral) var(--pc-wash), transparent);
+  --pc-orange-wash: color-mix(in srgb, var(--pc-orange) var(--pc-wash), transparent);
+  --pc-amber-wash: color-mix(in srgb, var(--pc-amber) var(--pc-wash), transparent);
+  --pc-yellow-wash: color-mix(in srgb, var(--pc-yellow) var(--pc-wash), transparent);
+  --pc-olive-wash: color-mix(in srgb, var(--pc-olive) var(--pc-wash), transparent);
+  --pc-lime-wash: color-mix(in srgb, var(--pc-lime) var(--pc-wash), transparent);
+  --pc-green-wash: color-mix(in srgb, var(--pc-green) var(--pc-wash), transparent);
+  --pc-emerald-wash: color-mix(in srgb, var(--pc-emerald) var(--pc-wash), transparent);
+  --pc-teal-wash: color-mix(in srgb, var(--pc-teal) var(--pc-wash), transparent);
+  --pc-cyan-wash: color-mix(in srgb, var(--pc-cyan) var(--pc-wash), transparent);
+  --pc-sky-wash: color-mix(in srgb, var(--pc-sky) var(--pc-wash), transparent);
+  --pc-blue-wash: color-mix(in srgb, var(--pc-blue) var(--pc-wash), transparent);
+  --pc-indigo-wash: color-mix(in srgb, var(--pc-indigo) var(--pc-wash), transparent);
+  --pc-violet-wash: color-mix(in srgb, var(--pc-violet) var(--pc-wash), transparent);
+  --pc-purple-wash: color-mix(in srgb, var(--pc-purple) var(--pc-wash), transparent);
+  --pc-magenta-wash: color-mix(in srgb, var(--pc-magenta) var(--pc-wash), transparent);
+  --pc-pink-wash: color-mix(in srgb, var(--pc-pink) var(--pc-wash), transparent);
+  --pc-rose-wash: color-mix(in srgb, var(--pc-rose) var(--pc-wash), transparent);
+  --pc-brown-wash: color-mix(in srgb, var(--pc-brown) var(--pc-wash), transparent);
+  --pc-tan-wash: color-mix(in srgb, var(--pc-tan) var(--pc-wash), transparent);
+  --pc-sand-wash: color-mix(in srgb, var(--pc-sand) var(--pc-wash), transparent);
+  --pc-slate-wash: color-mix(in srgb, var(--pc-slate) var(--pc-wash), transparent);
+  --pc-grey-wash: color-mix(in srgb, var(--pc-grey) var(--pc-wash), transparent);
 }
