@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-06. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-07. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -20,8 +20,10 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 
 | # | Plan | State | Plan file | Follow-ups |
 |---|---|---|---|---|
+| 1 | Page colors | approved 2026-11-07, in progress | `docs/plans/2026-11-07-01-page-colors.md` | |
 
-No plan yet. Plans go in `docs/plans/` (see `CLAUDE.md`).
+Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
+and in the plan's "Owner decisions" section. Progress ledger: `.superpowers/sdd/2026-11-07-01-page-colors/progress.md`.
 
 ## Next
 
