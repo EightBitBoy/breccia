@@ -40,3 +40,5 @@ Task 3: review Needs fixes (spec ✅): Important guard test opening_a_folder_sen
 Task 3: minor (deferred): rename.rs:830 relaxed assertion vacuous if changed is empty; tighten to keys == ["2026-10-29"]
 Task 3: minor (deferred): no test for the recompute_aliases path (alias added/removed on a coloured page recolours #alias blocks), names.rs:595-600
 Task 3: minor (deferred): PageView::of parses inline::links for every top-level block of a journal per keystroke (view.rs:331); index_page allocates colors.insert per coloured page (names.rs:542)
+Task 3: fix round 1/5 (2 addressed, 0 open — guard test fixture now reaches the generation guard, RED with guard removed; scale re-measured: parent median 12.37 ms, HEAD 11.95 ms, no fix needed; commits f6df5bc..98f76d1)
+Task 3: complete (commits 556f8ec..98f76d1, review clean after fix round 1)
