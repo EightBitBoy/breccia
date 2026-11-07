@@ -3,3 +3,4 @@ node_modules/
 dist/
 *.stackdump
 app/src-tauri/gen/
+.superpowers/brainstorm/
