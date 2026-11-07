@@ -95,3 +95,9 @@ Task 9: minor (deferred): docs/spec.md:157 and :226 longer than ~120 cols; compa
 Task 9: fix round 1/5 (2 addressed, 0 open — item 27 and spec §7.10 wash strengths; right-click wording matches linkMenuAction; commits e92db4d..40bb37e)
 Task 9: minor (deferred): edited doc lines over ~120 cols (review.md item 31, spec §7.4/§7.10); "links to days/missing pages show no menu" not true with a selection (native menu)
 Task 9: complete (commits e5f7d71..40bb37e, review clean after fix round 1)
+Task 10: dispatched (sonnet), BASE bf33b6a
+Task 10: implementer DONE_WITH_CONCERNS (d130686, 63bd632, dbb12a5): screenshots.mjs now exits via tray:exit (close hides to tray); controller viewed journal.png: violet merged run 29 Oct, green + amber separate blobs 28 Oct
+Task 10: review approved (spec ✅; screenshots.mjs tray:exit change judged justified)
+Task 10: minor (deferred): screenshots.mjs:109 .catch swallows an emit failure (ends as "did not close")
+Task 10: complete (commits bf33b6a..dbb12a5, review clean)
+All tasks complete. Final review next (opus), range 152f95c..HEAD.
