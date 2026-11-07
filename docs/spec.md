@@ -248,6 +248,14 @@ Enter and Esc work in the picker. A tag-only page gets its file when a color is 
 A pick is its own undo step: `Ctrl Z` with the swatch focused (right after a pick) or while editing a block of the page
 takes it back, and earlier typing stays undoable.
 
+Below the grid and "No color" the picker has a custom part. A "Custom hue" slider runs around the color wheel (0 to
+359): arrows change it by 1, Page Up / Down by 10, Home / End jump to the ends, and Tab moves between the grid and the
+slider. Arrow keys only preview; Enter saves and closes. A drag saves once on release and keeps the picker open, so a
+second drag can follow. A preview line (sample text with a link and a tag, on the color under the pointer or the
+keyboard, in the current theme) follows the 25 cells and the slider; the saved color stays marked. A custom color is
+saved as `color:: hue <h>`. Picking a name after a hue, or a hue after a name, replaces the line. One save is one undo
+step. The right-click "Color…" menu in the journal opens the same picker.
+
 ### 7.4 Journal
 
 - One continuous, scrollable feed: **today at the top**, and scrolling down goes back in time day by day.
@@ -258,7 +266,7 @@ takes it back, and earlier typing stays undoable.
 - Clicking a day's title opens that day as a normal page, with its linked references (e.g. tasks finished that day via
   `done::`). The feed itself shows no linked references, to stay compact.
 - **Page color washes.** Each top-level block gets a faint wash of the color of the first link or tag in it that goes to
-  a topic page with a color. Journal days and missing pages are skipped, aliases are followed, and sub-blocks follow
+  a topic page with a color (named or custom: a custom color washes and merges exactly like a named one). Journal days and missing pages are skipped, aliases are followed, and sub-blocks follow
   their parent. Consecutive blocks whose topic is the same page merge into one band; blocks of different pages stay
   separate, with a small gap, even in the same color. The feed and a day page look the same. Washes follow edits after the typing pause and any change of a page's color, from
   anywhere.
@@ -409,7 +417,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 - The choice (or "System") is a setting of this computer (§4). Each theme is a token set on `[data-theme="…"]`; the
   window's title bar follows its light or dark.
 - Every colour in the UI comes from a token (CSS variable): backgrounds, sidebar, lines, text, muted text, accent, link,
-  tag, card, one colour per task state, the 25 page colors (§7.3) and the strength of the page-color wash (§7.4): 28 % in Light and Taupe, 30 % in Teal, 34 % in the others. A theme is a set of token values. Switching applies instantly.
+  tag, card, one colour per task state, the 25 page colors (§7.3) and the strength of the page-color wash (§7.4): 28 % in Light and Taupe, 30 % in Teal, 34 % in the others. They also include each theme's shade parameters (base lightness, chroma and offset factors). A custom hue's shade (§7.3) is computed from them at runtime with the same rule as the 25 colors, and its wash strength is lowered step by step in a theme where text (4.5:1), links or tags (3:1) would otherwise be hard to read. A theme is a set of token values. Switching applies instantly.
 - User-made themes (e.g. a `breccia/themes/*.css` file with token overrides) are later, but the token structure must
   allow them.
 

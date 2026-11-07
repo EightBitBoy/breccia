@@ -85,3 +85,19 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    2026-10-29 journal has one new block, and the README journal screenshot shows the washes.
 33. [ ] **Escape in the color picker:** select a few blocks, open a page's color picker with the keyboard (focus the
    swatch, Enter) and press Escape: the picker closes and the blocks stay selected.
+
+## Custom page colors
+
+34. [ ] **Hue slider:** look, keys (arrows, Page Up/Down, Home/End, Enter, Tab), dragging, and that only release or
+   Enter writes the `color:: hue <h>` line; the picker stays open after a drag.
+35. [ ] **Preview:** the sample line follows the pointer and the arrow keys over the 25 colors, "No color" and the
+   slider, and shows what the journal shows; the sample text is "Notes with a link and #tag" (say if you want other
+   words).
+36. [ ] **Custom hues in every theme:** sweep the slider in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
+   Windows modes): washes soft, text, links and tags readable. Yellow-ish hues come out olive-like and darker than
+   the fixed `yellow` (the lightness is the same for every hue); say if that looks wrong.
+37. [ ] **Saved color stays marked:** while the picker is open, the saved cell or the slider stays marked while the
+   preview moves.
+38. [ ] **Undo:** one `Ctrl Z` takes back one whole drag or one Enter on the slider.
+39. [ ] **In the file:** `color:: hue 212`; `hue 360` and `hue x` stay visible as text and give no color; older
+   Breccia versions read a hue as no color and keep the line.
