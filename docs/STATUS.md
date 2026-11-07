@@ -11,7 +11,7 @@ configurable task states, cycling with `Ctrl Enter`, `created::` and `done::` ti
 block, with priority by dragging, hidden columns and automatic archiving; the Archive and All pages views; search
 (`Ctrl K`) with filters and typed dates; Git sync and a Git history view; six themes plus System; zoom; back and
 forward between views; the `F1` shortcut overlay; the graph; a tray icon; a Windows installer built by the release
-workflow. Since plans 1 and 2 (not released yet): page colors, 25 named colors or a custom hue per page, shown as soft
+workflow. Since 1.1.0 (released 2026-11-07, plans 1 and 2): page colors, 25 named colors or a custom hue per page, shown as soft
 washes behind journal blocks, set from a swatch on the page title or by right-clicking a link in the journal, with a
 live preview in the picker.
 
@@ -31,12 +31,12 @@ and in the plan's "Owner decisions" section. Progress ledger: `.superpowers/sdd/
 
 ## Next
 
-Plans 1 (page colors) and 2 (custom page colors) are done and on `main`, not yet released. The next plan is not chosen yet; to settle with the
+Plans 1 (page colors) and 2 (custom page colors) are done and released as 1.1.0 (2026-11-07,
+https://github.com/EightBitBoy/breccia/releases/tag/v1.1.0). The next plan is not chosen yet; to settle with the
 owner. Candidates:
 
 - the by-hand checks in `docs/review.md` (items 1 to 41; 25 to 41 are page colors);
 - the follow-ups of plans 1 and 2 (`docs/plans/2026-11-07-0{1,2}-*-followups.md`);
-- a release with page colors (`just release`, by the owner);
 - backlog items the owner picks (`docs/backlog.md`, 72 items);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
