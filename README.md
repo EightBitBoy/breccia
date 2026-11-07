@@ -21,6 +21,7 @@ It is made for one person who keeps daily notes and tasks in one place and wants
   an entry.
 - **Pages** with `[[links]]` and `#tags`. Each page lists its linked references: every block elsewhere that links to it.
   The sidebar's Tags section lists every tag with the number of blocks that have it; a tag can be renamed there.
+- **Page colors**: give a page one of 25 colors, and the journal's blocks that link to it get a faint wash of it.
 - **Tasks**: a block starting with a state keyword (`TODO`, `DOING`, `DONE`, …) is a task. The states are configurable,
   and `Ctrl Enter` cycles through them (`Ctrl Shift Enter` removes the state). A task records when it got its state (a `created::` line), and a finished one
   shows when it was done and how long it took (`✓ 3 Nov 14:05 after 3 days`).
