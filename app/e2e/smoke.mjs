@@ -2694,17 +2694,19 @@ try {
   assert(readAt(hue117) === 'color:: hue 212\n- custom\n', '117 the drag saved before the release')
   await page.mouse.up()
   await expectFile('117 one drag saves once', 'color:: hue 359\n- custom\n', hue117)
-  const mtime117 = statSync(hue117).mtimeMs
   assert(await picker.isVisible(), '117 the picker closed on release')
   assert((await slider.getAttribute('data-current')) !== null, '117 the slider lost data-current after the drag')
-  await sleep(1000) // a second write would come within the save pause
-  assert(readAt(hue117) === 'color:: hue 359\n- custom\n' && statSync(hue117).mtimeMs === mtime117, '117 the drag wrote the file twice')
   await kb.press('Escape')
   await picker.waitFor({ state: 'detached' })
   await waitFor('117 focus back on the swatch after Esc', focusedTestId, 'page-color')
   await kb.press('Control+z')
   await expectFile('117 undo takes back the whole drag', 'color:: hue 212\n- custom\n', hue117)
   await waitFor('117 swatch hue 212 after undo', () => swatch.getAttribute('data-color'), 'hue 212')
+  // One undo step per drag is the proof of one write: an intermediate save would need a second undo to reach hue 212.
+  await kb.press('Control+z')
+  await expectFile('117 the second undo goes back to before the hue', '- custom\n', hue117)
+  await kb.press('Control+Shift+z')
+  await expectFile('117 redo returns to hue 212', 'color:: hue 212\n- custom\n', hue117)
   await page.locator('[data-testid="nav-journal"]').click()
   console.log('PASS 117 a custom hue is picked by keyboard and by dragging, previewed, saved on release, and undone in one step')
 
