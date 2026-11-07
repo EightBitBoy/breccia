@@ -105,7 +105,8 @@ try {
 
   // Close the app the normal way, then check that no note changed.
   closing = true
-  spawnSync('taskkill', ['/PID', String(app.pid)], { stdio: 'ignore' }) // WM_CLOSE: the normal close path
+  // The close button only hides the window to the tray; the tray menu's "Exit" is the real close, and its event is sent.
+  await page.evaluate(() => window.__TAURI_INTERNALS__.invoke('plugin:event|emit', { event: 'tray:exit' })).catch(() => {})
   const closeEnd = Date.now() + 15_000
   while (!exited && Date.now() < closeEnd) await sleep(100)
   assert(exited, 'the app did not close')
