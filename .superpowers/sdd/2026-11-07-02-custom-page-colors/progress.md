@@ -36,3 +36,11 @@ Task 4: implementer DONE (de6f53c); sweep: no stepping needed in any theme (28/2
 Task 4: review approved (spec ✅; math cross-checked by independent test helpers; params in all 7 blocks); ⚠️ literal scan resolved: controller ran theme.test.ts, 18/18 pass
 Task 4: minor (deferred): the sweep's single console.info line in test output (borderline vs pristine output); float chroma loop and assignment-in-argument style nits in customColor.ts
 Task 4: complete (commits 3466955..de6f53c, review clean)
+Task 5: dispatched (opus), BASE e852776
+Task 5: implementer DONE_WITH_CONCERNS (42bd452): e2e 154, release-exe script confirms pinned values; picker opens with nothing focused for a saved hue until Task 6 adds the slider -> Task 6
+- Ruling (implementer): a theme missing a colour token logs an error and keeps the last values, so startup cannot break — cost if wrong: a broken theme shows stale washes instead of failing loudly.
+Task 5: review approved (spec ✅; theme + OS scheme recompute correct; shades cached per theme; implementer ruling accepted by reviewer); ⚠️ look on screen -> Task 7 e2e + owner review items
+Task 5: minor (deferred): preview font-size 15px/1.5 copied from body (app.css:741)
+Task 5: minor (deferred): preview keeps the last hovered cell when the pointer moves into gaps or onto the preview box (PageColorGrid.svelte:281)
+Task 5: carried to Task 6: `hue` is seeded once (untrack); decide whether it follows `color` after a save with the picker open; picker opens with nothing focused for a saved hue until the slider exists
+Task 5: complete (commits e852776..42bd452, review clean)
