@@ -2,7 +2,9 @@
   // The page color choice: five rows of five colors and "No color" below them. The one tab stop starts at the current
   // color (or "No color") and takes the focus when the grid mounts; in a bits-ui popover, whose content is not yet
   // focusable then, leave the popover's open auto-focus on: it lands on that tab stop. Arrows, Home and End move,
-  // Enter or Space picks (`colorPickerKey`).
+  // Enter or Space picks (`colorPickerKey`), Esc closes. No key goes on to the page behind it, so a block selection
+  // there stays: Esc, Tab or Delete are the picker's own. That also keeps the keys from the popover's own handlers, so
+  // the grid closes on Esc itself, and Tab stays put (the grid has one tab stop, which the popover would loop to).
   // It knows nothing about where it is shown: the page's swatch puts it in a popover, a link menu can too.
   import { onMount, untrack } from 'svelte'
   import { NO_COLOR, PAGE_COLORS, PAGE_COLOR_ROWS, colorLabel, colorPickerKey, pickerStart } from '../lib/pageColors'
@@ -16,7 +18,7 @@
     color: string | null
     /** A choice other than `color`: a color name, or null for "No color". */
     onpick: (color: string | null) => void
-    /** After every choice, the current one included, so the place showing the grid can close. */
+    /** After every choice, the current one included, and on Esc, so the place showing the grid can close. */
     ondone?: () => void
   } = $props()
 
@@ -39,6 +41,12 @@
   }
 
   function onKey(e: KeyboardEvent) {
+    e.stopPropagation()
+    if (e.key === 'Escape' || e.key === 'Tab') {
+      e.preventDefault()
+      if (e.key === 'Escape') ondone?.()
+      return
+    }
     const r = colorPickerKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, at)
     if (r === null) return
     e.preventDefault()

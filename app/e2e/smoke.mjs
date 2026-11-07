@@ -2527,8 +2527,8 @@ try {
   // 114: "No color" removes the line; the journal's washes for the page go
   await hueRow.click()
   await waitFor('114 opens Hue 112', () => title.innerText(), 'Hue 112')
-  // A block selection stays while the swatch takes the focus and opens the picker by keyboard. Esc in the picker
-  // clears it today as well (reported with plan 1, task 8); this step does not pin either way.
+  // A block selection stays while the swatch takes the focus and opens the picker by keyboard, and Esc in the picker
+  // closes only the picker: the next Esc clears the selection.
   const hueRows = page.locator('.main .block[data-block-id]')
   await clickRow(hueRows.nth(0))
   await page.locator('.cm-content').waitFor()
@@ -2540,6 +2540,7 @@ try {
   assert((await page.locator('.block.selected').count()) === 2, '114 opening the picker cleared the selection')
   await kb.press('Escape')
   await picker.waitFor({ state: 'detached' })
+  assert((await page.locator('.block.selected').count()) === 2, '114 Esc in the picker cleared the selection')
   await kb.press('Escape')
   await waitFor('114 selection cleared', () => page.locator('.block.selected').count(), 0)
   await swatch.click()
