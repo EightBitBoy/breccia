@@ -2,20 +2,26 @@ import { describe, expect, test } from 'vitest'
 import {
   CUSTOM,
   NO_COLOR,
+  VIVID,
   PAGE_COLORS,
   PAGE_COLOR_ROWS,
   colorLabel,
   colorPickerKey,
   followHue,
+  followVivid,
   gridStop,
   hueAt,
   hueColor,
   hueSliderKey,
   indexColor,
+  parseCustom,
   parseHue,
   pickerStart,
+  pickerTab,
   previewColor,
   swatchKey,
+  vividAt,
+  vividSliderKey,
   washRows,
 } from './pageColors'
 import appCss from '../styles/app.css?raw'
@@ -222,5 +228,108 @@ describe('the picker with a hue slider', () => {
     expect(followHue(100, 'red')).toBe(100)
     expect(followHue(100, null)).toBe(100)
     expect(followHue(100, 'hue 999')).toBe(100)
+  })
+})
+
+describe('custom colors with a vividness', () => {
+  test('parseCustom reads the wire form', () => {
+    expect(VIVID).toBe(27)
+    expect(parseCustom('hue 212')).toEqual({ hue: 212, vivid: 100 })
+    expect(parseCustom('hue 212 vivid 150')).toEqual({ hue: 212, vivid: 150 })
+    expect(parseCustom('hue 0 vivid 50')).toEqual({ hue: 0, vivid: 50 })
+    expect(parseCustom('hue 359 vivid 200')).toEqual({ hue: 359, vivid: 200 })
+    for (const bad of [
+      'hue 212 vivid 49',
+      'hue 212 vivid 201',
+      'hue 212 vivid 075',
+      'hue 212 vivid',
+      'hue 212 VIVID 150',
+      'hue 212 vivid 150 ',
+      'red',
+      null,
+    ])
+      expect(parseCustom(bad), String(bad)).toBeNull()
+  })
+  test('parseHue ignores the vividness and still rejects bad hues', () => {
+    expect(parseHue('hue 212 vivid 150')).toBe(212)
+    for (const bad of ['hue 1000', 'hue -1', 'hue 7 ', 'hue  7']) expect(parseHue(bad), bad).toBeNull()
+  })
+  test('hueColor leaves out vivid 100', () => {
+    expect(hueColor(212)).toBe('hue 212')
+    expect(hueColor(212, 100)).toBe('hue 212')
+    expect(hueColor(359, 50)).toBe('hue 359 vivid 50')
+  })
+  test('labels, start, follow and index colors', () => {
+    expect(colorLabel('hue 212 vivid 150')).toBe('Custom (hue 212, vividness 150)')
+    expect(pickerStart('hue 5 vivid 60')).toBe(CUSTOM)
+    expect(followVivid(130, 'hue 1 vivid 60')).toBe(60)
+    expect(followVivid(130, 'red')).toBe(130)
+    expect(followVivid(130, null)).toBe(130)
+    expect(followVivid(130, 'hue 1')).toBe(100)
+    expect(indexColor(VIVID, 9, 60)).toBe('hue 9 vivid 60')
+    expect(indexColor(CUSTOM, 9, 60)).toBe('hue 9 vivid 60')
+    expect(previewColor(null, VIVID, 9, 100)).toBe('hue 9')
+  })
+})
+
+describe('vividness slider keys', () => {
+  test('arrows by 5, Page keys by 25, Home and End to the ends', () => {
+    expect(vividSliderKey(k('ArrowRight'), 100)).toBe(105)
+    expect(vividSliderKey(k('ArrowUp'), 100)).toBe(105)
+    expect(vividSliderKey(k('ArrowLeft'), 100)).toBe(95)
+    expect(vividSliderKey(k('ArrowDown'), 100)).toBe(95)
+    expect(vividSliderKey(k('PageUp'), 100)).toBe(125)
+    expect(vividSliderKey(k('PageDown'), 100)).toBe(75)
+    expect(vividSliderKey(k('Home'), 100)).toBe(50)
+    expect(vividSliderKey(k('End'), 100)).toBe(200)
+    expect(vividSliderKey(k('Enter'), 100)).toBe('save')
+    expect(vividSliderKey(k('Tab'), 100)).toBe('leave')
+    expect(vividSliderKey(k('Tab', { shift: true }), 100)).toBe('leave')
+  })
+  test('off-step values move to the next multiple', () => {
+    expect(vividSliderKey(k('ArrowRight'), 133)).toBe(135)
+    expect(vividSliderKey(k('ArrowLeft'), 133)).toBe(130)
+    expect(vividSliderKey(k('PageUp'), 133)).toBe(150)
+    expect(vividSliderKey(k('PageDown'), 133)).toBe(125)
+  })
+  test('clamped to 50..200', () => {
+    expect(vividSliderKey(k('ArrowRight'), 198)).toBe(200)
+    expect(vividSliderKey(k('ArrowLeft'), 50)).toBe(50)
+    expect(vividSliderKey(k('PageUp'), 190)).toBe(200)
+    expect(vividSliderKey(k('PageDown'), 60)).toBe(50)
+  })
+  test('modifiers and other keys do nothing', () => {
+    expect(vividSliderKey(k('ArrowRight', { ctrl: true }), 100)).toBeNull()
+    expect(vividSliderKey(k('ArrowRight', { shift: true }), 100)).toBeNull()
+    expect(vividSliderKey(k('a'), 100)).toBeNull()
+  })
+})
+
+test('vividAt maps a pointer position to a vividness in steps of 5', () => {
+  expect(vividAt(0, 100)).toBe(50)
+  expect(vividAt(50, 100)).toBe(125)
+  expect(vividAt(100, 100)).toBe(200)
+  expect(vividAt(33, 100)).toBe(100)
+  expect(vividAt(-20, 100)).toBe(50)
+  expect(vividAt(140, 100)).toBe(200)
+  expect(vividAt(10, 0)).toBe(50)
+})
+
+describe('pickerTab', () => {
+  test('from the grid', () => {
+    for (const on of [true, false]) expect(pickerTab(7, false, 7, on)).toBe(CUSTOM)
+    expect(pickerTab(7, true, 7, true)).toBe(VIVID)
+    expect(pickerTab(7, true, 7, false)).toBe(CUSTOM)
+    expect(pickerTab(NO_COLOR, true, NO_COLOR, true)).toBe(VIVID)
+  })
+  test('from the hue slider', () => {
+    expect(pickerTab(CUSTOM, false, 7, true)).toBe(VIVID)
+    expect(pickerTab(CUSTOM, false, 7, false)).toBe(7)
+    expect(pickerTab(CUSTOM, true, 7, true)).toBe(7)
+    expect(pickerTab(CUSTOM, true, 7, false)).toBe(7)
+  })
+  test('from the vividness slider', () => {
+    expect(pickerTab(VIVID, false, 7, true)).toBe(7)
+    expect(pickerTab(VIVID, true, 7, true)).toBe(CUSTOM)
   })
 })

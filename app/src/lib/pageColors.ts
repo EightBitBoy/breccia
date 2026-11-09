@@ -18,29 +18,52 @@ export const NO_COLOR = PAGE_COLORS.length
 /** The picker index of the custom part (the hue slider), after "No color". */
 export const CUSTOM = NO_COLOR + 1
 
+/** The picker index of the vividness slider, after the hue slider. */
+export const VIVID = CUSTOM + 1
+
+/** The vividness a custom color has when its line gives none; the core writes no `vivid 100`. */
+export const DEFAULT_VIVID = 100
+export const MIN_VIVID = 50
+export const MAX_VIVID = 200
+/** The vividness slider's arrow step and Page key step. */
+export const VIVID_STEP = 5
+export const VIVID_PAGE = 25
+
 /** The hue the slider starts on when the page has no custom color yet. */
 export const DEFAULT_HUE = 200
 
 const COLUMNS = 5
 const MAX_HUE = 359
 
-/** The hue of a custom color as the core writes it (`hue 212`), else null. */
-export function parseHue(color: string | null): number | null {
-  const m = color === null ? null : /^hue (0|[1-9]\d{0,2})$/.exec(color)
+/** A custom color as the core writes it (`hue 212`, `hue 212 vivid 150`); a missing vividness is 100. */
+export function parseCustom(color: string | null): { hue: number; vivid: number } | null {
+  const m = color === null ? null : /^hue (0|[1-9]\d{0,2})(?: vivid ([1-9]\d{1,2}))?$/.exec(color)
   if (m === null) return null
-  const h = Number(m[1])
-  return h <= MAX_HUE ? h : null
+  const hue = Number(m[1])
+  const vivid = m[2] === undefined ? DEFAULT_VIVID : Number(m[2])
+  if (hue > MAX_HUE || vivid < MIN_VIVID || vivid > MAX_VIVID) return null
+  return { hue, vivid }
 }
 
-/** The color string for a custom hue. */
-export function hueColor(h: number): string {
-  return `hue ${h}`
+/** The hue of a custom color as the core writes it, else null. */
+export function parseHue(color: string | null): number | null {
+  return parseCustom(color)?.hue ?? null
+}
+
+/** The color string for a custom hue and vividness (`vivid 100` is left out). */
+export function hueColor(h: number, vivid = DEFAULT_VIVID): string {
+  return vivid === DEFAULT_VIVID ? `hue ${h}` : `hue ${h} vivid ${vivid}`
 }
 
 /** `crimson` becomes `Crimson`; `hue 212` becomes `Custom (hue 212)`; no color becomes `No color`. */
 export function colorLabel(name: string | null): string {
   if (name === null) return 'No color'
-  if (parseHue(name) !== null) return `Custom (${name})`
+  const custom = parseCustom(name)
+  if (custom !== null) {
+    return custom.vivid === DEFAULT_VIVID
+      ? `Custom (hue ${custom.hue})`
+      : `Custom (hue ${custom.hue}, vividness ${custom.vivid})`
+  }
   return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
@@ -61,15 +84,25 @@ export function followHue(hue: number, color: string | null): number {
   return parseHue(color) ?? hue
 }
 
-/** The color a picker index stands for: a name, a hue for the custom part, null for "No color". */
-export function indexColor(i: number, hue: number): string | null {
-  if (i === CUSTOM) return hueColor(hue)
+/** The vividness the slider shows after the saved color changes: a saved one, else the one it had. */
+export function followVivid(vivid: number, color: string | null): number {
+  return parseCustom(color)?.vivid ?? vivid
+}
+
+/** The color a picker index stands for: a name, a hue and vividness for the two sliders, null for "No color". */
+export function indexColor(i: number, hue: number, vivid = DEFAULT_VIVID): string | null {
+  if (i === CUSTOM || i === VIVID) return hueColor(hue, vivid)
   return i < NO_COLOR ? PAGE_COLORS[i] : null
 }
 
 /** The color the picker previews: the index under the pointer, else the focused one (`hue` for the custom part). */
-export function previewColor(hover: number | null, focused: number, hue: number): string | null {
-  return indexColor(hover ?? focused, hue)
+export function previewColor(
+  hover: number | null,
+  focused: number,
+  hue: number,
+  vivid = DEFAULT_VIVID,
+): string | null {
+  return indexColor(hover ?? focused, hue, vivid)
 }
 
 /** The hue under a pointer at `x` on a slider `width` wide. */
@@ -104,6 +137,49 @@ export function hueSliderKey(e: KeyInput, hue: number): number | 'save' | 'leave
     default:
       return null
   }
+}
+
+/** The vividness under a pointer at `x` on a slider `width` wide, in steps of 5. */
+export function vividAt(x: number, width: number): number {
+  if (width <= 0) return MIN_VIVID
+  const v = MIN_VIVID + Math.round(((x / width) * (MAX_VIVID - MIN_VIVID)) / VIVID_STEP) * VIVID_STEP
+  return Math.min(MAX_VIVID, Math.max(MIN_VIVID, v))
+}
+
+/** What a key press on the vividness slider does: the new vividness, `'save'`, `'leave'` (Tab), or null. */
+export function vividSliderKey(e: KeyInput, v: number): number | 'save' | 'leave' | null {
+  if (e.ctrl || e.meta || e.alt) return null
+  if (e.key === 'Tab') return 'leave'
+  if (e.shift) return null
+  const up = (n: number) => Math.min(MAX_VIVID, Math.floor(v / n) * n + n)
+  const down = (n: number) => Math.max(MIN_VIVID, Math.ceil(v / n) * n - n)
+  switch (e.key) {
+    case 'ArrowRight':
+    case 'ArrowUp':
+      return up(VIVID_STEP)
+    case 'ArrowLeft':
+    case 'ArrowDown':
+      return down(VIVID_STEP)
+    case 'PageUp':
+      return up(VIVID_PAGE)
+    case 'PageDown':
+      return down(VIVID_PAGE)
+    case 'Home':
+      return MIN_VIVID
+    case 'End':
+      return MAX_VIVID
+    case 'Enter':
+      return 'save'
+    default:
+      return null
+  }
+}
+
+/** The next tab stop in the picker (grid, hue slider, vividness slider); `vividOn`: the vividness slider is enabled. */
+export function pickerTab(from: number, back: boolean, gridAt: number, vividOn: boolean): number {
+  if (from === VIVID) return back ? CUSTOM : gridAt
+  if (from === CUSTOM) return back ? gridAt : vividOn ? VIVID : gridAt
+  return back ? (vividOn ? VIVID : CUSTOM) : CUSTOM
 }
 
 /** What a key press on picker index `at` does: the index to move to, `'pick'`, or null. */

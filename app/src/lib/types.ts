@@ -15,7 +15,7 @@ export interface BlockView {
   hasChildren: boolean
   /** Journal blocks only: the page the block's first topic link goes to. */
   topic?: string
-  /** Journal blocks only: that page's color (a name or `hue <h>`), when it has one. */
+  /** Journal blocks only: that page's color (a name, `hue <h>` or `hue <h> vivid <v>`), when it has one. */
   color?: string
 }
 
@@ -29,7 +29,7 @@ export interface PageView {
   blocks: BlockView[]
   /** Whether the page has a file; a moved page's file may be empty. */
   hasFile: boolean
-  /** The page's own color (a name or `hue <h>`); absent for a journal or an uncolored page. */
+  /** The page's own color (a name, `hue <h>` or `hue <h> vivid <v>`); absent for a journal or an uncolored page. */
   color?: string
   /** Journals only: the links and tags of its blocks whose page can be given a color; absent when there are none. */
   targets?: TargetView[]
@@ -43,7 +43,7 @@ export interface TargetView {
   /** The page the link goes to. */
   key: string
   name: string
-  /** That page's color (a name or `hue <h>`); absent when it has none. */
+  /** That page's color (a name, `hue <h>` or `hue <h> vivid <v>`); absent when it has none. */
   color?: string
 }
 
