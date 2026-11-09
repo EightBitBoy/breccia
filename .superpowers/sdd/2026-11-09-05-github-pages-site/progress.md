@@ -27,3 +27,5 @@ Owner approved the plan 2026-11-09 (AskUserQuestion "Approve, build it").
 Task 1: complete — commit 3a3fc02, review approved (spec pass, quality approved, 3 minor non-issues).
 
 Task 2: complete — commit 29ec8b5 (+ comment fix), review approved. Parked: no test for 'invents no feature' (hand-checked); light accent links on surface 4.67:1 (little headroom).
+
+Task 3: complete — commits 7e7d2e6, a43fdf8 (visual fixes), 47ed0d5 (check fixes); review approved. Parked: no hint that board image scrolls sideways at 375; sparse one-line cards at 768.
