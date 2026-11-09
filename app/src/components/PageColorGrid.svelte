@@ -23,6 +23,7 @@
   // from cell to cell; anywhere else that is not an enabled choice (the preview box, the labels, the greyed vividness
   // slider) it shows the focused one; a drag keeps showing its slider wherever the pointer goes. When readability holds
   // a custom wash below what its vividness asks for, a note under that line says it was softened.
+  // The sliders' thumbs stay inside their tracks.
   import { onMount, untrack } from 'svelte'
   import { customShade, hueTrack, vividTrack, washValue } from '../lib/customColor'
   import {
@@ -48,6 +49,7 @@
     pickerTab,
     pointerHover,
     previewColor,
+    thumbLeft,
     vividAt,
     vividSliderKey,
   } from '../lib/pageColors'
@@ -329,7 +331,7 @@
       onfocus={() => reach(CUSTOM, 'focus')}
       {...hueDrag}
     >
-      <div class="pc-hue-thumb" style:left={`${(hue / 359) * 100}%`} style:background={shown?.shade}></div>
+      <div class="pc-hue-thumb" style:left={thumbLeft(hue / 359)} style:background={shown?.shade}></div>
     </div>
   </div>
   <div class="pc-vivid-part" class:off={!vividOn}>
@@ -353,7 +355,7 @@
     >
       <div
         class="pc-hue-thumb"
-        style:left={`${((vivid - MIN_VIVID) / (MAX_VIVID - MIN_VIVID)) * 100}%`}
+        style:left={thumbLeft((vivid - MIN_VIVID) / (MAX_VIVID - MIN_VIVID))}
         style:background={shown?.wash}
       ></div>
     </div>
