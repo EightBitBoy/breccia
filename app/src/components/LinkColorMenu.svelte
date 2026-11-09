@@ -4,12 +4,23 @@
   // that is not a colorable link or tag, no menu opens (`linkMenuAction`). "On selected text" means the point lies in
   // the selection's own boxes, not merely in an element that holds a selection.
   //
-  // When the menu or the picker closes (a pick, Esc, a click outside), the focus goes back to the link. A link that is
-  // gone leaves the focus on the page.
-  import type { Snippet } from 'svelte'
+  // When the menu or the picker closes (a pick, Esc, a click outside), the focus goes back to the link. While the
+  // picker is open, and while the focus given back is still on the link, the day may be drawn anew (a pick re-sends
+  // it, another program edits it): the link is then found again at its place (row, page, index), the picker moves
+  // with it, and a replaced focused link hands the focus to the new one. A link that is gone leaves the picker where
+  // it is, and closing it leaves the focus on the page.
+  import { onDestroy, type Snippet } from 'svelte'
   import type { Action } from 'svelte/action'
   import { ContextMenu, Popover } from 'bits-ui'
-  import { linkMenuAction, pickingColor, pointInBoxes, type Box } from '../lib/linkColor'
+  import {
+    findSpot,
+    linkMenuAction,
+    pickingColor,
+    pointInBoxes,
+    spotOf,
+    type Box,
+    type LinkSpot,
+  } from '../lib/linkColor'
   import type { TargetView } from '../lib/types'
   import PageColorGrid from './PageColorGrid.svelte'
 
@@ -34,19 +45,95 @@
   /** "Color…" was chosen: the picker opens once the menu has closed, so the menu's focus return cannot take it. */
   let pending = false
 
+  /** The element that holds the links. */
+  let zone: HTMLElement | null = null
+  /** Where the anchor stands, to find it again when the day is drawn anew. */
+  let spot: LinkSpot | null = null
+  /** The focus was given back to the anchor: a link drawn anew in its place takes it. */
+  let refocus = false
+  let observer: MutationObserver | null = null
+
+  /**
+   * The picker's anchor: the link's box while it is in the page, else the last box it had, so the picker stays where
+   * it is when the link goes.
+   */
+  const anchorBox = $derived(boxOf(anchor))
+  function boxOf(a: HTMLElement | null) {
+    if (!a) return null
+    let last = new DOMRect()
+    return {
+      contextElement: a,
+      getBoundingClientRect: () => {
+        if (a.isConnected) last = a.getBoundingClientRect()
+        return last
+      },
+    }
+  }
+
   function focusLink(a: HTMLElement) {
     a.setAttribute('tabindex', '-1')
     a.focus({ preventScroll: true })
   }
 
+  /** The anchor was replaced: take its new self, and the focus if the old one had it. */
+  function follow() {
+    if (!zone || !spot || anchor?.isConnected) return
+    const found = findSpot(zone, spot)
+    if (!found) return
+    anchor = found
+    if (refocus && (document.activeElement === null || document.activeElement === document.body)) focusLink(found)
+  }
+
+  function watch() {
+    if (observer || !zone) return
+    observer = new MutationObserver(follow)
+    observer.observe(zone, { childList: true, subtree: true })
+  }
+
+  /** Stops following the link once neither the picker nor a given-back focus needs it. */
+  function settle() {
+    if (pickerOpen || refocus) return
+    observer?.disconnect()
+    observer = null
+  }
+
+  function onPointerDown() {
+    endRefocus()
+  }
+  function onFocusIn(e: FocusEvent) {
+    if (e.target !== anchor) endRefocus()
+  }
+  function endRefocus() {
+    if (!refocus) return
+    refocus = false
+    document.removeEventListener('pointerdown', onPointerDown, true)
+    document.removeEventListener('focusin', onFocusIn, true)
+    settle()
+  }
+
   /** The menu or the picker closed: the focus goes back to the link, unless something else took it or it is gone. */
   function giveBack() {
+    endRefocus()
     const a = anchor
     const active = document.activeElement
     const elsewhere =
       active && active !== document.body && !active.closest('[data-testid="link-color-menu"], [data-testid="page-color-picker"]')
-    if (a?.isConnected && !elsewhere) focusLink(a)
+    if (!a?.isConnected || elsewhere) {
+      settle()
+      return
+    }
+    focusLink(a)
+    refocus = true
+    document.addEventListener('pointerdown', onPointerDown, true)
+    document.addEventListener('focusin', onFocusIn, true)
+    watch()
   }
+
+  onDestroy(() => {
+    endRefocus()
+    observer?.disconnect()
+    observer = null
+  })
 
   /** The boxes of the selection's text. */
   function selectionBoxes(sel: Selection): Box[] {
@@ -60,6 +147,7 @@
    * menu stops the event here, "no menu" prevents its default, which the trigger then ignores.
    */
   const guard: Action<HTMLElement> = (node) => {
+    zone = node
     function oncontextmenu(e: MouseEvent) {
       const el = e.target instanceof Element ? e.target : null
       const a = el?.closest<HTMLElement>('a.link, a.tag') ?? null
@@ -80,10 +168,16 @@
       } else {
         target = act.target
         anchor = a
+        spot = a && spotOf(a)
       }
     }
     node.addEventListener('contextmenu', oncontextmenu)
-    return { destroy: () => node.removeEventListener('contextmenu', oncontextmenu) }
+    return {
+      destroy: () => {
+        node.removeEventListener('contextmenu', oncontextmenu)
+        if (zone === node) zone = null
+      },
+    }
   }
 </script>
 
@@ -104,8 +198,11 @@
           return
         }
         pending = false
+        endRefocus()
         picking = target
         pickerOpen = true
+        watch()
+        follow()
       }}
     >
       <ContextMenu.Item class="menu-item" data-testid="link-color" onSelect={() => (pending = true)}>
@@ -122,7 +219,7 @@
       data-testid="page-color-picker"
       role="dialog"
       aria-label={picking ? `Color of ${picking.name}` : undefined}
-      customAnchor={anchor}
+      customAnchor={anchorBox}
       side="bottom"
       align="start"
       sideOffset={4}
