@@ -2,6 +2,7 @@
   import { tick } from 'svelte'
   import type { SettingsSection } from '../lib/settings.svelte'
   import type { ThemeChoice } from '../lib/theme'
+  import type { JournalsAt } from '../lib/treeRows'
   import type { BoardSummary, GitSettings, RecentFolder, StateRename, StateUsage, StateView } from '../lib/types'
   import appIcon from '../../src-tauri/icons/icon.svg'
   import RecentFolders from './RecentFolders.svelte'
@@ -25,6 +26,7 @@
     git,
     gitText,
     theme,
+    journalsAt,
     mac,
     appVersion,
     hasGit,
@@ -40,6 +42,7 @@
     ongit,
     onhelp,
     ontheme,
+    onjournalsat,
     onpickfolder,
     onopenfolder,
     onforgetfolder,
@@ -62,6 +65,7 @@
     git: GitSettings | null
     gitText: string | null
     theme: ThemeChoice
+    journalsAt: JournalsAt
     mac: boolean
     /** The running program's version (not the config's `version`); null until known or if it is not. */
     appVersion: string | null
@@ -82,6 +86,7 @@
     onhelp: () => void
     ongit: (patch: Partial<GitSettings>) => Promise<void>
     ontheme: (c: ThemeChoice) => void
+    onjournalsat: (at: JournalsAt) => void
     /** "Open folder…" or "New folder…": the parent asks for the folder and switches. */
     onpickfolder: (type: 'folder.open' | 'folder.create') => void
     onopenfolder: (path: string) => void
@@ -134,8 +139,24 @@
   <section data-section="journal">
     <h2>Journal</h2>
     <p class="settings-hint">
-      Journal pages are kept in journals/, one file per day (YYYY-MM-DD.md). There are no journal settings yet.
+      Journal pages are kept in journals/, one file per day (YYYY-MM-DD.md).
     </p>
+    <p class="settings-hint">This computer only: not stored in the notes folder.</p>
+    <div class="theme-options" role="radiogroup" aria-label="Journals in the sidebar's Pages list">
+      {#each [['top', 'At the top'], ['bottom', 'At the bottom'], ['inline', 'Among the folders, by name']] as [v, name] (v)}
+        <button
+          type="button"
+          class="theme-option"
+          role="radio"
+          aria-checked={journalsAt === v}
+          data-testid="journals-at-option"
+          data-journals-at={v}
+          onclick={() => onjournalsat(v as JournalsAt)}
+        >
+          <span class="theme-name">{name}</span>
+        </button>
+      {/each}
+    </div>
   </section>
   <section data-section="appearance">
     <h2>Appearance</h2>

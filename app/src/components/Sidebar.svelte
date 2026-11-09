@@ -1,6 +1,6 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity'
-  import { reveal, rows as makeRows, tagRows, type Row } from '../lib/treeRows'
+  import { reveal, rows as makeRows, tagRows, type JournalsAt, type Row } from '../lib/treeRows'
   import { baseName, joinPath, type Op } from '../lib/pageOps'
   import TreeMenu from './TreeMenu.svelte'
   import { clampWidth } from '../lib/sidebarLayout'
@@ -39,11 +39,14 @@
     onresize,
     onresized,
     pickerOpen = $bindable(false),
+    journalsAt = 'bottom',
     onpickday,
     ondrop,
   }: {
     folder: string
     folderName: string
+    /** Where the Journals row sits among the pages. */
+    journalsAt?: JournalsAt
     tree: TreeView | null
     /** The key of the page shown; null while the journal feed is shown. */
     shown: string | null
@@ -104,7 +107,7 @@
     for (const id of r.open) open.add(id)
   })
 
-  const rows = $derived(tree ? makeRows(tree, open) : [])
+  const rows = $derived(tree ? makeRows(tree, open, journalsAt) : [])
   const tags = $derived(tree ? tagRows(tree) : [])
   /** The days the date picker marks (a tinted background). */
   const journalDays = $derived(journalKeys(tree))

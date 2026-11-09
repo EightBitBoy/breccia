@@ -42,8 +42,18 @@ export function folds(r: Row): boolean {
   return r.open !== undefined
 }
 
-/** The visible rows: page nodes in order, children of open rows only, then Journals. */
-export function rows(tree: TreeView, open: ReadonlySet<string>): Row[] {
+/** Where the Journals row sits: above the page tree, below it, or among its top-level folders by name. */
+export type JournalsAt = 'top' | 'bottom' | 'inline'
+
+export const JOURNALS_AT: JournalsAt[] = ['top', 'bottom', 'inline']
+
+/** A known placement, else the default (bottom). */
+export function parseJournalsAt(v: unknown): JournalsAt {
+  return v === 'top' || v === 'inline' ? v : 'bottom'
+}
+
+/** The visible rows: page nodes in order, children of open rows only, and Journals where `at` puts it. */
+export function rows(tree: TreeView, open: ReadonlySet<string>, at: JournalsAt = 'bottom'): Row[] {
   const out: Row[] = []
   const nodes = (list: TreeNode[], depth: number) => {
     for (const n of list) {
@@ -57,7 +67,24 @@ export function rows(tree: TreeView, open: ReadonlySet<string>): Row[] {
       if (isOpen) nodes(n.children, depth + 1)
     }
   }
-  nodes(tree.pages, 0)
+  const journal = journalRows(tree, open)
+  if (at === 'top') out.push(...journal)
+  if (at === 'inline') {
+    // Journals is a folder: it goes among the top-level folders (which come before the pages), ignoring case.
+    const folders = tree.pages.filter((n) => n.kind === 'folder')
+    const after = folders.filter((n) => n.name.toLowerCase() < 'journals').length
+    const before = after < folders.length ? folders[after] : tree.pages.find((n) => n.kind === 'page')
+    const head = before ? tree.pages.indexOf(before) : tree.pages.length
+    nodes(tree.pages.slice(0, head), 0)
+    out.push(...journal)
+    nodes(tree.pages.slice(head), 0)
+  } else nodes(tree.pages, 0)
+  if (at === 'bottom') out.push(...journal)
+  return out
+}
+
+function journalRows(tree: TreeView, open: ReadonlySet<string>): Row[] {
+  const out: Row[] = []
   const jOpen = open.has('j')
   out.push({ id: 'j', depth: 0, kind: 'journals', label: 'Journals', open: jOpen })
   if (!jOpen) return out

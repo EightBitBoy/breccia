@@ -2,6 +2,7 @@
 import type { UiState } from './types'
 import { clampColumn } from './boardWidth'
 import { parseZoom } from './zoom'
+import { parseJournalsAt, type JournalsAt } from './treeRows'
 import { parseTheme, type ThemeChoice } from './theme'
 
 export const SIDEBAR_DEFAULT = 250
@@ -18,16 +19,17 @@ export function clampWidth(w: number | null | undefined): number {
  * The saved sidebar layout from `get`, clamped. One that cannot be read is
  * logged and the default layout is used, so startup goes on.
  */
-export async function loadLayout(get: () => Promise<UiState>): Promise<{ width: number; hidden: boolean; theme: ThemeChoice; boardColumn: number | null; zoom: number }> {
+export async function loadLayout(get: () => Promise<UiState>): Promise<{ width: number; hidden: boolean; theme: ThemeChoice; boardColumn: number | null; zoom: number; journalsAt: JournalsAt }> {
   try {
     const ui = await get()
     return { width: clampWidth(ui.sidebarWidth), hidden: ui.sidebarHidden,
       theme: parseTheme(ui.theme),
       boardColumn: clampColumn(ui.boardColumnWidth),
       zoom: parseZoom(ui.zoomPercent),
+      journalsAt: parseJournalsAt(ui.journalsAt),
     }
   } catch (e) {
     console.error('could not read the saved layout', e)
-    return { width: clampWidth(null), hidden: false, theme: 'system', boardColumn: null, zoom: 100 }
+    return { width: clampWidth(null), hidden: false, theme: 'system', boardColumn: null, zoom: 100, journalsAt: 'bottom' }
   }
 }

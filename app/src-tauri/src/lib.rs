@@ -61,6 +61,9 @@ struct UiState {
     /// The zoom level in percent; `set_ui_state` never changes it (see `set_zoom`).
     #[serde(default)]
     zoom_percent: Option<u32>,
+    /// Where the sidebar lists Journals; `set_ui_state` never changes it (see `set_journals_at`).
+    #[serde(default)]
+    journals_at: Option<String>,
 }
 
 /// One entry of the recent-folders list, for the folder picker.
@@ -554,6 +557,7 @@ mod commands {
             board_column_width: s.board_column_width,
             theme: s.theme,
             zoom_percent: s.zoom_percent,
+            journals_at: s.journals_at,
         }
     }
 
@@ -561,6 +565,14 @@ mod commands {
     #[tauri::command]
     pub fn set_zoom(app: State<'_, App>, percent: Option<u32>) {
         if let Err(e) = settings::update(&app.config_dir, |s| s.zoom_percent = percent) {
+            eprintln!("could not save settings: {e}");
+        }
+    }
+
+    /// Saves where the sidebar lists Journals ("top", "bottom" or "inline"; `None` is bottom).
+    #[tauri::command]
+    pub fn set_journals_at(app: State<'_, App>, at: Option<String>) {
+        if let Err(e) = settings::update(&app.config_dir, |s| s.journals_at = at) {
             eprintln!("could not save settings: {e}");
         }
     }
@@ -824,6 +836,7 @@ pub fn run() {
             commands::hidden_columns,
             commands::set_hidden_columns,
             commands::set_theme,
+            commands::set_journals_at,
             commands::set_zoom,
             commands::recent_folders,
             commands::forget_folder,

@@ -26,6 +26,9 @@ pub struct Settings {
     /// The zoom level in percent; `None` is 100.
     #[serde(default)]
     pub zoom_percent: Option<u32>,
+    /// Where the sidebar lists Journals: "top", "bottom" or "inline"; `None` is bottom.
+    #[serde(default)]
+    pub journals_at: Option<String>,
     /// Folders opened before, the most recent first, at most `RECENT_MAX`.
     #[serde(default)]
     pub recent_folders: Vec<PathBuf>,
@@ -148,6 +151,7 @@ fn from_bytes(bytes: &[u8]) -> Option<Settings> {
         board_column_width: field(&mut map, "board_column_width"),
         theme: field(&mut map, "theme"),
         zoom_percent: field(&mut map, "zoom_percent"),
+        journals_at: field(&mut map, "journals_at"),
         recent_folders,
         hidden_columns: hidden_from(map.remove("hidden_columns")),
         other: map,
@@ -333,6 +337,15 @@ mod tests {
         assert_eq!(load(dir.path()).board_column_width, Some(300));
         std::fs::write(dir.path().join(FILE), r#"{"board_column_width":"wide"}"#).unwrap();
         assert_eq!(load(dir.path()).board_column_width, None);
+    }
+
+    #[test]
+    fn the_journals_placement_is_kept_and_a_wrong_type_is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        update(dir.path(), |s| s.journals_at = Some("inline".into())).unwrap();
+        assert_eq!(load(dir.path()).journals_at.as_deref(), Some("inline"));
+        std::fs::write(dir.path().join(FILE), r#"{"journals_at":3}"#).unwrap();
+        assert_eq!(load(dir.path()).journals_at, None);
     }
 
     #[test]

@@ -48,3 +48,9 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    "Date…" (also found by typing `/date`) opens the date picker; picking a day inserts `[[2026-11-09]]`-style link at the caret and
    puts the focus back in the block. `Esc` closes the picker and returns to the block with nothing inserted. The picker
    still appears by the sidebar's Journal row (the sidebar is shown first if hidden); say if you want it at the caret.
+44. [ ] **Journals position in the sidebar:** Settings > Journal has three choices: "At the top", "At the bottom"
+   (the default, as before) and "Among the folders, by name". The sidebar's Pages list follows at once and the choice
+   survives a restart. "Among the folders" puts Journals between the top-level folders in alphabetical order (ignoring
+   case), before the single pages, because the list shows folders first; say if you want it mixed in with the pages
+   too. The setting is for this computer only and is not stored in the notes folder. Journals' own fold, years, months
+   and days work the same in each place.

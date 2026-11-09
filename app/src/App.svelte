@@ -13,6 +13,7 @@
     uiState,
     setUiState,
     setTheme,
+    setJournalsAt,
     setZoom,
     recentFolders,
     forgetFolder,
@@ -60,6 +61,7 @@
   import { isNewFolder } from './lib/folder'
   import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
   import { clampWidth, loadLayout } from './lib/sidebarLayout'
+  import type { JournalsAt } from './lib/treeRows'
   import { applyTheme, storedTheme, type ThemeChoice } from './lib/theme'
   import { PageFlows } from './lib/pageFlows.svelte'
   import type { Row } from './lib/treeRows'
@@ -183,6 +185,8 @@
   let lastConfig: ConfigView | null = null
   /** The theme chosen on this computer. */
   let theme = $state<ThemeChoice>('system')
+  /** Where the sidebar lists Journals, chosen on this computer. */
+  let journalsAt = $state<JournalsAt>('bottom')
   /** The Settings screen in the main area (§7.12). */
   const settings = new SettingsScreen()
   /** A question from Settings (rename or remove a used state), while open. */
@@ -1136,6 +1140,11 @@
   }
 
   /** Applies at once; the choice is kept on this computer. */
+  function chooseJournalsAt(at: JournalsAt) {
+    journalsAt = at
+    setJournalsAt(at).catch(refuse)
+  }
+
   function chooseTheme(c: ThemeChoice) {
     theme = c
     applyTheme(c, document.documentElement, (t) => getCurrentWindow().setTheme(t))
@@ -1547,6 +1556,7 @@
         boardColumn = layout.boardColumn
         zoom.restore(layout.zoom)
         theme = layout.theme
+        journalsAt = layout.journalsAt
         applyTheme(layout.theme, document.documentElement, (t) => getCurrentWindow().setTheme(t))
         gitInstalled().then((ok) => void (hasGit = ok), () => {})
         inTray = await trayEnabled().catch(() => false)
@@ -1624,6 +1634,7 @@
             {folder}
             {folderName}
             {tree}
+            {journalsAt}
             shown={page?.key ?? null}
             journalShown={journal.feed !== null}
             allPagesShown={allPages.shown}
@@ -1705,6 +1716,8 @@
                 ongit={setGit}
                 onhelp={toggleHelp}
                 ontheme={chooseTheme}
+                {journalsAt}
+                onjournalsat={chooseJournalsAt}
                 onpickfolder={(type) => void pickAndSwitch(type)}
                 onopenfolder={(path) => void switchFolder('folder.open', path)}
                 onforgetfolder={(path) => void forgetRecent(path)}

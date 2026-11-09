@@ -358,6 +358,8 @@ export interface UiState {
   theme?: string | null
   /** The zoom level in percent; null or missing is 100. `setUiState` leaves it alone. */
   zoomPercent?: number | null
+  /** Where the sidebar lists Journals: top, bottom or inline; null or missing is bottom. `setUiState` leaves it alone. */
+  journalsAt?: string | null
 }
 
 /** One entry of the recent-folders list. */

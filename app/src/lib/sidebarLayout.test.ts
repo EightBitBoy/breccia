@@ -15,6 +15,7 @@ test('a saved layout that cannot be read is the default layout', async () => {
     theme: 'system',
     boardColumn: null,
     zoom: 100,
+    journalsAt: 'bottom',
   })
   expect(console.error).toHaveBeenCalled()
   vi.restoreAllMocks()
@@ -24,6 +25,7 @@ test('a saved layout that cannot be read is the default layout', async () => {
     theme: 'system',
     boardColumn: null,
     zoom: 100,
+    journalsAt: 'bottom',
   })
   await expect(
     loadLayout(async () => ({ sidebarWidth: 250, sidebarHidden: false, boardColumnWidth: 300 })),
@@ -37,6 +39,15 @@ test('a saved layout that cannot be read is the default layout', async () => {
   await expect(
     loadLayout(async () => ({ sidebarWidth: 250, sidebarHidden: false, theme: 'x' })),
   ).resolves.toMatchObject({ theme: 'system' })
+})
+
+test('the saved Journals placement is read; a bad one is bottom', async () => {
+  await expect(
+    loadLayout(async () => ({ sidebarWidth: 250, sidebarHidden: false, journalsAt: 'inline' })),
+  ).resolves.toMatchObject({ journalsAt: 'inline' })
+  await expect(
+    loadLayout(async () => ({ sidebarWidth: 250, sidebarHidden: false, journalsAt: 'middle' })),
+  ).resolves.toMatchObject({ journalsAt: 'bottom' })
 })
 
 test('the saved zoom is read; a bad one is 100', async () => {

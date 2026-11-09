@@ -35,6 +35,26 @@ test('closed folders hide their children; journals come last', () => {
   expect(rows(tree, new Set()).map((r) => r.id)).toEqual(['f:people', 'f:Projects', 'p:ideas', 'j'])
 })
 
+test('Journals can sit at the top, or among the folders by name', () => {
+  const open = new Set<string>()
+  expect(rows(tree, open, 'top').map((r) => r.id)).toEqual(['j', 'f:people', 'f:Projects', 'p:ideas'])
+  // Ignoring case, "journals" sorts before "people" and "Projects".
+  expect(rows(tree, open, 'inline').map((r) => r.id)).toEqual(['j', 'f:people', 'f:Projects', 'p:ideas'])
+  const t2: TreeView = { ...tree, pages: [{ kind: 'folder', name: 'Archive', path: 'Archive', children: [] }, ...tree.pages] }
+  expect(rows(t2, open, 'inline').map((r) => r.id)).toEqual(['f:Archive', 'j', 'f:people', 'f:Projects', 'p:ideas'])
+  // With no folder after it, it follows the last folder and stays before the pages.
+  const t3: TreeView = { ...tree, pages: [{ kind: 'folder', name: 'Zed', path: 'Zed', children: [] }, tree.pages[2]] }
+  expect(rows(t3, open, 'inline').map((r) => r.id)).toEqual(['j', 'f:Zed', 'p:ideas'])
+  const t4: TreeView = { ...tree, pages: [{ kind: 'folder', name: 'A', path: 'A', children: [] }, tree.pages[2]] }
+  expect(rows(t4, open, 'inline').map((r) => r.id)).toEqual(['f:A', 'j', 'p:ideas'])
+})
+
+test('an open Journals keeps its days under it wherever it sits', () => {
+  const ids = rows(tree, new Set(['j', 'y:2026']), 'top').map((r) => [r.id, r.depth])
+  expect(ids.slice(0, 3)).toEqual([['j', 0], ['y:2026', 1], ['m:2026-10', 2]])
+  expect(ids[3]).toEqual(['f:people', 0])
+})
+
 test('open rows show their children one level deeper', () => {
   expect(rows(tree, new Set(['f:Projects', 'j', 'y:2026'])).map((r) => [r.id, r.depth])).toEqual([
     ['f:people', 0],

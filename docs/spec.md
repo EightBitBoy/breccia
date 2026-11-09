@@ -111,7 +111,7 @@ Layout:
   unambiguous, sorts correctly and needs no locale)*
 - Files are UTF-8. Breccia saves every file with LF line endings: a file it creates gets LF, and an existing file with
   CRLF line endings is converted to LF the first time Breccia saves it. A file Breccia does not save keeps its bytes.
-- Machine-local settings (window size and position, selected theme, last opened folder, recent folders) live in the app's own config
+- Machine-local settings (window size and position, selected theme, where the sidebar lists Journals, last opened folder, recent folders) live in the app's own config
   directory, not in the notes folder. *(my call)*
 
 ## 5. File format

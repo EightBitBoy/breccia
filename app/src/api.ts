@@ -62,6 +62,11 @@ export function setZoom(percent: number): Promise<void> {
   return invoke<void>('set_zoom', { percent })
 }
 
+/** Saves where the sidebar lists Journals: top, bottom or inline (machine-local). */
+export function setJournalsAt(at: string): Promise<void> {
+  return invoke<void>('set_journals_at', { at })
+}
+
 /** Saves the chosen theme; null follows the operating system. */
 export function setTheme(theme: string | null): Promise<void> {
   return invoke<void>('set_theme', { theme })
