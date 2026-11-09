@@ -93,6 +93,18 @@ async function main() {
           iw: innerWidth,
         }))
         check(dims.sw <= dims.iw, `${tag}: no sideways scroll`, `scrollWidth ${dims.sw} > ${dims.iw}`)
+        if (width === 375) {
+          const pre = await page.evaluate(() => {
+            const p = document.querySelector('pre')
+            const s = getComputedStyle(p)
+            return { sw: p.scrollWidth, cw: p.clientWidth, ox: s.overflowX }
+          })
+          check(
+            pre.ox === 'auto' && pre.sw > pre.cw && dims.sw <= dims.iw,
+            `${tag}: the code block scrolls inside its own box`,
+            JSON.stringify(pre),
+          )
+        }
         const imgs = await page.evaluate(() =>
           [...document.images].map((i) => ({
             src: i.getAttribute('src'),

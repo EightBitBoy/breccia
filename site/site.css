@@ -197,6 +197,7 @@ h1 {
   border-radius: 0.5rem;
 }
 .download:hover { filter: brightness(1.08); }
+.download:focus-visible { outline: 3px solid var(--text); outline-offset: 3px; }
 
 .note { margin: 0 0 2.5rem; color: var(--muted); font-size: 0.9rem; }
 
@@ -279,8 +280,19 @@ h3::before {
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1.25rem;
+}
+
+/* Six columns: two cards per row from 40rem (a third card spans the row), three from 64rem. */
+@media (min-width: 40rem) {
+  .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .grid article { grid-column: span 3; }
+  .grid article:nth-child(3), .grid article:nth-child(7) { grid-column: span 6; }
+}
+@media (min-width: 64rem) {
+  .grid article { grid-column: span 2; }
+  .grid article:nth-child(3), .grid article:nth-child(7) { grid-column: span 2; }
 }
 
 .grid article {
@@ -290,6 +302,9 @@ h3::before {
 }
 
 .grid article.wide { grid-column: 1 / -1; }
+.grid .shot-scroll { overflow-x: auto; margin-top: 1rem; border-radius: 0.4rem; }
+.grid .shot-scroll img { min-width: 40rem; margin-top: 0; }
+@media (min-width: 40rem) { .grid .shot-scroll img { min-width: 0; } }
 .grid article.wide p, .grid article.wide ul { max-width: 70ch; }
 
 .grid article:nth-child(1) h3 { --m: var(--pc-violet); }
