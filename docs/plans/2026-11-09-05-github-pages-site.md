@@ -49,6 +49,8 @@ app (Features, Install, Your notes, License); backlog #64 (`docs/backlog.md`); `
 6. **Commits** are `chore`, `test`, `ci` or `docs`, never `feat` or `fix`: the site is not an app change and must
    stay out of the app's changelog (`cliff.toml` skips these types).
 
+- Pages enablement (Task 6), 2026-11-09: the owner chose that Claude turns Pages on. Done with `gh api -X POST repos/EightBitBoy/breccia/pages -f build_type=workflow`; the deploy run 42700654560 succeeded and the page and its images answer 200.
+
 ## Rulings (made while planning; each says what it costs if wrong)
 
 - **R1. No version number on the page.** The button says "Download for Windows" and links to `releases/latest`,

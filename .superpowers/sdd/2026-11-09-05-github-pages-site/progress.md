@@ -33,3 +33,5 @@ Task 3: complete — commits 7e7d2e6, a43fdf8 (visual fixes), 47ed0d5 (check fix
 Task 4: complete — commits 37d041b, 28be11c (review fixes: background tab, shard fallback, late-load checks, transition cleanup); opus review approved after fix; I re-ran site-check, vitest (164) and site-shots (79 PASS). Parked: tiles pass over 'What it is' text at 375px for ~0.5 s; brightness flash repaints tile layer 360 ms; hero seen only in headless frames, owner checks in a real browser.
 
 Task 5: complete — commit 1e7bdf4; reviewed by the controller directly (workflow read, 3 pinned SHAs verified with gh api). First run 42700284201 failed at configure-pages: Pages not enabled (expected, Task 6).
+
+Task 6: complete — owner chose 'You turn it on now'; Pages enabled (build_type workflow); run 42700654560 green; site and images answer 200.
