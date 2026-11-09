@@ -7,7 +7,7 @@
 //! - ```` ```text file-names ```` holds `name → stem` lines for `file_stem_for`;
 //! - ```` ```text page-colors ```` is `PAGE_COLORS`, five to a line;
 //! - a ```` ```markdown before ```` fence is followed by a ```` ```markdown after-<name> ````
-//!   fence (`<name>` a page color, `hue-<h>` or `none`): the `after` text is the `before`
+//!   fence (`<name>` a page color, `hue-<h>`, `hue-<h>-vivid-<v>` or `none`): the `after` text is the `before`
 //!   text with its preamble recolored with that color.
 
 use breccia_core::aliases::aliases;
@@ -259,6 +259,7 @@ fn format_doc_recolor_examples() {
     let mut failures = Vec::new();
     let mut pairs = 0;
     let mut hue_pairs = 0;
+    let mut vivid_pairs = 0;
     for (i, f) in fences.iter().enumerate() {
         if f.info != "markdown before" {
             continue;
@@ -273,6 +274,9 @@ fn format_doc_recolor_examples() {
         pairs += 1;
         if name.starts_with("hue-") {
             hue_pairs += 1;
+        }
+        if name.contains("-vivid-") {
+            vivid_pairs += 1;
         }
         let hue = hue_value(name);
         let color = match name {
@@ -307,13 +311,36 @@ fn format_doc_recolor_examples() {
         hue_pairs >= 2,
         "only {hue_pairs} hue recolor pairs, want at least 2"
     );
+    assert!(
+        vivid_pairs >= 2,
+        "only {vivid_pairs} vivid recolor pairs, want at least 2"
+    );
 }
 
-/// `hue-<h>` as the value `hue <h>`, when `<h>` is a canonical hue (no leading zeros).
+/// `hue-<h>` as the value `hue <h>`, and `hue-<h>-vivid-<v>` as `hue <h> vivid <v>`,
+/// when both numbers are canonical (no leading zeros) and `<v>` is not 100.
 fn hue_value(name: &str) -> Option<String> {
-    let h = name.strip_prefix("hue-")?;
-    let value = format!("hue {h}");
-    matches!(parse_color(&value), Some(PageColor::Hue { hue, vivid: DEFAULT_VIVID }) if hue.to_string() == h).then_some(value)
+    let rest = name.strip_prefix("hue-")?;
+    let (h, vivid) = match rest.split_once("-vivid-") {
+        Some((h, v)) => (h, Some(v)),
+        None => (rest, None),
+    };
+    let value = match vivid {
+        Some(v) => format!("hue {h} vivid {v}"),
+        None => format!("hue {h}"),
+    };
+    match parse_color(&value) {
+        Some(PageColor::Hue { hue, vivid: got })
+            if hue.to_string() == h
+                && match vivid {
+                    Some(v) => got != DEFAULT_VIVID && got.to_string() == v,
+                    None => got == DEFAULT_VIVID,
+                } =>
+        {
+            Some(value)
+        }
+        _ => None,
+    }
 }
 
 const KNOWN_PAIRS: [&str; 7] = [
@@ -349,7 +376,11 @@ fn format_doc_fence_info_strings_are_known() {
     let sample = fences(
         "```text raeds\nx\n```\n```markdown after-banana\nx\n```\n\
          ```markdown after-hue-212\nx\n```\n```markdown after-hue-360\nx\n```\n\
-         ```markdown after-hue-07\nx\n```\n",
+         ```markdown after-hue-07\nx\n```\n\
+         ```markdown after-hue-212-vivid-150\nx\n```\n\
+         ```markdown after-hue-212-vivid-100\nx\n```\n\
+         ```markdown after-hue-212-vivid-300\nx\n```\n\
+         ```markdown after-hue-212-vivid-075\nx\n```\n",
     );
     assert_eq!(
         unknown_pairs(&sample),
@@ -357,7 +388,10 @@ fn format_doc_fence_info_strings_are_known() {
             "line 1: unknown fence info \"text raeds\"",
             "line 4: unknown fence info \"markdown after-banana\"",
             "line 10: unknown fence info \"markdown after-hue-360\"",
-            "line 13: unknown fence info \"markdown after-hue-07\""
+            "line 13: unknown fence info \"markdown after-hue-07\"",
+            "line 19: unknown fence info \"markdown after-hue-212-vivid-100\"",
+            "line 22: unknown fence info \"markdown after-hue-212-vivid-300\"",
+            "line 25: unknown fence info \"markdown after-hue-212-vivid-075\""
         ]
     );
 }

@@ -1,4 +1,4 @@
-# Breccia notes format, version 7
+# Breccia notes format, version 8
 
 ## 1. About this document
 
@@ -20,7 +20,7 @@ line, with strings written in Rust's debug form (`\n` is a line break inside a b
 - `preamble "…"`: the page-level text before the first block, without the front matter (only when there is some);
 - `front-matter N lines`: the file starts with front matter of N lines, both `---` lines included;
 - `title "…"`: the page name the `title::` line gives;
-- `color "…"`: the page color the `color::` line gives, a name or `hue <h>` (section 8);
+- `color "…"`: the page color the `color::` line gives, a name, `hue <h>`, or `hue <h> vivid <v>` (section 8);
 - `alias "…"`: an alias the front matter gives (section 4);
 - one line per block: its depth (0 is the top level), its task state or `-`, and its text;
 - under a block, indented: each `link` (with `shown "…"` when it has its own shown text) and `tag` in text order, each
@@ -600,10 +600,13 @@ title "Q&A: hiring"
 **Page color (`color::`).** The first preamble property line with the key `color` (ASCII case ignored) whose value is
 one of the names below (case ignored), or a custom hue, gives the page its color. A custom hue is `hue <h>`: the word
 `hue` (case ignored), ASCII whitespace, and a whole number `<h>` from 0 to 359 (leading zeros allowed), an angle on the
-color wheel. Lines inside front matter and a `color` key in YAML do not count. Other values (`hue 360`, `hue 12.5`,
-`hue x`) are no color and are kept as written. In journals `color::` is not read. Breccia writes a name, or `hue <h>`
-with one space and no leading zeros, in lower case: choosing a color replaces the first `color::` line or adds one, and
-"no color" removes every `color::` line. What the color does in the app is described in [`docs/spec.md`](spec.md)
+color wheel. A custom hue may be followed by `vivid <v>`: the word `vivid` (case ignored), ASCII whitespace, and a
+whole number `<v>` from 50 to 200 (leading zeros allowed). It is how vivid the color is, in percent of normal: 100 is the
+same as leaving it out. Lines inside front matter and a `color` key in YAML do not count. Other values (`hue 360`,
+`hue 12.5`, `hue x`, `vivid 300`, `vivid x`, a lone `vivid`) are no color and are kept as written. In journals `color::`
+is not read. Breccia writes a name, `hue <h>` or `hue <h> vivid <v>` with single spaces and no leading zeros, in lower
+case, and leaves out `vivid 100`: choosing a color replaces the first `color::` line or adds one, and "no color"
+removes every `color::` line. What the color does in the app is described in [`docs/spec.md`](spec.md)
 section 7.4, and how a hue becomes a color in each theme is the app's business (sections 7.3 and 7.10). The names, row
 by row:
 
@@ -651,6 +654,29 @@ Color:: HUE 0212
 ```text reads
 preamble "Color:: HUE 0212\n"
 color "hue 212"
+0 - "a"
+```
+
+```markdown example
+Color:: Hue 212 Vivid 0150
+- a
+```
+
+```text reads
+preamble "Color:: Hue 212 Vivid 0150
+"
+color "hue 212 vivid 150"
+0 - "a"
+```
+
+```markdown example
+color:: hue 212 vivid 300
+- a
+```
+
+```text reads
+preamble "color:: hue 212 vivid 300
+"
 0 - "a"
 ```
 
@@ -729,6 +755,27 @@ color:: hue 360
 ```markdown after-teal
 title:: x
 color:: teal
+- a
+```
+
+```markdown before
+- a
+```
+
+```markdown after-hue-212-vivid-150
+color:: hue 212 vivid 150
+- a
+```
+
+```markdown before
+color:: hue 212 vivid 150
+notes
+- a
+```
+
+```markdown after-hue-40-vivid-60
+color:: hue 40 vivid 60
+notes
 - a
 ```
 
@@ -1009,7 +1056,7 @@ To work well with Breccia on the same folder:
   use them. It keeps them as text if they are there.
 - When you rename a page file, keep its `title::` line, or add one when the new file name differs from the page name,
   and keep Breccia's alias block (or the `aliases` entry that names the page).
-- Keep a page's `color::` line; write one only with a name or a `hue <h>` from section 8.
+- Keep a page's `color::` line; write one only with a name, `hue <h>` or `hue <h> vivid <v>` from section 8.
 - Leave the comments and unknown keys in `breccia/config.toml` alone.
 - Write files atomically (write a temporary file, then rename it), so Breccia never reads half a file.
 
@@ -1049,3 +1096,6 @@ To work well with Breccia on the same folder:
 
 - **Version 7**: a `color::` line may hold a custom hue, `hue <h>` (section 8). Before, such a value was no color and
   was kept as text; older Breccia versions still read it that way.
+
+- **Version 8**: a custom hue may carry a vividness, `hue <h> vivid <v>` (section 8). Before, such a value was no color
+  and was kept as text; older Breccia versions still read it that way.
