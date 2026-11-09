@@ -25,3 +25,5 @@ Task 5: fix round 1/5 (1 addressed, 0 open — note uses var(--text), italic; co
 Task 5: complete (commits 1295f9e..1c1718f, review clean after round 1)
 Task 6: minor (deferred): light theme reset only at end of step 120; Vivid 119 page and day journal file not deleted (same as earlier steps)
 Task 6: complete (commits 11b309c..cb5c849, review clean; e2e 176 PASS x2)
+Task 7: minor (deferred): spec §7.10 vividness sentence overlaps old "down to half the theme's strength" (not exact below 100); spec §7.3 old "Tab moves between the grid and the slider" left beside the new 3-stop order
+Task 7: complete (commits 8ce65be..5f167af, review clean)
