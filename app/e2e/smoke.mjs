@@ -1881,7 +1881,12 @@ try {
     const emptyFile = join(folder, 'journals', `${unmarked}.md`)
     assert(!existsSync(emptyFile), '95 the day 3 months back has a file')
     assert((await picker.locator(`[data-key="${unmarked}"][data-marked]`).count()) === 0, '95 an empty day has a dot')
+    // Each pick waits for the page title to change: every empty day shows the same "start writing" placeholder.
+    const pageTitle = page.locator('[data-testid="page-title"]')
+    const shownTitle = async () => ((await pageTitle.count()) ? (await pageTitle.innerText()).trim() : '')
     await kb.press('Enter')
+    await waitFor('95 the empty day opens as its page', async () => (await shownTitle()) !== '', true)
+    const unmarkedTitle = await shownTitle()
     await page.locator('[data-testid="start-writing"]').waitFor()
     assert(journalCount() === files94, '95 picking an empty day wrote a file')
     // A future day: its page, no file.
@@ -1894,6 +1899,10 @@ try {
     await waitFor('95 next month', focusedKey, future)
     await kb.press('Enter')
     await picker.waitFor({ state: 'detached' })
+    await waitFor('95 the future day opens as its page', async () => {
+      const shown = await shownTitle()
+      return shown !== '' && shown !== unmarkedTitle
+    }, true)
     await page.locator('[data-testid="start-writing"]').waitFor()
     // Back to the empty past day: typing writes its file (and the future day still has none).
     await kb.press('Control+Shift+D')
@@ -1903,6 +1912,7 @@ try {
     for (let i = 0; i < 3; i++) await kb.press('PageUp')
     await waitFor('95 back at the empty day', focusedKey, unmarked)
     await kb.press('Enter')
+    await waitFor('95 the empty day opens again', shownTitle, unmarkedTitle)
     await page.locator('[data-testid="start-writing"]').click()
     await page.locator('.cm-content').waitFor()
     await kb.type('picked day')
@@ -2912,6 +2922,9 @@ try {
   assert((await vslider.getAttribute('aria-disabled')) === 'true', '121 the vividness slider is enabled')
   await page.mouse.move(...center(await vslider.boundingBox()))
   await waitFor('121 the greyed vividness slider previews the focused choice', () => previewBox.getAttribute('data-preview'), '')
+  // Hovering the hue slider is enough to enable Vividness.
+  await slider.hover()
+  await waitFor('121 hovering the hue slider enables vividness', () => vslider.getAttribute('aria-disabled'), null)
   // The tracks are as wide as the grid's cells, from crimson's left edge to amber's right edge.
   const crimson121 = await option('crimson').boundingBox()
   const amber121 = await option('amber').boundingBox()
