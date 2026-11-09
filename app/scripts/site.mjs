@@ -23,6 +23,7 @@ export function assemble(root, siteDir = join(root, 'site')) {
 // ---------------------------------------------------------------- checker
 
 const VOID = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'source', 'track', 'wbr'])
+const PUBLISHED = 'https://eightbitboy.github.io/breccia/'
 const ABSOLUTE = /^(?:[a-z][a-z0-9+.-]*:)/i
 
 function walk(dir, out = []) {
@@ -141,7 +142,14 @@ function checkHtml(ctx, html, baseDir) {
       if (attr === 'target' && value.toLowerCase() === '_blank') ctx.add('target="_blank" is not allowed')
       if (attr === 'style') checkCss(ctx, `x{${value}}`, baseDir)
       if (attr === 'id') ids.set(value, (ids.get(value) ?? 0) + 1)
-      if (isSocial && attr === 'content') continue
+      if (isSocial && attr === 'content') {
+        // a social image on the published site must exist in siteDir (a renamed screenshot would leave it dead)
+        const key = attrs.property ?? attrs.name
+        if ((key === 'og:image' || key === 'twitter:image') && value.startsWith(PUBLISHED)) {
+          checkRef(ctx, value.slice(PUBLISHED.length), 'req', ctx.siteDir)
+        }
+        continue
+      }
       if (/\bhttp:\/\//i.test(value) && attr !== 'href' && attr !== 'src' && attr !== 'srcset') {
         ctx.add(`http: is not allowed: ${value}`)
       } else if (attr === 'href' || attr === 'src') {
@@ -179,7 +187,7 @@ function checkHtml(ctx, html, baseDir) {
   if (!hasTitle) ctx.add('missing <title>')
   if (!meta('description')) ctx.add('missing description meta')
   if (!hasIcon) ctx.add('missing <link rel="icon"> (icon)')
-  for (const key of ['og:title', 'og:description', 'og:type', 'og:url', 'og:image', 'twitter:card']) {
+  for (const key of ['og:title', 'og:description', 'og:type', 'og:url', 'og:image', 'og:image:alt', 'twitter:card', 'twitter:image:alt']) {
     const a = meta(key)
     if (!a) ctx.add(`missing ${key}`)
     else if (key === 'og:image' && !/^https:\/\//.test(a.content ?? '')) {

@@ -17,8 +17,10 @@ const HEAD = `<meta charset="utf-8">
 <meta property="og:description" content="An outliner.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://example.github.io/breccia/">
-<meta property="og:image" content="https://example.github.io/breccia/images/a.png">
+<meta property="og:image" content="https://eightbitboy.github.io/breccia/images/a.png">
+<meta property="og:image:alt" content="A shot">
 <meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image:alt" content="A shot">
 <link rel="icon" href="icons/icon.svg">
 <link rel="stylesheet" href="style.css">`
 
@@ -179,17 +181,29 @@ describe('checkSite', () => {
   })
 
   it('refuses_missing_social_meta', () => {
-    for (const key of ['og:title', 'og:description', 'og:type', 'og:url', 'og:image', 'twitter:card']) {
+    for (const key of ['og:title', 'og:description', 'og:type', 'og:url', 'og:image', 'og:image:alt', 'twitter:card', 'twitter:image:alt']) {
       const head = HEAD.split('\n')
         .filter((l) => !l.includes(`"${key}"`))
         .join('\n')
       const p = checkSite(fixture(withHead(head)))
       expect(p, key).toEqual([expect.stringContaining(key)])
     }
-    const relative = HEAD.replace('https://example.github.io/breccia/images/a.png', 'images/a.png')
+    const relative = HEAD.replace('https://eightbitboy.github.io/breccia/images/a.png', 'images/a.png')
     expect(checkSite(fixture(withHead(relative)))).toEqual([expect.stringContaining('og:image')])
     const card = HEAD.replace('summary_large_image', 'summary')
     expect(checkSite(fixture(withHead(card)))).toEqual([expect.stringContaining('twitter:card')])
+  })
+
+  it('refuses_a_social_image_that_is_not_in_the_site', () => {
+    for (const key of ['og:image', 'twitter:image']) {
+      const tag = `<meta ${key.startsWith('og') ? 'property' : 'name'}="${key}" content="https://eightbitboy.github.io/breccia/images/renamed.png">`
+      const p = checkSite(fixture(withHead(HEAD + tag)))
+      expect(p, key).toEqual([expect.stringContaining('images/renamed.png')])
+      const ok = tag.replace('renamed.png', 'a.png')
+      expect(checkSite(fixture(withHead(HEAD + ok))), key).toEqual([])
+    }
+    const renamed = HEAD.replace('images/a.png', 'images/b.png')
+    expect(checkSite(fixture(withHead(renamed)))).toEqual([expect.stringContaining('images/b.png')])
   })
 
   it('refuses_missing_head_meta', () => {
@@ -344,6 +358,8 @@ describe('the real site', () => {
         ['--muted', '--bg'],
         ['--muted', '--surface'],
         ['--on-accent', '--accent'],
+        ['--accent', '--bg'],
+        ['--accent', '--surface'],
       ]
       for (const [fg, bg] of pairs) {
         expect(contrast(p[fg], p[bg]), `${sel} ${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5)
