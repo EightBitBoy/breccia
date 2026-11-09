@@ -250,7 +250,8 @@ a.ext { color: var(--link); }
 .pc-preview-wash { padding: 4px 8px; font-size: 15px; line-height: 1.5; color: var(--text); }
 .pc-preview-link { color: var(--link); }
 .pc-preview-tag { color: var(--tag); }
-.pc-preview-note { font-size: 11px; line-height: 1.4; color: var(--muted); }
+/* In the text colour, which the readability guard keeps at 4.5:1 on every wash; italic keeps it below the sample. */
+.pc-preview-note { font-size: 11px; line-height: 1.4; font-style: italic; color: var(--text); }
 .group {
   margin: 12px 10px 4px; font-size: 11px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted);
