@@ -20,3 +20,5 @@ Task 3: minor (deferred): refocus only ends on a pointerdown or focusin elsewher
 Task 3: complete (commits 45c4e62..4fbb18b, review clean after round 1; e2e 183 PASS x2; expected total after Task 4: 184)
 Task 4: minor (deferred): step 123 also assert the animation end differs from white; step 123 covers only the named blue wash, not a custom (opaque) one; getAnimations()[0] should filter by animation name
 Task 4: complete (commits 0c9122a..f0d9e61, review clean; e2e 184 PASS x2)
+Task 5: minor (deferred): review.md:72 is 122 columns; review item 52 says "a click under the thumb does not change the value" but no code or test backs it (fix in final wave: remove or make true); long struck lines in plan 1 follow-ups
+Task 5: complete (commits fa5b54b..8207b9d, review clean)
