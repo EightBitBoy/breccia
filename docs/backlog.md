@@ -442,3 +442,12 @@ Done as the Vividness slider: see `docs/plans/2026-11-09-03-custom-color-vividne
 Owner, 2026-11-07: custom page colors start with a hue slider only (lightness and vividness come from the theme). If
 that proves too limited, add a second slider for vividness. The app would still lower it per theme wherever text
 readability needs that, so the slider can seem to stop at some point; the picker's preview line shows why.
+
+## 73. Board card buttons need a visible background (Boards)
+
+Owner, 2026-11-09: on the board, hovering a card shows two small buttons, the arrow (↗, opens the page or journal day
+at the block) and the "…" card menu. Their background matches the card's background, so they hardly stand out. Give
+them a different background color rather than a border (the owner prefers color because the buttons are small). It
+has to work in all six themes and the System dark block, and in the hover and open states (`app/src/styles/app.css`,
+`.card .jump`, `.card .card-menu`, `.card .tools button`; colors only in `app/src/styles/tokens.css`). Check the
+contrast of the arrow and the dots against the new background.
