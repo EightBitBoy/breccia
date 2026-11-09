@@ -38,7 +38,7 @@ Plan 3 (custom color vividness, backlog #72) is done (2026-11-09; owner decision
 ledger `.superpowers/sdd/2026-11-09-03-custom-color-vividness/progress.md`). It is released as 1.2.0 (2026-11-09,
 https://github.com/EightBitBoy/breccia/releases/tag/v1.2.0); the owner still checks review items 46 to 50.
 
-Released since 1.1.0: 1.1.1 and 1.2.0 (2026-11-09; 1.1.1: state chips and "Date…" in the slash menu, Journals position setting, no
+Released since 1.1.0: 1.1.1, 1.2.0 and 1.3.0 (2026-11-09; 1.1.1: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
 Plan 4 (follow-ups of plans 1 to 3) is done (2026-11-09; owner decisions Q1 to Q8 and pre-flight rulings in the plan,
@@ -48,18 +48,17 @@ colored row. The owner checks review items 51 to 58.
 
 Backlog #73 (board card button background) is done; the owner checks review item 59.
 Backlog #74 (a theme button in the status bar, left of "?") is done; the owner checks review item 60.
-Next, release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
-minor bump for the new features is the controller's ruling).
-At the 1.3.0 release pause, delete the changelog line that comes from commit 1a3bc80 ("a picker opened on a link that
-just went…"): it fixes a bug from plan 4 itself that no release had.
-After the release, plan backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) as a normal
+Plan 4 and backlog #73 and #74 are released as 1.3.0 (2026-11-09,
+https://github.com/EightBitBoy/breccia/releases/tag/v1.3.0). The changelog line for a bug of plan 4 itself (commit
+1a3bc80) was left out of the 1.3.0 notes by hand at the release pause.
+Next, plan backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) as a normal
 plan, with the owner's review.
 
 Candidates for the next plan, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 60; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 72 items, #72 done);
+- backlog items the owner picks (`docs/backlog.md`, 75 items; #71, #72, #73 and #74 done);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
 ## Test baseline
