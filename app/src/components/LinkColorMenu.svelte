@@ -55,17 +55,18 @@
 
   /**
    * The picker's anchor: the link's box while it is in the page, else the last box it had, so the picker stays where
-   * it is when the link goes.
+   * it is when the link goes. The box is first taken when the menu opens, so a link gone before the picker opens
+   * still places it at the link.
    */
+  let lastBox = new DOMRect()
   const anchorBox = $derived(boxOf(anchor))
   function boxOf(a: HTMLElement | null) {
     if (!a) return null
-    let last = new DOMRect()
     return {
       contextElement: a,
       getBoundingClientRect: () => {
-        if (a.isConnected) last = a.getBoundingClientRect()
-        return last
+        if (a.isConnected) lastBox = a.getBoundingClientRect()
+        return lastBox
       },
     }
   }
@@ -169,6 +170,7 @@
         target = act.target
         anchor = a
         spot = a && spotOf(a)
+        if (a) lastBox = a.getBoundingClientRect()
       }
     }
     node.addEventListener('contextmenu', oncontextmenu)
