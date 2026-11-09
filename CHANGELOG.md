@@ -2,6 +2,15 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.1.1] - 2026-11-09
+
+### Features
+
+- Slash menu: states show as colored chips like on a page
+- Slash menu: pick any day with Date…, and Current time is gone
+- Settings: choose whether Journals sits at the top, bottom or among the folders in the sidebar
+- Git settings: the "Now:" status line is gone
+
 ## [1.1.0] - 2026-11-07
 
 ### Features
