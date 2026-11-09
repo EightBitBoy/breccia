@@ -14,3 +14,7 @@ Owner request: after plan 4 finishes, implement backlog #73 directly (small chan
 Owner request: after #73, implement backlog #74 (theme picker button in the status bar next to "?") directly, then release a new version.
 - Ruling: the release is 1.3.0 (owner gave no number; plan 4 and #73/#74 are user-visible changes, a minor bump) — cost if wrong: the owner re-cuts with another number before the tag is pushed, or gets a skipped version number
 Owner request: after the 1.3.0 release, plan backlog #75 (faint lines between wash rows at zoom 110%/125%, display scale 100%) as a normal plan with owner review.
+Task 3: review (opus): spec ✅, quality needs fixes — Important: no test could fail on follow()/findSpot; gap: Q6 pick-after-link-gone untested
+Task 3: fix round 1/5 (2 addressed, 0 open — step 122 edits block text on disk while picker open and after a pick; removes the link and checks the pick's bytes; commits 0011855..4fbb18b)
+Task 3: minor (deferred): refocus only ends on a pointerdown or focusin elsewhere; tabindex written into {@html} content
+Task 3: complete (commits 45c4e62..4fbb18b, review clean after round 1; e2e 183 PASS x2; expected total after Task 4: 184)
