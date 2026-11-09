@@ -37,3 +37,5 @@ Task 5: complete — commit 1e7bdf4; reviewed by the controller directly (workfl
 Task 6: complete — owner chose 'You turn it on now'; Pages enabled (build_type workflow); run 42700654560 green; site and images answer 200.
 
 Task 7: complete — commit ad945cd (docs, haiku), diff read by the controller. Open for finish: STATUS test baseline unchanged (no app tests added), #64 heading check at close.
+
+Task 8: complete — final review (opus) found no blocker; fix wave cdef3dc; finish checks: just test (Vitest 978, cargo ok), just lint, just site-check, just e2e 186 PASS. Plan 5 done.

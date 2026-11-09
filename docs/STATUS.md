@@ -27,7 +27,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 2 | Custom page colors | done 2026-11-07 | `docs/plans/2026-11-07-02-custom-page-colors.md` | `docs/plans/2026-11-07-02-custom-page-colors-followups.md` |
 | 3 | Custom color vividness | done 2026-11-09 | `docs/plans/2026-11-09-03-custom-color-vividness.md` | `docs/plans/2026-11-09-03-custom-color-vividness-followups.md` |
 | 4 | Follow-ups of plans 1 to 3 | done 2026-11-09 | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | `docs/plans/2026-11-09-04-followups-of-plans-1-3-followups.md` |
-| 5 | GitHub Pages site | in progress | `docs/plans/2026-11-09-05-github-pages-site.md` | at the end of the plan |
+| 5 | GitHub Pages site | done 2026-11-09 | `docs/plans/2026-11-09-05-github-pages-site.md` | `docs/plans/2026-11-09-05-github-pages-site-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -52,10 +52,10 @@ Backlog #74 (a theme button in the status bar, left of "?") is done; the owner c
 Plan 4 and backlog #73 and #74 are released as 1.3.0 (2026-11-09,
 https://github.com/EightBitBoy/breccia/releases/tag/v1.3.0). The changelog line for a bug of plan 4 itself (commit
 1a3bc80) was left out of the 1.3.0 notes by hand at the release pause.
-Plan 5 (GitHub Pages site, backlog #64) is in progress (plan file `docs/plans/2026-11-09-05-github-pages-site.md`,
+Plan 5 (GitHub Pages site, backlog #64) is done (2026-11-09; plan file `docs/plans/2026-11-09-05-github-pages-site.md`,
 ledger `.superpowers/sdd/2026-11-09-05-github-pages-site/progress.md`). The site is published at
 https://eightbitboy.github.io/breccia/ (GitHub Pages on, with GitHub Actions as its source, turned on on 2026-11-09 with
-the owner's approval). Its final review is still to come. The site lives in `site/` (plain HTML, CSS and JS, no build
+the owner's approval). The site lives in `site/` (plain HTML, CSS and JS, no build
 step) and is deployed by `.github/workflows/pages.yml` on each push to `main` that touches `site/`, `docs/images/` or the
 app icons. It is not part of the app's release, and its commits are `chore`, `test`, `ci` or `docs`. Recipes:
 `just site` (a local preview at http://127.0.0.1:4173/breccia/), `just site-check` (links, alt texts, sizes, no external
@@ -75,7 +75,7 @@ Candidates for the next plan, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (935 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just test`: Vitest (978 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 186 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
