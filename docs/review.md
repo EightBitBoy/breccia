@@ -54,3 +54,4 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    case), before the single pages, because the list shows folders first; say if you want it mixed in with the pages
    too. The setting is for this computer only and is not stored in the notes folder. Journals' own fold, years, months
    and days work the same in each place.
+45. [ ] **Git settings: no "Now:" line:** Settings > Git no longer ends with a "Now: …" status line. The status bar item still shows the state.

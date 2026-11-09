@@ -24,7 +24,6 @@
     archiveDays,
     autoArchive,
     git,
-    gitText,
     theme,
     journalsAt,
     mac,
@@ -63,7 +62,6 @@
     autoArchive: boolean
     /** The `[git]` settings; null until the config is loaded. */
     git: GitSettings | null
-    gitText: string | null
     theme: ThemeChoice
     journalsAt: JournalsAt
     mac: boolean
@@ -134,7 +132,7 @@
         💡 Git was not found on this computer. Breccia uses the installed Git for versioning and sync of your notes
         folder. Install Git and restart Breccia for full Git support.
       </p>
-    {:else if git}<GitSection {git} {gitText} {ongit} />{/if}
+    {:else if git}<GitSection {git} {ongit} />{/if}
   </section>
   <section data-section="journal">
     <h2>Journal</h2>

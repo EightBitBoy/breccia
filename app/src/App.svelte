@@ -1698,7 +1698,6 @@
                 {archiveDays}
                 autoArchive={autoArchiveOn}
                 git={gitSettings}
-                gitText={git.item?.text ?? null}
                 {theme}
                 {mac}
                 version={configVersion}

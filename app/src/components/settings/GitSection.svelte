@@ -5,12 +5,10 @@
 
   let {
     git,
-    gitText,
     ongit,
   }: {
     git: GitSettings
     /** The Git item's text, or null while it is hidden. */
-    gitText: string | null
     /** Sends only what changed, over the settings shown when it is sent; settles once answered. */
     ongit: (patch: Partial<GitSettings>) => Promise<void>
   } = $props()
@@ -84,6 +82,3 @@
   {#if intervalProblem}<div class="field-problem">{intervalProblem}</div>{/if}
   <div class="settings-hint">{zeroNote('pull')}</div>
 </div>
-{#if gitText}
-  <p class="settings-hint">Now: {gitText}</p>
-{/if}
