@@ -49,7 +49,7 @@ Candidates after plan 3, to settle with the owner:
 ## Test baseline
 
 - `just test`: Vitest (890 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 164 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 176 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
 
