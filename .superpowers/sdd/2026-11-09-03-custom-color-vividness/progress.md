@@ -17,3 +17,9 @@ Task 3: minor (deferred): an optional extra pickerTab test case (reviewer's sugg
 Task 3: complete (commits 5648801..89418f3, review clean)
 Task 4: minor (deferred): customColor.ts:78 chroma at 100 exact only for today's cs (prefer CUSTOM_CHROMA*t.cs*(vivid/100)); vividTrack uses 5*VIVID_STEP instead of VIVID_PAGE; sweep gamut uses t.l not t.l+CUSTOM_DL*t.ds; `limited` doc comment wording
 Task 4: complete (commits da3e066..adc1ed8, review clean)
+Task 5: review (opus): spec ✅, quality needs fixes — Important: "softened" note in var(--muted) 11px is 1.58–3.28:1 on limited washes; UI unverified until e2e
+- Ruling: the note uses var(--text) instead of var(--muted) — global constraint "text ≥ 4.5:1 on the wash" outranks the plan's styling detail, and the guard guarantees --text on every wash — cost if wrong: the note looks less subdued; one CSS line
+- Ruling: "UI unverified" is not a fix item; Task 6's e2e steps 119/120 are the verification, and the controller runs just e2e at the end — cost if wrong: a UI bug surfaces in Task 6 instead of here
+Task 5: minor (deferred): sweep timeout 60 s could be 15–20 s
+Task 5: fix round 1/5 (1 addressed, 0 open — note uses var(--text), italic; commits b7dde96..1c1718f)
+Task 5: complete (commits 1295f9e..1c1718f, review clean after round 1)
