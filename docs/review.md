@@ -47,7 +47,7 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    applies (or the hue slider is reached); the keys (arrows ±5, Page Up/Down ±25, Home/End, Enter, Tab order);
    dragging; and that only release or Enter writes `color:: hue <h> vivid <v>`.
 47. [ ] **Vividness in every theme:** sweep 50 to 200 in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
-   Windows modes). Check where the slider stops getting stronger (about 155 in Light, 125 in Teal for a blue), and that
+   Windows modes). Check where the slider stops getting stronger (about 155 in Light, 125 in Teal for hue 212), and that
    the 50 end is still visibly colored. Say if the range or the "normal" point feels wrong.
 48. [ ] **The "softened" note:** the wording "Softened here so text stays readable" (normal text color, italics) and
    where it sits under the preview. Say if you want other words, a mark on the track instead, or no note.

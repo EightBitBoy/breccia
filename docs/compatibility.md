@@ -95,7 +95,7 @@ block links and embeds are not read yet.
 
 Page colors use the same syntax: a `color:: <name>` line in the page's preamble ([§8](format.md#8-properties)). In Obsidian it is plain text (not verified). In Logseq a `key:: value` line before the first bullet is a page property, so it shows as one (not verified). Neither app colors anything with it. A custom color is `color:: hue 212` (a hue from 0 to 359, format version 7): plain text in Obsidian and a page property in Logseq (not verified). Breccia versions before format 7 read it as no color and keep the line. A custom color can also carry a vividness: `color:: hue 212 vivid 150` (format version 8, vividness 50 to 200). It is plain text in Obsidian and a page property in Logseq (not verified). Breccia versions before format 8 read it as no color and keep the line.
 
-**Decision:** The color lives in the file as a name or `hue <h>`, so each app (and each theme) can decide how to show it.
+**Decision:** The color lives in the file as a name, `hue <h>` or `hue <h> vivid <v>`, so each app (and each theme) can decide how to show it.
 
 ### Tasks
 

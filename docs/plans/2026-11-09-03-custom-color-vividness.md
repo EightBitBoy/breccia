@@ -96,6 +96,8 @@ Full table: `.superpowers/sdd/2026-11-09-03-custom-color-vividness/preflight.md`
 - **R11 (Task 6):** in step 119, before the "119 Esc writes nothing" check, add: Tab twice (to the vividness slider),
   ArrowRight, Esc, then assert the bytes unchanged. Expected e2e count after the plan: 176 PASS lines.
 - **R12 (Task 6):** update the stale "steps 112 to 116" comment in `smoke.mjs` to name the new range.
+- **R13 (Task 5, from Task 5's review):** the "softened" note uses `var(--text)` in italics, not `var(--muted)` as P7
+  and Task 5 say: `var(--muted)` measured only 1.58-3.28:1 on limited washes, below 4.5:1.
 
 ## Global Constraints
 
