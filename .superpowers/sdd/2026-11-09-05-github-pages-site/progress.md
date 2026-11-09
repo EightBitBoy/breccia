@@ -35,3 +35,5 @@ Task 4: complete — commits 37d041b, 28be11c (review fixes: background tab, sha
 Task 5: complete — commit 1e7bdf4; reviewed by the controller directly (workflow read, 3 pinned SHAs verified with gh api). First run 42700284201 failed at configure-pages: Pages not enabled (expected, Task 6).
 
 Task 6: complete — owner chose 'You turn it on now'; Pages enabled (build_type workflow); run 42700654560 green; site and images answer 200.
+
+Task 7: complete — commit ad945cd (docs, haiku), diff read by the controller. Open for finish: STATUS test baseline unchanged (no app tests added), #64 heading check at close.
