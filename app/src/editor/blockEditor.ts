@@ -5,6 +5,7 @@ import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { defaultKeymap, deleteCharBackward, deleteCharForward, insertNewline } from '@codemirror/commands'
 import { decide, type Action, type Ctx } from '../lib/keys'
 import { isOutline } from '../lib/paste'
+import { isMac as mac } from '../lib/platform'
 import { highlighting } from './highlight'
 
 export interface EditorHooks {
@@ -42,8 +43,6 @@ export interface BlockEditor {
 
 /** Marks changes made by `setText`, which are not the user's typing. */
 const external = Annotation.define<boolean>()
-
-const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
 /** Colours from the tokens; a theme beats CodeMirror's base theme, plain CSS does not. */
 const theme = EditorView.theme({

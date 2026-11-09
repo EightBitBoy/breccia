@@ -6,6 +6,7 @@
   import { swatchValue } from '../lib/customColor'
   import { colorLabel, swatchKey } from '../lib/pageColors'
   import { themeTokens } from '../lib/themeTokens.svelte'
+  import { isMac as mac } from '../lib/platform'
   import PageColorGrid from './PageColorGrid.svelte'
 
   let {
@@ -21,7 +22,6 @@
     onhistory: (redo: boolean) => void
   } = $props()
 
-  const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
   const fill = $derived(color === null ? undefined : swatchValue(color, themeTokens.current))
 

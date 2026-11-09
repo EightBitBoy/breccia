@@ -124,6 +124,7 @@
   import ShortcutsDialog from './components/ShortcutsDialog.svelte'
   import SettingsView from './components/SettingsView.svelte'
   import NewPageView from './components/NewPageView.svelte'
+  import { isMac as mac } from './lib/platform'
 
   let folder = $state<string | null>(null)
   let page = $state<Page | null>(null)
@@ -232,7 +233,6 @@
     folded,
   )
 
-  const mac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform)
 
   const sel = new MultiSelect(
     {
