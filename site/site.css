@@ -158,6 +158,7 @@ a { color: var(--accent); text-underline-offset: 0.2em; }
   border: 1px solid var(--muted);
   border-radius: 50%;
   cursor: pointer;
+  z-index: 4;
 }
 .scheme[hidden] { display: none; }
 .scheme[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
@@ -205,8 +206,9 @@ h1 {
    layout and clip-path only (no transform), so the static page is the assembled state. */
 .stone {
   position: relative;
+  --pad: 1.75rem;
   margin: 0;
-  padding: 1.75rem;
+  padding: var(--pad);
 }
 
 .stone .shot {
@@ -246,6 +248,46 @@ h1 {
 .shard:nth-child(14) { right: 0; top: 6%; width: 2.4rem; height: 30%; }
 .shard:nth-child(15) { right: 0; top: 33%; width: 2.2rem; height: 32%; }
 .shard:nth-child(16) { right: 0; top: 62%; width: 2.6rem; height: 32%; }
+
+/* The assembly (hero.js, only without reduced motion). scheme.js sets .hero-intro on <html> so the stone is
+   hidden from the first paint; hero.js swaps it for .assembling on the stone, flies the frame shards and a
+   .tiles mosaic in, and fades the mosaic into the screenshot. If the script fails, the hero-reveal animation
+   shows the screenshot and the frame 2.5 s after they were hidden, whatever the script did. */
+@keyframes hero-reveal { to { opacity: 1; } }
+
+.hero-intro .stone .frame,
+.hero-intro .stone img.shot,
+.stone.assembling img.shot {
+  opacity: 0;
+  animation: hero-reveal 1ms 2.5s forwards;
+}
+
+.stone.assembling.resolving img.shot {
+  opacity: 1;
+  transition: opacity 440ms ease-in-out; /* done before hero.js clears the classes 500 ms later */
+}
+
+/* The shards fly behind the words and the button. */
+.hero > :not(.stone) { position: relative; z-index: 3; }
+
+/* Shards start up to a viewport away; no sideways scrollbar while they fly. */
+html:has(.stone.assembling) { overflow-x: hidden; }
+
+.tiles {
+  position: absolute;
+  inset: var(--pad);
+  z-index: 2;
+  pointer-events: none;
+}
+
+.tiles > span {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(var(--a, 135deg), rgb(255 255 255 / 0.18), rgb(255 255 255 / 0) 55%, rgb(0 0 0 / 0.16)),
+    var(--c);
+  will-change: transform, opacity;
+}
 
 /* ---- content ---- */
 
@@ -354,5 +396,5 @@ footer .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
 
 @media (max-width: 40rem) {
   .hero { padding-top: 4rem; }
-  .stone { padding: 1.1rem; }
+  .stone { --pad: 1.1rem; }
 }

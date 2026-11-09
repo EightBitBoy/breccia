@@ -28,6 +28,12 @@
   var stored = read()
   if (stored) root.setAttribute('data-scheme', stored)
 
+  // The hero's assembly (hero.js) starts from a hidden stone: mark it before the first paint, so the assembled
+  // frame does not flash before the module runs. site.css reveals the stone after 2.5 s if hero.js never does.
+  if (window.matchMedia && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    root.classList.add('hero-intro')
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     var button = document.querySelector('button.scheme')
     if (!button) return
