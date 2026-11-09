@@ -1,0 +1,9 @@
+# SDD ledger — plan: docs/plans/2026-11-09-03-custom-color-vividness.md
+
+Start: b551882 (2026-11-09). Spec: docs/spec.md (binding); designs docs/superpowers/specs/2026-11-07-*-design.md.
+Workspace on main per CLAUDE.md (owner: commit directly on main).
+
+Pre-flight scan (opus): 12 findings, table in preflight.md (local). All accepted and written into the plan's
+"Pre-flight rulings" section (R1-R12).
+- Ruling: R1-R12 as in the plan — each is the smallest correction that keeps the plan consistent with the owner's P5
+  change and makes every test able to fail — cost if wrong: rework of the affected test or wording in one task.

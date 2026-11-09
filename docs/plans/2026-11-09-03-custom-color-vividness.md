@@ -10,7 +10,7 @@ hard to read. When that happens, the picker's preview line says so.
 writes `hue <h> vivid <v>` and leaves out `vivid 100`. The frontend's `customShade` takes the vividness and scales
 the shade's chroma and the wash strength by `v/100`. The existing readability stepping then runs from that target, and
 a new `limited` flag reports when the stepping had to change anything. The picker (`PageColorGrid`) gets a second
-slider under the hue slider, shown once the custom part is in use, and a note in the preview when `limited` is set.
+slider under the hue slider, always shown and greyed out until a custom hue applies (P5), and a note in the preview when `limited` is set.
 Backlog #72.
 
 **Tech Stack:** Rust (breccia-core), Svelte 5 + TypeScript, Vitest, Playwright e2e over WebView2. No new dependency.
@@ -67,6 +67,35 @@ for everything this plan does not change. Also `docs/spec.md` §7.3, §7.4 and �
 - **P9. Keyboard:** three tab stops. Tab goes grid → hue → vividness → grid, and Shift Tab goes the other way. On
   the vividness slider: arrows ±5, Page Up/Down ±25, Home 50, End 200. Enter saves the custom color as shown (hue and
   vividness, one undo step) and closes. A drag saves on release and keeps the picker open, as on the hue slider.
+
+## Pre-flight rulings (2026-11-09, binding; they override the task text where they differ)
+
+Full table: `.superpowers/sdd/2026-11-09-03-custom-color-vividness/preflight.md` (local).
+
+- **R1 (Tasks 5, 7):** P5 everywhere: the vividness slider is always shown and greyed out until a custom hue applies.
+  Any text saying it "shows only", "appears" or "reopening shows no slider" means "is greyed out / disabled" instead.
+  The spec §7.3 text and review item 46 say so.
+- **R2 (Task 5):** a greyed slider does nothing: no pointer, focus or key handling. Only the hue slider, or an
+  enabled vividness slider, sets `customSeen`.
+- **R3 (Tasks 5, 6):** render `aria-disabled={enabled ? undefined : 'true'}`; e2e asserts
+  `getAttribute('aria-disabled') !== 'true'` for "enabled".
+- **R4 (Task 4):** "vividness 100 is today's look" must be able to fail: before changing `customShade`, compute a
+  digest (or full table) of today's `customShade(h, t)` for every hue in every theme block, pin it in the test, and
+  check the vivid-100 result against that pinned digest (bypassing the memo).
+- **R5 (Task 2):** add a valid `after-hue-212-vivid-150` sample that must not be flagged, so the fence test fails
+  first.
+- **R6 (Tasks 1, 3):** tests that already pass on today's code stay as pinning tests; the RED evidence comes from the
+  other new tests in the task.
+- **R7 (Task 1):** run `cargo test -p breccia-core -- color:: render:: page_color::`; add
+  `crates/core/tests/it/format_doc.rs` to Task 1's files if it has to change.
+- **R8 (Task 4):** the readability sweep checks every vividness step of 5 from 50 to 200, not only 50, 75 … 200.
+- **R9 (Task 5):** the slider is enabled when `customSeen || current === CUSTOM`, so a color that becomes a custom
+  hue while the picker is open (an outside edit) enables it.
+- **R10 (Tasks 1, 3):** Task 3 defines `VIVID_STEP` and `VIVID_PAGE` in `pageColors.ts`; the core mirrors only
+  `DEFAULT_VIVID`, `MIN_VIVID` and `MAX_VIVID`.
+- **R11 (Task 6):** in step 119, before the "119 Esc writes nothing" check, add: Tab twice (to the vividness slider),
+  ArrowRight, Esc, then assert the bytes unchanged. Expected e2e count after the plan: 176 PASS lines.
+- **R12 (Task 6):** update the stale "steps 112 to 116" comment in `smoke.mjs` to name the new range.
 
 ## Global Constraints
 
@@ -206,7 +235,7 @@ always renders; it is enabled only when `customSeen` is true, and disabled (grey
 
 - [ ] **Step 2: Run them to verify they fail**
 
-Run: `cargo test -p breccia-core color:: render:: page_color::`
+Run: `cargo test -p breccia-core -- color:: render:: page_color::`
 Expected: compile failure (`PageColor::hue` and the `Hue { .. }` shape do not exist yet).
 
 - [ ] **Step 3: Implement** the interfaces above in `color.rs`. Fix `format_doc.rs`'s `hue_value` match only as far
@@ -600,8 +629,8 @@ git commit -m "test(e2e): vividness slider, save on release and Enter, undo, jou
   - compatibility: format version 8. `color:: hue 212 vivid 150` is plain text in Obsidian and a page property in
     Logseq (not verified). Breccia versions before format 8 read it as no color and keep the line.
   - review.md (one item each, `N. [ ] **Title:** …`):
-    46. **Vividness slider:** its look under the hue slider; that it shows only for a custom hue (or once the hue
-        slider is reached); the keys (arrows ±5, Page Up/Down ±25, Home/End, Enter, Tab order); dragging; and that
+    46. **Vividness slider:** its look under the hue slider; that it is always shown and greyed out until a custom
+        hue applies (or the hue slider is reached); the keys (arrows ±5, Page Up/Down ±25, Home/End, Enter, Tab order); dragging; and that
         only release or Enter writes `color:: hue <h> vivid <v>`.
     47. **Vividness in every theme:** sweep 50 to 200 in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
         Windows modes). Check where the slider stops getting stronger (about 155 in Light, 125 in Teal for a blue),
