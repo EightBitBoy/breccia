@@ -29,3 +29,5 @@ Task 1: complete — commit 3a3fc02, review approved (spec pass, quality approve
 Task 2: complete — commit 29ec8b5 (+ comment fix), review approved. Parked: no test for 'invents no feature' (hand-checked); light accent links on surface 4.67:1 (little headroom).
 
 Task 3: complete — commits 7e7d2e6, a43fdf8 (visual fixes), 47ed0d5 (check fixes); review approved. Parked: no hint that board image scrolls sideways at 375; sparse one-line cards at 768.
+
+Task 4: complete — commits 37d041b, 28be11c (review fixes: background tab, shard fallback, late-load checks, transition cleanup); opus review approved after fix; I re-ran site-check, vitest (164) and site-shots (79 PASS). Parked: tiles pass over 'What it is' text at 375px for ~0.5 s; brightness flash repaints tile layer 360 ms; hero seen only in headless frames, owner checks in a real browser.
