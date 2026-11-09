@@ -407,7 +407,8 @@ test('every vividness is readable in every theme', () => {
       }
     }
   }
-})
+  // Over 200,000 shades: about 2 s alone, over 5 s while the whole suite runs in parallel.
+}, 60_000)
 
 test('the readability guard is reported as limited', () => {
   const light = tokensOf(THEME_SELECTORS[0])
