@@ -26,3 +26,6 @@ Final review (opus): ready with fixes. Fix: (1) step 121 hover of the hue slider
 Release pause (1.3.0): delete the changelog line from 1a3bc80 ("a picker opened on a link that just went…") — it fixes a bug from this same plan that no release had, wording unclear.
 - Ruling: one opus fix wave for 1, 2, 3 and the two free items; everything else stays a follow-up — nothing builds on it — cost if wrong: small cleanups wait
 Final fix wave: dispatched (opus), FIX_BASE 13ec07c
+Final fix wave: 45768f2, e19d1d1, 6c5a639; re-review: all addressed, no new breakage
+Finish checks (controller): just test green (Vitest 926), just lint green, just e2e 184 PASS.
+Plan 4: complete (e6f19ee..6c5a639)
