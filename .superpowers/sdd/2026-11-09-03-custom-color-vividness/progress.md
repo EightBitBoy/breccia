@@ -15,3 +15,5 @@ Task 2: minor (deferred): intermediate commit 0c250bc was red (fixed in 0ba34d6)
 Task 2: complete (commits f510c3a..0ba34d6, review clean)
 Task 3: minor (deferred): an optional extra pickerTab test case (reviewer's suggestion)
 Task 3: complete (commits 5648801..89418f3, review clean)
+Task 4: minor (deferred): customColor.ts:78 chroma at 100 exact only for today's cs (prefer CUSTOM_CHROMA*t.cs*(vivid/100)); vividTrack uses 5*VIVID_STEP instead of VIVID_PAGE; sweep gamut uses t.l not t.l+CUSTOM_DL*t.ds; `limited` doc comment wording
+Task 4: complete (commits da3e066..adc1ed8, review clean)
