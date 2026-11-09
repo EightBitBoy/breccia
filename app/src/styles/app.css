@@ -141,6 +141,8 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 
 /* ---------- multi-select and the caret menus ---------- */
 .block.selected { background: var(--hover); outline: 1px solid var(--accent); border-radius: 4px; }
+.block.selected.wash-top { border-top-left-radius: 8px; border-top-right-radius: 8px; }
+.block.selected.wash-bottom { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
 .slash-menu {
   position: fixed; z-index: 10; min-width: 180px; margin-top: 4px; padding: 4px 0;
   background: var(--card); border: 1px solid var(--line); border-radius: 6px;
