@@ -19,8 +19,10 @@
   // yet focusable at mount, the popover's open auto-focus lands on the first tab stop, which for a saved hue is not
   // the start. It knows nothing about where it is shown: the page's swatch puts it in a popover, a link menu can too.
   // Below the choices, a preview shows a line of text with a link and a tag on the color under the pointer, else on
-  // the focused one, in the current theme. When readability holds a custom wash below what its vividness asks for, a
-  // note under that line says it was softened.
+  // the focused one, in the current theme. In a gap between grid cells it keeps the last cell, so it does not blink
+  // from cell to cell; anywhere else that is not an enabled choice (the preview box, the labels, the greyed vividness
+  // slider) it shows the focused one; a drag keeps showing its slider wherever the pointer goes. When readability holds
+  // a custom wash below what its vividness asks for, a note under that line says it was softened.
   import { onMount, untrack } from 'svelte'
   import { customShade, hueTrack, vividTrack, washValue } from '../lib/customColor'
   import {
@@ -44,6 +46,7 @@
     parseCustom,
     pickerStart,
     pickerTab,
+    pointerHover,
     previewColor,
     vividAt,
     vividSliderKey,
@@ -77,8 +80,8 @@
   let vividSlider = $state<HTMLElement | null>(null)
   const current = $derived(pickerStart(color))
   /**
-   * The picker index under the pointer, null when the pointer is outside the choices; any key clears it, so the
-   * preview follows the arrow keys. A slider sets it to its own index when pointed at or pressed.
+   * The picker index under the pointer (`pointerHover`), null when the pointer is not on a choice; any key clears it,
+   * so the preview follows the arrow keys. A slider sets it to its own index when pointed at or pressed.
    */
   let hover = $state<number | null>(null)
   /** The hue the slider stands for: the saved hue, else the default. Moving the slider changes it, saving does not. */
@@ -201,6 +204,20 @@
   }
 
   /**
+   * The pointer has moved onto another element in the picker: the preview takes the enabled choice under it, keeps
+   * the last cell in a gap of the grid, else shows the focused choice; a drag keeps its slider. A slider under the
+   * pointer counts as reached. The greyed vividness slider takes no pointer, so its part is the target there.
+   */
+  function onPointerOver(e: PointerEvent) {
+    const target = e.target as Element
+    const el = target.closest<HTMLElement>('[data-index]')
+    let on = el !== null && root?.contains(el) ? Number(el.dataset.index) : null
+    if (on === VIVID && !vividOn) on = null
+    if (on === CUSTOM || on === VIVID) reach(on, 'pointer')
+    hover = pointerHover(on, target.closest('.pc-grid') !== null, hover, dragging)
+  }
+
+  /**
    * The pointer handlers of a slider: a press takes the pointer and the focus, a move previews, the release saves once
    * and keeps the picker open; a cancelled drag, or one whose pointer was taken away, saves nothing. A disabled
    * vividness slider ignores them all.
@@ -253,6 +270,7 @@
   bind:this={root}
   onkeydown={onKey}
   onpointerdown={() => (moved = true)}
+  onpointerover={onPointerOver}
   onpointerleave={() => (hover = null)}>
   <div class="pc-grid" role="grid" aria-label="Page colors">
     {#each PAGE_COLOR_ROWS as row, r (r)}
@@ -272,7 +290,6 @@
               title={colorLabel(name)}
               tabindex={i === gridAt ? 0 : -1}
               onfocus={() => ((at = i), (gridAt = i))}
-              onpointerenter={() => (hover = i)}
               onclick={() => choose(i)}
             ></button>
           </span>
@@ -289,7 +306,6 @@
     aria-pressed={current === NO_COLOR}
     tabindex={gridAt === NO_COLOR ? 0 : -1}
     onfocus={() => ((at = NO_COLOR), (gridAt = NO_COLOR))}
-    onpointerenter={() => (hover = NO_COLOR)}
     onclick={() => choose(NO_COLOR)}>{colorLabel(null)}</button
   >
   <div class="pc-custom">
@@ -311,7 +327,6 @@
       title={colorLabel(hueColor(hue, vivid))}
       tabindex="0"
       onfocus={() => reach(CUSTOM, 'focus')}
-      onpointerenter={() => reach(CUSTOM, 'pointer')}
       {...hueDrag}
     >
       <div class="pc-hue-thumb" style:left={`${(hue / 359) * 100}%`} style:background={shown?.shade}></div>
@@ -334,7 +349,6 @@
       aria-disabled={vividOn ? undefined : 'true'}
       tabindex={vividOn ? 0 : -1}
       onfocus={() => reach(VIVID, 'focus')}
-      onpointerenter={() => reach(VIVID, 'pointer')}
       {...vividDrag}
     >
       <div
