@@ -3020,10 +3020,20 @@ try {
     return ok || `picker at ${p.x},${p.y}, link at ${l.x},${l.y} (height ${l.height})`
   }
   await waitFor('122 the picker follows its link', pickerAtLink, true)
+  // Another program changes the text before the links: the block keeps its id, but its links are drawn anew further
+  // right; the picker goes to the new second link.
+  const journalWith = (twice) => `- new one\n- new two\n- first [[Tone 122]]\n- ${twice} [[Tone 122]] and [[Tone 122]]\n- plain words\n`
+  writeFileSync(day122, journalWith('twice moved right'))
+  await rows122.nth(3).getByText('twice moved right').waitFor({ timeout: 10_000 })
+  await waitFor('122 the picker follows its link drawn anew', pickerAtLink, true)
   await option('teal').click()
   await expectFile('122 a pick after a re-send writes the page', 'color:: teal\n- t\n', tone122)
   await waitFor('122 teal washes', () => washesOf(rows122), '- - teal teal -')
   await waitFor('122 the focus is back on the second link after the re-send', () => focusedLinkIn(rows122.nth(3)), 1)
+  // The block's text changes again after the pick: the link drawn anew takes the focus.
+  writeFileSync(day122, journalWith('twice moved again'))
+  await rows122.nth(3).getByText('twice moved again').waitFor({ timeout: 10_000 })
+  await waitFor('122 the link drawn anew takes the focus', () => focusedLinkIn(rows122.nth(3)), 1)
   // The text of the row "first …" selected: a right-click in the row's top padding, beside the text, opens no menu
   // (its default is prevented); one on the selected word keeps the browser's menu. The events are synthetic, so no
   // real browser menu opens.
@@ -3068,7 +3078,7 @@ try {
   // The link's block goes while its picker is open: the picker stays where it is; Esc writes nothing.
   await colorFrom(rows122.nth(2).locator('a.link').first())
   const open122 = await picker.boundingBox()
-  writeFileSync(day122, '- new one\n- new two\n- twice [[Tone 122]] and [[Tone 122]]\n- plain words\n')
+  writeFileSync(day122, '- new one\n- new two\n- twice moved again [[Tone 122]] and [[Tone 122]]\n- plain words\n')
   await waitFor('122 four rows', () => rows122.count(), 4)
   await frames()
   assert((await picker.count()) === 1, '122 the picker closed when its link went')
@@ -3079,6 +3089,14 @@ try {
   await frames()
   assert(!(await page.evaluate(() => !!document.activeElement?.closest('a.link'))), '122 the focus is on a link after its link went')
   assert(readAt(tone122) === 'color:: teal\n- t\n', `122 Esc wrote the page: ${JSON.stringify(readAt(tone122))}`)
+  // The links leave their block's text while the picker is open: the picker stays, and a pick still colors the page.
+  await colorFrom(rows122.nth(2).locator('a.link').first())
+  writeFileSync(day122, '- new one\n- new two\n- twice without links\n- plain words\n')
+  await rows122.nth(2).getByText('twice without links').waitFor({ timeout: 10_000 })
+  await frames()
+  assert((await picker.count()) === 1, '122 the picker closed when its links left the text')
+  await option('red').click()
+  await expectFile('122 a pick after its link went still writes the page', 'color:: red\n- t\n', tone122)
   page.off('pageerror', onError122)
   assert(errors122.length === 0, `122 page errors: ${errors122.join(' | ')}`)
   await page.locator('[data-testid="nav-journal"]').click()
