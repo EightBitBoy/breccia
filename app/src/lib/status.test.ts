@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { helpItem, indexItem, placeItems, type StatusItem } from './status'
+import { helpItem, indexItem, placeItems, themeItem, type StatusItem } from './status'
 
 const item = (id: string, side: 'left' | 'right', order: number): StatusItem => ({ id, side, order, text: id, progress: null, tone: 'normal' })
 
@@ -43,5 +43,18 @@ describe('helpItem', () => {
   it('comes after the zoom (30) and the history button (11) on the right', () => {
     const placed = placeItems([helpItem(false), { ...item('zoom', 'right', 30) }, { ...item('gitLog', 'right', 11) }])
     expect(placed.right.map((i) => i.id)).toEqual(['gitLog', 'zoom', 'help'])
+  })
+})
+
+describe('themeItem', () => {
+  it('is a button named Theme with a symbol for its text', () => {
+    const t = themeItem()
+    expect(t).toMatchObject({ id: 'theme', side: 'right', action: true, tip: 'Theme', label: 'Theme', progress: null, tone: 'normal' })
+    expect(t.text).toBe('◐')
+    expect(t.icon).toBeUndefined()
+  })
+  it('sits just before the ? button, after the zoom and the history button', () => {
+    const placed = placeItems([helpItem(false), themeItem(), item('zoom', 'right', 30), item('gitLog', 'right', 11)])
+    expect(placed.right.map((i) => i.id)).toEqual(['gitLog', 'zoom', 'theme', 'help'])
   })
 })
