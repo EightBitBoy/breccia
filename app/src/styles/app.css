@@ -131,7 +131,8 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .editor-slot .cm-line { padding: 0 8px; }
 .editor-slot .cm-dim { color: var(--muted); }
 
-/* ---------- page color washes (journal only); before the selection rule, so a selection shows over them ---------- */
+/* ---------- page color washes (journal only); before the selection rule, so a selection shows over them ----------
+   A selection and the jump highlight (`.flash`, below) show over a wash but keep the band's rounded ends. */
 .block.wash { background: var(--wash); padding-right: 8px; }
 .block.wash-top { border-top-left-radius: 8px; border-top-right-radius: 8px; padding-top: 4px; }
 .block.wash-bottom { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; padding-bottom: 4px; }
@@ -462,8 +463,9 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
   color: var(--muted); font-size: 13px;
 }
 .add-card:hover { background: var(--hover); color: var(--text); }
-.block.flash { animation: flash 1.5s ease-out; border-radius: 4px; }
-@keyframes flash { from { background: var(--select); } to { background: transparent; } }
+.block.flash { animation: flash 1.5s ease-out; }
+.block.flash:not(.wash) { border-radius: 4px; }
+@keyframes flash { from { background: var(--select); } to { background: var(--wash, transparent); } }
 
 /* ---------- All pages ---------- */
 .all-pages .ptitle { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
