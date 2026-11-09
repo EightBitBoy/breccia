@@ -75,3 +75,11 @@ release *args:
 # Show what the next CHANGELOG section would list (writes nothing; needs git-cliff)
 changelog:
     node app/scripts/release.mjs preview
+
+# Preview the website at http://127.0.0.1:4173/breccia/ (copies the screenshots and icons into site/)
+site:
+    node app/scripts/site.mjs serve
+
+# Check the website: links, alt texts, sizes, no external requests (app/scripts/site.mjs)
+site-check:
+    node app/scripts/site.mjs check
