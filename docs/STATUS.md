@@ -47,6 +47,8 @@ background) directly, as a small change without a plan: a failing test first, th
 Then (owner, 2026-11-09) backlog #74 the same way: a theme picker button in the status bar next to the help button.
 Afterwards release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
 minor bump for the new features is the controller's ruling).
+After the release, plan backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) as a normal
+plan, with the owner's review.
 
 Candidates for the next plan, to settle with the owner:
 

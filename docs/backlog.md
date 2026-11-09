@@ -466,8 +466,12 @@ row with sub-blocks): the washes are drawn as one band, but faint horizontal lin
 at the border of each block. The screenshot is the owner's own notes, so it is not in the repository; it was
 `Pictures\Screenshots\Artifact.png` on the owner's PC.
 
+Owner, 2026-11-09 (follow-up): the Windows display scale is 100 %. The lines show at a Breccia zoom of 125 % and of
+110 %, and not at 100 %. That fits the fractional-pixel guess below, because the app's own zoom gives fractional row
+heights. The owner wants it planned right after the 1.3.0 release.
+
 Not yet reproduced. Likely cause (a guess to test first): every block draws its own see-through wash background
-(`.block.wash` in `app/src/styles/app.css`), so at a fractional pixel height (zoom, or a display scale such as 125 %)
+(`.block.wash` in `app/src/styles/app.css`), so at a fractional pixel height (zoom, or a zoom such as 110 % or 125 %)
 two neighbouring rows are anti-aliased at their shared edge and a thin seam of the page background shows. A custom
 wash is opaque and a named wash is see-through, so check whether named and custom colors both show it, and at which
 zoom levels and display scales.

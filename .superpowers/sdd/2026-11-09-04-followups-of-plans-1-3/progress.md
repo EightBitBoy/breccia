@@ -13,3 +13,4 @@ Task 2: complete (commits 86e3ed6..29e294a, review clean; e2e 179 PASS x2)
 Owner request: after plan 4 finishes, implement backlog #73 directly (small change, no plan). Recorded in docs/STATUS.md.
 Owner request: after #73, implement backlog #74 (theme picker button in the status bar next to "?") directly, then release a new version.
 - Ruling: the release is 1.3.0 (owner gave no number; plan 4 and #73/#74 are user-visible changes, a minor bump) — cost if wrong: the owner re-cuts with another number before the tag is pushed, or gets a skipped version number
+Owner request: after the 1.3.0 release, plan backlog #75 (faint lines between wash rows at zoom 110%/125%, display scale 100%) as a normal plan with owner review.
