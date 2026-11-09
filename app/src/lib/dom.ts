@@ -5,7 +5,10 @@ export function installDom(h: {
   click(e: MouseEvent): void
   pointerDown(e: MouseEvent): void
   key(e: KeyboardEvent): void
-  /** Keys before anyone else (the editor included) sees them: `Ctrl K`. */
+  /**
+   * Keys before anyone else (the editor included) sees them: `Ctrl K`. App-wide shortcuts belong here, because the
+   * page color picker stops every key at the bubble phase.
+   */
   keyCapture(e: KeyboardEvent): void
   scroll(): void
 }): () => void {
