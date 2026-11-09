@@ -50,6 +50,32 @@ function watch(page) {
   return seen
 }
 
+/** Tab to the download link and check the ring that `.download:focus-visible` sets (3px solid, offset 3px, text colour). */
+async function focusDownload(page, label, file) {
+  let focused = false
+  for (let i = 0; i < 40 && !focused; i++) {
+    await page.keyboard.press('Tab')
+    focused = await page.evaluate(() => document.activeElement?.matches('a.download') ?? false)
+  }
+  check(focused, `keyboard (${label}): Tab reaches the download link`)
+  if (!focused) return
+  const ring = await page.evaluate(() => {
+    const s = getComputedStyle(document.activeElement)
+    const probe = document.createElement('span')
+    probe.style.color = 'var(--text)'
+    document.body.append(probe)
+    const text = getComputedStyle(probe).color
+    probe.remove()
+    return { style: s.outlineStyle, width: s.outlineWidth, offset: s.outlineOffset, color: s.outlineColor, text }
+  })
+  check(
+    ring.style === 'solid' && ring.width === '3px' && ring.offset === '3px' && ring.color === ring.text,
+    `keyboard (${label}): the download link has the 3px ring in the text colour`,
+    JSON.stringify(ring),
+  )
+  await page.screenshot({ path: join(OUT, file) })
+}
+
 async function main() {
   let browser
   try {
@@ -138,6 +164,24 @@ async function main() {
       const opacity = await page.evaluate(() => getComputedStyle(document.querySelector('img.shot')).opacity)
       check(opacity === '1', 'no JavaScript: the screenshot is opaque', `opacity ${opacity}`)
       check(!(await page.locator('button.scheme').isVisible()), 'no JavaScript: button.scheme is hidden')
+      const hero = await page.evaluate(() => {
+        const i = document.querySelector('img.shot')
+        return { complete: i.complete, w: i.naturalWidth }
+      })
+      check(hero.complete && hero.w > 0, 'no JavaScript: the hero image is loaded', JSON.stringify(hero))
+      await ctx.close()
+    }
+
+    // Dark keyboard focus, in its own context.
+    {
+      const ctx = await browser.newContext({
+        viewport: { width: 1280, height: 900 },
+        colorScheme: 'dark',
+        reducedMotion: 'reduce',
+      })
+      const page = await ctx.newPage()
+      await page.goto(url, { waitUntil: 'load' })
+      await focusDownload(page, 'dark', 'focus.png')
       await ctx.close()
     }
 
@@ -160,24 +204,7 @@ async function main() {
       check(kept === 'light', 'toggle: data-scheme="light" is kept after a reload', `got ${kept}`)
       check((await page.locator('button.scheme').getAttribute('aria-pressed')) === 'true', 'toggle: aria-pressed kept after a reload')
 
-      let focused = false
-      for (let i = 0; i < 40 && !focused; i++) {
-        await page.keyboard.press('Tab')
-        focused = await page.evaluate(() => document.activeElement?.matches('a.download') ?? false)
-      }
-      check(focused, 'keyboard: Tab reaches the download link')
-      if (focused) {
-        const ring = await page.evaluate(() => {
-          const s = getComputedStyle(document.activeElement)
-          return { style: s.outlineStyle, width: parseFloat(s.outlineWidth), shadow: s.boxShadow }
-        })
-        check(
-          (ring.style !== 'none' && ring.width > 0) || ring.shadow !== 'none',
-          'keyboard: the focused download link has a focus ring',
-          JSON.stringify(ring),
-        )
-        await page.screenshot({ path: join(OUT, 'focus.png') })
-      }
+      await focusDownload(page, 'light', 'focus-light.png')
       await ctx.close()
     }
   } finally {
