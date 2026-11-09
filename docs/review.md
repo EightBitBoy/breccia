@@ -88,6 +88,12 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    color. Under the pointer a button changes its background again, and the "…" button keeps that look while its menu
    is open. In Teal the hovered button turns darker rather than lighter, because the text there is too faint on a
    lighter one. Say if you want a stronger or weaker background.
+60. [ ] **Theme button in the status bar:** at the bottom right, just left of the "?" button, a half-filled circle
+   (◐, named "Theme") opens a small menu with System and the six themes (Light, Dark, Violet, Graphite, Taupe, Teal);
+   the current one has a check mark. A choice applies at once, closes the menu, and is kept on this computer only,
+   exactly like Settings > Appearance, and both always show the same choice. The arrow keys and Enter work in the
+   menu, and Esc closes it. While you are editing a block, using the button keeps you in the block with the cursor
+   where it was. Say if you want another symbol, or a preview of each theme's colors in the menu.
 
 ## Slash menu
 

@@ -47,9 +47,8 @@ and screen reader text, the focus and picker position for the link menu, and the
 colored row. The owner checks review items 51 to 58.
 
 Backlog #73 (board card button background) is done; the owner checks review item 59.
-Owner request (2026-11-09): backlog #74 is next, implemented directly as a small change without a plan (a failing
-test first, the change, the checks, a `docs/review.md` item, a commit): a theme picker button in the status bar next to the help button.
-Afterwards release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
+Backlog #74 (a theme button in the status bar, left of "?") is done; the owner checks review item 60.
+Next, release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
 minor bump for the new features is the controller's ruling).
 At the 1.3.0 release pause, delete the changelog line that comes from commit 1a3bc80 ("a picker opened on a link that
 just went…"): it fixes a bug from plan 4 itself that no release had.
@@ -58,15 +57,15 @@ plan, with the owner's review.
 
 Candidates for the next plan, to settle with the owner:
 
-- the by-hand checks in `docs/review.md` (items 1 to 58; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4);
+- the by-hand checks in `docs/review.md` (items 1 to 60; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
 - backlog items the owner picks (`docs/backlog.md`, 72 items, #72 done);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
 ## Test baseline
 
-- `just test`: Vitest (926 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 185 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (935 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 186 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
 

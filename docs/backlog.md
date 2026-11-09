@@ -452,7 +452,7 @@ has to work in all six themes and the System dark block, and in the hover and op
 `.card .jump`, `.card .card-menu`, `.card .tools button`; colors only in `app/src/styles/tokens.css`). Check the
 contrast of the arrow and the dots against the new background.
 
-## 74. A theme picker in the status bar (Themes)
+## 74. A theme picker in the status bar (Themes) (done 2026-11-09)
 
 Owner, 2026-11-09: in the status bar, next to the help ("?") button, add a button that opens a theme picker, so the
 theme can be changed without opening Settings. It offers the same choices as Settings > Appearance (System and the six
