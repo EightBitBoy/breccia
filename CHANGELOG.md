@@ -2,6 +2,12 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.2.0] - 2026-11-09
+
+### Features
+
+- Page colors: a vividness slider makes a custom color softer or stronger
+
 ## [1.1.1] - 2026-11-09
 
 ### Features
