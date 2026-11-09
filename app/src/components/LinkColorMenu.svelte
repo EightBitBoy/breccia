@@ -3,6 +3,9 @@
   // page the link goes to. A right-click in the block editor or on selected text keeps the native menu; anywhere else
   // that is not a colorable link or tag, no menu opens (`linkMenuAction`). "On selected text" means the point lies in
   // the selection's own boxes, not merely in an element that holds a selection.
+  //
+  // When the menu or the picker closes (a pick, Esc, a click outside), the focus goes back to the link. A link that is
+  // gone leaves the focus on the page.
   import type { Snippet } from 'svelte'
   import type { Action } from 'svelte/action'
   import { ContextMenu, Popover } from 'bits-ui'
@@ -30,6 +33,20 @@
   let pickerOpen = $state(false)
   /** "Color…" was chosen: the picker opens once the menu has closed, so the menu's focus return cannot take it. */
   let pending = false
+
+  function focusLink(a: HTMLElement) {
+    a.setAttribute('tabindex', '-1')
+    a.focus({ preventScroll: true })
+  }
+
+  /** The menu or the picker closed: the focus goes back to the link, unless something else took it or it is gone. */
+  function giveBack() {
+    const a = anchor
+    const active = document.activeElement
+    const elsewhere =
+      active && active !== document.body && !active.closest('[data-testid="link-color-menu"], [data-testid="page-color-picker"]')
+    if (a?.isConnected && !elsewhere) focusLink(a)
+  }
 
   /** The boxes of the selection's text. */
   function selectionBoxes(sel: Selection): Box[] {
@@ -82,7 +99,10 @@
       data-testid="link-color-menu"
       onCloseAutoFocus={(e) => {
         e.preventDefault()
-        if (!pending) return
+        if (!pending) {
+          giveBack()
+          return
+        }
         pending = false
         picking = target
         pickerOpen = true
@@ -108,7 +128,10 @@
       sideOffset={4}
       collisionPadding={8}
       onOpenAutoFocus={(e) => e.preventDefault()}
-      onCloseAutoFocus={(e) => e.preventDefault()}
+      onCloseAutoFocus={(e) => {
+        e.preventDefault()
+        giveBack()
+      }}
     >
       {#if picking}
         {@const page = picking}
