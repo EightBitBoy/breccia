@@ -143,8 +143,10 @@ Full table: `.superpowers/sdd/2026-11-09-04-followups-of-plans-1-3/preflight.md`
 - **A slider drag that crosses the gaps or the preview box.** The preview must keep following the dragged slider, not
   fall back to the focused choice. Pinned in Task 1 (`pointerHover` keeps the slider while `dragging`) and Task 2
   (step 121 drags the hue slider down over the preview box).
-- **A pick re-sends the day and replaces the link.** The focus returned to the link must survive the re-send (the
-  re-rendered link takes it). Pinned in Task 3 (step 122 waits for the new wash, then checks the focused link).
+- **The link is replaced when its block's text is changed from outside.** A pick re-sends the day but keeps the link
+  element; another program editing the block's text (the block keeps its ID) draws its links anew. An open picker
+  must move to the new link, and a focus returned to the link must pass to the new one. Pinned in Task 3 (step 122
+  edits the block's text on disk once while the picker is open and once after a pick).
 - **Right-click on selected text that is a colorable link.** The color menu still wins (spec §7.4); on selected plain
   text the browser menu stays. Pinned in Task 3 (`linkMenuAction` tests kept; step 122 right-clicks the selected text).
 
