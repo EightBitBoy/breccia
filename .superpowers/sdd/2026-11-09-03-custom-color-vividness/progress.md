@@ -23,3 +23,5 @@ Task 5: review (opus): spec ✅, quality needs fixes — Important: "softened" n
 Task 5: minor (deferred): sweep timeout 60 s could be 15–20 s
 Task 5: fix round 1/5 (1 addressed, 0 open — note uses var(--text), italic; commits b7dde96..1c1718f)
 Task 5: complete (commits 1295f9e..1c1718f, review clean after round 1)
+Task 6: minor (deferred): light theme reset only at end of step 120; Vivid 119 page and day journal file not deleted (same as earlier steps)
+Task 6: complete (commits 11b309c..cb5c849, review clean; e2e 176 PASS x2)
