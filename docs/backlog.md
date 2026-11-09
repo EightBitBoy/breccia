@@ -479,3 +479,14 @@ zoom levels and display scales.
 Ways to fix, for the plan to weigh: draw the wash once per run of blocks (one element behind the group); or overlap
 neighbouring rows by a pixel without doubling the see-through color; or snap the row heights to whole pixels. Needs an
 e2e or screenshot check at a few zoom levels, in all themes.
+
+## 76. Wheel over the theme button, and more themes (Themes)
+
+Owner, 2026-11-09: if possible, when the pointer is over the theme button in the status bar (backlog #74), the scroll
+wheel cycles through the themes (System and the themes, in the menu's order; decide whether the list wraps, and keep
+the choice on this computer only, like the menu does). At the same time add a few more themes, at least one dark,
+reddish one. Take inspiration from other popular IDEs and editors (for example Monokai, Dracula, Nord, Solarized,
+Gruvbox, One Dark, Tokyo Night, Ayu; check each theme's licence and use only the idea and the general palette, not
+copied files). Each new theme needs all tokens in `app/src/styles/tokens.css`, the readability checks of the
+existing themes (page colour washes, text and link contrast), a place in Settings > Appearance and the status bar
+menu, and a look at the card buttons (#73) in it. Plan it as one plan; ask the owner which themes to add.
