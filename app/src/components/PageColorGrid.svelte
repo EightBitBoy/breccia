@@ -23,7 +23,8 @@
   // from cell to cell; anywhere else that is not an enabled choice (the preview box, the labels, the greyed vividness
   // slider) it shows the focused one; a drag keeps showing its slider wherever the pointer goes. When readability holds
   // a custom wash below what its vividness asks for, a note under that line says it was softened.
-  // The sliders' thumbs stay inside their tracks.
+  // The sliders' thumbs stay inside their tracks, and their value text ends in ", page color" while they stand at the
+  // saved custom color (`hueValueText`, `vividValueText`).
   import { onMount, untrack } from 'svelte'
   import { customShade, hueTrack, vividTrack, washValue } from '../lib/customColor'
   import {
@@ -44,6 +45,8 @@
     hueAt,
     hueColor,
     hueSliderKey,
+    hueValueText,
+    isSavedCustom,
     parseCustom,
     pickerStart,
     pickerTab,
@@ -52,6 +55,7 @@
     thumbLeft,
     vividAt,
     vividSliderKey,
+    vividValueText,
   } from '../lib/pageColors'
   import { themeTokens } from '../lib/themeTokens.svelte'
 
@@ -99,6 +103,8 @@
   const vividOn = $derived(customSeen || current === CUSTOM)
   /** The slider that holds the pointer during a drag, else null. */
   let dragging: SliderIndex | null = null
+  /** The sliders stand at the saved custom color; their value text says so. */
+  const saved = $derived(isSavedCustom(color, hue, vivid))
   /** The color the preview shows (null: no color). */
   const preview = $derived(previewColor(hover, at, hue, vivid))
   const previewWash = $derived(preview === null ? undefined : washValue(preview, themeTokens.current))
@@ -325,7 +331,7 @@
       aria-valuemin="0"
       aria-valuemax="359"
       aria-valuenow={hue}
-      aria-valuetext={`Hue ${hue}`}
+      aria-valuetext={hueValueText(hue, saved)}
       title={colorLabel(hueColor(hue, vivid))}
       tabindex="0"
       onfocus={() => reach(CUSTOM, 'focus')}
@@ -347,7 +353,7 @@
       aria-valuemin={MIN_VIVID}
       aria-valuemax={MAX_VIVID}
       aria-valuenow={vivid}
-      aria-valuetext={`Vividness ${vivid}${limited ? ', softened for readability' : ''}`}
+      aria-valuetext={vividValueText(vivid, saved, limited)}
       aria-disabled={vividOn ? undefined : 'true'}
       tabindex={vividOn ? 0 : -1}
       onfocus={() => reach(VIVID, 'focus')}
