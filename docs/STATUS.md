@@ -39,6 +39,13 @@ plan's "Owner decisions" section). Next: execute it with subagent-driven develop
 Released since 1.1.0: 1.1.1 (2026-11-09: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
+Candidates after plan 3, to settle with the owner:
+
+- the by-hand checks in `docs/review.md` (items 1 to 45; 25 to 41 are page colors);
+- the follow-ups of plans 1 and 2 (`docs/plans/2026-11-07-0{1,2}-*-followups.md`);
+- backlog items the owner picks (`docs/backlog.md`, 72 items);
+- automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
+
 ## Test baseline
 
 - `just test`: Vitest (890 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
