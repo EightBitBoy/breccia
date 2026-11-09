@@ -3184,6 +3184,41 @@ try {
   await page.locator('[data-testid="nav-journal"]').click()
   console.log("PASS 123 the jump highlight and a selection keep a colored row's band corners, and the highlight fades back to the band")
 
+  // 124: the arrow and the "..." menu on a hovered board card have a background of their own in every theme,
+  // and the hover and open states still differ from the resting one.
+  await page.locator('[data-testid="nav-board"][data-board="0"]').click()
+  const card124 = cardTitled('Write release notes')
+  await card124.waitFor()
+  const bg124 = (loc) => loc.evaluate((el) => getComputedStyle(el).backgroundColor)
+  for (const theme of ['light', 'violet', 'teal', 'graphite']) {
+    await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
+    await page.mouse.move(1, 1)
+    await card124.hover()
+    await waitFor(`124 the buttons are visible in ${theme}`, () => card124.locator('.jump').isVisible(), true)
+    const cardBg = await bg124(card124)
+    const jump = await bg124(card124.locator('.jump'))
+    const menu = await bg124(card124.locator('.card-menu'))
+    assert(jump !== cardBg, `124 ${theme}: the arrow has the card's background ${jump}`)
+    assert(menu !== cardBg, `124 ${theme}: the dots have the card's background ${menu}`)
+    await card124.locator('.jump').hover()
+    const hj = await bg124(card124.locator('.jump'))
+    assert(hj !== jump && hj !== cardBg, `124 ${theme}: the arrow looks the same when hovered (${hj})`)
+    await card124.locator('.card-menu').hover()
+    const hm = await bg124(card124.locator('.card-menu'))
+    assert(hm !== menu, `124 ${theme}: the dots look the same when hovered (${hm})`)
+  }
+  // Open state: the menu is open with the pointer elsewhere
+  await card124.locator('[data-testid="card-menu"]').click()
+  const open124 = page.locator('.card .card-menu[data-state="open"]')
+  await open124.waitFor()
+  await page.mouse.move(1, 1)
+  const openBg = await bg124(open124)
+  assert(openBg !== (await bg124(card124.locator('.jump'))), `124 an open menu button looks like the resting arrow (${openBg})`)
+  await kb.press('Escape')
+  await open124.waitFor({ state: 'detached' })
+  await page.evaluate(() => delete document.documentElement.dataset.theme)
+  console.log('PASS 124 the buttons on a hovered card have their own background in every theme, and hover and open still show')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
