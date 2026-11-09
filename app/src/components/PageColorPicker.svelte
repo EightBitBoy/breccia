@@ -1,5 +1,6 @@
 <script lang="ts">
-  // The page color swatch at the right end of a page's title row: a click opens the color grid below it. A pick,
+  // The page color swatch at the right end of a page's title row: a click opens the color grid below it, and the grid
+  // puts the focus on its start itself (the popover's own open auto-focus is turned off). A pick,
   // Esc or a click outside closes it and sends the focus back to the swatch, so undo works on it right away: while
   // it is focused, Ctrl Z takes the page's newest step back and Ctrl Shift Z or Ctrl Y redoes it (`swatchKey`).
   import { Popover } from 'bits-ui'
@@ -58,6 +59,7 @@
       align="end"
       sideOffset={4}
       collisionPadding={8}
+      onOpenAutoFocus={(e) => e.preventDefault()}
       onCloseAutoFocus={(e) => {
         e.preventDefault()
         if (trigger?.isConnected) trigger.focus({ preventScroll: true })

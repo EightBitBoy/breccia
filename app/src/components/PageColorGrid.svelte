@@ -15,9 +15,9 @@
   // saved color.
   // No key goes on to the page behind it, so a block selection there stays: Esc, Tab or Delete are the picker's own.
   // That also keeps the keys from the popover's own handlers, so the grid closes on Esc itself and moves Tab itself.
-  // The start takes the focus when the grid mounts and again a frame later: in a bits-ui popover, whose content is not
-  // yet focusable at mount, the popover's open auto-focus lands on the first tab stop, which for a saved hue is not
-  // the start. It knows nothing about where it is shown: the page's swatch puts it in a popover, a link menu can too.
+  // The start takes the focus when the grid mounts and again a frame later, in case the content was not yet focusable
+  // at mount; the place showing it keeps its own open auto-focus out (the swatch's popover does). It knows nothing
+  // about where it is shown: the page's swatch puts it in a popover, a link menu can too.
   // Below the choices, a preview shows a line of text with a link and a tag on the color under the pointer, else on
   // the focused one, in the current theme. In a gap between grid cells it keeps the last cell, so it does not blink
   // from cell to cell; anywhere else that is not an enabled choice (the preview box, the labels, the greyed vividness
