@@ -15,6 +15,7 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - Release pipeline: `.github/workflows/release.yml` (builds the installer and publishes a GitHub release for `vX.Y.Z`
   tags) and `docs/releasing.md` (how to cut a release).
 - README for people outside the project: `README.md` (screenshots in `docs/images/`, made by `just screenshots`).
+- Website: `site/` (plain HTML, CSS and JS), published to GitHub Pages by `.github/workflows/pages.yml`.
 - Notes format reference: `docs/format.md`, checked by `crates/core/tests/it/format_doc.rs`. Update it with any format
   change. `docs/compatibility.md` compares the format with Obsidian and Logseq, and `docs/demo/` is a sample notes
   folder.
@@ -51,6 +52,9 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
   releases (`docs/releasing.md`).
 - `just changelog`: previews the next `CHANGELOG.md` section and writes nothing.
 - `just screenshots`: retakes the README images from `docs/demo/`.
+- `just site`: previews the website at http://127.0.0.1:4173/breccia/ (`app/scripts/site.mjs`).
+- `just site-check`: checks the website's links, alt texts, sizes and external requests (`app/scripts/site.mjs`).
+- `just site-shots`: writes the website's views at 375, 768 and 1280 px, dark and light, to `target/site-shots/`.
 - `just dev` runs the app in dev mode, kept apart from an installed Breccia (`app/scripts/dev.mjs`): each run opens a
   fresh copy of `docs/demo/` with fresh settings and its own WebView2 profile, titled "Breccia (dev)", and deletes them
   when the app exits. `just dev-debug` does the same with DevTools on port 9222.

@@ -358,13 +358,15 @@ block, task, state, card, board, column, folder, linked-only page, linked refere
 view). Open: which word wins where several are used ("linked-only" vs "virtual"); whether UI text and docs are brought
 in line; whether a test checks UI strings; whether CLAUDE.md points to it.
 
-## 64. A GitHub Pages site (Docs)
+## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain
 HTML and CSS on one page: one sentence on what Breccia is, the README screenshots, about five feature blocks, a
 "Download for Windows" button (a version-less installer copy on each release makes a stable "latest" link), a note that
 SmartScreen warns because the installer is unsigned, links to GitHub, the changelog and the format docs. Not the `docs/`
-folder. Open: a custom domain, showing the version, how screenshots get into `site/`.
+folder. Answered in plan 5 (`docs/plans/2026-11-09-05-github-pages-site.md`, rulings R1 and R2): the button opens the
+newest release and shows no version number, and the screenshots are copied into `site/` when the site is built.
+Open: a custom domain.
 
 ## 65. Core test gaps (Tests)
 

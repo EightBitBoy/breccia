@@ -7,6 +7,8 @@
 
 ![The journal in Breccia](docs/images/journal.png)
 
+Website: https://eightbitboy.github.io/breccia/
+
 Breccia is a local-first outliner for the desktop: a lean, personal take on Logseq. You write in a daily journal and in
 pages, as nested bullets. Any bullet can be a task, and every task in every file shows up as a card on a Kanban board.
 Your notes stay plain Markdown files in a folder you choose; there is no account or server, and your notes are not

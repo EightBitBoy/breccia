@@ -27,6 +27,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 2 | Custom page colors | done 2026-11-07 | `docs/plans/2026-11-07-02-custom-page-colors.md` | `docs/plans/2026-11-07-02-custom-page-colors-followups.md` |
 | 3 | Custom color vividness | done 2026-11-09 | `docs/plans/2026-11-09-03-custom-color-vividness.md` | `docs/plans/2026-11-09-03-custom-color-vividness-followups.md` |
 | 4 | Follow-ups of plans 1 to 3 | done 2026-11-09 | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | `docs/plans/2026-11-09-04-followups-of-plans-1-3-followups.md` |
+| 5 | GitHub Pages site | in progress | `docs/plans/2026-11-09-05-github-pages-site.md` | at the end of the plan |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -51,15 +52,26 @@ Backlog #74 (a theme button in the status bar, left of "?") is done; the owner c
 Plan 4 and backlog #73 and #74 are released as 1.3.0 (2026-11-09,
 https://github.com/EightBitBoy/breccia/releases/tag/v1.3.0). The changelog line for a bug of plan 4 itself (commit
 1a3bc80) was left out of the 1.3.0 notes by hand at the release pause.
-Next, plan backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) as a normal
-plan, with the owner's review.
+Plan 5 (GitHub Pages site, backlog #64) is in progress (plan file `docs/plans/2026-11-09-05-github-pages-site.md`,
+ledger `.superpowers/sdd/2026-11-09-05-github-pages-site/progress.md`). The site is published at
+https://eightbitboy.github.io/breccia/ (GitHub Pages on, with GitHub Actions as its source, turned on on 2026-11-09 with
+the owner's approval). Its final review is still to come. The site lives in `site/` (plain HTML, CSS and JS, no build
+step) and is deployed by `.github/workflows/pages.yml` on each push to `main` that touches `site/`, `docs/images/` or the
+app icons. It is not part of the app's release, and its commits are `chore`, `test`, `ci` or `docs`. Recipes:
+`just site` (a local preview at http://127.0.0.1:4173/breccia/), `just site-check` (links, alt texts, sizes, no external
+requests) and `just site-shots` (the views at three widths, dark and light, into `target/site-shots/`). The owner checks
+review items 61 to 63.
+
+Next is plan 6, backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %), then backlog #76
+(the scroll wheel over the theme button, and more themes). Each is a normal plan, with the owner's review.
 
 Candidates for the next plan, to settle with the owner:
 
-- the by-hand checks in `docs/review.md` (items 1 to 60; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4);
+- the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
+  61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 75 items; #71, #72, #73 and #74 done);
-- automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
+- backlog items the owner picks (`docs/backlog.md`, 76 items; #71, #72, #73, #74 done, #64 done by plan 5);
+- automatic updates (backlog #52).
 
 ## Test baseline
 

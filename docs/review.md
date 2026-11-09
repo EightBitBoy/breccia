@@ -113,3 +113,17 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    and days work the same in each place.
 45. [ ] **Git settings: no "Now:" line:** Settings > Git no longer ends with a "Now: …" status line. The status bar
    item still shows the state.
+
+## Website
+
+61. [ ] **The website's look:** open https://eightbitboy.github.io/breccia/ in a real browser (the hero has so far been
+   checked only in headless screenshots) at a phone width, a tablet width and a desktop width, in dark and light (the
+   toggle at the top), and with "reduce motion" on in Windows. The shards drift in, snap together and give way to the
+   journal; they follow the pointer slightly. Check that the animation runs smoothly on the phone and the desktop. Say
+   if the motion is too much or too little, or the colours too loud. `just site-shots` writes the same views to
+   `target/site-shots/`.
+62. [ ] **Publishing:** GitHub Pages is on with GitHub Actions as its source, and https://eightbitboy.github.io/breccia/
+   shows the page (turned on on 2026-11-09 with your approval). A change to `site/` or to the README screenshots
+   republishes it.
+63. [ ] **The text:** read the page once. Every sentence comes from the README; say what to cut, add or reword. The
+   download button names no version (it opens the newest release); say if you want the number shown.
