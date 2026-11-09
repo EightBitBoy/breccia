@@ -2597,8 +2597,7 @@ try {
   await page.locator('.cm-content').waitFor()
   await clickRow(rows116.nth(5), ['Shift'])
   await waitFor('116 two blocks selected', () => day5b.locator('.block.selected').count(), 2)
-  const blueWash = await bgProbe('var(--pc-blue-wash)')
-  assert((await bgOf(rows116.nth(5))) !== blueWash, '116 the selection does not show over the wash')
+  assert((await bgOf(rows116.nth(5))) === (await bgProbe('var(--hover)')), '116 the selection does not show over the wash')
   await kb.press('Escape')
   await waitFor('116 selection cleared', () => day5b.locator('.block.selected').count(), 0)
   const toneLink = rows116.nth(4).locator('a.link', { hasText: 'Tone 113' })
@@ -3101,6 +3100,76 @@ try {
   assert(errors122.length === 0, `122 page errors: ${errors122.join(' | ')}`)
   await page.locator('[data-testid="nav-journal"]').click()
   console.log('PASS 122 a pick from a link on a day page, the focus back on the link, the picker following its link, and no menu beside a selection')
+
+  // 123: a jump highlight and a block selection on a row with a wash keep the band's rounded ends; the highlight fades
+  // back to the band's color, not to nothing.
+  const tone123 = join(pagesDir, 'Tone 123.md')
+  writeFileSync(tone123, 'color:: blue\n- t\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:tone 123"]').waitFor({ timeout: 10_000 })
+  const day123 = join(folder, 'journals', `${dayKey(11)}.md`)
+  const journal123 = '- [[Tone 123]] flashword123\n- [[Tone 123]] second\n- plain\n'
+  writeFileSync(day123, journal123)
+  await showDay(dayKey(11), 'plain')
+  await openSearch()
+  await searchInput.fill('flashword123')
+  await waitFor('123 one hit', () => rows('hit').count(), 1)
+  for (let i = 0; i < 3 && (await selectedRow().getAttribute('data-kind')) !== 'hit'; i++) await kb.press('ArrowDown')
+  assert((await selectedRow().getAttribute('data-kind')) === 'hit', '123 the hit is not the selected search row')
+  await kb.press('Enter')
+  const flash123 = page.locator('.block.flash', { hasText: 'flashword123' })
+  await flash123.waitFor({ timeout: 5000 })
+  const flashed = await flash123.evaluate(async (el) => {
+    const probe = document.createElement('span')
+    probe.style.backgroundColor = 'var(--wash)'
+    el.append(probe)
+    const wash = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    const anim = el.getAnimations()[0]
+    if (!anim) return { gone: true }
+    anim.pause()
+    anim.currentTime = 1499
+    const end = getComputedStyle(el).backgroundColor
+    const radius = getComputedStyle(el).borderTopLeftRadius
+    anim.finish()
+    // Both colors on white, in 8-bit sRGB: the animation blends in another color space than the wash is written in.
+    const ctx = document.createElement('canvas').getContext('2d')
+    const onWhite = (c) => {
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, 1, 1)
+      ctx.fillStyle = c
+      ctx.fillRect(0, 0, 1, 1)
+      return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
+    }
+    return { wash, end, radius, washOnWhite: onWhite(wash), endOnWhite: onWhite(end) }
+  })
+  assert(!flashed.gone, '123 the highlight ended before it was read')
+  assert(flashed.radius === '8px', `123 the highlighted row has a top corner of ${flashed.radius}, not the band's 8px`)
+  assert(
+    flashed.endOnWhite.every((v, k) => Math.abs(v - flashed.washOnWhite[k]) <= 3),
+    `123 the highlight ends on ${flashed.end} (${flashed.endOnWhite} on white), not the band's ${flashed.wash} (${flashed.washOnWhite})`,
+  )
+  await page.locator('.block.flash').waitFor({ state: 'detached', timeout: 5000 })
+  const rows123 = page.locator('.main .block[data-block-id]')
+  await waitFor('123 the day page shows the band', () => washesOf(rows123), 'blue blue -')
+  const radii = (row) =>
+    row.evaluate((el) => {
+      const s = getComputedStyle(el)
+      return [s.borderTopLeftRadius, s.borderTopRightRadius, s.borderBottomRightRadius, s.borderBottomLeftRadius].join(' ')
+    })
+  await clickRow(rows123.nth(0))
+  await page.locator('.cm-content').waitFor()
+  await clickRow(rows123.nth(1), ['Shift'])
+  await waitFor('123 two blocks selected', () => page.locator('.main .block.selected').count(), 2)
+  const hover123 = await bgProbe('var(--hover)')
+  assert((await radii(rows123.nth(0))) === '8px 8px 4px 4px', `123 the top selected row has corners ${await radii(rows123.nth(0))}`)
+  assert((await radii(rows123.nth(1))) === '4px 4px 8px 8px', `123 the bottom selected row has corners ${await radii(rows123.nth(1))}`)
+  assert((await bgOf(rows123.nth(0))) === hover123 && (await bgOf(rows123.nth(1))) === hover123, '123 a selected row does not show the selection color')
+  await kb.press('Escape')
+  await waitFor('123 selection cleared', () => page.locator('.main .block.selected').count(), 0)
+  assert(readAt(day123) === journal123, '123 the journal file changed')
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log("PASS 123 the jump highlight and a selection keep a colored row's band corners, and the highlight fades back to the band")
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
