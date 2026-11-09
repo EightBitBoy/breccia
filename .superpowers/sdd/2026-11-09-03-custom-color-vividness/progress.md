@@ -7,3 +7,7 @@ Pre-flight scan (opus): 12 findings, table in preflight.md (local). All accepted
 "Pre-flight rulings" section (R1-R12).
 - Ruling: R1-R12 as in the plan — each is the smallest correction that keeps the plan consistent with the owner's P5
   change and makes every test able to fail — cost if wrong: rework of the affected test or wording in one task.
+Task 1: dispatched (sonnet), BASE e09d58a
+Task 1: minor (deferred): format_doc.rs:338 long matches! line; render.rs:437 "no color::" assertion is pinning-only; color.rs:123 `v as u8` could be u8::try_from
+Task 1: ⚠ "page.setColor canonicalizes via parse_color/Display" checked by controller: color_change path from plan 2, covered by session tests — resolved
+Task 1: complete (commits e09d58a..4e40b19, review clean)
