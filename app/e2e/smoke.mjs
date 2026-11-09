@@ -2407,7 +2407,7 @@ try {
   await page.locator('[data-testid="nav-journal"]').click() // steps 45-50 start from the journal
   console.log('PASS 80 the Tags section counts, opens and renames a tag without writing a page')
 
-  // Page colors (steps 112 to 120): each starts and ends at the journal. The pages are outside edits, as in step 69.
+  // Page colors (steps 112 to 123): each starts and ends at the journal. The pages are outside edits, as in step 69.
   const swatch = page.locator('[data-testid="page-color"]')
   const picker = page.locator('[data-testid="page-color-picker"]')
   const option = (c) => picker.locator(`[data-testid="page-color-option"][data-color="${c}"]`)
@@ -2880,6 +2880,96 @@ try {
   await expectFile('120 a hand-written vividness is kept as written', 'color:: HUE 212 VIVID 0150\n- vivid\n', vivid119)
   await page.evaluate(() => delete document.documentElement.dataset.theme)
   console.log('PASS 120 a hand-written vividness washes the journal, matches the preview, and is limited in Teal')
+
+  // 121: the preview shows only a color under the pointer (a gap in the grid keeps the last cell); the slider thumbs
+  // stay inside tracks as wide as the grid; a drag keeps its preview over the preview box; the sliders' value text
+  // says when they stand on the page's color; the swatch's picker keeps its own start focus.
+  await page.evaluate(() => (document.documentElement.dataset.theme = 'light'))
+  const hue121 = join(pagesDir, 'Hue 121.md')
+  writeFileSync(hue121, '- hue\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  const row121 = side.locator('[data-row="p:hue 121"]')
+  await row121.waitFor({ timeout: 10_000 })
+  await row121.click()
+  await waitFor('121 opens Hue 121', () => title.innerText(), 'Hue 121')
+  await swatch.click()
+  await picker.waitFor()
+  await waitFor('121 focus on "No color"', focusedTestId, 'page-color-none')
+  const center = (b) => [b.x + b.width / 2, b.y + b.height / 2]
+  await option('red').hover()
+  await waitFor('121 hover previews red', () => previewBox.getAttribute('data-preview'), 'red')
+  // The gap between red and coral keeps red, so the preview does not blink from cell to cell.
+  const red121 = await option('red').boundingBox()
+  const coral121 = await option('coral').boundingBox()
+  await page.mouse.move((red121.x + red121.width + coral121.x) / 2, red121.y + red121.height / 2)
+  await frames()
+  assert((await previewBox.getAttribute('data-preview')) === 'red', `121 the gap between cells previews ${await previewBox.getAttribute('data-preview')}`)
+  // Off the colors (the preview box), the preview shows the focused choice: "No color".
+  await page.mouse.move(...center(await previewBox.boundingBox()))
+  await waitFor('121 the preview box previews the focused choice', () => previewBox.getAttribute('data-preview'), '')
+  // The greyed vividness slider is not a choice. One move from red, so the pointer never crosses the hue slider.
+  await option('red').hover()
+  await waitFor('121 hover previews red again', () => previewBox.getAttribute('data-preview'), 'red')
+  assert((await vslider.getAttribute('aria-disabled')) === 'true', '121 the vividness slider is enabled')
+  await page.mouse.move(...center(await vslider.boundingBox()))
+  await waitFor('121 the greyed vividness slider previews the focused choice', () => previewBox.getAttribute('data-preview'), '')
+  // The tracks are as wide as the grid's cells, from crimson's left edge to amber's right edge.
+  const crimson121 = await option('crimson').boundingBox()
+  const amber121 = await option('amber').boundingBox()
+  const gridW = amber121.x + amber121.width - crimson121.x
+  const hbox121 = await slider.boundingBox()
+  const vbox121 = await vslider.boundingBox()
+  assert(Math.abs(hbox121.width - gridW) <= 0.5, `121 the hue track is ${hbox121.width} px wide, the grid ${gridW} px`)
+  assert(Math.abs(vbox121.width - gridW) <= 0.5, `121 the vividness track is ${vbox121.width} px wide, the grid ${gridW} px`)
+  assert(Math.abs(hbox121.x - crimson121.x) <= 0.5, `121 the hue track starts at ${hbox121.x}, the grid at ${crimson121.x}`)
+  // The thumb stays inside its track at both ends.
+  const thumb121 = slider.locator('.pc-hue-thumb')
+  await kb.press('ArrowDown')
+  await waitFor('121 ArrowDown reaches the hue slider', focusedTestId, 'page-color-hue')
+  await kb.press('Home')
+  await waitFor('121 hue 0', () => slider.getAttribute('aria-valuenow'), '0')
+  const home121 = await thumb121.boundingBox()
+  assert(home121.x >= hbox121.x - 0.5, `121 the thumb at hue 0 starts at ${home121.x}, before the track at ${hbox121.x}`)
+  await kb.press('End')
+  await waitFor('121 hue 359', () => slider.getAttribute('aria-valuenow'), '359')
+  const end121 = await thumb121.boundingBox()
+  const trackEnd = hbox121.x + hbox121.width
+  assert(end121.x + end121.width <= trackEnd + 0.5, `121 the thumb at hue 359 ends at ${end121.x + end121.width}, past the track at ${trackEnd}`)
+  // A drag that crosses the preview box keeps previewing the slider; a release at the track's 4 px point saves hue 0.
+  await page.mouse.move(...center(hbox121))
+  await page.mouse.down()
+  await page.mouse.move(...center(await previewBox.boundingBox()), { steps: 6 })
+  await frames()
+  const dragged121 = await previewBox.getAttribute('data-preview')
+  assert(dragged121.startsWith('hue '), `121 a drag over the preview box previews ${JSON.stringify(dragged121)}`)
+  await page.mouse.move(hbox121.x + 4, hbox121.y + hbox121.height / 2, { steps: 6 })
+  await waitFor('121 the drag previews hue 0', () => previewBox.getAttribute('data-preview'), 'hue 0')
+  await page.mouse.up()
+  await expectFile('121 a drag saves hue 0', 'color:: hue 0\n- hue\n', hue121)
+  // The value text says when a slider stands on the page's color.
+  await waitFor('121 the hue slider holds the page color', () => slider.getAttribute('aria-valuetext'), 'Hue 0, page color')
+  await waitFor('121 focus on the hue slider after the drag', focusedTestId, 'page-color-hue')
+  await kb.press('ArrowRight')
+  await waitFor('121 the moved hue is not the page color', () => slider.getAttribute('aria-valuetext'), 'Hue 1')
+  await kb.press('Tab')
+  await waitFor('121 Tab reaches vividness', focusedTestId, 'page-color-vivid')
+  assert((await vslider.getAttribute('aria-valuetext')) === 'Vividness 100', `121 vividness value text ${await vslider.getAttribute('aria-valuetext')}`)
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  // On opening, the focus starts on the saved hue and stays there.
+  await waitFor('121 focus back on the swatch', focusedTestId, 'page-color')
+  await swatch.click()
+  await picker.waitFor()
+  await waitFor('121 the reopened hue slider holds the page color', () => slider.getAttribute('aria-valuetext'), 'Hue 0, page color')
+  await frames()
+  await frames()
+  assert((await focusedTestId()) === 'page-color-hue', `121 the focus moved to ${await focusedTestId()} on opening`)
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  await expectFile('121 Esc writes nothing', 'color:: hue 0\n- hue\n', hue121)
+  await page.evaluate(() => delete document.documentElement.dataset.theme)
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 121 the preview follows only the colors under the pointer, the thumbs stay in their tracks, and the sliders say when they hold the page color')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
