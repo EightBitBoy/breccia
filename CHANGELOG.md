@@ -2,6 +2,24 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.3.0] - 2026-11-09
+
+### Features
+
+- Themes: a button in the status bar changes the theme without opening Settings
+
+### Fixes
+
+- Page colors: the preview no longer keeps a color the pointer has left
+- Page colors: the slider thumbs stay inside their tracks
+- Page colors: screen readers hear when a slider stands on the page's color
+- Journal: a right-click beside selected text no longer opens the browser menu
+- Page colors: after a color pick from a journal link, the focus returns to the link
+- Page colors: the picker stays at its link when the journal day changes
+- Journal: a jump highlight on a colored row fades back to its color
+- Journal: a selected row keeps the rounded ends of its color band
+- Boards: the buttons on a hovered card have their own background color
+
 ## [1.2.0] - 2026-11-09
 
 ### Features
