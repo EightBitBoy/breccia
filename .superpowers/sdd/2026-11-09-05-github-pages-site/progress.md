@@ -23,3 +23,5 @@ Owner approved the plan 2026-11-09 (AskUserQuestion "Approve, build it").
    point there). T4 Step 4 re-runs `site.test.mjs` too.
 10. **T2 checker vs inline SVG:** no `xmlns` attribute in inline SVG (or no inline SVG).
 11. **T6:** use `curl.exe` or the Bash tool; T6 Step 3's "item 62" is written by T7.
+
+Task 1: complete — commit 3a3fc02, review approved (spec pass, quality approved, 3 minor non-issues).
