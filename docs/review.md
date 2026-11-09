@@ -41,6 +41,22 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 
 38. [ ] **Undo:** one `Ctrl Z` takes back one whole drag or one Enter on the slider.
 
+## Custom color vividness
+
+46. [ ] **Vividness slider:** its look under the hue slider; that it is always shown and greyed out until a custom hue
+   applies (or the hue slider is reached); the keys (arrows ±5, Page Up/Down ±25, Home/End, Enter, Tab order);
+   dragging; and that only release or Enter writes `color:: hue <h> vivid <v>`.
+47. [ ] **Vividness in every theme:** sweep 50 to 200 in Light, Dark, Violet, Graphite, Taupe, Teal and System (both
+   Windows modes). Check where the slider stops getting stronger (about 155 in Light, 125 in Teal for a blue), and that
+   the 50 end is still visibly colored. Say if the range or the "normal" point feels wrong.
+48. [ ] **The "softened" note:** the wording "Softened here so text stays readable" (normal text color, italics) and
+   where it sits under the preview. Say if you want other words, a mark on the track instead, or no note.
+49. [ ] **Named color and back:** picking a named color drops the vividness and `Ctrl Z` brings it back. Reopening the
+   picker on a named color starts the vividness at 100.
+50. [ ] **In the file:** `color:: hue 212 vivid 150`; `vivid 100` is never written. `vivid 300` and `vivid x` make no
+   color and stay visible as text. A hand-written `HUE 212 VIVID 0150` stays as written until another color is picked.
+   Older Breccia versions read a vividness as no color and keep the line.
+
 ## Slash menu
 
 42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain text. Change a state color in Settings and the menu follows.

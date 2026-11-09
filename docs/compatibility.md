@@ -3,7 +3,7 @@
 Breccia keeps notes as Markdown files in a folder, and so do Obsidian and Logseq. This page says how far the three
 agree, how to set Obsidian or Logseq up to open a Breccia folder, and what does not carry over.
 
-Breccia's side is described exactly in [the notes format](format.md) (format version 7); this page links to its sections
+Breccia's side is described exactly in [the notes format](format.md) (format version 8); this page links to its sections
 instead of repeating them. For the other two apps:
 
 - Statements about Obsidian were checked against Obsidian's help pages (obsidian.md/help) on 2026-10-31. The ones about
@@ -93,7 +93,7 @@ block links and embeds are not read yet.
 
 **Decision:** Breccia reads front matter as page-level text, reads `aliases` from it and otherwise leaves it untouched; reading `tags` and `title` may come later.
 
-Page colors use the same syntax: a `color:: <name>` line in the page's preamble ([§8](format.md#8-properties)). In Obsidian it is plain text (not verified). In Logseq a `key:: value` line before the first bullet is a page property, so it shows as one (not verified). Neither app colors anything with it. A custom color is `color:: hue 212` (a hue from 0 to 359, format version 7): plain text in Obsidian and a page property in Logseq (not verified). Breccia versions before format 7 read it as no color and keep the line.
+Page colors use the same syntax: a `color:: <name>` line in the page's preamble ([§8](format.md#8-properties)). In Obsidian it is plain text (not verified). In Logseq a `key:: value` line before the first bullet is a page property, so it shows as one (not verified). Neither app colors anything with it. A custom color is `color:: hue 212` (a hue from 0 to 359, format version 7): plain text in Obsidian and a page property in Logseq (not verified). Breccia versions before format 7 read it as no color and keep the line. A custom color can also carry a vividness: `color:: hue 212 vivid 150` (format version 8, vividness 50 to 200). It is plain text in Obsidian and a page property in Logseq (not verified). Breccia versions before format 8 read it as no color and keep the line.
 
 **Decision:** The color lives in the file as a name or `hue <h>`, so each app (and each theme) can decide how to show it.
 

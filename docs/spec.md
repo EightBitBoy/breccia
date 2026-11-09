@@ -257,6 +257,16 @@ keyboard, in the current theme) follows the 25 cells and the slider; the saved c
 saved as `color:: hue <h>`. Picking a name after a hue, or a hue after a name, replaces the line. One save is one undo
 step. The right-click "Color…" menu in the journal opens the same picker.
 
+Under the hue slider is a "Vividness" slider (50 to 200, 100 is the normal look). It is always shown, so the picker
+never changes its layout, and it is greyed out (disabled, not a tab stop) until the page's color is a custom hue or the
+hue slider has been reached; after that it stays enabled until the picker closes. Its keys: arrows change it by 5,
+Page Up / Down by 25, Home and End jump to 50 and 200. Tab moves grid, hue slider, vividness slider, and Shift Tab the
+other way. Enter on either slider saves hue and vividness together and closes; a drag saves once on release and keeps
+the picker open. A custom color is saved as `color:: hue <h> vivid <v>`, and `vivid 100` is left out, so a plain hue
+stays `color:: hue <h>`. Picking a name drops the vividness (the file has one `color::` line), and undo brings it back;
+reopening the picker on a named color starts the vividness at 100. When the theme softens the color so text stays
+readable, the preview shows the note "Softened here so text stays readable", in the normal text color and in italics.
+
 ### 7.4 Journal
 
 - One continuous, scrollable feed: **today at the top**, and scrolling down goes back in time day by day.
@@ -422,7 +432,9 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
   tag, card, one colour per task state, the 25 page colors (§7.3) and the strength of the page-color wash (§7.4): 28 %
   in Light and Taupe, 30 % in Teal, 34 % in the others. They also include each theme's shade parameters (base
   lightness, chroma and offset factors). A custom hue's shade (§7.3) is computed from them at runtime with the same rule
-  as the 25 colors. In a theme where text (4.5:1), links or tags (3:1) would otherwise be hard to read on its wash, the
+  as the 25 colors. A page's vividness `v` (§7.3; the named colors have none) scales the custom shade's chroma and the
+  wash strength by `v/100` before the readability steps below; those steps start from that strength and go down to
+  half of it, or half of the theme's strength, whichever is lower. At 100 nothing changes. In a theme where text (4.5:1), links or tags (3:1) would otherwise be hard to read on its wash, the
   wash strength is lowered step by step, down to half the theme's strength; if that is not enough, the shade loses
   chroma step by step at that half strength, down to grey; if even grey is not readable, the hue gets no wash. A theme
   is a set of token values. Switching applies instantly.
