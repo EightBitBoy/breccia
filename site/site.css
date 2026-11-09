@@ -1,0 +1,343 @@
+/* Breccia website. Palette values are copied from app/src/styles/tokens.css (a test keeps them equal).
+   Dark is the default; the light scheme follows the system unless the visitor chose (data-scheme). */
+:root {
+  color-scheme: dark;
+  --bg: #1b1b1d;
+  --surface: #232326;
+  --text: #d9d9dc;
+  --muted: #9a9aa2;
+  --accent: #7aa2f7;
+  --on-accent: #141415;
+  --focus: #8fb0f9;
+  --pc-crimson: #d36173;
+  --pc-red: #e0685b;
+  --pc-coral: #da7d59;
+  --pc-orange: #d27e35;
+  --pc-amber: #ca9134;
+  --pc-yellow: #b8a546;
+  --pc-olive: #8c914e;
+  --pc-lime: #85ad4a;
+  --pc-green: #59a25c;
+  --pc-emerald: #4faa81;
+  --pc-teal: #46a499;
+  --pc-cyan: #3daab9;
+  --pc-sky: #52a4cc;
+  --pc-blue: #548bdc;
+  --pc-indigo: #707fd8;
+  --pc-violet: #917dd9;
+  --pc-purple: #a272c9;
+  --pc-magenta: #c56cbe;
+  --pc-pink: #d07aa1;
+  --pc-rose: #cc8599;
+  --pc-brown: #9e765c;
+  --pc-tan: #ad9072;
+  --pc-sand: #ad9f85;
+  --pc-slate: #7d8d9e;
+  --pc-grey: #929292;
+}
+
+[data-scheme="light"] {
+  color-scheme: light;
+  --bg: #fbfaf8;
+  --surface: #f1efeb;
+  --text: #2b2a28;
+  --muted: #6b675f;
+  --accent: #5b5bd6;
+  --on-accent: #ffffff;
+  --focus: #4b4bc4;
+  --pc-crimson: #d4556c;
+  --pc-red: #e86154;
+  --pc-coral: #e67e54;
+  --pc-orange: #db7d24;
+  --pc-amber: #d69727;
+  --pc-yellow: #c7b144;
+  --pc-olive: #888c40;
+  --pc-lime: #89b645;
+  --pc-green: #4ea253;
+  --pc-emerald: #45af81;
+  --pc-teal: #37a69a;
+  --pc-cyan: #2eb1c2;
+  --pc-sky: #4caad7;
+  --pc-blue: #4885df;
+  --pc-indigo: #6875d8;
+  --pc-violet: #8f78df;
+  --pc-purple: #9f6acb;
+  --pc-magenta: #ca66c3;
+  --pc-pink: #db7aa7;
+  --pc-rose: #d98aa0;
+  --pc-brown: #95694c;
+  --pc-tan: #b19270;
+  --pc-sand: #b8a98b;
+  --pc-slate: #77889b;
+  --pc-grey: #929292;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-scheme]) {
+    color-scheme: light;
+    --bg: #fbfaf8;
+    --surface: #f1efeb;
+    --text: #2b2a28;
+    --muted: #6b675f;
+    --accent: #5b5bd6;
+    --on-accent: #ffffff;
+    --focus: #4b4bc4;
+    --pc-crimson: #d4556c;
+    --pc-red: #e86154;
+    --pc-coral: #e67e54;
+    --pc-orange: #db7d24;
+    --pc-amber: #d69727;
+    --pc-yellow: #c7b144;
+    --pc-olive: #888c40;
+    --pc-lime: #89b645;
+    --pc-green: #4ea253;
+    --pc-emerald: #45af81;
+    --pc-teal: #37a69a;
+    --pc-cyan: #2eb1c2;
+    --pc-sky: #4caad7;
+    --pc-blue: #4885df;
+    --pc-indigo: #6875d8;
+    --pc-violet: #8f78df;
+    --pc-purple: #9f6acb;
+    --pc-magenta: #ca66c3;
+    --pc-pink: #db7aa7;
+    --pc-rose: #d98aa0;
+    --pc-brown: #95694c;
+    --pc-tan: #b19270;
+    --pc-sand: #b8a98b;
+    --pc-slate: #77889b;
+    --pc-grey: #929292;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 1rem/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+img { max-width: 100%; height: auto; }
+
+a { color: var(--accent); text-underline-offset: 0.2em; }
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.skip {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  padding: 0.5rem 1rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 0.4rem;
+  z-index: 10;
+}
+.skip:focus { top: 1rem; }
+
+.scheme {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  line-height: 1;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--muted);
+  border-radius: 50%;
+  cursor: pointer;
+}
+.scheme[hidden] { display: none; }
+.scheme[aria-pressed="true"] { background: var(--accent); color: var(--on-accent); border-color: var(--accent); }
+
+/* ---- hero ---- */
+
+.hero {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.25rem 2rem;
+  text-align: center;
+}
+
+h1 {
+  margin: 0 0 0.5rem;
+  font-size: clamp(2.75rem, 8vw, 4.5rem);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+}
+
+.tagline {
+  max-width: 36rem;
+  margin: 0 auto 1.5rem;
+  font-size: 1.25rem;
+  color: var(--muted);
+}
+
+.get { margin: 0 0 0.5rem; }
+
+.download {
+  display: inline-block;
+  padding: 0.8rem 1.6rem;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 0.5rem;
+}
+.download:hover { filter: brightness(1.08); }
+
+.note { margin: 0 0 2.5rem; color: var(--muted); font-size: 0.9rem; }
+
+/* The stone: the screenshot inside a mosaic frame of palette-coloured shards. The shards are placed with
+   layout and clip-path only (no transform), so the static page is the assembled state. */
+.stone {
+  position: relative;
+  margin: 0;
+  padding: 1.75rem;
+}
+
+.stone .shot {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 100%;
+  border-radius: 0.3rem;
+  box-shadow: 0 0.5rem 2rem rgba(0, 0, 0, 0.35);
+}
+
+.frame { position: absolute; inset: 0; pointer-events: none; }
+
+.shard {
+  position: absolute;
+  background: var(--c);
+  opacity: calc(0.55 + var(--d) * 0.4);
+}
+
+/* top row */
+.shard:nth-child(1) { left: 0; top: 0; width: 22%; height: 2.4rem; }
+.shard:nth-child(2) { left: 19%; top: 0; width: 21%; height: 2rem; }
+.shard:nth-child(3) { left: 38%; top: 0; width: 22%; height: 2.6rem; }
+.shard:nth-child(4) { left: 58%; top: 0; width: 21%; height: 2rem; }
+.shard:nth-child(5) { left: 77%; top: 0; width: 23%; height: 2.4rem; }
+/* bottom row */
+.shard:nth-child(6) { left: 0; bottom: 0; width: 21%; height: 2.2rem; }
+.shard:nth-child(7) { left: 18%; bottom: 0; width: 22%; height: 2.6rem; }
+.shard:nth-child(8) { left: 38%; bottom: 0; width: 21%; height: 2rem; }
+.shard:nth-child(9) { left: 57%; bottom: 0; width: 22%; height: 2.4rem; }
+.shard:nth-child(10) { left: 77%; bottom: 0; width: 23%; height: 2.2rem; }
+/* left column */
+.shard:nth-child(11) { left: 0; top: 6%; width: 2.2rem; height: 30%; }
+.shard:nth-child(12) { left: 0; top: 33%; width: 2.6rem; height: 32%; }
+.shard:nth-child(13) { left: 0; top: 62%; width: 2.2rem; height: 32%; }
+/* right column */
+.shard:nth-child(14) { right: 0; top: 6%; width: 2.4rem; height: 30%; }
+.shard:nth-child(15) { right: 0; top: 33%; width: 2.2rem; height: 32%; }
+.shard:nth-child(16) { right: 0; top: 62%; width: 2.6rem; height: 32%; }
+
+/* ---- content ---- */
+
+main, footer {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 0 1.25rem;
+}
+
+section { padding: 2.5rem 0; }
+
+section > p, section > ol { max-width: 70ch; }
+
+h2 { margin: 0 0 1rem; font-size: 1.9rem; line-height: 1.2; }
+
+h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0 0 0.6rem;
+  font-size: 1.15rem;
+}
+
+h3::before {
+  content: "";
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: var(--m, var(--pc-violet));
+  clip-path: polygon(10% 0, 100% 20%, 80% 100%, 0 75%);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  gap: 1.25rem;
+}
+
+.grid article {
+  padding: 1.25rem;
+  background: var(--surface);
+  border-radius: 0.6rem;
+}
+
+.grid article.wide { grid-column: 1 / -1; }
+.grid article.wide p, .grid article.wide ul { max-width: 70ch; }
+
+.grid article:nth-child(1) h3 { --m: var(--pc-violet); }
+.grid article:nth-child(2) h3 { --m: var(--pc-teal); }
+.grid article:nth-child(3) h3 { --m: var(--pc-rose); }
+.grid article:nth-child(4) h3 { --m: var(--pc-blue); }
+.grid article:nth-child(5) h3 { --m: var(--pc-green); }
+.grid article:nth-child(6) h3 { --m: var(--pc-amber); }
+.grid article:nth-child(7) h3 { --m: var(--pc-cyan); }
+.grid article:nth-child(8) h3 { --m: var(--pc-orange); }
+.grid article:nth-child(9) h3 { --m: var(--pc-magenta); }
+
+.grid p { margin: 0 0 0.8rem; }
+.grid article > :last-child { margin-bottom: 0; }
+.grid img { display: block; margin-top: 1rem; border-radius: 0.4rem; }
+
+.more { max-width: 70ch; margin-top: 1.5rem; }
+
+code, kbd, pre { font: 0.9em/1.5 ui-monospace, "Cascadia Code", Consolas, monospace; }
+
+kbd {
+  padding: 0.05em 0.4em;
+  background: var(--bg);
+  border: 1px solid var(--muted);
+  border-radius: 0.3rem;
+  white-space: nowrap;
+}
+
+pre {
+  margin: 0 0 0.8rem;
+  padding: 0.9rem 1rem;
+  overflow-x: auto;
+  background: var(--bg);
+  border-radius: 0.4rem;
+}
+
+ol li { margin-bottom: 0.5rem; }
+
+footer {
+  padding-top: 1.5rem;
+  padding-bottom: 3rem;
+  color: var(--muted);
+  border-top: 1px solid var(--surface);
+}
+
+footer .links { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; }
+
+@media (max-width: 40rem) {
+  .hero { padding-top: 4rem; }
+  .stone { padding: 1.1rem; }
+}

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breccia: local-first notes and tasks in plain Markdown</title>
+<meta name="description" content="Breccia is a notes app where the fragments of everyday work and tasks bind into one body of knowledge.">
+<meta property="og:title" content="Breccia: local-first notes and tasks in plain Markdown">
+<meta property="og:description" content="Breccia is a notes app where the fragments of everyday work and tasks bind into one body of knowledge.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://eightbitboy.github.io/breccia/">
+<meta property="og:image" content="https://eightbitboy.github.io/breccia/images/journal.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/32x32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/128x128@2x.png">
+<script src="scheme.js"></script>
+<link rel="stylesheet" href="site.css">
+</head>
+<body>
+<a class="skip" href="#what">Skip to content</a>
+<button class="scheme" type="button" hidden aria-label="Light theme" aria-pressed="false"><span aria-hidden="true">&#9680;</span></button>
+
+<header class="hero">
+  <h1>Breccia</h1>
+  <p class="tagline">Breccia is a notes app where the fragments of everyday work and tasks bind into one body of knowledge.</p>
+  <p class="get"><a class="download" href="https://github.com/EightBitBoy/breccia/releases/latest">Download for Windows</a></p>
+  <p class="note">Newest release on GitHub · Windows only for now</p>
+  <figure class="stone">
+    <div class="frame" aria-hidden="true">
+      <span class="shard" style="--c: var(--pc-violet); --d: 0.9; clip-path: polygon(0 12%, 38% 0, 100% 18%, 92% 100%, 6% 88%)"></span>
+      <span class="shard" style="--c: var(--pc-blue); --d: 0.5; clip-path: polygon(8% 0, 100% 10%, 90% 92%, 0 100%)"></span>
+      <span class="shard" style="--c: var(--pc-teal); --d: 0.7; clip-path: polygon(0 20%, 70% 0, 100% 80%, 20% 100%)"></span>
+      <span class="shard" style="--c: var(--pc-amber); --d: 0.3; clip-path: polygon(12% 8%, 100% 0, 88% 100%, 0 78%)"></span>
+      <span class="shard" style="--c: var(--pc-rose); --d: 1; clip-path: polygon(0 0, 85% 14%, 100% 90%, 14% 100%)"></span>
+      <span class="shard" style="--c: var(--pc-green); --d: 0.6; clip-path: polygon(6% 14%, 94% 0, 100% 86%, 0 100%)"></span>
+      <span class="shard" style="--c: var(--pc-crimson); --d: 0.4; clip-path: polygon(0 0, 100% 22%, 80% 100%, 10% 84%)"></span>
+      <span class="shard" style="--c: var(--pc-sky); --d: 0.8; clip-path: polygon(18% 0, 100% 16%, 94% 100%, 0 86%)"></span>
+      <span class="shard" style="--c: var(--pc-orange); --d: 0.25; clip-path: polygon(0 10%, 80% 0, 100% 74%, 16% 100%)"></span>
+      <span class="shard" style="--c: var(--pc-purple); --d: 0.55; clip-path: polygon(10% 0, 100% 12%, 86% 100%, 0 90%)"></span>
+      <span class="shard" style="--c: var(--pc-tan); --d: 0.35; clip-path: polygon(14% 0, 100% 6%, 80% 100%, 0 92%)"></span>
+      <span class="shard" style="--c: var(--pc-cyan); --d: 0.75; clip-path: polygon(0 8%, 90% 0, 100% 94%, 20% 100%)"></span>
+      <span class="shard" style="--c: var(--pc-lime); --d: 0.2; clip-path: polygon(10% 4%, 100% 0, 90% 100%, 0 88%)"></span>
+      <span class="shard" style="--c: var(--pc-pink); --d: 0.85; clip-path: polygon(0 0, 92% 10%, 100% 100%, 8% 94%)"></span>
+      <span class="shard" style="--c: var(--pc-indigo); --d: 0.45; clip-path: polygon(6% 0, 100% 14%, 84% 100%, 0 80%)"></span>
+      <span class="shard" style="--c: var(--pc-coral); --d: 0.65; clip-path: polygon(0 16%, 86% 0, 100% 84%, 12% 100%)"></span>
+    </div>
+    <img class="shot" src="images/journal.png" alt="The journal in Breccia" width="1280" height="800" fetchpriority="high">
+  </figure>
+</header>
+
+<main>
+  <section id="what">
+    <h2>What it is</h2>
+    <p>Breccia is a local-first outliner for the desktop: a lean, personal take on Logseq. You write in a daily journal and in pages, as nested bullets. Any bullet can be a task, and every task in every file shows up as a card on a Kanban board. Your notes stay plain Markdown files in a folder you choose; there is no account or server, and your notes are not kept in a database.</p>
+    <p>It is made for one person who keeps daily notes and tasks in one place and wants to own the files.</p>
+  </section>
+
+  <section id="features">
+    <h2>Features</h2>
+    <div class="grid">
+      <article>
+        <h3>Journal</h3>
+        <p>One file per day, shown as a scrolling feed with today on top. Jump to any date by typing it into search (<code>12 Mar</code>, <code>yesterday</code>) or with the date picker next to "Journal" (<kbd>Ctrl Shift D</kbd>), including days without an entry.</p>
+      </article>
+      <article>
+        <h3>Pages, links and tags</h3>
+        <p>Pages with <code>[[links]]</code> and <code>#tags</code>. Each page lists its linked references: every block elsewhere that links to it. The sidebar's Tags section lists every tag with the number of blocks that have it; a tag can be renamed there.</p>
+      </article>
+      <article>
+        <h3>Page colors</h3>
+        <p>Give a page one of 25 colors, and the journal's blocks that link to it get a faint wash of it.</p>
+      </article>
+      <article class="wide">
+        <h3>Tasks and Kanban boards</h3>
+        <p>A block starting with a state keyword (<code>TODO</code>, <code>DOING</code>, <code>DONE</code>, …) is a task. The states are configurable, and <kbd>Ctrl Enter</kbd> cycles through them (<kbd>Ctrl Shift Enter</kbd> removes the state). A task records when it got its state, and a finished one shows when it was done and how long it took.</p>
+        <p>Kanban boards cover every task block in the folder: each column shows the tasks in one state. Dragging a card to another column changes the state in its file; dropping it at a place in a column keeps that place. Archiving a card hides it from the board and keeps its state. Finished tasks done more than 14 days ago are archived by themselves, and Archive in the sidebar lists every archived task.</p>
+        <img src="images/board.png" alt="A board in Breccia" width="1280" height="800" loading="lazy">
+      </article>
+      <article>
+        <h3>Git sync</h3>
+        <p>If the folder is a Git repository, Breccia commits your changes a few minutes after you stop typing, and pulls and pushes when it has a remote. The history button next to the Git item in the status bar lists the folder's commits, newest first.</p>
+      </article>
+      <article>
+        <h3>Six themes</h3>
+        <p>Light, Dark, Violet, Graphite, Taupe and Teal, plus System, which follows Windows.</p>
+      </article>
+      <article>
+        <h3>Graph</h3>
+        <p>A graph of the pages and the links between them.</p>
+      </article>
+      <article class="wide">
+        <h3>Local-first, plain Markdown</h3>
+        <p>On first start, Breccia asks for a notes folder: open an existing one or create a new one. Everything lives there:</p>
+        <pre>notes/
+  journals/2026-10-29.md   one file per day
+  pages/Project X.md       one file per page
+  breccia/config.toml      task states, boards and other settings</pre>
+        <p>Every file is plain Markdown, so you can read and edit your notes in any text editor, back them up as you like, and keep them in Git. Breccia never reformats text you wrote; it only saves line endings as LF.</p>
+        <ul>
+          <li><a href="https://github.com/EightBitBoy/breccia/blob/main/docs/format.md">The notes format</a> describes the folder and the files exactly, for anyone who wants to write a compatible app.</li>
+          <li><a href="https://github.com/EightBitBoy/breccia/blob/main/docs/compatibility.md">Breccia, Obsidian and Logseq</a> compares the three and says how to open a Breccia folder in Obsidian or Logseq.</li>
+        </ul>
+      </article>
+      <article>
+        <h3>Keyboard-driven</h3>
+        <p><kbd>F1</kbd> shows every keyboard shortcut in an overlay, grouped, with a filter. <kbd>Ctrl K</kbd> searches page names and block text, with <code>#tag</code> and state filters. <kbd>Ctrl Enter</kbd> cycles a task's state, and <kbd>Alt ←</kbd> / <kbd>Alt →</kbd> go back and forward between views.</p>
+      </article>
+    </div>
+    <p class="more"><strong>And more:</strong> search over page names and block text, All pages (a table of every page, to sort and filter), zoom for the whole window, and a tray icon on Windows so Breccia is always at hand.</p>
+  </section>
+
+  <section id="install">
+    <h2>Install</h2>
+    <p>Breccia runs on Windows only for now.</p>
+    <ol>
+      <li>Open the <a href="https://github.com/EightBitBoy/breccia/releases">Releases page</a> of the GitHub repository.</li>
+      <li>Download <code>Breccia_X.Y.Z_x64-setup.exe</code> from the newest release and run it. It installs for the current user only, with no admin prompt, and adds a Start-menu entry.</li>
+      <li>The installer is not code signed, so Windows SmartScreen warns on the first run. Click "More info", then "Run anyway".</li>
+    </ol>
+    <p>Breccia needs Microsoft WebView2, which Windows 11 already has. If it is missing, the installer downloads it, so the first install needs an internet connection.</p>
+  </section>
+</main>
+
+<footer>
+  <p>Breccia is a rock made of broken fragments cemented together into one stone.</p>
+  <p class="links">
+    <a href="https://github.com/EightBitBoy/breccia">Source on GitHub</a>
+    <a href="https://github.com/EightBitBoy/breccia/releases">Releases</a>
+    <a href="https://github.com/EightBitBoy/breccia/blob/main/CHANGELOG.md">Changelog</a>
+    <a href="https://github.com/EightBitBoy/breccia/blob/main/LICENSE">MIT License</a>
+  </p>
+</footer>
+</body>
+</html>

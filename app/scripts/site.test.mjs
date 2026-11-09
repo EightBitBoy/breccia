@@ -1,6 +1,6 @@
 import { get } from 'node:http'
 import { once } from 'node:events'
-import { mkdirSync, mkdtempSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -283,5 +283,96 @@ describe('serve', () => {
       server.close()
       server.closeAllConnections()
     }
+  })
+})
+
+// ---------------------------------------------------------------- the real site
+
+const read = (...p) => readFileSync(join(REPO, ...p), 'utf8')
+
+/** The body of the rule whose selector is exactly `selector` (blocks here have no nested braces). */
+function block(css, selector) {
+  const esc = selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const m = new RegExp(`(?:^|\\})\\s*${esc}\\s*\\{([^{}]*)\\}`, 'm').exec(css)
+  if (!m) throw new Error(`no block ${selector}`)
+  return m[1]
+}
+const props = (body, names) =>
+  Object.fromEntries([...body.matchAll(new RegExp(`(${names})\\s*:\\s*([^;]+);`, 'g'))].map((m) => [m[1], m[2].trim()]))
+const PALETTE = '--pc-(?!wash|l\\b|cs|ds)[a-z]+(?![a-z-])'
+const SCHEME = '--(?:bg|surface|text|muted|accent|on-accent|focus)(?![a-z-])'
+const palette = (body) => props(body, PALETTE)
+
+const lum = (hex) => {
+  const c = [1, 3, 5]
+    .map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4))
+  return 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+}
+const contrast = (a, b) => {
+  const [x, y] = [lum(a), lum(b)].sort((p, q) => q - p)
+  return (x + 0.05) / (y + 0.05)
+}
+
+describe('the real site', () => {
+  it('the_real_site_passes_the_check', () => {
+    assemble(REPO)
+    expect(checkSite(join(REPO, 'site'))).toEqual([])
+  })
+
+  it('site_palette_matches_the_app', () => {
+    const tokens = read('app', 'src', 'styles', 'tokens.css')
+    const css = read('site', 'site.css')
+    const appLight = palette(block(tokens, ':root, [data-theme="light"]'))
+    const appDark = palette(block(tokens, '[data-theme="dark"]'))
+    expect(Object.keys(appLight)).toHaveLength(25)
+    expect(Object.keys(appDark)).toHaveLength(25)
+    expect(palette(block(css, ':root'))).toEqual(appDark)
+    expect(palette(block(css, '[data-scheme="light"]'))).toEqual(appLight)
+    expect(palette(block(css, ':root:not([data-scheme])'))).toEqual(appLight)
+  })
+
+  it('site_text_has_enough_contrast', () => {
+    const css = read('site', 'site.css')
+    for (const sel of [':root', '[data-scheme="light"]', ':root:not([data-scheme])']) {
+      const p = props(block(css, sel), SCHEME)
+      expect(Object.keys(p), sel).toHaveLength(7)
+      for (const v of Object.values(p)) expect(v, sel).toMatch(/^#[0-9a-f]{6}$/)
+      const pairs = [
+        ['--text', '--bg'],
+        ['--text', '--surface'],
+        ['--muted', '--bg'],
+        ['--muted', '--surface'],
+        ['--on-accent', '--accent'],
+      ]
+      for (const [fg, bg] of pairs) {
+        expect(contrast(p[fg], p[bg]), `${sel} ${fg} on ${bg}`).toBeGreaterThanOrEqual(4.5)
+      }
+      expect(contrast(p['--focus'], p['--bg']), `${sel} focus`).toBeGreaterThanOrEqual(3)
+    }
+  })
+
+  it('site_copy_comes_from_the_readme', () => {
+    const html = read('site', 'index.html')
+    const tagline = 'Breccia is a notes app where the fragments of everyday work and tasks bind into one body of knowledge.'
+    const rock = 'Breccia is a rock made of broken fragments cemented together into one stone.'
+    expect(read('README.md')).toContain(tagline)
+    expect(read('README.md')).toContain(rock)
+    expect(html).toContain(tagline)
+    expect(html).toContain(rock)
+    expect(html).toContain('href="https://github.com/EightBitBoy/breccia/releases/latest"')
+    expect(html).not.toMatch(/\d+\.\d+\.\d+/)
+    const names = [
+      'Journal',
+      'Pages, links and tags',
+      'Page colors',
+      'Tasks and Kanban boards',
+      'Git sync',
+      'Six themes',
+      'Graph',
+      'Local-first, plain Markdown',
+      'Keyboard-driven',
+    ]
+    for (const h of names) expect(html, h).toMatch(new RegExp(`<h3[^>]*>\\s*${h}\\s*</h3>`))
   })
 })
