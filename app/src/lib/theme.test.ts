@@ -1,7 +1,17 @@
 import { expect, test } from 'vitest'
 import { applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
-import { PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
-import { customShade, hueTrack, readThemeTokens, ruleShade, swatchValue, washValue, type ThemeTokens } from './customColor'
+import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
+import {
+  CUSTOM_CHROMA,
+  customShade,
+  hueTrack,
+  readThemeTokens,
+  ruleShade,
+  swatchValue,
+  vividTrack,
+  washValue,
+  type ThemeTokens,
+} from './customColor'
 
 import tokensCss from '../styles/tokens.css?raw'
 
@@ -318,6 +328,111 @@ test('custom shades step down only when needed', () => {
     expect(r.strength, text).toBe(0)
     expect(r.wash, text).toBe('#ffffff')
   }
+})
+
+test('vivid shades: pinned values', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  const teal = tokensOf('[data-theme="teal"]')
+  const dark = tokensOf('[data-theme="dark"]')
+  const pins: [ThemeTokens, number, number, string, string, number, boolean][] = [
+    [light, 212, 50, '#619da9', '#e5eded', 0.14, false],
+    [light, 212, 100, '#08a4bb', '#b7e2e7', 0.28, false],
+    [light, 212, 150, '#00a4bb', '#92d6de', 0.42, false],
+    [light, 212, 200, '#08a4bb', '#95d6de', 0.42, true],
+    [dark, 100, 200, '#a69306', '#695e10', 0.56, true],
+    [teal, 212, 150, '#055a67', '#023c48', 0.37, true],
+  ]
+  for (const [t, h, v, shade, wash, strength, limited] of pins) {
+    const r = customShade(h, t, v)
+    expect(near(r.shade, shade), `hue ${h} vivid ${v} shade ${r.shade}`).toBe(true)
+    expect(near(r.wash, wash), `hue ${h} vivid ${v} wash ${r.wash}`).toBe(true)
+    expect(r.strength, `hue ${h} vivid ${v} strength`).toBe(strength)
+    expect(r.limited, `hue ${h} vivid ${v} limited`).toBe(limited)
+  }
+})
+
+/** FNV-1a of a string, as hex. */
+function fnv(text: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return (h >>> 0).toString(16)
+}
+
+/** Digest of customShade(h, t, vivid) for hues 0..359; a fresh token object bypasses the memo. */
+function shadeDigest(s: string, vivid?: number): string {
+  const t = { ...tokensOf(s) }
+  let all = ''
+  for (let h = 0; h < 360; h++) {
+    const r = vivid === undefined ? customShade(h, t) : customShade(h, t, vivid)
+    all += `${h}:${r.shade}${r.wash}${r.strength}:${r.chroma};`
+  }
+  return fnv(all)
+}
+
+// Digests of plan 2's customShade(h, t) per theme block, taken before vividness existed (plan 3, R4).
+const TODAYS_SHADES = ['3c5fa875', 'd47bf017', 'c5f5959a', 'ebb31daa', '83a5b0a9', 'd7f75c44', 'd47bf017']
+
+test("vividness 100 is today's look", () => {
+  THEME_SELECTORS.forEach((s, i) => {
+    expect(shadeDigest(s, 100), `${s} explicit 100`).toBe(TODAYS_SHADES[i])
+    expect(shadeDigest(s), `${s} default`).toBe(TODAYS_SHADES[i])
+    const t = tokensOf(s)
+    for (let h = 0; h < 360; h++) {
+      expect(customShade(h, t, 100), `${s} hue ${h}`).toEqual(customShade(h, t))
+      expect(customShade(h, t, 100).limited, `${s} hue ${h} limited`).toBe(false)
+    }
+  })
+})
+
+test('every vividness is readable in every theme', () => {
+  for (const s of THEME_SELECTORS) {
+    const t = tokensOf(s)
+    const P = Math.round(t.wash * 100)
+    for (let v = MIN_VIVID; v <= MAX_VIVID; v += 5) {
+      const T = Math.round((P * v) / 100) / 100
+      for (let h = 0; h < 360; h++) {
+        const r = customShade(h, t, v)
+        const at = `${s} hue ${h} vivid ${v}`
+        if (r.strength !== 0) expect(r.wash, `${at} wash`).toBe(over(r.shade, t.bg, r.strength))
+        expect(contrast(t.text, r.wash), `${at} text`).toBeGreaterThanOrEqual(4.5)
+        expect(contrast(t.link, r.wash), `${at} link`).toBeGreaterThanOrEqual(3)
+        expect(contrast(t.tag, r.wash), `${at} tag`).toBeGreaterThanOrEqual(3)
+        expect(r.strength, `${at} strength`).toBeLessThanOrEqual(T)
+        const gamut = ruleShade(t.l, (CUSTOM_CHROMA * t.cs * v) / 100, h).chroma
+        expect(r.limited, `${at} limited`).toBe(r.strength < T || r.chroma < gamut)
+        if (v <= 100) expect(r.limited, `${at} limited at or below 100`).toBe(false)
+      }
+    }
+  }
+})
+
+test('the readability guard is reported as limited', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  expect(customShade(212, light, 100).limited).toBe(false)
+  const r = customShade(212, { ...light, bg: '#ffffff', text: '#686868' }, 100)
+  expect(r.limited).toBe(true)
+  expect(r.strength).toBe(0.2)
+})
+
+test('washValue and swatchValue with a vividness', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  expect(near(washValue('hue 212 vivid 150', light) ?? '', '#92d6de')).toBe(true)
+  expect(swatchValue('hue 212 vivid 50', light)).toBe(customShade(212, light, 50).shade)
+  expect(washValue('hue 212 vivid 300', light)).toBeUndefined()
+  expect(DEFAULT_VIVID).toBe(100)
+})
+
+test('tracks', () => {
+  const light = tokensOf(THEME_SELECTORS[0])
+  const v = vividTrack(212, light)
+  expect(v.startsWith('linear-gradient(to right, ')).toBe(true)
+  expect(v.match(/#/g)?.length).toBe(7)
+  expect(v.slice('linear-gradient(to right, '.length).startsWith(customShade(212, light, 50).wash)).toBe(true)
+  expect(hueTrack(light, 50)).not.toBe(hueTrack(light))
+  expect(hueTrack(light, 100)).toBe(hueTrack(light))
 })
 
 test('readThemeTokens', () => {

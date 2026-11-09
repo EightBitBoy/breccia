@@ -1,7 +1,7 @@
 // Custom page colors: a hue the user picked becomes a shade and a wash for the current theme.
 // The theme gives lightness, chroma scale and wash strength (tokens); only the hue is the user's.
 // Everything is computed here at runtime, so no theme colour is written down in this file.
-import { PAGE_COLORS, parseHue } from './pageColors'
+import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, VIVID_STEP, parseCustom } from './pageColors'
 
 export interface ThemeTokens {
   bg: string
@@ -119,61 +119,72 @@ export interface CustomShade {
   wash: string
   strength: number
   chroma: number
+  /** True when readability (or nothing else) forced less than the strength and chroma the vividness asked for. */
+  limited: boolean
 }
 
 const cache = new WeakMap<ThemeTokens, Map<number, CustomShade>>()
 
 /**
- * The shade and wash of a custom hue in a theme. The wash starts at the theme's strength and steps
- * down to half of it, then loses chroma, until text, links and tags stay readable; if nothing helps
- * the wash is the bare background (strength 0).
+ * The shade and wash of a custom hue in a theme at a vividness (50..200, 100 is the plain look). The wash
+ * starts at the theme's strength scaled by the vividness and steps down to half of it, then loses chroma,
+ * until text, links and tags stay readable; if nothing helps the wash is the bare background (strength 0).
  */
-export function customShade(hue: number, t: ThemeTokens): CustomShade {
+export function customShade(hue: number, t: ThemeTokens, vivid: number = DEFAULT_VIVID): CustomShade {
   let perTheme = cache.get(t)
   if (perTheme === undefined) cache.set(t, (perTheme = new Map()))
-  const known = perTheme.get(hue)
+  const key = hue * 1000 + vivid
+  const known = perTheme.get(key)
   if (known !== undefined) return known
-  const result = compute(hue, t)
-  perTheme.set(hue, result)
+  const result = compute(hue, t, vivid)
+  perTheme.set(key, result)
   return result
 }
 
-function compute(hue: number, t: ThemeTokens): CustomShade {
+function compute(hue: number, t: ThemeTokens, vivid: number): CustomShade {
   const l = t.l + CUSTOM_DL * t.ds
-  const base = ruleShade(l, CUSTOM_CHROMA * t.cs, hue)
-  const full = Math.round(t.wash * 100)
-  const floor = Math.ceil(full / 2)
+  const base = ruleShade(l, (CUSTOM_CHROMA * t.cs * vivid) / 100, hue)
+  const plain = Math.round(t.wash * 100)
+  const full = Math.round((plain * vivid) / 100)
+  const floor = Math.ceil(Math.min(full, plain) / 2)
   for (let p = full; p >= floor; p--) {
     const wash = blend(base.hex, t.bg, p / 100)
-    if (readable(t, wash)) return { shade: base.hex, wash, strength: p / 100, chroma: base.chroma }
+    if (readable(t, wash)) return { shade: base.hex, wash, strength: p / 100, chroma: base.chroma, limited: p !== full }
   }
   for (let c = base.chroma - CHROMA_READ_STEP; c > 0; c -= CHROMA_READ_STEP) {
     const s = ruleShade(l, c, hue)
     const wash = blend(s.hex, t.bg, floor / 100)
-    if (readable(t, wash)) return { shade: s.hex, wash, strength: floor / 100, chroma: s.chroma }
+    if (readable(t, wash)) return { shade: s.hex, wash, strength: floor / 100, chroma: s.chroma, limited: true }
   }
   const grey = ruleShade(l, 0, hue)
   const wash = blend(grey.hex, t.bg, floor / 100)
-  if (readable(t, wash)) return { shade: grey.hex, wash, strength: floor / 100, chroma: 0 }
-  return { shade: grey.hex, wash: t.bg, strength: 0, chroma: 0 }
+  if (readable(t, wash)) return { shade: grey.hex, wash, strength: floor / 100, chroma: 0, limited: true }
+  return { shade: grey.hex, wash: t.bg, strength: 0, chroma: 0, limited: true }
 }
 
 /** The background of a row or page with this color: a variable for a name, a computed colour for a hue. */
 export function washValue(color: string, t: ThemeTokens | null): string | undefined {
   if (PAGE_COLORS.includes(color)) return `var(--pc-${color}-wash)`
-  const h = parseHue(color)
-  return h === null || t === null ? undefined : customShade(h, t).wash
+  const c = parseCustom(color)
+  return c === null || t === null ? undefined : customShade(c.hue, t, c.vivid).wash
 }
 
 /** The swatch colour of a color: a variable for a name, a computed colour for a hue. */
 export function swatchValue(color: string, t: ThemeTokens | null): string | undefined {
   if (PAGE_COLORS.includes(color)) return `var(--pc-${color})`
-  const h = parseHue(color)
-  return h === null || t === null ? undefined : customShade(h, t).shade
+  const c = parseCustom(color)
+  return c === null || t === null ? undefined : customShade(c.hue, t, c.vivid).shade
 }
 
-/** The hue slider's track: the shades at hues 0, 30, ... 330 and 359. */
-export function hueTrack(t: ThemeTokens): string {
+/** The hue slider's track: the shades at hues 0, 30, ... 330 and 359, at a vividness. */
+export function hueTrack(t: ThemeTokens, vivid: number = DEFAULT_VIVID): string {
   const hues = [...Array.from({ length: 12 }, (_, i) => i * 30), 359]
-  return `linear-gradient(to right, ${hues.map((h) => customShade(h, t).shade).join(', ')})`
+  return `linear-gradient(to right, ${hues.map((h) => customShade(h, t, vivid).shade).join(', ')})`
+}
+
+/** The vividness slider's track: the washes of a hue at vividness 50, 75, ... 200. */
+export function vividTrack(hue: number, t: ThemeTokens): string {
+  const stops = []
+  for (let v = MIN_VIVID; v <= MAX_VIVID; v += 5 * VIVID_STEP) stops.push(customShade(hue, t, v).wash)
+  return `linear-gradient(to right, ${stops.join(', ')})`
 }
