@@ -83,3 +83,7 @@ site:
 # Check the website: links, alt texts, sizes, no external requests (app/scripts/site.mjs)
 site-check:
     node app/scripts/site.mjs check
+
+# Screenshots of the website at 375, 768 and 1280 px, dark and light, in headless Edge (target/site-shots/)
+site-shots:
+    node app/scripts/site-shots.mjs
