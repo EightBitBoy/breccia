@@ -82,6 +82,35 @@ shortcut (F1, `Ctrl K`, `Ctrl N`, `Ctrl ,`, `Ctrl Shift D`, `Alt ←/→`, zoom)
 selection's (`multiSelect.svelte.ts`), which the picker shuts out on purpose (spec §7.3: a selection behind the picker
 stays). Task 3 adds one comment in `app/src/lib/dom.ts` so a future app-wide shortcut goes into the capture phase.
 
+## Pre-flight rulings (2026-11-09, binding; they override the task text where they differ)
+
+Full table: `.superpowers/sdd/2026-11-09-04-followups-of-plans-1-3/preflight.md` (local).
+
+- **R1 (Task 1):** the `isSavedCustom('HUE 212 VIVID 0150', 212, 150)` test cannot pass (`parseCustom` rejects capitals
+  and leading zeros, and the core always sends the canonical string). Test canonical strings only (`hue 212 vivid
+  150`, `hue 212`), and drop the "hand-written counts" sentence.
+- **R2 (Task 2):** step 121's width check must be able to fail: `.pc-grid` stretches to the 140 px content width like
+  `.pc-hue`. Measure the grid from the crimson cell's left edge to the amber cell's right edge, and compare the
+  slider tracks with that.
+- **R3 (Task 3):** step 122's "selection" check: on `native` the guard stops propagation, so a bubble listener on
+  `window` records nothing, and a real right-click opens the WebView2 menu. Send a synthetic `contextmenu` event from
+  `page.evaluate` at the point and read what `dispatchEvent` returns (false = no menu at the padding point, true =
+  the browser menu is kept on the word).
+- **R4 (Task 3):** `smoke.mjs` has no `pageerror` listener, and the Q6 focus after Esc is never checked. Step 122 adds
+  and removes its own `page.on('pageerror')` and asserts the focus is not on an `a.link` after Esc.
+- **R5 (Task 2):** dropping the sliders' `onpointerenter` also drops `reach(…, 'pointer')`, so hovering the hue slider
+  would no longer enable Vividness. The root `pointerover` handler calls `reach` for the CUSTOM and VIVID indexes.
+- **R6 (Task 1):** `App.svelte` uses `mac` 13 times. Use `import { isMac as mac }` in all three files, so only the
+  declaration line changes.
+- **R7 (Task 4):** changing step 116 leaves `const blueWash` unused. Delete it with the old assertion.
+- **R8 (Task 2):** step 121's focus-on-open check already passes today (it guards a refactor). Keep it, and say in
+  the report that it was green before the change.
+- **R9 (Tasks 3, 4):** days 9 and 11 are not empty (setup writes `- day k` for days 4 to 63). Overwriting them is
+  fine, as steps 113 to 120 do with days 5 to 8. Open the day with `showDay` first.
+- **R10 (Task 1):** `thumbLeft` must build its 4 px and 8 px from `THUMB_W`, not hard-code them. Also: Task 1
+  adjusts the old `hueAt`/`vividAt` tests; step 121 waits for the "page color" value text; Task 3 commits the `dom.ts`
+  comment on its own; Task 5 alone writes the STATUS test count.
+
 ## Global Constraints
 
 - No core change and no notes-file format change. Files Breccia does not change stay byte-identical; a pick changes
