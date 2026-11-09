@@ -2867,7 +2867,10 @@ try {
   await picker.waitFor()
   assert((await vslider.getAttribute('aria-valuenow')) === '150', `120 vividness ${await vslider.getAttribute('aria-valuenow')}, not 150`)
   await waitFor('120 the hue is marked', async () => (await slider.getAttribute('data-current')) !== null, true)
-  assert((await bgOf(previewWash)) === wash120, `120 preview ${await bgOf(previewWash)}, the journal shows ${wash120}`)
+  // The picker opens at the right-click point, so the pointer may rest on a grid cell, and the preview then shows
+  // that hovered cell. Move the pointer off the picker, then wait for the preview to show the page's own color.
+  await page.mouse.move(1, 1)
+  await waitFor('120 the preview matches the journal wash', () => bgOf(previewWash), wash120)
   assert((await limited.count()) === 0, '120 a note is shown in Light at 150')
   await page.evaluate(() => (document.documentElement.dataset.theme = 'teal'))
   await limited.waitFor({ state: 'visible' })
