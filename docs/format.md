@@ -663,8 +663,7 @@ Color:: Hue 212 Vivid 0150
 ```
 
 ```text reads
-preamble "Color:: Hue 212 Vivid 0150
-"
+preamble "Color:: Hue 212 Vivid 0150\n"
 color "hue 212 vivid 150"
 0 - "a"
 ```
@@ -675,8 +674,7 @@ color:: hue 212 vivid 300
 ```
 
 ```text reads
-preamble "color:: hue 212 vivid 300
-"
+preamble "color:: hue 212 vivid 300\n"
 0 - "a"
 ```
 
