@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { colorTarget, linkMenuAction, pickingColor } from './linkColor'
+import { colorTarget, linkMenuAction, pickingColor, pointInBoxes } from './linkColor'
 import type { TargetView } from './types'
 
 const targets: TargetView[] = [
@@ -49,6 +49,30 @@ test('a right-click elsewhere shows no menu at all', () => {
   expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null }, targets)).toEqual({ kind: 'none' })
   const missing = { className: 'link', dataPage: 'missing' }
   expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: missing }, targets)).toEqual({ kind: 'none' })
+})
+
+test('a point inside a box is in the boxes', () => {
+  expect(pointInBoxes(5, 5, [{ left: 0, top: 0, right: 10, bottom: 10 }])).toBe(true)
+})
+
+test('a point on a box edge is in the boxes', () => {
+  expect(pointInBoxes(10, 10, [{ left: 0, top: 0, right: 10, bottom: 10 }])).toBe(true)
+  expect(pointInBoxes(0, 0, [{ left: 0, top: 0, right: 10, bottom: 10 }])).toBe(true)
+})
+
+test('a point beside every box, or with no boxes, is not in them', () => {
+  expect(pointInBoxes(11, 5, [{ left: 0, top: 0, right: 10, bottom: 10 }])).toBe(false)
+  expect(pointInBoxes(5, -1, [{ left: 0, top: 0, right: 10, bottom: 10 }])).toBe(false)
+  expect(pointInBoxes(5, 5, [])).toBe(false)
+})
+
+test('a point in the second of two boxes is in the boxes', () => {
+  const boxes = [
+    { left: 0, top: 0, right: 10, bottom: 10 },
+    { left: 20, top: 20, right: 30, bottom: 30 },
+  ]
+  expect(pointInBoxes(25, 25, boxes)).toBe(true)
+  expect(pointInBoxes(15, 15, boxes)).toBe(false)
 })
 
 test('the open picker marks the color the list holds now for its page', () => {

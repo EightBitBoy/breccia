@@ -1,11 +1,12 @@
 <script lang="ts">
   // The right-click menu on a journal day's links and tags: "Color…" opens the page color grid at the link, for the
   // page the link goes to. A right-click in the block editor or on selected text keeps the native menu; anywhere else
-  // that is not a colorable link or tag, no menu opens (`linkMenuAction`).
+  // that is not a colorable link or tag, no menu opens (`linkMenuAction`). "On selected text" means the point lies in
+  // the selection's own boxes, not merely in an element that holds a selection.
   import type { Snippet } from 'svelte'
   import type { Action } from 'svelte/action'
   import { ContextMenu, Popover } from 'bits-ui'
-  import { linkMenuAction, pickingColor } from '../lib/linkColor'
+  import { linkMenuAction, pickingColor, pointInBoxes, type Box } from '../lib/linkColor'
   import type { TargetView } from '../lib/types'
   import PageColorGrid from './PageColorGrid.svelte'
 
@@ -30,6 +31,13 @@
   /** "Color…" was chosen: the picker opens once the menu has closed, so the menu's focus return cannot take it. */
   let pending = false
 
+  /** The boxes of the selection's text. */
+  function selectionBoxes(sel: Selection): Box[] {
+    const boxes: Box[] = []
+    for (let i = 0; i < sel.rangeCount; i++) boxes.push(...Array.from(sel.getRangeAt(i).getClientRects()))
+    return boxes
+  }
+
   /**
    * Decides before the menu trigger sees the event (a native listener on an inner element runs first): the native
    * menu stops the event here, "no menu" prevents its default, which the trigger then ignores.
@@ -39,7 +47,7 @@
       const el = e.target instanceof Element ? e.target : null
       const a = el?.closest<HTMLElement>('a.link, a.tag') ?? null
       const sel = window.getSelection()
-      const onSelection = !!el && !!sel && !sel.isCollapsed && sel.containsNode(el, true)
+      const onSelection = !!el && !!sel && !sel.isCollapsed && pointInBoxes(e.clientX, e.clientY, selectionBoxes(sel))
       const act = linkMenuAction(
         {
           inEditor: !!el?.closest('.editor-slot'),

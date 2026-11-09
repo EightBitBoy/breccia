@@ -37,6 +37,19 @@ export function linkMenuAction(
   return e.onSelection ? { kind: 'native' } : { kind: 'none' }
 }
 
+/** A rectangle in viewport pixels, as `DOMRect` gives it. */
+export interface Box {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/** Whether the point lies in one of the boxes, edges included. */
+export function pointInBoxes(x: number, y: number, boxes: readonly Box[]): boolean {
+  return boxes.some((b) => x >= b.left && x <= b.right && y >= b.top && y <= b.bottom)
+}
+
 /**
  * The color an open picker marks for the page of `picking`: the list's entry for that page now, so the mark follows a
  * save while the picker stays open; the color it had when the picker opened if the list no longer holds the page.
