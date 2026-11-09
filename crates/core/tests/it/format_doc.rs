@@ -11,7 +11,9 @@
 //!   text with its preamble recolored with that color.
 
 use breccia_core::aliases::aliases;
-use breccia_core::color::{PAGE_COLORS, PageColor, page_color, parse_color, recolor};
+use breccia_core::color::{
+    DEFAULT_VIVID, PAGE_COLORS, PageColor, page_color, parse_color, recolor,
+};
 use breccia_core::config::PALETTE;
 use breccia_core::inline::{LinkKind, links, properties, title_line};
 use breccia_core::naming::file_stem_for;
@@ -311,7 +313,7 @@ fn format_doc_recolor_examples() {
 fn hue_value(name: &str) -> Option<String> {
     let h = name.strip_prefix("hue-")?;
     let value = format!("hue {h}");
-    matches!(parse_color(&value), Some(PageColor::Hue(n)) if n.to_string() == h).then_some(value)
+    matches!(parse_color(&value), Some(PageColor::Hue { hue, vivid: DEFAULT_VIVID }) if hue.to_string() == h).then_some(value)
 }
 
 const KNOWN_PAIRS: [&str; 7] = [

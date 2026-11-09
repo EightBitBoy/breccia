@@ -22,19 +22,38 @@ pub fn canonical_color(name: &str) -> Option<&'static str> {
         .find(|c| c.eq_ignore_ascii_case(name))
 }
 
+/// The vividness of a custom hue that looks as the hue always did.
+pub const DEFAULT_VIVID: u8 = 100;
+/// The least vividness a page color can have.
+pub const MIN_VIVID: u8 = 50;
+/// The most vividness a page color can have.
+pub const MAX_VIVID: u8 = 200;
+
 /// What a page's `color::` line gives it: one of [`PAGE_COLORS`] or a hue
-/// (0 to 359 degrees), written `hue 212`.
+/// (0 to 359 degrees) with a vividness (50 to 200, 100 is the default),
+/// written `hue 212` or `hue 212 vivid 150`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum PageColor {
     Named(&'static str),
-    Hue(u16),
+    Hue { hue: u16, vivid: u8 },
+}
+
+impl PageColor {
+    /// A hue with the default vividness.
+    pub const fn hue(hue: u16) -> PageColor {
+        PageColor::Hue {
+            hue,
+            vivid: DEFAULT_VIVID,
+        }
+    }
 }
 
 impl fmt::Display for PageColor {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             PageColor::Named(n) => f.write_str(n),
-            PageColor::Hue(h) => write!(f, "hue {h}"),
+            PageColor::Hue { hue, vivid } if *vivid == DEFAULT_VIVID => write!(f, "hue {hue}"),
+            PageColor::Hue { hue, vivid } => write!(f, "hue {hue} vivid {vivid}"),
         }
     }
 }
@@ -45,29 +64,48 @@ impl Serialize for PageColor {
     }
 }
 
+/// The number in `digits` (ASCII digits only, leading zeros allowed) when it
+/// is at most `max`; long digit strings do not overflow.
+fn bounded_number(digits: &str, max: u32) -> Option<u32> {
+    if digits.is_empty() || !digits.bytes().all(|b| b.is_ascii_digit()) {
+        return None;
+    }
+    let mut n = 0u32;
+    for b in digits.bytes() {
+        n = n * 10 + u32::from(b - b'0');
+        if n > max {
+            return None;
+        }
+    }
+    Some(n)
+}
+
 /// A page color from its text: a name from [`PAGE_COLORS`] (any ASCII case),
-/// or `hue` (any ASCII case) and a number from 0 to 359 made of ASCII digits
-/// only (leading zeros allowed), separated by ASCII whitespace.
+/// or `hue` and a number from 0 to 359, optionally followed by `vivid` and a
+/// number from 50 to 200. The words ignore ASCII case, the numbers are ASCII
+/// digits only (leading zeros allowed), and the separator is ASCII whitespace.
 pub fn parse_color(value: &str) -> Option<PageColor> {
     if let Some(n) = canonical_color(value) {
         return Some(PageColor::Named(n));
     }
     let mut words = value.split_ascii_whitespace();
     let (word, num) = (words.next()?, words.next()?);
-    if words.next().is_some()
-        || !word.eq_ignore_ascii_case("hue")
-        || !num.bytes().all(|b| b.is_ascii_digit())
-    {
+    if !word.eq_ignore_ascii_case("hue") {
         return None;
     }
-    let mut hue = 0u32;
-    for b in num.bytes() {
-        hue = hue * 10 + u32::from(b - b'0');
-        if hue > 359 {
-            return None;
+    let hue = bounded_number(num, 359)? as u16;
+    let vivid = match (words.next(), words.next(), words.next()) {
+        (None, ..) => DEFAULT_VIVID,
+        (Some(w), Some(v), None) if w.eq_ignore_ascii_case("vivid") => {
+            let v = bounded_number(v, u32::from(MAX_VIVID))?;
+            if v < u32::from(MIN_VIVID) {
+                return None;
+            }
+            v as u8
         }
-    }
-    Some(PageColor::Hue(hue as u16))
+        _ => return None,
+    };
+    Some(PageColor::Hue { hue, vivid })
 }
 
 /// The color a page has of its own: none for a journal, else what its

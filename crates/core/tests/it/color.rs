@@ -81,14 +81,15 @@ fn recolor_none_removes_every_color_line() {
 
 #[test]
 fn parse_color_reads_names_and_hues() {
-    use PageColor::{Hue, Named};
+    use PageColor::Named;
+    let hue = PageColor::hue;
     assert_eq!(parse_color("Red"), Some(Named("red")));
-    assert_eq!(parse_color("hue 212"), Some(Hue(212)));
-    assert_eq!(parse_color("HUE 0212"), Some(Hue(212)));
-    assert_eq!(parse_color("Hue  7"), Some(Hue(7)));
-    assert_eq!(parse_color("hue	7"), Some(Hue(7)));
-    assert_eq!(parse_color("hue 0"), Some(Hue(0)));
-    assert_eq!(parse_color("hue 359"), Some(Hue(359)));
+    assert_eq!(parse_color("hue 212"), Some(hue(212)));
+    assert_eq!(parse_color("HUE 0212"), Some(hue(212)));
+    assert_eq!(parse_color("Hue  7"), Some(hue(7)));
+    assert_eq!(parse_color("hue	7"), Some(hue(7)));
+    assert_eq!(parse_color("hue 0"), Some(hue(0)));
+    assert_eq!(parse_color("hue 359"), Some(hue(359)));
     for bad in [
         "hue 360",
         "hue 999",
@@ -103,8 +104,8 @@ fn parse_color_reads_names_and_hues() {
     ] {
         assert_eq!(parse_color(bad), None, "{bad}");
     }
-    assert_eq!(Hue(7).to_string(), "hue 7");
-    assert_eq!(serde_json::to_string(&Hue(212)).unwrap(), "\"hue 212\"");
+    assert_eq!(hue(7).to_string(), "hue 7");
+    assert_eq!(serde_json::to_string(&hue(212)).unwrap(), "\"hue 212\"");
     assert_eq!(serde_json::to_string(&Named("red")).unwrap(), "\"red\"");
 }
 
@@ -115,7 +116,7 @@ fn page_color_reads_a_hue_line() {
             "color:: HUE 012
 "
         ),
-        Some(PageColor::Hue(12))
+        Some(PageColor::hue(12))
     );
     assert_eq!(
         page_color(
@@ -123,7 +124,7 @@ fn page_color_reads_a_hue_line() {
 color:: hue 5
 "
         ),
-        Some(PageColor::Hue(5))
+        Some(PageColor::hue(5))
     );
     assert_eq!(
         color_line(
@@ -131,7 +132,7 @@ color:: hue 5
 color:: hue 40
 "
         ),
-        Some((1, PageColor::Hue(40)))
+        Some((1, PageColor::hue(40)))
     );
 }
 
@@ -179,5 +180,62 @@ x
             lf
         ),
         ""
+    );
+}
+
+fn vivid(h: u16, v: u8) -> PageColor {
+    PageColor::Hue { hue: h, vivid: v }
+}
+
+#[test]
+fn parse_color_reads_a_vividness() {
+    let hue = PageColor::hue;
+    assert_eq!(parse_color("hue 212 vivid 150"), Some(vivid(212, 150)));
+    assert_eq!(parse_color("Hue 212 Vivid 0150"), Some(vivid(212, 150)));
+    assert_eq!(parse_color("hue 7\tvivid  50"), Some(vivid(7, 50)));
+    assert_eq!(parse_color("hue 0 vivid 200"), Some(vivid(0, 200)));
+    assert_eq!(parse_color("hue 212 vivid 100"), Some(hue(212)));
+    for bad in [
+        "hue 212 vivid",
+        "hue 212 vivid 49",
+        "hue 212 vivid 201",
+        "hue 212 vivid 0",
+        "hue 212 vivid -60",
+        "hue 212 vivid +60",
+        "hue 212 vivid 1.5",
+        "hue 212 vivid x",
+        "hue 212 vivid 80 x",
+        "hue 212 strong 80",
+        "vivid 80 hue 212",
+        "hue 360 vivid 80",
+        "hue 212 vivid 99999999999999999999",
+        "red vivid 150",
+    ] {
+        assert_eq!(parse_color(bad), None, "{bad}");
+    }
+    assert_eq!(vivid(212, 150).to_string(), "hue 212 vivid 150");
+    assert_eq!(vivid(212, 100).to_string(), "hue 212");
+    assert_eq!(
+        serde_json::to_string(&vivid(9, 55)).unwrap(),
+        "\"hue 9 vivid 55\""
+    );
+}
+
+#[test]
+fn page_color_reads_a_lone_invalid_hue() {
+    assert_eq!(page_color("color:: hue 999\n"), None);
+    assert_eq!(page_color("color:: hue 212 vivid 300\n"), None);
+}
+
+#[test]
+fn recolor_writes_a_vividness() {
+    let lf = LineEnding::Lf;
+    assert_eq!(
+        recolor("- a\n", Some("hue 212 vivid 150"), lf),
+        "color:: hue 212 vivid 150\n- a\n"
+    );
+    assert_eq!(
+        recolor("color:: hue 212 vivid 150\nx\n", Some("teal"), lf),
+        "color:: teal\nx\n"
     );
 }

@@ -337,3 +337,10 @@ note
         .contains("hue 360")
     );
 }
+
+#[test]
+fn preamble_html_shows_an_invalid_vividness() {
+    use breccia_core::render::preamble_html;
+    assert!(!preamble_html("color:: hue 212 vivid 150\nnote\n").contains("color::"));
+    assert!(preamble_html("color:: hue 212 vivid 300\n").contains("vivid 300"));
+}

@@ -572,3 +572,57 @@ fn journal_blocks_carry_a_hue() {
         .unwrap();
     assert_eq!(t["color"], "hue 301");
 }
+
+#[test]
+fn set_color_with_a_vividness() {
+    let (t, mut s) = folder(&[("pages/Garden.md", "- a\n\t- b\n")]);
+    let out = pick(&mut s, "garden", json!("hue 212 vivid 150"));
+    assert_eq!(
+        read(&t, "pages/Garden.md"),
+        "color:: hue 212 vivid 150\n- a\n\t- b\n"
+    );
+    let view = serde_json::to_value(out.page.unwrap()).unwrap();
+    assert_eq!(view["color"], "hue 212 vivid 150");
+    pick(&mut s, "garden", Value::Null);
+    pick(&mut s, "garden", json!("HUE 212 VIVID 0150"));
+    assert_eq!(
+        read(&t, "pages/Garden.md"),
+        "color:: hue 212 vivid 150\n- a\n\t- b\n"
+    );
+    pick(&mut s, "garden", json!("hue 212 vivid 100"));
+    assert_eq!(read(&t, "pages/Garden.md"), "color:: hue 212\n- a\n\t- b\n");
+    let before = read(&t, "pages/Garden.md");
+    let e = cmd(
+        &mut s,
+        json!({"type": "page.setColor", "key": "garden", "color": "hue 212 vivid 300"}),
+        0,
+    )
+    .unwrap_err();
+    assert_eq!(e.code, "unknownColor");
+    assert_eq!(read(&t, "pages/Garden.md"), before);
+}
+
+#[test]
+fn a_pick_of_the_saved_vividness_records_no_step() {
+    let (t, mut s) = folder(&[("pages/Garden.md", "- a\n\t- b\n")]);
+    pick(&mut s, "garden", json!("hue 40 vivid 60"));
+    pick(&mut s, "garden", json!("hue 40 vivid 60"));
+    pick(&mut s, "garden", json!("hue 40 vivid 65"));
+    undo(&mut s, "garden");
+    assert_eq!(
+        read(&t, "pages/Garden.md"),
+        "color:: hue 40 vivid 60\n- a\n\t- b\n"
+    );
+    undo(&mut s, "garden");
+    assert_eq!(read(&t, "pages/Garden.md"), "- a\n\t- b\n");
+}
+
+#[test]
+fn journal_blocks_carry_a_vividness() {
+    let (_t, mut s) = topics_folder();
+    let out = pick(&mut s, "hiring", json!("hue 300 vivid 120"));
+    let pr = pairs(day(&out));
+    for i in [3, 6, 9] {
+        assert_eq!(pr[i], p("hiring", "hue 300 vivid 120"), "block {}", i + 1);
+    }
+}
