@@ -13,7 +13,7 @@ block, with priority by dragging, hidden columns and automatic archiving; the Ar
 forward between views; the `F1` shortcut overlay; the graph; a tray icon; a Windows installer built by the release
 workflow. Since 1.1.0 (released 2026-11-07, plans 1 and 2): page colors, 25 named colors or a custom hue per page, shown as soft
 washes behind journal blocks, set from a swatch on the page title or by right-clicking a link in the journal, with a
-live preview in the picker. Since 1.1.1 (plan 3, not released yet): a Vividness slider makes a custom color softer or
+live preview in the picker. Since 1.2.0 (released 2026-11-09, plan 3): a Vividness slider makes a custom color softer or
 stronger per page (`color:: hue 212 vivid 150`, format version 8), held back where text would be hard to read.
 
 This repository starts from a prototype, without its history. Breccia 1.0.0, the first public release, was published
@@ -34,10 +34,10 @@ and in the plan's "Owner decisions" section. Progress ledger: `.superpowers/sdd/
 ## Next
 
 Plan 3 (custom color vividness, backlog #72) is done (2026-11-09; owner decisions and pre-flight rulings in the plan,
-ledger `.superpowers/sdd/2026-11-09-03-custom-color-vividness/progress.md`). It is not released yet; the owner checks
-review items 46 to 50 and decides when to cut the next release.
+ledger `.superpowers/sdd/2026-11-09-03-custom-color-vividness/progress.md`). It is released as 1.2.0 (2026-11-09,
+https://github.com/EightBitBoy/breccia/releases/tag/v1.2.0); the owner still checks review items 46 to 50.
 
-Released since 1.1.0: 1.1.1 (2026-11-09: state chips and "Date…" in the slash menu, Journals position setting, no
+Released since 1.1.0: 1.1.1 and 1.2.0 (2026-11-09; 1.1.1: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
 Candidates for the next plan, to settle with the owner:
