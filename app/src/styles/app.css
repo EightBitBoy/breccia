@@ -417,10 +417,10 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .card .tools { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
 .card .jump, .card .card-menu {
   padding: 0 6px; line-height: 20px; font-size: 12px;
-  border: none; background: var(--card); color: var(--muted); visibility: hidden;
+  border: none; background: var(--card-btn); color: var(--text); visibility: hidden;
 }
 .card:hover .tools button, .card .tools button:focus-visible, .card .card-menu[data-state='open'] { visibility: visible; }
-.card .jump:hover, .card .card-menu:hover { background: var(--hover); color: var(--text); }
+.card .jump:hover, .card .card-menu:hover, .card .card-menu[data-state='open'] { background: var(--card-btn-hover); color: var(--text); }
 .card.dragging { opacity: .5; }
 .col.drop-over { outline: 2px dashed var(--accent); outline-offset: -2px; }
 /* Where a drop lands: a line above that card, or above "+ Add" at the column's end. */

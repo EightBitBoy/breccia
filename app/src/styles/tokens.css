@@ -13,6 +13,8 @@
   --link: #4b4bc4;
   --tag: #2f7d6d;
   --card: #ffffff;
+  --card-btn: #e3dfd8;
+  --card-btn-hover: #d3cec5;
   --edit: #f4f2ee;
   --select: #d7d4f0;
   --on-accent: #ffffff;
@@ -72,6 +74,8 @@
     --link: #8fb0f9;
     --tag: #5fc4a8;
     --card: #232326;
+    --card-btn: #35353b;
+    --card-btn-hover: #44444c;
     --edit: #242428;
     --select: #3b4261;
     --on-accent: #141415;
@@ -131,6 +135,8 @@
   --link: #8fb0f9;
   --tag: #5fc4a8;
   --card: #232326;
+  --card-btn: #35353b;
+  --card-btn-hover: #44444c;
   --edit: #242428;
   --select: #3b4261;
   --on-accent: #141415;
@@ -189,6 +195,8 @@
   --link: #c3b1ff;
   --tag: #f0a3d8;
   --card: #262038;
+  --card-btn: #3a3257;
+  --card-btn-hover: #4a406e;
   --edit: #2a2440;
   --select: #3d3360;
   --on-accent: #171425;
@@ -247,6 +255,8 @@
   --link: #8cc6ca;
   --tag: #c9b37a;
   --card: #33373c;
+  --card-btn: #474c53;
+  --card-btn-hover: #575d65;
   --edit: #353940;
   --select: #3d4a52;
   --on-accent: #1f2124;
@@ -305,6 +315,8 @@
   --link: #4aa8e0;
   --tag: #c9a227;
   --card: #073a48;
+  --card-btn: #0d4e60;
+  --card-btn-hover: #03303c;
   --edit: #0a4452;
   --select: #145568;
   --on-accent: #002b36;
@@ -363,6 +375,8 @@
   --link: #7a5c42;
   --tag: #5f7a5a;
   --card: #f8f4ee;
+  --card-btn: #e2d8ca;
+  --card-btn-hover: #d2c5b3;
   --edit: #e9e1d6;
   --select: #e0d2bf;
   --on-accent: #ffffff;
