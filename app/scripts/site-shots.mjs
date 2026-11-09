@@ -209,6 +209,12 @@ async function heroChecks(browser, url) {
       })
       .then(() => true, () => false)
     check(back, 'hero: after the pointer leaves, every frame shard is back in place', (await shardTransforms(page)).join(' '))
+    const clean = await page
+      .waitForFunction(() => [...document.querySelectorAll('.shard')].every((s) => !/transform|transition/.test(s.style.cssText)), undefined, {
+        timeout: 2000,
+      })
+      .then(() => true, () => false)
+    check(clean, 'hero: after the pointer leaves, no frame shard keeps an inline transform or transition')
     check(seen.errors.length === 0, 'hero: no console error, no page error', seen.errors.join(' | '))
     await ctx.close()
   }
@@ -285,6 +291,123 @@ async function heroChecks(browser, url) {
       'fallback: exactly one page error, from the broken script',
       seen.errors.join(' | '),
     )
+    await ctx.close()
+  }
+
+  // In-page clock: wait until performance.now() passes ms (a state of the page, not a sleep in the test).
+  const pageTime = (page, ms) => page.waitForFunction((ms) => performance.now() >= ms, ms, { timeout: ms + 5000 })
+  const stoneState = (page) =>
+    page.evaluate(() => ({
+      tiles: !!document.querySelector('.tiles'),
+      assembling: !!document.querySelector('.stone.assembling'),
+      intro: document.documentElement.classList.contains('hero-intro'),
+      img: getComputedStyle(document.querySelector('img.shot')).opacity,
+      shards: [...document.querySelectorAll('.shard')].filter(
+        // out of place or hidden (an animation's end state `transform: none` reads as the identity matrix)
+        (s) => !['none', 'matrix(1, 0, 0, 1, 0, 0)'].includes(getComputedStyle(s).transform) || Number(getComputedStyle(s).opacity) < 0.5,
+      ).length,
+    }))
+
+  // A tab opened in the background gets no animation frame until it is shown: hold the first one for 3.2 s.
+  {
+    const ctx = await browser.newContext({ ...base, reducedMotion: 'no-preference' })
+    const page = await ctx.newPage()
+    const seen = watch(page)
+    await page.addInitScript(() => {
+      const raf = window.requestAnimationFrame.bind(window)
+      let held = false
+      window.requestAnimationFrame = (cb) => {
+        if (held) return raf(cb)
+        held = true
+        return setTimeout(() => raf(cb), 3200)
+      }
+    })
+    await page.goto(url, { waitUntil: 'load' })
+    await pageTime(page, 3600)
+    const state = await stoneState(page)
+    check(
+      !state.tiles && !state.assembling && !state.intro && state.img === '1' && state.shards === 0,
+      'background tab: when the first frame comes late, no shard flies over the shown screenshot',
+      JSON.stringify(state),
+    )
+    check(seen.errors.length === 0, 'background tab: no console error, no page error', seen.errors.join(' | '))
+    await ctx.close()
+  }
+
+  // hero.js arrives late: at 1.5 s the assembly still runs and the fallback clock restarts; at 2.2 s it is skipped.
+  for (const delay of [1500, 2200]) {
+    const ctx = await browser.newContext({ ...base, reducedMotion: 'no-preference' })
+    const page = await ctx.newPage()
+    const seen = watch(page)
+    await page.addInitScript(recordTiles)
+    await page.route('**/hero.js', (route) => setTimeout(() => route.continue(), delay))
+    await page.goto(url, { waitUntil: 'commit' })
+    if (delay === 1500) {
+      const ran = await page
+        .waitForFunction(() => !!document.querySelector('.tiles'), undefined, { timeout: 5000, polling: 'raf' })
+        .then(() => true, () => false)
+      check(ran, 'late script (1.5 s): the assembly still runs')
+      await pageTime(page, 2700)
+      const state = await stoneState(page)
+      check(
+        state.tiles && state.img === '0',
+        'late script (1.5 s): at 2.7 s the screenshot is still hidden under the flying mosaic (the fallback clock restarted)',
+        JSON.stringify(state),
+      )
+      const ended = await page
+        .waitForFunction(() => !document.querySelector('.tiles') && getComputedStyle(document.querySelector('img.shot')).opacity === '1', undefined, {
+          timeout: 4000,
+        })
+        .then(() => true, () => false)
+      check(ended, 'late script (1.5 s): the sequence ends with the screenshot shown')
+    } else {
+      const shown = await page
+        .waitForFunction(() => !document.documentElement.classList.contains('hero-intro'), undefined, { timeout: 6000 })
+        .then(() => true, () => false)
+      const state = await stoneState(page)
+      const tiles = await page.evaluate(() => window.__tiles.added)
+      check(
+        shown && tiles === 0 && !state.assembling && state.img === '1' && state.shards === 0,
+        'late script (2.2 s): the assembly is skipped and the stone shows as it is',
+        JSON.stringify({ ...state, tiles }),
+      )
+    }
+    check(seen.errors.length === 0, `late script (${delay / 1000} s): no console error, no page error`, seen.errors.join(' | '))
+    await ctx.close()
+  }
+
+  // The CSS fallback once the flight was set up: hero.js throws after hiding the shards and adding the mosaic.
+  {
+    const ctx = await browser.newContext({ ...base, reducedMotion: 'no-preference' })
+    const page = await ctx.newPage()
+    const seen = watch(page)
+    await page.route('**/hero.js', (route) =>
+      route.fulfill({
+        contentType: 'text/javascript',
+        body: [
+          "const stone = document.querySelector('.stone')",
+          "stone.classList.add('assembling')",
+          "const layer = document.createElement('div'); layer.className = 'tiles'",
+          "const t = document.createElement('span'); t.style.setProperty('--c', 'var(--pc-red)'); layer.append(t); stone.append(layer)",
+          "for (const s of document.querySelectorAll('.shard')) { s.style.opacity = '0'; s.style.transform = 'translate(300px, -200px) rotate(40deg)' }",
+          "document.documentElement.classList.remove('hero-intro')",
+          "throw new Error('x')",
+        ].join('\n'),
+      }),
+    )
+    await page.goto(url, { waitUntil: 'commit' })
+    await page.waitForTimeout(3000) // the time is the point here: the reveal must come from CSS alone
+    const state = await stoneState(page)
+    const layer = await page.evaluate(() => {
+      const t = document.querySelector('.tiles')
+      return t && { opacity: getComputedStyle(t).opacity, visibility: getComputedStyle(t).visibility }
+    })
+    check(
+      state.img === '1' && state.shards === 0 && !!layer && (layer.opacity === '0' || layer.visibility === 'hidden'),
+      'fallback after setup: at 3 s the screenshot and the frame show and the mosaic is gone',
+      JSON.stringify({ ...state, layer }),
+    )
+    check(seen.errors.length === 1, 'fallback after setup: exactly one page error, from the broken script', seen.errors.join(' | '))
     await ctx.close()
   }
 }

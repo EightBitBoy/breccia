@@ -30,6 +30,14 @@ function reveal() {
   return img.getAnimations ? img.getAnimations().find((a) => a.animationName === 'hero-reveal') : undefined
 }
 
+/** Restarts every CSS fallback in the stone (screenshot, frame shards, mosaic), so the 2.5 s count from now. */
+function restartFallbacks() {
+  if (!stone.getAnimations) return
+  for (const a of stone.getAnimations({ subtree: true })) {
+    if (typeof a.animationName === 'string' && a.animationName.startsWith('hero-')) a.currentTime = 0
+  }
+}
+
 function assemble() {
   stone.classList.add('assembling')
   const layer = document.createElement('div')
@@ -78,10 +86,24 @@ function assemble() {
 
   root.classList.remove('hero-intro')
   void stone.offsetWidth // the start state is computed before the transitions are set
-  const fallback = reveal()
-  if (fallback) fallback.currentTime = 0 // the 2.5 s fallback counts from here
+  restartFallbacks() // the 2.5 s fallbacks count from here
+  const set = performance.now()
+
+  /** The end state: the static page, as without JavaScript. */
+  const finish = () => {
+    layer.remove()
+    stone.classList.remove('assembling', 'resolving')
+    for (const el of shards) {
+      el.style.transition = ''
+      el.style.transform = ''
+      el.style.opacity = ''
+    }
+  }
 
   requestAnimationFrame(() => {
+    // A background tab gets its first frame only when shown, after the fallback may have shown the screenshot:
+    // too late for the flight to end before the fallback, so show the stone as it is.
+    if (performance.now() - set > 500) return finish()
     for (const it of items) {
       const d = `${it.delay}ms`
       it.el.style.transition =
@@ -112,15 +134,7 @@ function assemble() {
         it.el.style.opacity = '0'
       }
     }, landed + SETTLE)
-    setTimeout(() => {
-      layer.remove()
-      stone.classList.remove('assembling', 'resolving')
-      for (const el of shards) {
-        el.style.transition = ''
-        el.style.transform = ''
-        el.style.opacity = ''
-      }
-    }, landed + SETTLE + FADE)
+    setTimeout(finish, landed + SETTLE + FADE)
   })
 }
 
@@ -146,6 +160,12 @@ function follow() {
     last = { x: e.clientX, y: e.clientY }
     schedule()
   })
+  // Once a shard is back in place, it keeps no inline style.
+  for (const el of shards) {
+    el.addEventListener('transitionend', () => {
+      if (!el.style.transform && !stone.classList.contains('assembling')) el.style.transition = ''
+    })
+  }
   hero.addEventListener('pointerleave', () => {
     last = null
     schedule()

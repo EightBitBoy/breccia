@@ -262,6 +262,13 @@ h1 {
   animation: hero-reveal 1ms 2.5s forwards;
 }
 
+/* The same fallback for what hero.js may have left mid-flight: the frame shards land, the mosaic goes. Animations
+   override the inline start styles. */
+@keyframes hero-reveal-shard { to { opacity: calc(0.55 + var(--d) * 0.4); transform: none; } }
+@keyframes hero-hide { to { opacity: 0; visibility: hidden; } }
+.stone.assembling .shard { animation: hero-reveal-shard 1ms 2.5s forwards; }
+.stone.assembling .tiles { animation: hero-hide 1ms 2.5s forwards; }
+
 .stone.assembling.resolving img.shot {
   opacity: 1;
   transition: opacity 440ms ease-in-out; /* done before hero.js clears the classes 500 ms later */
