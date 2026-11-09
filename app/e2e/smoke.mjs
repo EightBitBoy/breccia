@@ -2971,6 +2971,119 @@ try {
   await page.locator('[data-testid="nav-journal"]').click()
   console.log('PASS 121 the preview follows only the colors under the pointer, the thumbs stay in their tracks, and the sliders say when they hold the page color')
 
+  // 122: a pick from a link on a day page gives the focus back to that link (the second of two to the same page), as
+  // Esc in the menu does; an open picker follows its link when the day changes on disk; a right-click beside selected
+  // text opens no menu, one on the selected text keeps the browser's; a link that goes while its picker is open leaves
+  // the picker where it is, and Esc then writes nothing and throws nothing.
+  const errors122 = []
+  const onError122 = (e) => errors122.push(String(e))
+  page.on('pageerror', onError122)
+  const tone122 = join(pagesDir, 'Tone 122.md')
+  writeFileSync(tone122, 'color:: blue\n- t\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:tone 122"]').waitFor({ timeout: 10_000 })
+  const day122 = join(folder, 'journals', `${dayKey(9)}.md`)
+  const journal122 = '- first [[Tone 122]]\n- twice [[Tone 122]] and [[Tone 122]]\n- plain words\n'
+  writeFileSync(day122, journal122)
+  const day9 = await showDay(dayKey(9), 'plain words')
+  await day9.locator('[data-testid="day-title"]').click()
+  const rows122 = page.locator('.main .block[data-block-id]')
+  await waitFor('122 the day page shows the washes', () => washesOf(rows122), 'blue blue -')
+  /** The index of the focused element among the row's page links (-1: none of them). */
+  const focusedLinkIn = (row) => row.evaluate((el) => [...el.querySelectorAll('a.link')].indexOf(document.activeElement))
+  const colorFrom = async (link) => {
+    await link.click({ button: 'right' })
+    await page.locator('[data-testid="link-color"]').click()
+    await picker.waitFor()
+  }
+  // A pick on a day page writes the page, and the focus goes back to the link it came from.
+  await colorFrom(rows122.nth(1).locator('a.link').nth(1))
+  await option('green').click()
+  await expectFile('122 a pick on a day page writes the page', 'color:: green\n- t\n', tone122)
+  await waitFor('122 green washes', () => washesOf(rows122), 'green green -')
+  await waitFor('122 the focus is back on the second link', () => focusedLinkIn(rows122.nth(1)), 1)
+  // Esc in the menu gives the focus back to the link too.
+  await page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur())
+  await rows122.nth(1).locator('a.link').nth(1).click({ button: 'right' })
+  await linkColorMenu.waitFor()
+  await kb.press('Escape')
+  await linkColorMenu.waitFor({ state: 'detached' })
+  await waitFor('122 Esc in the menu gives the focus back to the link', () => focusedLinkIn(rows122.nth(1)), 1)
+  // Two blocks written above the link while its picker is open: the picker moves with the link.
+  await colorFrom(rows122.nth(1).locator('a.link').nth(1))
+  writeFileSync(day122, `- new one\n- new two\n${journal122}`)
+  await waitFor('122 five rows', () => rows122.count(), 5)
+  const pickerAtLink = async () => {
+    const l = await rows122.nth(3).locator('a.link').nth(1).boundingBox()
+    const p = await picker.boundingBox()
+    const ok = Math.abs(p.y - (l.y + l.height + 4)) <= 2 && Math.abs(p.x - l.x) <= 2
+    return ok || `picker at ${p.x},${p.y}, link at ${l.x},${l.y} (height ${l.height})`
+  }
+  await waitFor('122 the picker follows its link', pickerAtLink, true)
+  await option('teal').click()
+  await expectFile('122 a pick after a re-send writes the page', 'color:: teal\n- t\n', tone122)
+  await waitFor('122 teal washes', () => washesOf(rows122), '- - teal teal -')
+  await waitFor('122 the focus is back on the second link after the re-send', () => focusedLinkIn(rows122.nth(3)), 1)
+  // The text of the row "first …" selected: a right-click in the row's top padding, beside the text, opens no menu
+  // (its default is prevented); one on the selected word keeps the browser's menu. The events are synthetic, so no
+  // real browser menu opens.
+  const rightClickInSelection = (where) =>
+    rows122.nth(2).evaluate((row, where) => {
+      const content = row.querySelector('.content')
+      const range = document.createRange()
+      range.selectNodeContents(content)
+      const sel = window.getSelection()
+      sel.removeAllRanges()
+      sel.addRange(range)
+      let x, y
+      if (where === 'padding') {
+        const r = content.getBoundingClientRect()
+        x = r.left + 4
+        y = row.getBoundingClientRect().top + 2
+      } else {
+        const walker = document.createTreeWalker(content, NodeFilter.SHOW_TEXT)
+        let text = walker.nextNode()
+        while (text && !text.data.includes('first')) text = walker.nextNode()
+        const word = document.createRange()
+        word.setStart(text, text.data.indexOf('first'))
+        word.setEnd(text, text.data.indexOf('first') + 5)
+        const b = word.getBoundingClientRect()
+        x = (b.left + b.right) / 2
+        y = (b.top + b.bottom) / 2
+      }
+      const el = document.elementFromPoint(x, y)
+      const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true, clientX: x, clientY: y, button: 2 })
+      const kept = el.dispatchEvent(ev)
+      return { onRow: el === row, inContent: !!el.closest('.content'), kept }
+    }, where)
+  const beside122 = await rightClickInSelection('padding')
+  assert(beside122.onRow, `122 the padding point is not on the row: ${JSON.stringify(beside122)}`)
+  assert(!beside122.kept, '122 a right-click beside the selected text keeps the browser menu')
+  const onWord122 = await rightClickInSelection('word')
+  assert(onWord122.inContent, `122 the word point is not in the text: ${JSON.stringify(onWord122)}`)
+  assert(onWord122.kept, '122 a right-click on the selected text has no browser menu')
+  await frames()
+  assert((await page.locator('[data-testid="link-color-menu"]').count()) === 0, '122 a right-click on selected text opened the link menu')
+  await page.evaluate(() => window.getSelection()?.removeAllRanges())
+  // The link's block goes while its picker is open: the picker stays where it is; Esc writes nothing.
+  await colorFrom(rows122.nth(2).locator('a.link').first())
+  const open122 = await picker.boundingBox()
+  writeFileSync(day122, '- new one\n- new two\n- twice [[Tone 122]] and [[Tone 122]]\n- plain words\n')
+  await waitFor('122 four rows', () => rows122.count(), 4)
+  await frames()
+  assert((await picker.count()) === 1, '122 the picker closed when its link went')
+  const left122 = await picker.boundingBox()
+  assert(Math.abs(left122.x - open122.x) <= 2 && Math.abs(left122.y - open122.y) <= 2, `122 the picker moved from ${open122.x},${open122.y} to ${left122.x},${left122.y}`)
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  await frames()
+  assert(!(await page.evaluate(() => !!document.activeElement?.closest('a.link'))), '122 the focus is on a link after its link went')
+  assert(readAt(tone122) === 'color:: teal\n- t\n', `122 Esc wrote the page: ${JSON.stringify(readAt(tone122))}`)
+  page.off('pageerror', onError122)
+  assert(errors122.length === 0, `122 page errors: ${errors122.join(' | ')}`)
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 122 a pick from a link on a day page, the focus back on the link, the picker following its link, and no menu beside a selection')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
