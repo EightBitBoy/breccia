@@ -46,10 +46,9 @@ ledger `.superpowers/sdd/2026-11-09-04-followups-of-plans-1-3/progress.md`): the
 and screen reader text, the focus and picker position for the link menu, and the jump highlight and selection on a
 colored row. The owner checks review items 51 to 58.
 
-Owner request (2026-11-09): after plan 4, implement backlog #73 (board card buttons need a visible
-background) directly, as a small change without a plan: a failing test first, the change, the checks, a
-`docs/review.md` item, a commit.
-Then (owner, 2026-11-09) backlog #74 the same way: a theme picker button in the status bar next to the help button.
+Backlog #73 (board card button background) is done; the owner checks review item 59.
+Owner request (2026-11-09): backlog #74 is next, implemented directly as a small change without a plan (a failing
+test first, the change, the checks, a `docs/review.md` item, a commit): a theme picker button in the status bar next to the help button.
 Afterwards release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
 minor bump for the new features is the controller's ruling).
 At the 1.3.0 release pause, delete the changelog line that comes from commit 1a3bc80 ("a picker opened on a link that
@@ -67,7 +66,7 @@ Candidates for the next plan, to settle with the owner:
 ## Test baseline
 
 - `just test`: Vitest (926 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 184 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 185 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
 

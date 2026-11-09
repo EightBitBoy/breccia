@@ -443,7 +443,7 @@ Owner, 2026-11-07: custom page colors start with a hue slider only (lightness an
 that proves too limited, add a second slider for vividness. The app would still lower it per theme wherever text
 readability needs that, so the slider can seem to stop at some point; the picker's preview line shows why.
 
-## 73. Board card buttons need a visible background (Boards)
+## 73. Board card buttons need a visible background (Boards) (done 2026-11-09)
 
 Owner, 2026-11-09: on the board, hovering a card shows two small buttons, the arrow (↗, opens the page or journal day
 at the block) and the "…" card menu. Their background matches the card's background, so they hardly stand out. Give

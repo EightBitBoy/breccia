@@ -83,6 +83,11 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    highlight starts in the selection color, fades back to the band's color, and keeps the band's rounded ends.
 58. [ ] **Selected row at a band's end:** Shift-click the first or the last row of a color band: the selection keeps the
    band's rounded end. Say if you want other corners.
+59. [ ] **Card buttons:** hover a board card in each theme: the arrow and the "…" menu button in its top right now
+   have a background of their own, a little darker or lighter than the card, and their symbols are in the main text
+   color. Under the pointer a button changes its background again, and the "…" button keeps that look while its menu
+   is open. In Teal the hovered button turns darker rather than lighter, because the text there is too faint on a
+   lighter one. Say if you want a stronger or weaker background.
 
 ## Slash menu
 
