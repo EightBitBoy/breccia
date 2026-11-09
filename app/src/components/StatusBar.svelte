@@ -1,16 +1,23 @@
 <script lang="ts">
   // A thin strip along the bottom of the window (§7.13); empty and quiet with nothing to show.
   import type { StatusItem } from '../lib/status'
+  import type { ThemeChoice } from '../lib/theme'
+  import ThemeMenu from './ThemeMenu.svelte'
 
   let {
     left,
     right,
     onitem,
+    theme,
+    ontheme,
   }: {
     left: StatusItem[]
     right: StatusItem[]
     /** A click on an item with an action (Enter and Space press it too). */
     onitem: (id: string) => void
+    /** The theme item's current choice and its pick (the same as Settings > Appearance). */
+    theme: ThemeChoice
+    ontheme: (c: ThemeChoice) => void
   } = $props()
 </script>
 
@@ -32,7 +39,9 @@
 {#snippet items(list: StatusItem[], side: 'left' | 'right')}
   <div class="status-side {side}">
     {#each list as item (item.id)}
-      {#if item.action}
+      {#if item.id === 'theme'}
+        <ThemeMenu {item} {theme} {ontheme} />
+      {:else if item.action}
         <button
           type="button"
           class="status-item"
@@ -40,7 +49,7 @@
           class:icon={item.icon !== undefined}
           class:pressed={item.pressed === true}
           aria-pressed={item.pressed}
-          aria-label={item.icon ? item.tip : undefined}
+          aria-label={item.label ?? (item.icon ? item.tip : undefined)}
           data-testid="status-item"
           data-id={item.id}
           title={item.tip}

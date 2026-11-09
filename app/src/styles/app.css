@@ -596,7 +596,11 @@ button.status-item.warning { color: var(--c-red); }
 /* An icon button (the Git history) sits close to the item before it; pressed while its view is open. */
 button.status-item.icon { margin-left: -14px; }
 button.status-item.icon svg { width: 13px; height: 13px; }
-button.status-item.pressed { background: var(--select); color: var(--text); }
+button.status-item.pressed, button.status-item[data-state='open'] { background: var(--select); color: var(--text); }
+/* The theme menu (status bar): a check mark before the current choice. */
+.theme-menu { min-width: 130px; }
+.theme-menu-item { position: relative; padding-left: 26px; }
+.theme-menu-item[data-state='checked']::before { content: '✓'; position: absolute; left: 9px; }
 .status-item .status-progress {
   position: absolute; left: 0; bottom: 0; height: 2px; background: var(--accent);
   transition: width 0.2s ease-out;

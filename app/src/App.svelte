@@ -68,7 +68,7 @@
   import { StatusItems } from './lib/status.svelte'
   import { Zoom } from './lib/zoom.svelte'
   import { WheelSteps, zoomItem, zoomKey } from './lib/zoom'
-  import { helpItem, indexItem } from './lib/status'
+  import { helpItem, indexItem, themeItem } from './lib/status'
   import { GitStatus } from './lib/git.svelte'
   import { gitClick } from './lib/git'
   import { historyItem, historyStale } from './lib/gitLog'
@@ -323,6 +323,11 @@
   $effect(() => {
     const item = folder ? helpItem(helpShown) : null
     untrack(() => (item ? status.set(item) : status.clear('help')))
+  })
+  /** The theme button left of "?": its menu offers the Settings > Appearance choices (`chooseTheme`). */
+  $effect(() => {
+    const item = folder ? themeItem() : null
+    untrack(() => (item ? status.set(item) : status.clear('theme')))
   })
   /** The Git history; `git.log` skips the command queue, so a slow log never holds typed text up. */
   const gitLog = new GitLog({
@@ -1362,10 +1367,12 @@
     const t = e.target as Element | null
     // The search dialog and its backdrop sit over the main area: a press there, even one that dismisses
     // the search, is not a press outside the card or the editor. bits-ui closes it on the click, after this.
-    // The date picker too: a press on it leaves the edited block alone, so Esc can go back to it.
-    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]')) return
-    // The ? button opens the list without taking the focus (or the editing) from the block.
-    if (t.closest('[data-testid="status-item"][data-id="help"]')) {
+    // The date picker too: a press on it leaves the edited block alone, so Esc can go back to it. The theme menu
+    // likewise: a pick gives the focus back to the edited block.
+    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-theme-menu]')) return
+    // The ? button opens the list, and the theme button its menu, without taking the focus (or the editing) from
+    // the block.
+    if (t.closest('[data-testid="status-item"]:is([data-id="help"], [data-id="theme"])')) {
       e.preventDefault()
       return
     }
@@ -1827,6 +1834,6 @@
         onmissing={recentMissing}
       />
     {/if}
-    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} />
+    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme} ontheme={chooseTheme} />
   </div>
 {/if}

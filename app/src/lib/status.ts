@@ -18,6 +18,8 @@ export interface StatusItem {
   icon?: 'history'
   /** A button that is pressed (its view is open). */
   pressed?: boolean
+  /** The button's accessible name, when its text is a symbol. */
+  label?: string
 }
 
 /** The items split by side, each sorted by `order`, then `id`. */
@@ -59,5 +61,20 @@ export function helpItem(shown: boolean): StatusItem {
     action: true,
     tip: 'Keyboard shortcuts (F1)',
     pressed: shown,
+  }
+}
+
+/** The button just left of "?" that opens the theme menu (the same choices as Settings > Appearance). */
+export function themeItem(): StatusItem {
+  return {
+    id: 'theme',
+    side: 'right',
+    order: 35,
+    text: '◐',
+    progress: null,
+    tone: 'normal',
+    action: true,
+    tip: 'Theme',
+    label: 'Theme',
   }
 }
