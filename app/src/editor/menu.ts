@@ -20,6 +20,8 @@ export interface MenuSource<I, Q extends MenuQuery = MenuQuery> {
   label(item: I): string
   /** A note drawn after the label. */
   note?(item: I): string | null
+  /** A state colour name: the label is drawn as a state chip, like a task keyword on a page. */
+  color?(item: I): string | null
   /** The menu closed: forget anything kept for this query. */
   reset?(): void
 }
@@ -27,6 +29,7 @@ export interface MenuSource<I, Q extends MenuQuery = MenuQuery> {
 export interface MenuEntry {
   label: string
   note: string | null
+  color: string | null
 }
 
 export interface MenuView {
@@ -70,7 +73,7 @@ export function createCaretMenu<I, Q extends MenuQuery = MenuQuery>(source: Menu
   function publish() {
     hooks.show(
       open && {
-        items: open.items.map((i) => ({ label: source.label(i), note: source.note?.(i) ?? null })),
+        items: open.items.map((i) => ({ label: source.label(i), note: source.note?.(i) ?? null, color: source.color?.(i) ?? null })),
         index: open.index,
         left: open.left,
         top: open.top,

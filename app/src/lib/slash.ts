@@ -1,5 +1,5 @@
 export type SlashItem =
-  | { kind: 'state'; keyword: string; label: string }
+  | { kind: 'state'; keyword: string; label: string; color?: string }
   | { kind: 'link'; label: string }
   | { kind: 'date'; label: string }
   | { kind: 'time'; label: string }
@@ -19,9 +19,9 @@ function matches(label: string, query: string): boolean {
     .some((w) => w.startsWith(q))
 }
 
-export function slashItems(states: { keyword: string }[], query: string): SlashItem[] {
+export function slashItems(states: { keyword: string; color?: string }[], query: string): SlashItem[] {
   const all: SlashItem[] = [
-    ...states.map((s): SlashItem => ({ kind: 'state', keyword: s.keyword, label: s.keyword })),
+    ...states.map((s): SlashItem => ({ kind: 'state', keyword: s.keyword, label: s.keyword, color: s.color })),
     { kind: 'link', label: 'Link to page' },
     { kind: 'date', label: "Today's date" },
     { kind: 'time', label: 'Current time' },

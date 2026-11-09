@@ -6,7 +6,7 @@ import { createCaretMenu, type MenuHooks, type MenuSource, type Slash } from './
 
 export interface SlashHooks extends MenuHooks {
   /** The configured states, in order. */
-  states(): { keyword: string }[]
+  states(): { keyword: string; color?: string }[]
   /** A state was chosen; the `/query` is already gone from the editor's text. */
   setState(keyword: string): void
 }
@@ -31,6 +31,7 @@ export function slashSource(hooks: Pick<SlashHooks, 'states' | 'setState'>): Men
     },
     label: (item) => item.label,
     note: (item) => (item.kind === 'state' ? 'state' : null),
+    color: (item) => (item.kind === 'state' ? (item.color ?? 'grey') : null),
   }
 }
 

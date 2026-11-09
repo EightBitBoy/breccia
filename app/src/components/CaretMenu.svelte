@@ -22,7 +22,7 @@
         onchoose(i)
       }}
     >
-      {item.label}{#if item.note}<span class="kind">{item.note}</span>{/if}
+      {#if item.color}<span class="st" data-color={item.color}>{item.label}</span>{:else}{item.label}{/if}{#if item.note}<span class="kind">{item.note}</span>{/if}
     </div>
   {/each}
 </div>

@@ -17,6 +17,11 @@ test('slash items filter', () => {
   expect(slashItems(s, 'TODO')[0]).toEqual({ kind: 'state', keyword: 'TODO', label: 'TODO' })
 })
 
+test('a state item carries its colour for the menu chip', () => {
+  const s = [{ keyword: 'DOING', color: 'amber' }]
+  expect(slashItems(s, 'doi')[0]).toEqual({ kind: 'state', keyword: 'DOING', label: 'DOING', color: 'amber' })
+})
+
 test('removing the query drops the space before it only at the end of the text', () => {
   // "TODO later /do": the slash is at 11, the caret at 14.
   expect(removeSlash('TODO later /do', 11, 14)).toEqual({ text: 'TODO later', at: 10 })

@@ -40,3 +40,7 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 ## Custom page colors
 
 38. [ ] **Undo:** one `Ctrl Z` takes back one whole drag or one Enter on the slider.
+
+## Slash menu
+
+42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain text. Change a state color in Settings and the menu follows.
