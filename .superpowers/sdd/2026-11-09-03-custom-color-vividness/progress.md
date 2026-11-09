@@ -13,3 +13,5 @@ Task 1: ⚠ "page.setColor canonicalizes via parse_color/Display" checked by con
 Task 1: complete (commits e09d58a..4e40b19, review clean)
 Task 2: minor (deferred): intermediate commit 0c250bc was red (fixed in 0ba34d6); long module doc comment line in format_doc.rs
 Task 2: complete (commits f510c3a..0ba34d6, review clean)
+Task 3: minor (deferred): an optional extra pickerTab test case (reviewer's suggestion)
+Task 3: complete (commits 5648801..89418f3, review clean)
