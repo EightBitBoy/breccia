@@ -11,7 +11,8 @@ test('slash query only at word start', () => {
 test('slash items filter', () => {
   const s = [{ keyword: 'TODO' }, { keyword: 'DOING' }, { keyword: 'WAITING' }]
   expect(slashItems(s, 'do').map((i) => i.label)).toEqual(['DOING'])
-  expect(slashItems(s, 't').map((i) => i.label)).toEqual(['TODO', 'Link to page', "Today's date", 'Current time'])
+  expect(slashItems(s, 't').map((i) => i.label)).toEqual(['TODO', 'Link to page', "Today's date"])
+  expect(slashItems(s, 'date').map((i) => i.label)).toEqual(["Today's date", 'Date…'])
   expect(slashItems(s, 'page').map((i) => i.label)).toEqual(['Link to page'])
   expect(slashItems(s, '').map((i) => i.label)).toHaveLength(6)
   expect(slashItems(s, 'TODO')[0]).toEqual({ kind: 'state', keyword: 'TODO', label: 'TODO' })
@@ -44,11 +45,7 @@ test('what each item inserts, with the caret offset in it', () => {
   const now = new Date(2026, 0, 5, 7, 3)
   expect(slashInsert({ kind: 'link', label: 'Link to page' }, now)).toEqual({ text: '[[]]', caret: 2 })
   expect(slashInsert({ kind: 'date', label: "Today's date" }, now)).toEqual({ text: '[[2026-01-05]]', caret: 14 })
-  expect(slashInsert({ kind: 'time', label: 'Current time' }, now)).toEqual({ text: '07:03', caret: 5 })
-  expect(slashInsert({ kind: 'time', label: 'Current time' }, new Date(2026, 0, 5, 23, 59))).toEqual({
-    text: '23:59',
-    caret: 5,
-  })
+  expect(slashInsert({ kind: 'pickdate', label: 'Date…' }, now)).toEqual({ text: '', caret: 0 })
   expect(slashInsert({ kind: 'state', keyword: 'TODO', label: 'TODO' }, now)).toBeNull()
 })
 
@@ -59,6 +56,18 @@ test('slashEdit for a state removes the query and the space, and names the state
     insert: '',
     caret: 10,
     setState: 'DOING',
+    pickDate: false,
+  })
+})
+
+test('slashEdit for the date picker removes only the query, keeps the space, and asks for the picker', () => {
+  expect(slashEdit('see /da', 4, 7, { kind: 'pickdate', label: 'Date…' }, new Date())).toEqual({
+    from: 4,
+    to: 7,
+    insert: '',
+    caret: 4,
+    setState: null,
+    pickDate: true,
   })
 })
 
@@ -69,5 +78,6 @@ test('slashEdit for a link inserts brackets with the caret inside', () => {
     insert: '[[]]',
     caret: 6,
     setState: null,
+    pickDate: false,
   })
 })

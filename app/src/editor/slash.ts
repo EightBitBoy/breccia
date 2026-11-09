@@ -1,5 +1,5 @@
 // The slash menu inside the block editor: a caret-menu source that finds
-// `/query` before the caret and applies the chosen state, link, date or time.
+// `/query` before the caret and applies the chosen state, link or date.
 import { EditorSelection } from '@codemirror/state'
 import { slashEdit, slashItems, slashQuery, type SlashItem } from '../lib/slash'
 import { createCaretMenu, type MenuHooks, type MenuSource, type Slash } from './menu'
@@ -9,9 +9,11 @@ export interface SlashHooks extends MenuHooks {
   states(): { keyword: string; color?: string }[]
   /** A state was chosen; the `/query` is already gone from the editor's text. */
   setState(keyword: string): void
+  /** "Date…" was chosen; the `/query` is already gone. Opens the date picker. */
+  pickDate(): void
 }
 
-export function slashSource(hooks: Pick<SlashHooks, 'states' | 'setState'>): MenuSource<SlashItem> {
+export function slashSource(hooks: Pick<SlashHooks, 'states' | 'setState' | 'pickDate'>): MenuSource<SlashItem> {
   return {
     query(before) {
       const q = slashQuery(before)
@@ -28,6 +30,7 @@ export function slashSource(hooks: Pick<SlashHooks, 'states' | 'setState'>): Men
         scrollIntoView: true,
       })
       if (r.setState !== null) hooks.setState(r.setState)
+      if (r.pickDate) hooks.pickDate()
     },
     label: (item) => item.label,
     note: (item) => (item.kind === 'state' ? 'state' : null),

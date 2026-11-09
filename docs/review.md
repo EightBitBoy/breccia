@@ -44,3 +44,7 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 ## Slash menu
 
 42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain text. Change a state color in Settings and the menu follows.
+43. [ ] **Slash menu: no "Current time", new "Date…":** `/` no longer offers "Current time". "Today's date" stays. A new
+   "Date…" (also found by typing `/date`) opens the date picker; picking a day inserts `[[2026-11-09]]`-style link at the caret and
+   puts the focus back in the block. `Esc` closes the picker and returns to the block with nothing inserted. The picker
+   still appears by the sidebar's Journal row (the sidebar is shown first if hidden); say if you want it at the caret.

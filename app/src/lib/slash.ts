@@ -2,7 +2,7 @@ export type SlashItem =
   | { kind: 'state'; keyword: string; label: string; color?: string }
   | { kind: 'link'; label: string }
   | { kind: 'date'; label: string }
-  | { kind: 'time'; label: string }
+  | { kind: 'pickdate'; label: string }
 
 /** `start` is in UTF-16 units (a string index). A `/` at the start or after whitespace, then non-whitespace up to the cursor. */
 export function slashQuery(before: string): { start: number; query: string } | null {
@@ -24,7 +24,7 @@ export function slashItems(states: { keyword: string; color?: string }[], query:
     ...states.map((s): SlashItem => ({ kind: 'state', keyword: s.keyword, label: s.keyword, color: s.color })),
     { kind: 'link', label: 'Link to page' },
     { kind: 'date', label: "Today's date" },
-    { kind: 'time', label: 'Current time' },
+    { kind: 'pickdate', label: 'Date…' },
   ]
   return all.filter((i) => matches(i.label, query))
 }
@@ -55,10 +55,9 @@ export function slashInsert(item: SlashItem, now: Date): { text: string; caret: 
       const text = `[[${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}]]`
       return { text, caret: text.length }
     }
-    case 'time': {
-      const text = `${pad(now.getHours())}:${pad(now.getMinutes())}`
-      return { text, caret: text.length }
-    }
+    // The date picker inserts the picked day later; the query goes now.
+    case 'pickdate':
+      return { text: '', caret: 0 }
   }
 }
 
@@ -66,7 +65,7 @@ export function slashInsert(item: SlashItem, now: Date): { text: string; caret: 
  * The edit that applies `item` to `doc`, where the `/query` runs from `start`
  * (the slash) to `end` (the caret), both UTF-16: replace `from..to` with
  * `insert` and put the caret at `caret`. Only a state inserts nothing; then the
- * space before the slash goes too, and `setState` names the state.
+ * space before the slash goes too, and `setState` names the state. `pickDate` asks for the date picker.
  */
 export function slashEdit(
   doc: string,
@@ -74,7 +73,7 @@ export function slashEdit(
   end: number,
   item: SlashItem,
   now: Date,
-): { from: number; to: number; insert: string; caret: number; setState: string | null } {
+): { from: number; to: number; insert: string; caret: number; setState: string | null; pickDate: boolean } {
   const insert = slashInsert(item, now)
   const { at } = removeSlash(doc, start, end, insert === null)
   return {
@@ -83,5 +82,6 @@ export function slashEdit(
     insert: insert?.text ?? '',
     caret: at + (insert?.caret ?? 0),
     setState: item.kind === 'state' ? item.keyword : null,
+    pickDate: item.kind === 'pickdate',
   }
 }

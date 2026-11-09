@@ -31,6 +31,8 @@ export interface EditorEnv {
   notify(n: Notice): void
   /** Draws a caret menu (the slash menu or the link completion), or hides it with null. */
   showMenu(which: CaretMenuKind, m: MenuView | null): void
+  /** Opens the date picker; a pick calls `onpick` with the day's key, closing it calls nothing. */
+  pickDate?(onpick: (key: string) => void): void
   selectWithNeighbour(id: BlockId, dir: -1 | 1): void
   /** Test seams; default to mountEditor and the `[data-block-id="…"] .editor-slot` lookup. */
   mount?: typeof mountEditor
@@ -400,6 +402,13 @@ export class EditorHost {
       show: (m) => this.env.showMenu('slash', m),
       // `run` sends the pending text (without the `/query`) first.
       setState: (keyword) => void this.exec({ type: 'blocks.setState', ids: [id], keyword }),
+      pickDate: () =>
+        this.env.pickDate?.((key) => {
+          // The block may have been left while the picker was open.
+          if (this.mounted?.id !== id) return
+          this.mounted.ed.insert(`[[${key}]]`)
+          this.mounted.ed.focus()
+        }),
       canApply,
       blocked: () => link.active(),
     })

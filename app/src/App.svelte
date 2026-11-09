@@ -217,6 +217,12 @@
       states: () => states,
       notify: (n) => notify(n),
       showMenu: (which, m) => (which === 'link' ? (linkMenu = m) : (slashMenu = m)),
+      pickDate: (onpick) => {
+        if (dialogOpen() || search.shown) return
+        if (sidebarHidden) toggleSidebar()
+        pickerInsert = onpick
+        pickerOpen = true
+      },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
     },
     folded,
@@ -762,6 +768,12 @@
 
   /** The date picker by the sidebar's Journal row is open. */
   let pickerOpen = $state(false)
+  /** Set when the slash menu's "Date…" opened the picker: a pick goes to the editor, not to the journal. */
+  let pickerInsert: ((key: string) => void) | null = null
+
+  $effect(() => {
+    if (!pickerOpen) pickerInsert = null
+  })
 
   /** `Ctrl Shift D` opens it (a hidden sidebar is shown first), a second press closes it; not over a dialog. */
   function togglePicker() {
@@ -779,6 +791,12 @@
 
   /** A picked day jumps as a typed date does; the edited block's text is sent first. Nothing is written. */
   async function pickDay(key: string) {
+    if (pickerInsert) {
+      const insert = pickerInsert
+      pickerInsert = null
+      insert(key)
+      return
+    }
     host.leave()
     sel.clear()
     try {

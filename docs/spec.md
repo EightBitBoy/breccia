@@ -226,7 +226,8 @@ second click on the Git history button is Back.
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
 - **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` does the same for tags.
 - **Slash menu:** `/` at the start of a word opens a menu with every configured state (`/todo`, `/waiting`, …), "link
-  to page", "today's date" and "current time".
+  to page", "today's date" and "date…", which opens the date picker at the sidebar and inserts the picked day as a
+  `[[YYYY-MM-DD]]` link at the caret.
 - Selecting several blocks (Shift-click or `Shift ↑/↓` from editing) allows indent, outdent, move, delete and set state
   for all of them.
 - Clicking a rendered `[[link]]` or `#tag` opens that page; `Ctrl`-click is reserved for "open in new tab" later.
