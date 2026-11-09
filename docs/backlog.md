@@ -458,3 +458,20 @@ Owner, 2026-11-09: in the status bar, next to the help ("?") button, add a butto
 theme can be changed without opening Settings. It offers the same choices as Settings > Appearance (System and the six
 themes) and behaves the same: the choice applies at once and is kept on this computer only. Implement it directly, as
 a small change without a plan, right after backlog #73; then release a new version.
+
+## 75. Faint lines between rows of a page color wash (Page colors)
+
+Owner, 2026-11-09, with a screenshot (dark theme, a journal day, a blue wash behind a DOING row and behind a DONE
+row with sub-blocks): the washes are drawn as one band, but faint horizontal lines show between the rows inside it,
+at the border of each block. The screenshot is the owner's own notes, so it is not in the repository; it was
+`Pictures\Screenshots\Artifact.png` on the owner's PC.
+
+Not yet reproduced. Likely cause (a guess to test first): every block draws its own see-through wash background
+(`.block.wash` in `app/src/styles/app.css`), so at a fractional pixel height (zoom, or a display scale such as 125 %)
+two neighbouring rows are anti-aliased at their shared edge and a thin seam of the page background shows. A custom
+wash is opaque and a named wash is see-through, so check whether named and custom colors both show it, and at which
+zoom levels and display scales.
+
+Ways to fix, for the plan to weigh: draw the wash once per run of blocks (one element behind the group); or overlap
+neighbouring rows by a pixel without doubling the see-through color; or snap the row heights to whole pixels. Needs an
+e2e or screenshot check at a few zoom levels, in all themes.
