@@ -25,3 +25,5 @@ Owner approved the plan 2026-11-09 (AskUserQuestion "Approve, build it").
 11. **T6:** use `curl.exe` or the Bash tool; T6 Step 3's "item 62" is written by T7.
 
 Task 1: complete — commit 3a3fc02, review approved (spec pass, quality approved, 3 minor non-issues).
+
+Task 2: complete — commit 29ec8b5 (+ comment fix), review approved. Parked: no test for 'invents no feature' (hand-checked); light accent links on surface 4.67:1 (little headroom).

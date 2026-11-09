@@ -5,7 +5,7 @@
   --bg: #1b1b1d;
   --surface: #232326;
   --text: #d9d9dc;
-  --muted: #9a9aa2;
+  --muted: #9a9aa2; /* lighter than the app's #7c7c84, for 4.5:1 text contrast */
   --accent: #7aa2f7;
   --on-accent: #141415;
   --focus: #8fb0f9;
