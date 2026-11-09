@@ -22,3 +22,7 @@ Task 4: minor (deferred): step 123 also assert the animation end differs from wh
 Task 4: complete (commits 0c9122a..f0d9e61, review clean; e2e 184 PASS x2)
 Task 5: minor (deferred): review.md:72 is 122 columns; review item 52 says "a click under the thumb does not change the value" but no code or test backs it (fix in final wave: remove or make true); long struck lines in plan 1 follow-ups
 Task 5: complete (commits fa5b54b..8207b9d, review clean)
+Final review (opus): ready with fixes. Fix: (1) step 121 hover of the hue slider enables Vividness (no test covers pointer path, PageColorGrid.svelte:224); (2) step 95 race (smoke.mjs 1884/1897/1905) wait for the page title to change; (3) review item 52 text wrong (only a press on the thumb's exact middle keeps the value) + follow-up for grabbing the thumb without a jump; free: review.md:72 length, two double blank lines.
+Release pause (1.3.0): delete the changelog line from 1a3bc80 ("a picker opened on a link that just went…") — it fixes a bug from this same plan that no release had, wording unclear.
+- Ruling: one opus fix wave for 1, 2, 3 and the two free items; everything else stays a follow-up — nothing builds on it — cost if wrong: small cleanups wait
+Final fix wave: dispatched (opus), FIX_BASE 13ec07c
