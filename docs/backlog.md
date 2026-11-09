@@ -451,3 +451,10 @@ them a different background color rather than a border (the owner prefers color 
 has to work in all six themes and the System dark block, and in the hover and open states (`app/src/styles/app.css`,
 `.card .jump`, `.card .card-menu`, `.card .tools button`; colors only in `app/src/styles/tokens.css`). Check the
 contrast of the arrow and the dots against the new background.
+
+## 74. A theme picker in the status bar (Themes)
+
+Owner, 2026-11-09: in the status bar, next to the help ("?") button, add a button that opens a theme picker, so the
+theme can be changed without opening Settings. It offers the same choices as Settings > Appearance (System and the six
+themes) and behaves the same: the choice applies at once and is kept on this computer only. Implement it directly, as
+a small change without a plan, right after backlog #73; then release a new version.

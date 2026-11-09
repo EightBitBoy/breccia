@@ -11,3 +11,5 @@ Task 2: minor (deferred): opening has no focus fallback if the content can't tak
 Task 2: concern: e2e step 95 (journal date picker) failed once in the implementer's runs — reviewer judges a pre-existing race (waits for start-writing, which the previous empty day also shows, smoke.mjs:1897); not caused by this change. Final review to decide whether to fix.
 Task 2: complete (commits 86e3ed6..29e294a, review clean; e2e 179 PASS x2)
 Owner request: after plan 4 finishes, implement backlog #73 directly (small change, no plan). Recorded in docs/STATUS.md.
+Owner request: after #73, implement backlog #74 (theme picker button in the status bar next to "?") directly, then release a new version.
+- Ruling: the release is 1.3.0 (owner gave no number; plan 4 and #73/#74 are user-visible changes, a minor bump) — cost if wrong: the owner re-cuts with another number before the tag is pushed, or gets a skipped version number

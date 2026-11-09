@@ -44,6 +44,9 @@ Released since 1.1.0: 1.1.1 and 1.2.0 (2026-11-09; 1.1.1: state chips and "Dateâ
 Owner request (2026-11-09): right after plan 4 finishes, implement backlog #73 (board card buttons need a visible
 background) directly, as a small change without a plan: a failing test first, the change, the checks, a
 `docs/review.md` item, a commit.
+Then (owner, 2026-11-09) backlog #74 the same way: a theme picker button in the status bar next to the help button.
+Afterwards release a new application version (1.3.0; the owner asked for "a new version" without a number, so the
+minor bump for the new features is the controller's ruling).
 
 Candidates for the next plan, to settle with the owner:
 
