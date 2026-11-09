@@ -18,3 +18,5 @@ Task 3: review (opus): spec ✅, quality needs fixes — Important: no test coul
 Task 3: fix round 1/5 (2 addressed, 0 open — step 122 edits block text on disk while picker open and after a pick; removes the link and checks the pick's bytes; commits 0011855..4fbb18b)
 Task 3: minor (deferred): refocus only ends on a pointerdown or focusin elsewhere; tabindex written into {@html} content
 Task 3: complete (commits 45c4e62..4fbb18b, review clean after round 1; e2e 183 PASS x2; expected total after Task 4: 184)
+Task 4: minor (deferred): step 123 also assert the animation end differs from white; step 123 covers only the named blue wash, not a custom (opaque) one; getAnimations()[0] should filter by animation name
+Task 4: complete (commits 0c9122a..f0d9e61, review clean; e2e 184 PASS x2)
