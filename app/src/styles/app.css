@@ -237,6 +237,11 @@ a.ext { color: var(--link); }
   position: absolute; top: -2px; bottom: -2px; width: 8px; transform: translateX(-50%); border-radius: 3px;
   box-shadow: 0 0 0 2px var(--card), 0 0 0 3px var(--text); pointer-events: none;
 }
+/* The vividness slider: shaped like the hue slider, its track the hue's washes, its thumb the shown wash. Until a
+   custom hue applies it is greyed out and takes no pointer. */
+.pc-vivid-part { margin-top: 8px; }
+.pc-vivid-part.off { opacity: .4; }
+.pc-vivid-part.off .pc-vivid { pointer-events: none; cursor: default; }
 /* The preview takes the picker's width from the choices above it (no width of its own) and wraps its line in it. */
 .pc-preview {
   contain: inline-size; margin-top: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 5px;
@@ -245,6 +250,7 @@ a.ext { color: var(--link); }
 .pc-preview-wash { padding: 4px 8px; font-size: 15px; line-height: 1.5; color: var(--text); }
 .pc-preview-link { color: var(--link); }
 .pc-preview-tag { color: var(--tag); }
+.pc-preview-note { font-size: 11px; line-height: 1.4; color: var(--muted); }
 .group {
   margin: 12px 10px 4px; font-size: 11px; letter-spacing: .06em;
   text-transform: uppercase; color: var(--muted);
