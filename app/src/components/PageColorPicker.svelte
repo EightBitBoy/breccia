@@ -23,7 +23,6 @@
     onhistory: (redo: boolean) => void
   } = $props()
 
-
   const fill = $derived(color === null ? undefined : swatchValue(color, themeTokens.current))
 
   let open = $state(false)

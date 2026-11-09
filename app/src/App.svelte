@@ -233,7 +233,6 @@
     folded,
   )
 
-
   const sel = new MultiSelect(
     {
       order: () => {
