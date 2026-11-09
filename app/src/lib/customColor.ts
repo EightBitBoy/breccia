@@ -143,7 +143,7 @@ export function customShade(hue: number, t: ThemeTokens, vivid: number = DEFAULT
 
 function compute(hue: number, t: ThemeTokens, vivid: number): CustomShade {
   const l = t.l + CUSTOM_DL * t.ds
-  const base = ruleShade(l, (CUSTOM_CHROMA * t.cs * vivid) / 100, hue)
+  const base = ruleShade(l, CUSTOM_CHROMA * t.cs * (vivid / DEFAULT_VIVID), hue)
   const plain = Math.round(t.wash * 100)
   const full = Math.round((plain * vivid) / 100)
   const floor = Math.ceil(Math.min(full, plain) / 2)

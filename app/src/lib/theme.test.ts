@@ -401,7 +401,7 @@ test('every vividness is readable in every theme', () => {
         expect(contrast(t.link, r.wash), `${at} link`).toBeGreaterThanOrEqual(3)
         expect(contrast(t.tag, r.wash), `${at} tag`).toBeGreaterThanOrEqual(3)
         expect(r.strength, `${at} strength`).toBeLessThanOrEqual(T)
-        const gamut = ruleShade(t.l, (CUSTOM_CHROMA * t.cs * v) / 100, h).chroma
+        const gamut = ruleShade(t.l, CUSTOM_CHROMA * t.cs * (v / DEFAULT_VIVID), h).chroma
         expect(r.limited, `${at} limited`).toBe(r.strength < T || r.chroma < gamut)
         if (v <= 100) expect(r.limited, `${at} limited at or below 100`).toBe(false)
       }
