@@ -250,22 +250,27 @@ A pick is its own undo step: `Ctrl Z` with the swatch focused (right after a pic
 takes it back, and earlier typing stays undoable.
 
 Below the grid and "No color" the picker has a custom part. A "Custom hue" slider runs around the color wheel (0 to
-359): arrows change it by 1, Page Up / Down by 10, Home / End jump to the ends; Tab order is
-given in the next paragraph. On the slider, arrow keys only preview; Enter saves and closes. A drag saves once on release and keeps the picker open, so a
-second drag can follow. A preview line (sample text with a link and a tag, on the color under the pointer or the
-keyboard, in the current theme) follows the 25 cells and the slider; the saved color stays marked. A custom color is
-saved as `color:: hue <h>`. Picking a name after a hue, or a hue after a name, replaces the line. One save is one undo
-step. The right-click "Color…" menu in the journal opens the same picker.
+359): arrows change it by 1, Page Up / Down by 10, Home / End jump to the ends; Tab order is given in the next
+paragraph. On the slider, arrow keys only preview; Enter saves and closes. A drag saves once on release and keeps the
+picker open, so a second drag can follow. A preview line (sample text with a link and a tag, on the color under the
+pointer, else the focused one, in the current theme) follows the 25 cells and the slider; the saved color stays
+marked. Between two grid colors (the gaps) the preview keeps the last one; on the preview box, the labels, the greyed
+Vividness slider and when the pointer leaves the picker it shows the focused choice, and during a slider drag it keeps
+following that slider. A slider that stands at the page's saved color says so to a screen reader ("Hue 212, page
+color", "Vividness 150, page color"). The slider thumbs stay inside their tracks, and both tracks are as wide as the
+grid. A custom color is saved as `color:: hue <h>`. Picking a name after a hue, or a hue after a name, replaces the
+line. One save is one undo step. The right-click "Color…" menu in the journal opens the same picker.
 
 Under the hue slider is a "Vividness" slider (50 to 200, 100 is the normal look). It is always shown, so the picker
-never changes its layout, and it is greyed out (disabled, not a tab stop) until the page's color is a custom hue or the
-hue slider has been reached; after that it stays enabled until the picker closes. Its keys: arrows change it by 5,
+never changes its layout, and it is greyed out (disabled, not a tab stop) until the page's color is a custom hue or
+the hue slider has been reached; after that it stays enabled until the picker closes. Its keys: arrows change it by 5,
 Page Up / Down by 25, Home and End jump to 50 and 200. Tab moves grid, hue slider, vividness slider (only while it is
-enabled), then back to the grid, and Shift Tab the other way. Enter on either slider saves hue and vividness together and closes; a drag saves once on release and keeps
-the picker open. A custom color is saved as `color:: hue <h> vivid <v>`, and `vivid 100` is left out, so a plain hue
-stays `color:: hue <h>`. Picking a name drops the vividness (the file has one `color::` line), and undo brings it back;
-reopening the picker on a named color starts the vividness at 100. When the theme softens the color so text stays
-readable, the preview shows the note "Softened here so text stays readable", in the normal text color and in italics.
+enabled), then back to the grid, and Shift Tab the other way. Enter on either slider saves hue and vividness together
+and closes; a drag saves once on release and keeps the picker open. A custom color is saved as `color:: hue <h> vivid
+<v>`, and `vivid 100` is left out, so a plain hue stays `color:: hue <h>`. Picking a name drops the vividness (the
+file has one `color::` line), and undo brings it back; reopening the picker on a named color starts the vividness at
+100. When the theme softens the color so text stays readable, the preview shows the note "Softened here so text stays
+readable", in the normal text color and in italics.
 
 ### 7.4 Journal
 
@@ -281,14 +286,25 @@ readable, the preview shows the note "Softened here so text stays readable", in 
   and missing pages are skipped, aliases are followed, and sub-blocks follow their parent. Consecutive blocks whose
   topic is the same page merge into one band; blocks of different pages stay separate, with a small gap, even in the
   same color. The feed and a day page look the same. Washes follow edits after the typing pause and any change of a
-  page's color, from anywhere.
+  page's color, from anywhere. A selected row and the jump highlight (after a jump from a card or a search result)
+  keep the band's rounded ends; the highlight starts in the selection color and fades back to the band's color.
 - **Color from a link.** A right-click on a link or tag in a journal day opens a menu with "Color…", which opens the
   same picker for the page the link goes to (aliases followed, tag-only pages included). Links to journal days and to
   pages that do not exist get no "Color…" entry. Inside an open block editor, and on selected text that is not a link
   to a colorable page (including a link to a day or a missing page), the normal browser menu stays, so copy and paste
-  keep working; elsewhere no menu opens.
-- **Jump to a date** through search (§7.8): typing a date (`12 Mar`, `12.3.`, `2026-03-12`, `yesterday`, …) offers "Go to ‹day›" first. A day with an entry (or today) opens the feed scrolled to that day. Any other day, past or future, opens as its day page with the "start writing…" placeholder; its file is created when the user types, and from then on the day is in the feed in its place. A date without a year means the most recent such day not after today.
-- **Date picker**: a calendar icon right of the sidebar's "Journal" entry, or `Ctrl Shift D` from anywhere (also while editing), opens a month below the icon. Weeks start on Monday; days with a journal file have a dot, today is outlined; it opens at the journal day shown, else at today. Arrows move by day and week, Page Up / Page Down by month, Home / End to the week's start and end, Enter or a click picks, Esc closes (the focus goes back where it was); ‹ › change the month and "Today" shows today. A picked day, past or future, jumps exactly as a typed date does (above): nothing is written until the user types.
+  keep working; elsewhere no menu opens. When the menu or the picker closes (a pick, Esc, a click outside), the focus
+  is on the link again, unless something else already holds it. If the day is drawn anew while the picker is open,
+  the picker stays at its link; if the link is gone, it stays where it was, and a pick still colors the page.
+- **Jump to a date** through search (§7.8): typing a date (`12 Mar`, `12.3.`, `2026-03-12`, `yesterday`, …) offers "Go
+  to ‹day›" first. A day with an entry (or today) opens the feed scrolled to that day. Any other day, past or future,
+  opens as its day page with the "start writing…" placeholder; its file is created when the user types, and from then
+  on the day is in the feed in its place. A date without a year means the most recent such day not after today.
+- **Date picker**: a calendar icon right of the sidebar's "Journal" entry, or `Ctrl Shift D` from anywhere (also while
+  editing), opens a month below the icon. Weeks start on Monday; days with a journal file have a dot, today is
+  outlined; it opens at the journal day shown, else at today. Arrows move by day and week, Page Up / Page Down by
+  month, Home / End to the week's start and end, Enter or a click picks, Esc closes (the focus goes back where it
+  was); ‹ › change the month and "Today" shows today. A picked day, past or future, jumps exactly as a typed date does
+  (above): nothing is written until the user types.
 
 ### 7.5 Task states
 

@@ -12,10 +12,11 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    fail with a clear message, not hang.
 11. [ ] **Settings:** themes, renaming and removing a used task state, hand edits of `config.toml` while Settings is
    open, switching folders and the recent folders list.
-12. [ ] **Typing in Settings boxes:** type in one box while another change is saved or refused; the typed text must stay.
+12. [ ] **Typing in Settings boxes:** type in one box while another change is saved or refused; the typed text must
+   stay.
 15. [ ] **Graph:** filters, hover, Find, keyboard keys, Re-arrange.
-17. [ ] **Graph at scale:** run `just graph-scale --onscreen` and judge pan and zoom by eye (wheel zoom at 5,000 pages is
-   known to be slow, backlog #56).
+17. [ ] **Graph at scale:** run `just graph-scale --onscreen` and judge pan and zoom by eye (wheel zoom at 5,000 pages
+   is known to be slow, backlog #56).
 18. [ ] **`just release` at a real console:** at the pause, try Ctrl+C and a wrong answer (it should ask again); with an
    SSH key that needs a passphrase, check the push prompt after the pause.
 19. [ ] **Open the demo in Obsidian:** open a copy of `docs/demo/` in Obsidian and compare what you see with
@@ -29,11 +30,12 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    it back, and earlier typing on the page stays undoable. Undoing the first pick on a tag-only page leaves its
    new file empty.
 30. [ ] **Tag-only page:** picking a color for a tag without a page writes `pages/<tag>.md` holding only the line.
-31. [ ] **Color from a link in the journal:** right-click a link or tag in the feed and on a day page, choose
-   "Color…" and pick; the linked page gets the color and the washes follow. An alias link colors the aliased page,
-   a tag without a page gets its file, and links to days or to missing pages show no "Color…" entry. Inside an open
-   block editor, and on selected text that is not a link to a colorable page (including a link to a day or a missing
-   page), the normal browser menu stays, so copy and paste keep working; say if you want the color menu there too. Undo for such a pick is on the linked page (its swatch or its blocks), not in the journal.
+31. [ ] **Color from a link in the journal:** right-click a link or tag in the feed and on a day page, choose "Color…"
+   and pick; the linked page gets the color and the washes follow. An alias link colors the aliased page, a tag
+   without a page gets its file, and links to days or to missing pages show no "Color…" entry. Inside an open block
+   editor, and on selected text that is not a link to a colorable page (including a link to a day or a missing page),
+   the normal browser menu stays, so copy and paste keep working; say if you want the color menu there too. Undo for
+   such a pick is on the linked page (its swatch or its blocks), not in the journal.
 32. [ ] **Demo and README:** the demo pages Q&A: hiring, Release 2, on call and Project X have colors, the
    2026-10-29 journal has one new block, and the README journal screenshot shows the washes.
 
@@ -57,17 +59,44 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    color and stay visible as text. A hand-written `HUE 212 VIVID 0150` stays as written until another color is picked.
    Older Breccia versions read a vividness as no color and keep the line.
 
+## Follow-ups of plans 1 to 3
+
+51. [ ] **Preview inside the picker:** open a page's picker and move the pointer from one color to the next across the
+   gap between them: the preview keeps the last color and does not blink. On the preview box, the labels or the greyed
+   Vividness slider, and when the pointer leaves the picker, it shows the focused choice (the saved color until a key
+   moves the focus). Say if leaving the picker should always show the saved color instead.
+52. [ ] **Slider thumbs:** drag each slider to its ends (hue 0 and 359, vividness 50 and 200): the thumb stays inside
+   the track, and both tracks are as wide as the color grid. A click under the thumb does not change the value.
+53. [ ] **Screen reader on the sliders:** with Narrator, a slider at the page's saved color reads "Hue 212, page color"
+   (Vividness likewise); moving it drops "page color". Say if "selected" (the word the grid colors use) reads better.
+54. [ ] **Focus after a pick from a link:** right-click a link in the journal, choose Color… and pick, or press Esc: the
+   focus is on the link again (it shows a focus ring when you used the keyboard), and Tab moves on from there. If you
+   click elsewhere, for example in the search box, the focus stays there. Undo for the pick is still on the linked
+   page. Say if `Ctrl Z` on the link should undo the pick too.
+55. [ ] **The picker follows its link:** open the picker from a link, then change the day's file in another editor: the
+   picker moves with the link. If the link is deleted, the picker stays where it was and a pick still colors the page.
+56. [ ] **Right-click beside a selection:** with text selected in the journal, a right-click on empty space opens no
+   menu; on the selected text the browser menu stays.
+57. [ ] **Jump highlight on a colored row:** jump from a board card or a search result to a colored journal block: the
+   highlight starts in the selection color, fades back to the band's color, and keeps the band's rounded ends.
+58. [ ] **Selected row at a band's end:** Shift-click the first or the last row of a color band: the selection keeps the
+   band's rounded end. Say if you want other corners.
+
 ## Slash menu
 
-42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain text. Change a state color in Settings and the menu follows.
-43. [ ] **Slash menu: no "Current time", new "Date…":** `/` no longer offers "Current time". "Today's date" stays. A new
-   "Date…" (also found by typing `/date`) opens the date picker; picking a day inserts `[[2026-11-09]]`-style link at the caret and
-   puts the focus back in the block. `Esc` closes the picker and returns to the block with nothing inserted. The picker
-   still appears by the sidebar's Journal row (the sidebar is shown first if hidden); say if you want it at the caret.
+42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a
+   page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain
+   text. Change a state color in Settings and the menu follows.
+43. [ ] **Slash menu: no "Current time", new "Date…":** `/` no longer offers "Current time". "Today's date" stays. A
+   new "Date…" (also found by typing `/date`) opens the date picker; picking a day inserts `[[2026-11-09]]`-style link
+   at the caret and puts the focus back in the block. `Esc` closes the picker and returns to the block with nothing
+   inserted. The picker still appears by the sidebar's Journal row (the sidebar is shown first if hidden); say if you
+   want it at the caret.
 44. [ ] **Journals position in the sidebar:** Settings > Journal has three choices: "At the top", "At the bottom"
    (the default, as before) and "Among the folders, by name". The sidebar's Pages list follows at once and the choice
    survives a restart. "Among the folders" puts Journals between the top-level folders in alphabetical order (ignoring
    case), before the single pages, because the list shows folders first; say if you want it mixed in with the pages
    too. The setting is for this computer only and is not stored in the notes folder. Journals' own fold, years, months
    and days work the same in each place.
-45. [ ] **Git settings: no "Now:" line:** Settings > Git no longer ends with a "Now: …" status line. The status bar item still shows the state.
+45. [ ] **Git settings: no "Now:" line:** Settings > Git no longer ends with a "Now: …" status line. The status bar
+   item still shows the state.

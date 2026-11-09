@@ -26,7 +26,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 1 | Page colors | done 2026-11-07 | `docs/plans/2026-11-07-01-page-colors.md` | `docs/plans/2026-11-07-01-page-colors-followups.md` |
 | 2 | Custom page colors | done 2026-11-07 | `docs/plans/2026-11-07-02-custom-page-colors.md` | `docs/plans/2026-11-07-02-custom-page-colors-followups.md` |
 | 3 | Custom color vividness | done 2026-11-09 | `docs/plans/2026-11-09-03-custom-color-vividness.md` | `docs/plans/2026-11-09-03-custom-color-vividness-followups.md` |
-| 4 | Follow-ups of plans 1 to 3 | approved 2026-11-09, not started | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | |
+| 4 | Follow-ups of plans 1 to 3 | done 2026-11-09 | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | `docs/plans/2026-11-09-04-followups-of-plans-1-3-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -41,7 +41,12 @@ https://github.com/EightBitBoy/breccia/releases/tag/v1.2.0); the owner still che
 Released since 1.1.0: 1.1.1 and 1.2.0 (2026-11-09; 1.1.1: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
-Owner request (2026-11-09): right after plan 4 finishes, implement backlog #73 (board card buttons need a visible
+Plan 4 (follow-ups of plans 1 to 3) is done (2026-11-09; owner decisions Q1 to Q8 and pre-flight rulings in the plan,
+ledger `.superpowers/sdd/2026-11-09-04-followups-of-plans-1-3/progress.md`): the color picker's preview, slider thumbs
+and screen reader text, the focus and picker position for the link menu, and the jump highlight and selection on a
+colored row. The owner checks review items 51 to 58.
+
+Owner request (2026-11-09): after plan 4, implement backlog #73 (board card buttons need a visible
 background) directly, as a small change without a plan: a failing test first, the change, the checks, a
 `docs/review.md` item, a commit.
 Then (owner, 2026-11-09) backlog #74 the same way: a theme picker button in the status bar next to the help button.
@@ -52,15 +57,15 @@ plan, with the owner's review.
 
 Candidates for the next plan, to settle with the owner:
 
-- the by-hand checks in `docs/review.md` (items 1 to 50; 25 to 41 are page colors, 46 to 50 vividness);
+- the by-hand checks in `docs/review.md` (items 1 to 58; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
 - backlog items the owner picks (`docs/backlog.md`, 72 items, #72 done);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
 ## Test baseline
 
-- `just test`: Vitest (913 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 176 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (926 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 184 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
 

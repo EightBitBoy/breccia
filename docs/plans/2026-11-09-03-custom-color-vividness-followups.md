@@ -23,15 +23,15 @@ reviews and the final whole-plan review (2026-11-09). Backlog #72 is done by thi
 
 ## Tests
 
-8. **An extra `pickerTab` case** (back from the vividness slider when the grid's position is `NO_COLOR`). The cases
-   that matter are covered by unit tests and e2e step 119.
+8. ~~**An extra `pickerTab` case** (back from the vividness slider when the grid's position is `NO_COLOR`). The cases
+   that matter are covered by unit tests and e2e step 119.~~ Done in plan 4.
 9. **e2e step 120 resets the Light theme only at its end**, and steps 119 and 120 leave their page (`Vivid 119`)
    and day journal behind, as earlier steps do. A failing step ends the run anyway.
 
 ## Behaviour (seen, not changed)
 
-10. **Pointing at the greyed vividness slider** leaves the preview on what it showed before (`pointer-events: none`
-    hands the event to the wrapper). Harmless.
+10. ~~**Pointing at the greyed vividness slider** leaves the preview on what it showed before (`pointer-events: none`
+    hands the event to the wrapper). Harmless.~~ Done in plan 4 (Q4).
 11. **`recolor` replaces the first `color::` line even when its value is invalid** (for example `color:: hue 999`
     above a valid line). This is plan 2 behaviour, documented in `docs/format.md` §8; this plan did not change it.
 
