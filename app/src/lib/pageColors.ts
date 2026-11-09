@@ -105,10 +105,25 @@ export function previewColor(
   return indexColor(hover ?? focused, hue, vivid)
 }
 
+/** The slider thumb's width in px (matches `.pc-hue-thumb`). */
+export const THUMB_W = 8
+
+/** The thumb's travel (0..1) for a pointer at `x` on a slider `width` wide; 0 at `THUMB_W / 2`. */
+function travel(x: number, width: number): number {
+  const span = width - THUMB_W
+  if (span <= 0) return 0
+  return Math.min(1, Math.max(0, (x - THUMB_W / 2) / span))
+}
+
+/** CSS `left` for a thumb at fraction `f` (0 to 1) of the track, inset so the thumb stays inside it. */
+export function thumbLeft(f: number): string {
+  const c = Math.min(1, Math.max(0, f))
+  return `calc(${THUMB_W / 2}px + (100% - ${THUMB_W}px) * ${Number(c.toFixed(4))})`
+}
+
 /** The hue under a pointer at `x` on a slider `width` wide. */
 export function hueAt(x: number, width: number): number {
-  if (width <= 0) return 0
-  return Math.min(MAX_HUE, Math.max(0, Math.round((x / width) * MAX_HUE)))
+  return Math.round(travel(x, width) * MAX_HUE)
 }
 
 /** What a key press on the hue slider does: the new hue, `'save'`, `'leave'` (Tab), or null. */
@@ -141,8 +156,7 @@ export function hueSliderKey(e: KeyInput, hue: number): number | 'save' | 'leave
 
 /** The vividness under a pointer at `x` on a slider `width` wide, in steps of 5. */
 export function vividAt(x: number, width: number): number {
-  if (width <= 0) return MIN_VIVID
-  const v = MIN_VIVID + Math.round(((x / width) * (MAX_VIVID - MIN_VIVID)) / VIVID_STEP) * VIVID_STEP
+  const v = MIN_VIVID + Math.round((travel(x, width) * (MAX_VIVID - MIN_VIVID)) / VIVID_STEP) * VIVID_STEP
   return Math.min(MAX_VIVID, Math.max(MIN_VIVID, v))
 }
 
@@ -175,7 +189,38 @@ export function vividSliderKey(e: KeyInput, v: number): number | 'save' | 'leave
   }
 }
 
-/** The next tab stop in the picker (grid, hue slider, vividness slider); `vividOn`: the vividness slider is enabled. */
+/**
+ * The picker's new `hover` after the pointer moves: a drag's slider wins, then an enabled choice under the
+ * pointer (`on`, its index), then the previous grid cell while the pointer is in a gap of the grid, else none.
+ */
+export function pointerHover(
+  on: number | null,
+  inGrid: boolean,
+  prev: number | null,
+  dragging: number | null,
+): number | null {
+  if (dragging !== null) return dragging
+  if (on !== null) return on
+  return inGrid && prev !== null && prev < NO_COLOR ? prev : null
+}
+
+/** Whether `color` is the saved custom color with exactly this hue and vividness. */
+export function isSavedCustom(color: string | null, hue: number, vivid: number): boolean {
+  const c = parseCustom(color)
+  return c !== null && c.hue === hue && c.vivid === vivid
+}
+
+/** The hue slider's spoken value. */
+export function hueValueText(hue: number, saved: boolean): string {
+  return `Hue ${hue}${saved ? ', page color' : ''}`
+}
+
+/** The vividness slider's spoken value. */
+export function vividValueText(vivid: number, saved: boolean, limited: boolean): string {
+  return `Vividness ${vivid}${saved ? ', page color' : ''}${limited ? ', softened for readability' : ''}`
+}
+
+/** The next tab stop in the picker (grid, hue, vividness); `vividOn`: the vividness slider is enabled. */
 export function pickerTab(from: number, back: boolean, gridAt: number, vividOn: boolean): number {
   if (from === VIVID) return back ? CUSTOM : gridAt
   if (from === CUSTOM) return back ? gridAt : vividOn ? VIVID : gridAt

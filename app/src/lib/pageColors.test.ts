@@ -13,15 +13,20 @@ import {
   hueAt,
   hueColor,
   hueSliderKey,
+  hueValueText,
   indexColor,
+  isSavedCustom,
   parseCustom,
   parseHue,
   pickerStart,
   pickerTab,
+  pointerHover,
   previewColor,
   swatchKey,
+  thumbLeft,
   vividAt,
   vividSliderKey,
+  vividValueText,
   washRows,
 } from './pageColors'
 import appCss from '../styles/app.css?raw'
@@ -216,6 +221,63 @@ test('hueAt maps a pointer position to a hue', () => {
   expect(hueAt(10, 0)).toBe(0)
 })
 
+test('hueAt and vividAt measure the inset travel of the thumb', () => {
+  expect(hueAt(4, 136)).toBe(0)
+  expect(hueAt(0, 136)).toBe(0)
+  expect(hueAt(132, 136)).toBe(359)
+  expect(hueAt(136, 136)).toBe(359)
+  expect(hueAt(68, 136)).toBe(180)
+  expect(hueAt(5, 8)).toBe(0)
+  expect(vividAt(4, 136)).toBe(50)
+  expect(vividAt(132, 136)).toBe(200)
+  expect(vividAt(68, 136)).toBe(125)
+  expect(vividAt(5, 8)).toBe(50)
+})
+
+test('thumbLeft puts the thumb inside the track', () => {
+  expect(thumbLeft(0)).toBe('calc(4px + (100% - 8px) * 0)')
+  expect(thumbLeft(1)).toMatch(/\* 1\)$/)
+  expect(thumbLeft(2)).toBe(thumbLeft(1))
+  expect(thumbLeft(-1)).toBe(thumbLeft(0))
+  expect(thumbLeft(212 / 359)).toMatch(/\* 0\.5905\)$/)
+})
+
+describe('pointerHover', () => {
+  test('a choice under the pointer is the hover', () => {
+    expect(pointerHover(3, false, null, null)).toBe(3)
+  })
+  test('a gap in the grid keeps the cell, anything else clears it', () => {
+    expect(pointerHover(null, true, 3, null)).toBe(3)
+    expect(pointerHover(null, true, NO_COLOR, null)).toBeNull()
+    expect(pointerHover(null, false, 3, null)).toBeNull()
+  })
+  test('a drag keeps its slider', () => {
+    expect(pointerHover(null, false, 3, CUSTOM)).toBe(CUSTOM)
+    expect(pointerHover(3, true, null, VIVID)).toBe(VIVID)
+  })
+})
+
+describe('slider value text', () => {
+  test('isSavedCustom compares the saved hue and vividness', () => {
+    expect(isSavedCustom('hue 212', 212, 100)).toBe(true)
+    expect(isSavedCustom('hue 212 vivid 150', 212, 150)).toBe(true)
+    expect(isSavedCustom('hue 212', 213, 100)).toBe(false)
+    expect(isSavedCustom('hue 212 vivid 150', 212, 100)).toBe(false)
+    expect(isSavedCustom('red', 200, 100)).toBe(false)
+    expect(isSavedCustom(null, 200, 100)).toBe(false)
+  })
+  test('hueValueText', () => {
+    expect(hueValueText(212, false)).toBe('Hue 212')
+    expect(hueValueText(212, true)).toBe('Hue 212, page color')
+  })
+  test('vividValueText', () => {
+    expect(vividValueText(200, true, true)).toBe('Vividness 200, page color, softened for readability')
+    expect(vividValueText(150, false, false)).toBe('Vividness 150')
+    expect(vividValueText(150, true, false)).toBe('Vividness 150, page color')
+    expect(vividValueText(150, false, true)).toBe('Vividness 150, softened for readability')
+  })
+})
+
 describe('the picker with a hue slider', () => {
   test('the grid keeps its own tab stop: "No color" when the start is the slider', () => {
     expect(gridStop(CUSTOM)).toBe(NO_COLOR)
@@ -309,7 +371,7 @@ test('vividAt maps a pointer position to a vividness in steps of 5', () => {
   expect(vividAt(0, 100)).toBe(50)
   expect(vividAt(50, 100)).toBe(125)
   expect(vividAt(100, 100)).toBe(200)
-  expect(vividAt(33, 100)).toBe(100)
+  expect(vividAt(33, 100)).toBe(95)
   expect(vividAt(-20, 100)).toBe(50)
   expect(vividAt(140, 100)).toBe(200)
   expect(vividAt(10, 0)).toBe(50)
@@ -331,5 +393,9 @@ describe('pickerTab', () => {
   test('from the vividness slider', () => {
     expect(pickerTab(VIVID, false, 7, true)).toBe(7)
     expect(pickerTab(VIVID, true, 7, true)).toBe(CUSTOM)
+  })
+  test('from the vividness slider with the grid on No color', () => {
+    expect(pickerTab(VIVID, false, NO_COLOR, true)).toBe(NO_COLOR)
+    expect(pickerTab(VIVID, true, NO_COLOR, true)).toBe(CUSTOM)
   })
 })
