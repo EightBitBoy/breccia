@@ -10,3 +10,4 @@ Task 1: complete (commits e6977d0..cbe7833, review clean)
 Task 2: minor (deferred): opening has no focus fallback if the content can't take focus within one frame (later: focus from onOpenAutoFocus); .page-color-picker padding/min-width/z-index lines are dead (overridden by .menu); step 121's focus-on-open check is pinning-only; STATUS e2e count must read the final total (Task 5 only)
 Task 2: concern: e2e step 95 (journal date picker) failed once in the implementer's runs — reviewer judges a pre-existing race (waits for start-writing, which the previous empty day also shows, smoke.mjs:1897); not caused by this change. Final review to decide whether to fix.
 Task 2: complete (commits 86e3ed6..29e294a, review clean; e2e 179 PASS x2)
+Owner request: after plan 4 finishes, implement backlog #73 directly (small change, no plan). Recorded in docs/STATUS.md.

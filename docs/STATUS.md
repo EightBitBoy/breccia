@@ -41,6 +41,10 @@ https://github.com/EightBitBoy/breccia/releases/tag/v1.2.0); the owner still che
 Released since 1.1.0: 1.1.1 and 1.2.0 (2026-11-09; 1.1.1: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
+Owner request (2026-11-09): right after plan 4 finishes, implement backlog #73 (board card buttons need a visible
+background) directly, as a small change without a plan: a failing test first, the change, the checks, a
+`docs/review.md` item, a commit.
+
 Candidates for the next plan, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 50; 25 to 41 are page colors, 46 to 50 vividness);
