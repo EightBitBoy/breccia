@@ -66,12 +66,14 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    Vividness slider, and when the pointer leaves the picker, it shows the focused choice (the saved color until a key
    moves the focus). Say if leaving the picker should always show the saved color instead.
 52. [ ] **Slider thumbs:** drag each slider to its ends (hue 0 and 359, vividness 50 and 200): the thumb stays inside
-   the track, and both tracks are as wide as the color grid. A click under the thumb does not change the value.
+   the track, and both tracks are as wide as the color grid. A press on the middle of a thumb keeps the value; a press
+   elsewhere, even on the thumb's edge, moves the thumb there (by up to about 11 hue or 5 vividness on the thumb).
+   Grabbing the thumb without a jump is a follow-up.
 53. [ ] **Screen reader on the sliders:** with Narrator, a slider at the page's saved color reads "Hue 212, page color"
    (Vividness likewise); moving it drops "page color". Say if "selected" (the word the grid colors use) reads better.
-54. [ ] **Focus after a pick from a link:** right-click a link in the journal, choose Color… and pick, or press Esc: the
-   focus is on the link again (it shows a focus ring when you used the keyboard), and Tab moves on from there. If you
-   click elsewhere, for example in the search box, the focus stays there. Undo for the pick is still on the linked
+54. [ ] **Focus after a pick from a link:** right-click a link in the journal, choose Color… and pick, or press Esc:
+   the focus is on the link again (it shows a focus ring when you used the keyboard), and Tab moves on from there. If
+   you click elsewhere, for example in the search box, the focus stays there. Undo for the pick is still on the linked
    page. Say if `Ctrl Z` on the link should undo the pick too.
 55. [ ] **The picker follows its link:** open the picker from a link, then change the day's file in another editor: the
    picker moves with the link. If the link is deleted, the picker stays where it was and a pick still colors the page.
