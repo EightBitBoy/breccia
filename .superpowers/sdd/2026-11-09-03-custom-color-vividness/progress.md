@@ -27,3 +27,13 @@ Task 6: minor (deferred): light theme reset only at end of step 120; Vivid 119 p
 Task 6: complete (commits 11b309c..cb5c849, review clean; e2e 176 PASS x2)
 Task 7: minor (deferred): spec §7.10 vividness sentence overlaps old "down to half the theme's strength" (not exact below 100); spec §7.3 old "Tab moves between the grid and the slider" left beside the new 3-stop order
 Task 7: complete (commits 8ce65be..5f167af, review clean)
+Final review (opus): ready with fixes. Must fix I1 (spec Tab sentence), I2 (spec readability floor sentence); same wave M1-M4; M5-M8 to follow-ups; M9 = STATUS at finish.
+- Ruling: one fix wave (opus) for I1, I2, M1-M4; M5-M8 go to the follow-ups doc — they are cosmetic or test hygiene and nothing builds on them — cost if wrong: small cleanups wait for a later plan
+Final fix wave: dispatched (opus), FIX_BASE 6fc1dab
+Final fix wave: 32c2ce7 (M1), 56643ab (I1, I2, M2-M4); re-review: all addressed, no new breakage
+Finish checks: just test green (Vitest 913, cargo 718+50+41), just lint green; just e2e FAILED at step 120 (preview showed a hovered named color, not the page's custom wash)
+- Ruling: step 120 is flaky because the picker opens under the pointer and the grid's hover drives the preview (plan 2 follow-up 3); fix the test (move the pointer away, wait for the state), not the component — cost if wrong: a real preview bug stays hidden behind the pointer move
+e2e fix: dispatched (sonnet)
+e2e fix: 4f4d3ff (move pointer off the grid, waitFor the preview); fixer 176 PASS x2; controller just e2e 176 PASS
+Finish: just test green (Vitest 913, cargo ok), just lint green, just e2e 176 PASS. Follow-ups doc written; STATUS updated.
+Plan 3: complete (b551882..HEAD)

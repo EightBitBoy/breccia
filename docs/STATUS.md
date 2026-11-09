@@ -13,7 +13,8 @@ block, with priority by dragging, hidden columns and automatic archiving; the Ar
 forward between views; the `F1` shortcut overlay; the graph; a tray icon; a Windows installer built by the release
 workflow. Since 1.1.0 (released 2026-11-07, plans 1 and 2): page colors, 25 named colors or a custom hue per page, shown as soft
 washes behind journal blocks, set from a swatch on the page title or by right-clicking a link in the journal, with a
-live preview in the picker.
+live preview in the picker. Since 1.1.1 (plan 3, not released yet): a Vividness slider makes a custom color softer or
+stronger per page (`color:: hue 212 vivid 150`, format version 8), held back where text would be hard to read.
 
 This repository starts from a prototype, without its history. Breccia 1.0.0, the first public release, was published
 on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and the repository is public since then.
@@ -24,7 +25,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 |---|---|---|---|---|
 | 1 | Page colors | done 2026-11-07 | `docs/plans/2026-11-07-01-page-colors.md` | `docs/plans/2026-11-07-01-page-colors-followups.md` |
 | 2 | Custom page colors | done 2026-11-07 | `docs/plans/2026-11-07-02-custom-page-colors.md` | `docs/plans/2026-11-07-02-custom-page-colors-followups.md` |
-| 3 | Custom color vividness | approved 2026-11-09, not started | `docs/plans/2026-11-09-03-custom-color-vividness.md` | |
+| 3 | Custom color vividness | done 2026-11-09 | `docs/plans/2026-11-09-03-custom-color-vividness.md` | `docs/plans/2026-11-09-03-custom-color-vividness-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -32,23 +33,23 @@ and in the plan's "Owner decisions" section. Progress ledger: `.superpowers/sdd/
 
 ## Next
 
-Plan 3 (custom color vividness, backlog #72) is written and approved by the owner (2026-11-09; decisions in the
-plan's "Owner decisions" section). Next: execute it with subagent-driven development (ledger
-`.superpowers/sdd/2026-11-09-03-custom-color-vividness/progress.md`).
+Plan 3 (custom color vividness, backlog #72) is done (2026-11-09; owner decisions and pre-flight rulings in the plan,
+ledger `.superpowers/sdd/2026-11-09-03-custom-color-vividness/progress.md`). It is not released yet; the owner checks
+review items 46 to 50 and decides when to cut the next release.
 
 Released since 1.1.0: 1.1.1 (2026-11-09: state chips and "Date…" in the slash menu, Journals position setting, no
 "Now:" line in Git settings).
 
-Candidates after plan 3, to settle with the owner:
+Candidates for the next plan, to settle with the owner:
 
-- the by-hand checks in `docs/review.md` (items 1 to 45; 25 to 41 are page colors);
-- the follow-ups of plans 1 and 2 (`docs/plans/2026-11-07-0{1,2}-*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 72 items);
+- the by-hand checks in `docs/review.md` (items 1 to 50; 25 to 41 are page colors, 46 to 50 vividness);
+- the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
+- backlog items the owner picks (`docs/backlog.md`, 72 items, #72 done);
 - automatic updates (backlog #52) and a GitHub Pages site (backlog #64), now possible because the repository is public.
 
 ## Test baseline
 
-- `just test`: Vitest (890 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just test`: Vitest (913 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 176 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
