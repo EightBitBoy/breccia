@@ -291,6 +291,49 @@ test('text sent to a block that is gone is shown to copy, never dropped', () => 
   ])
 })
 
+test('typed text that met an internal error or a reloaded folder is shown to copy, never dropped', () => {
+  // `recovered`: the core recovered from an internal error before it ran; `stale`: it was typed before the reload.
+  for (const code of ['recovered', 'stale']) {
+    notices = []
+    const cmd: Command = { type: 'block.setText', id: 9, text: `my words ${code}` }
+    host.backgroundFailed({ code, message: 'Breccia hit an internal error' }, cmd)
+    expect(notices).toEqual([
+      {
+        kind: 'conflict',
+        page: 'p',
+        block: 9,
+        mine: `my words ${code}`,
+        theirs: null,
+        message: 'This block is gone, so your text was not saved. Copy it from here:',
+      },
+    ])
+  }
+})
+
+test('a refusal the env calls quiet is not shown; typed text never asks', async () => {
+  const asked: [string | null, string][] = []
+  const quietHost = new EditorHost(
+    {
+      client: { ...client, run: (cmd) => (sent.push(cmd), Promise.reject({ code: 'recovered', message: 'internal' })) },
+      blocks: () => blocks,
+      pageOf: () => 'p',
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      quiet: (code, cmd) => (asked.push([code, cmd.type]), true),
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await quietHost.exec({ type: 'block.merge', id: 1 })
+  expect(notices).toEqual([])
+  await quietHost.exec({ type: 'block.setText', id: 9, text: 'kept' })
+  expect(notices.map((n) => n.kind === 'conflict' && n.mine)).toEqual(['kept'])
+  expect(asked).toEqual([['recovered', 'block.merge']])
+})
+
 test('a refused setText run by a command shows the unsent text too', async () => {
   const run = client.run
   client.run = (cmd) => (sent.push(cmd), Promise.reject({ code: 'unknownBlock', message: 'no such block' }))

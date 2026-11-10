@@ -244,6 +244,8 @@ try {
       BRECCIA_TODAY: today, // a midnight during the run must not shift the app's day against dayKey
       // The window starts unfocused and off screen: the run never takes the keyboard.
       BRECCIA_OFFSCREEN: '1',
+      // Step 127: the first search for this text panics inside the core, once per run.
+      BRECCIA_TEST_PANIC: 'zz-panic-127',
       // Its own WebView2 profile, never the installed app's (which an open Breccia holds).
       WEBVIEW2_USER_DATA_FOLDER: join(configDir, 'webview'),
       WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
@@ -3322,6 +3324,55 @@ try {
   await page.locator('[data-testid="nav-journal"]').click()
   await screen.waitFor({ state: 'detached' })
   console.log("PASS 126 the log file is in the app's data folder, and Settings offers to open its folder")
+
+  // 127: after an internal error the notes reload from disk and one notice says so; text typed just before it is
+  // saved, the search box that met it is gone, typing saves again, and the log names the panic but no note text.
+  // BRECCIA_TEST_PANIC makes the first search for `zz-panic-127` panic inside the core.
+  const RELOADED127 = 'Breccia hit an internal error and reloaded your notes from disk. Everything saved is safe; undo starts afresh.'
+  const notices127 = page.locator('[data-testid="notice"]')
+  // Nothing may be unsaved, or the core keeps the session instead of reloading it: the journal as step 55 left it.
+  assert(join(folder, journalRel) === journal, `127 step 55 renamed in ${journalRel}, not in today's journal`)
+  await waitFor('127 the journal as step 55 left it', () => readAt(journal), after55[journalRel])
+  await waitFor('127 nothing unsaved', () => page.locator('[data-testid="status-item"][data-id="save"]').innerText(), 'All changes saved')
+  // Notices earlier steps left are dismissed, so the count below is the recovery's alone.
+  const left127 = await notices127.allInnerTexts()
+  if (left127.length) console.log(`127 dismissed earlier notices: ${JSON.stringify(left127)}`)
+  while ((await notices127.count()) > 0) await notices127.first().locator('button.close').click()
+  const before127 = readAt(journal)
+  /** The journal with `extra` typed at the end of today's first block. */
+  const typedIn127 = (extra) => before127.replace(/^[^\n]*/, (line) => line + extra)
+  // A sidebar row marked now is drawn anew once the reload has shown the folder's tree again (its last step).
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:anna"]').evaluate((el) => (el.dataset.e2eBefore = '1'))
+  const firstRow127 = () => page.locator(`[data-testid="day"][data-day="${today}"] .block[data-block-id]`).first()
+  await clickRow(firstRow127())
+  await page.locator('.cm-content').waitFor()
+  await kb.type(' typed before the error')
+  // At once: opening the search box sends the typed text first, so the core has it before the error.
+  await openSearch()
+  await searchInput.fill('zz-panic-127')
+  const recovery127 = notices127.filter({ hasText: 'Breccia hit an internal error' })
+  await recovery127.first().waitFor({ timeout: 10_000 })
+  const said127 = await recovery127.first().innerText()
+  assert(said127.includes(RELOADED127), `127 the notes were not reloaded (was a page still unsaved?): ${JSON.stringify(said127)}`)
+  await dialog.waitFor({ state: 'detached', timeout: 10_000 })
+  await side.locator('[data-row="p:anna"]:not([data-e2e-before])').waitFor({ timeout: 10_000 })
+  await page.locator(`[data-testid="day"][data-day="${today}"]`).waitFor()
+  await waitFor('127 the text typed before the error is on disk', () => readAt(journal), typedIn127(' typed before the error'))
+  await clickRow(firstRow127())
+  await page.locator('.cm-content').waitFor()
+  await kb.type(' after recovery')
+  await expectFile('127 typing saves after the recovery', typedIn127(' typed before the error after recovery'), journal)
+  const texts127 = await notices127.allInnerTexts()
+  assert(texts127.length === 1, `127 not exactly one notice: ${JSON.stringify(texts127)}`)
+  await waitFor('127 the log names the panic and the recovery', () => ['panic at', 'recovered (reopened)'].map((t) => log126().includes(t)), [true, true])
+  for (const text of ['zz-panic-127', 'typed before the error', 'after recovery']) {
+    assert(!log126().includes(text), `127 the log file holds ${text}`)
+  }
+  await recovery127.first().locator('button.close').click()
+  await waitFor('127 the notice dismissed', () => notices127.count(), 0)
+  await kb.press('Escape')
+  console.log('PASS 127 after an internal error the notes reload, one notice says so, and typing saves again')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')

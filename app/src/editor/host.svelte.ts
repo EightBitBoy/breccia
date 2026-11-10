@@ -34,6 +34,8 @@ export interface EditorEnv {
   /** Opens the date picker; a pick calls `onpick` with the day's key, closing it calls nothing. */
   pickDate?(onpick: (key: string) => void): void
   selectWithNeighbour(id: BlockId, dir: -1 | 1): void
+  /** Whether the refusal of `cmd` with error `code` stays unshown (after an internal error); never asked for typed text. */
+  quiet?(code: string | null, cmd: Command): boolean
   /** Test seams; default to mountEditor and the `[data-block-id="…"] .editor-slot` lookup. */
   mount?: typeof mountEditor
   slot?(id: BlockId): HTMLElement | null
@@ -44,6 +46,8 @@ export type CaretMenuKind = 'slash' | 'link'
 const PASTE_SKIPPED = 'Paste skipped while a change is being saved; the text is still on the clipboard.'
 /** The core's message for a block changed on disk while being edited. */
 const CHANGED_ON_DISK = 'This block changed on disk while you were editing it.'
+/** Error codes of a `block.setText` whose text the core never took: the block is gone, or the session was recovered. */
+const UNSENT_CODES = new Set<string | null>(['unknownBlock', 'recovered', 'stale'])
 
 export class EditorHost {
   /** The block being edited; the editor itself lives outside Svelte's state. */
@@ -135,9 +139,16 @@ export class EditorHost {
     this.env.notify({ kind: 'refused', message: errorMessage(e) })
   }
 
-  /** Shows why `cmd` failed; text sent to a block that is gone is shown to copy, never dropped. */
+  /**
+   * Shows why `cmd` failed. Text sent to a block that is gone, or that met an internal error or the reload after it
+   * (`recovered`, `stale`), is shown to copy, never dropped.
+   */
   private refuseCommand(e: unknown, cmd: Command) {
-    if (cmd.type !== 'block.setText' || errorCode(e) !== 'unknownBlock') return this.refuse(e)
+    const code = errorCode(e)
+    if (cmd.type !== 'block.setText' || !UNSENT_CODES.has(code)) {
+      if (cmd.type !== 'block.setText' && this.env.quiet?.(code, cmd)) return
+      return this.refuse(e)
+    }
     this.env.notify({
       kind: 'conflict',
       page: this.env.pageOf(cmd.id) ?? '',

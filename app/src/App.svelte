@@ -33,6 +33,7 @@
   import { InFlight, Refreshes } from './lib/external'
   import { NoticeCenter } from './lib/noticeCenter.svelte'
   import { listenShell } from './lib/shellEvents'
+  import { Recovery } from './lib/recovery'
   import { installDom } from './lib/dom'
   import { linkClick } from './lib/links'
   import { extendsTo, route, selectionPageOf } from './lib/route'
@@ -234,6 +235,7 @@
         pickerOpen = true
       },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
+      quiet: (code, cmd) => recovery.quiet(code, cmd),
     },
     folded,
   )
@@ -286,9 +288,29 @@
     resolveConflict: (block, text, show, since) => void host.resolveConflict(block, text, show, since),
     exec: (cmd) => void exec(cmd),
   })
+  /**
+   * After an internal error (`session:recovered`): one notice, the notes shown again from disk, and the refusals that
+   * error caused stay quiet. Typed text still in the editor is sent first, so text the core did not take is shown to
+   * copy.
+   */
+  const recovery = new Recovery({
+    notify: (n) => notices.notify(n),
+    flush: async () => {
+      host.leave()
+      await client.flush()
+    },
+    reload: async () => {
+      await exec({ type: 'folder.status' })
+      // No folder open any more: the Welcome screen shows.
+      if (folder) await openFolder()
+    },
+    now: () => Date.now(),
+  })
   /** The titles of pages named by Keep mine / Use theirs notices, taken while the page is shown (for a refused switch). */
   const noticeTitles = new Map<string, string>()
   function notify(n: Notice) {
+    // Every view's refusals meet here: those an internal error caused say no more than its one notice.
+    if (n.kind === 'refused' && recovery.quietMessage(n.message)) return
     if (n.kind === 'conflict' && page?.key === n.page) noticeTitles.set(n.page, page.title)
     notices.notify(n)
   }
@@ -687,6 +709,7 @@
   }
 
   function refuse(e: unknown) {
+    if (recovery.quiet(errorCode(e), null)) return
     notify({ kind: 'refused', message: errorMessage(e) })
   }
 
@@ -1547,6 +1570,7 @@
       // Text typed in the last moment before closing is still in the typing pause;
       // pages that still could not be saved, and text shown in unsent notices, are named before closing.
       trayExit: () => void exitFromTray(),
+      recovered: (e) => void recovery.recovered(e).catch(refuse),
       closeRequested: async (event) => {
         if (inTray) {
           // The close button only hides the window; the text typed a moment ago is saved first.

@@ -141,6 +141,15 @@ export type Notice =
       message: string
     }
 
+/**
+ * `session:recovered`: the core recovered from an internal error. `reopened`: the notes were read again from disk,
+ * or no folder is open any more; the window must reload. Else the session was kept because of unsaved edits.
+ */
+export interface RecoveredEvent {
+  reopened: boolean
+  notice: Notice
+}
+
 export type TreeNode =
   | { kind: 'folder'; name: string; path: string; children: TreeNode[] }
   | {

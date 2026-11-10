@@ -11,14 +11,14 @@ vi.mock('@tauri-apps/api/window', () => ({
 }))
 
 const { listenShell } = await import('./shellEvents')
-const { CONFIG_CHANGED, GIT_CHANGED, PAGES_SAVED, TRAY_EXIT } = await import('../api')
+const { CONFIG_CHANGED, GIT_CHANGED, PAGES_SAVED, SESSION_RECOVERED, TRAY_EXIT } = await import('../api')
 
 describe('listenShell', () => {
   it('is ready only once every listener is registered, git:changed included', async () => {
     const noop = () => {}
     const shell = listenShell({
       pageChanged: noop, treeChanged: noop, pageRemoved: noop, notices: noop, indexChanged: noop,
-      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {},
+      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {}, recovered: noop,
     })
     let ready = false
     void shell.ready.then(() => (ready = true))
@@ -35,7 +35,7 @@ describe('listenShell', () => {
     const noop = () => {}
     const shell = listenShell({
       pageChanged: noop, treeChanged: noop, pageRemoved: noop, notices: noop, indexChanged: noop,
-      gitChanged: noop, pageRenamed: noop, configChanged: (c) => seen.push(c), pagesSaved: noop, trayExit: noop, closeRequested: async () => {},
+      gitChanged: noop, pageRenamed: noop, configChanged: (c) => seen.push(c), pagesSaved: noop, trayExit: noop, closeRequested: async () => {}, recovered: noop,
     })
     let ready = false
     void shell.ready.then(() => (ready = true))
@@ -52,7 +52,7 @@ describe('listenShell', () => {
     const noop = () => {}
     listenShell({
       pageChanged: noop, treeChanged: noop, pageRemoved: noop, notices: noop, indexChanged: noop,
-      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {},
+      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {}, recovered: noop,
     })
     expect(PAGES_SAVED).toBe('pages:saved')
     expect(pending.has(PAGES_SAVED)).toBe(true)
@@ -62,9 +62,19 @@ describe('listenShell', () => {
     const noop = () => {}
     listenShell({
       pageChanged: noop, treeChanged: noop, pageRemoved: noop, notices: noop, indexChanged: noop,
-      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {},
+      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {}, recovered: noop,
     })
     expect(TRAY_EXIT).toBe('tray:exit')
     expect(pending.has(TRAY_EXIT)).toBe(true)
+  })
+  it('listens to session:recovered (the session recovered from an internal error)', async () => {
+    pending.clear()
+    const noop = () => {}
+    listenShell({
+      pageChanged: noop, treeChanged: noop, pageRemoved: noop, notices: noop, indexChanged: noop,
+      gitChanged: noop, pageRenamed: noop, configChanged: noop, pagesSaved: noop, trayExit: noop, closeRequested: async () => {}, recovered: noop,
+    })
+    expect(SESSION_RECOVERED).toBe('session:recovered')
+    expect(pending.has(SESSION_RECOVERED)).toBe(true)
   })
 })

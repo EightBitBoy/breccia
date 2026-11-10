@@ -162,3 +162,11 @@ are its questions for you; each answer decides what a later plan does.
    log folder (`%LOCALAPPDATA%\dev.breccia.app\logs` for an installed Breccia; check the path). `breccia.log` starts
    with "Breccia <version> started" and holds no note text. The button's tooltip shows the folder. The click was not
    tried in the automated checks.
+
+74. [ ] **After an internal error:** in PowerShell, in the repository: `$env:BRECCIA_TEST_PANIC='boom'; just dev`
+   (the first search for exactly `boom` then fails inside Breccia, once per run). Type a few words into a block, then
+   search for `boom`: one notice says "Breccia hit an internal error and reloaded your notes from disk. Everything
+   saved is safe; undo starts afresh.", the journal shows, the words you typed are still there, and typing saves
+   again. Check the wording (Q1). Close it and run `Remove-Item Env:BRECCIA_TEST_PANIC` before the next `just dev`.
+   With an installed Breccia instead: quit it (tray > Exit), then
+   `$env:BRECCIA_TEST_PANIC='boom'; & "$env:LOCALAPPDATA\Breccia\breccia.exe"` (adjust to where it is installed).
