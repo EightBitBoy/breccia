@@ -38,3 +38,12 @@ Task 5: minor (deferred): `edit.rs:273-289`, `session.rs:378-391` no test emptie
 Task 5: minor (deferred): `edit.rs:119` a redundant second `self.find(id)?`.
 Task 5: minor (deferred): `session/mod.rs:226` deleting an already-empty only block returns a focus although nothing changed.
 Task 6: implemented (commit f336357; Vitest 1042, lint clean, e2e 197). `split.ts` got the F7 line. Not tested: board cards. With every block of a page selected, the key deletes all (same path as Delete), leaving a page with no blocks.
+Task 6: complete (commits fc0a5e2..f336357, review clean on opus: CodeMirror's binding cannot fire in any mode, no key collision, caret rule right for nested rows and journal days).
+Task 6: minor (deferred, fix in the final wave): `docs/spec.md:224-226` reads as if a selection were emptied too; add "(while editing)".
+Task 6: minor (deferred, follow-ups): should deleting every selected block keep one empty block (all three keys)? Owner question.
+Task 6: minor (deferred): board cards untested (`Boards.patchCard` when the root is deleted).
+Task 6: minor (deferred): the caret lookup grows with the square of shown rows; one frame at about 4,000 to 5,000 rows.
+Task 6: minor (deferred): no test of `Ctrl Shift K` then Escape before the answer.
+Task 6: minor (deferred): `smoke.mjs:3657` the caret check for the emptied block passes for any empty line.
+
+## Final review
