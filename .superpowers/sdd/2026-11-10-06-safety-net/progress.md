@@ -175,3 +175,6 @@ Task 1: minor (deferred): a push to a branch with an open same-repo pull request
 Task 1: minor (deferred): cancel-in-progress on main can cancel a run before the cache is saved (accepted, F17).
 Task 1: minor (deferred): the step-equality test fails with a vague message if the release's version step is renamed.
 Task 1: minor (deferred): only the file-level RED was recorded for the workflow test, no mutation per test.
+Task 2: complete (commits bdaf036..0815964, review clean: spec compliant, quality approved).
+Task 2: minor (deferred): `CONTRIBUTING.md:102` says "issue numbers" where `CLAUDE.md` says "review or finding IDs, plan or task numbers".
+Task 2: minor (deferred): `app/scripts/docs.test.mjs:10` is a 140-character line.
