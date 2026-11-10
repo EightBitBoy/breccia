@@ -22,6 +22,7 @@ export type Action =
   | 'redo'
   | 'extendUp'
   | 'extendDown'
+  | 'deleteBlock'
 
 export type KeyInput = { key: string; shift: boolean; alt: boolean; ctrl: boolean; meta: boolean }
 
@@ -37,6 +38,8 @@ export function decide(e: KeyInput, ctx: Ctx): Action | null {
     if (key === 'enter') return e.shift ? 'removeState' : 'cycleState'
     if (key === 'z') return e.shift ? 'redo' : 'undo'
     if (key === 'y' && !e.shift) return 'redo'
+    // Replaces CodeMirror's own `Ctrl Shift K`, which deletes one line of the block's text.
+    if (key === 'k' && e.shift) return 'deleteBlock'
     return null
   }
   if (!plain) {

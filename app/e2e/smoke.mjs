@@ -3603,6 +3603,83 @@ try {
   await kb.press('Escape')
   console.log('PASS 129 the slash menu offers Today, Yesterday and Date… with a calendar, and inserts the days')
 
+  // 130: Ctrl Shift K deletes the edited block with its children (#78), not one line of its text (CodeMirror's own
+  // binding); the caret goes to the end of the block above; Ctrl Z brings everything back. A page's only block is
+  // emptied instead and stays edited. F1 and Settings → Keyboard list the key.
+  const file130 = join(pagesDir, 'Delete 130.md')
+  const solo130 = join(pagesDir, 'Solo 130.md')
+  const text130 = '- one\n- two\n\t- child\n- three\n'
+  writeFileSync(file130, text130)
+  writeFileSync(solo130, '- solo\n\t- kid\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  // The rendered block whose text is exactly `t`.
+  const content130 = async (t) => {
+    const all = page.locator('.block[data-block-id] .content')
+    await waitFor(`130 the block ${t} is shown`, async () => {
+      const texts = await all.allTextContents()
+      return texts.some((x) => x.trim() === t) || texts
+    }, true)
+    return all.nth((await all.allTextContents()).findIndex((x) => x.trim() === t))
+  }
+  const unlocked130 = page.locator('.cm-content[contenteditable="true"]')
+  // The edited line and whether the caret (the DOM selection's focus) is at its end.
+  const caret130 = () =>
+    page.evaluate(() => {
+      const s = getSelection()
+      const line = s?.focusNode && (s.focusNode.nodeType === 1 ? s.focusNode : s.focusNode.parentElement)?.closest('.cm-line')
+      if (!line) return null
+      const r = document.createRange()
+      r.setStart(line, 0)
+      r.setEnd(s.focusNode, s.focusOffset)
+      return [line.textContent, r.toString().length === line.textContent.length]
+    })
+  await side.locator('[data-row="p:delete 130"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:delete 130"]').click()
+  await title.filter({ hasText: 'Delete 130' }).waitFor()
+  await (await content130('two')).click()
+  await unlocked130.waitFor()
+  await kb.press('Control+Shift+K')
+  await expectFile('130 the block goes with its child', '- one\n- three\n', file130)
+  await unlocked130.waitFor()
+  await waitFor('130 the caret is at the end of the block above', caret130, ['one', true])
+  await kb.press('Control+z')
+  await expectFile('130 undo brings it back', text130, file130)
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await side.locator('[data-row="p:solo 130"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:solo 130"]').click()
+  await title.filter({ hasText: 'Solo 130' }).waitFor()
+  await (await content130('solo')).click()
+  await unlocked130.waitFor()
+  await kb.press('Control+Shift+K')
+  await expectFile('130 the only block is emptied', '-\n', solo130)
+  await unlocked130.waitFor()
+  await waitFor('130 the emptied block is still edited', caret130, ['', true])
+  await kb.press('Control+z')
+  await expectFile('130 undo brings the only block back', '- solo\n\t- kid\n', solo130)
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await kb.press('F1')
+  await page.locator('[data-testid="shortcuts-filter"]').fill('delete')
+  const keys130 = () =>
+    page.evaluate(() =>
+      [...document.querySelectorAll('.shortcuts-group[data-group="Editing"] dd')]
+        .filter((dd) => dd.textContent === 'Delete the block with its sub-blocks')
+        .map((dd) => [...(dd.previousElementSibling?.querySelectorAll('kbd') ?? [])].map((k) => k.textContent).join(' ')),
+    )
+  await waitFor('130 F1 lists the key under Editing', keys130, ['Ctrl Shift K'])
+  await kb.press('Escape')
+  await kb.press('Escape')
+  await page.locator('[data-testid="shortcuts"]').waitFor({ state: 'detached' })
+  const settings130 = page.locator('[data-testid="settings"]')
+  await kb.press('Control+Comma')
+  await settings130.waitFor()
+  const keyboard130 = settings130.locator('section[data-section="keyboard"] tr', { hasText: 'Delete the block with its sub-blocks' })
+  await waitFor('130 Settings → Keyboard lists the key', () => keyboard130.locator('kbd').allInnerTexts(), ['Ctrl Shift K'])
+  await page.locator('[data-testid="nav-journal"]').click()
+  await settings130.waitFor({ state: 'detached' })
+  console.log('PASS 130 Ctrl Shift K deletes the block with its children, the caret moves up, and Ctrl Z brings it back')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

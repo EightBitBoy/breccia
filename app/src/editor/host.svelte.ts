@@ -6,6 +6,7 @@ import { tick } from 'svelte'
 import { errorCode, errorMessage } from '../api'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
+import { deleteFocus } from '../lib/deleteBlock'
 import { UNSENT } from '../lib/notices'
 import { restoreRemoved } from '../lib/paste'
 import { settleCommand, typedState } from '../lib/settle'
@@ -60,6 +61,8 @@ export class EditorHost {
   private locks = 0
   /** The block being edited when a command was issued. */
   private issuedFrom = new WeakMap<Command, BlockId | null>()
+  /** Where the caret goes after a `block.delete` whose answer names no block (`deleteFocus`). */
+  private deleteTargets = new WeakMap<Command, { id: BlockId; at: 'end' | 'start' }>()
   /** The last text typed into each block and when (a running count): Keep mine sends it. */
   private typed = new Map<BlockId, { text: string; at: number }>()
   private typings = 0
@@ -224,11 +227,18 @@ export class EditorHost {
       editing: this.editingId,
       issuedFrom: this.issuedFrom.get(cmd) ?? null,
       editedText: this.editingId === null ? null : (this.blockOf(this.editingId)?.text ?? null),
-      focus: fb && out.focus ? { id: fb.id, cursor16: utf8ToUtf16(fb.text, out.focus.at) } : null,
+      focus: fb && out.focus ? { id: fb.id, cursor16: utf8ToUtf16(fb.text, out.focus.at) } : this.deleteFocusOf(cmd),
       sent: cmd.type === 'block.setText' ? { id: cmd.id, text: cmd.text } : undefined,
       current: this.mounted?.ed.text(),
     })
     background(this.runStep(step, cmd.type === 'block.setText' ? cmd.id : null))
+  }
+
+  /** The caret after a `block.delete` the core placed no caret for: the block chosen when the key was pressed. */
+  private deleteFocusOf(cmd: Command): { id: BlockId; cursor16: number } | null {
+    const t = this.deleteTargets.get(cmd)
+    const b = t && this.blockOf(t.id)
+    return b ? { id: b.id, cursor16: t.at === 'end' ? b.text.length : 0 } : null
   }
 
   private async runStep(step: Step, typedIn: BlockId | null) {
@@ -571,6 +581,15 @@ export class EditorHost {
       case 'extendDown':
         this.env.selectWithNeighbour(id, a === 'extendUp' ? -1 : 1)
         return
+      case 'deleteBlock': {
+        // The caret target among the shown rows of the block's own page (a feed shows several days).
+        const page = this.env.pageOf(id)
+        const rows = visible(this.env.order?.(id) ?? this.env.blocks(), this.folded).filter((b) => this.env.pageOf(b.id) === page)
+        const cmd: Command = { type: 'block.delete', id }
+        this.deleteTargets.set(cmd, deleteFocus(rows, id))
+        void this.exec(cmd)
+        return
+      }
     }
   }
 }

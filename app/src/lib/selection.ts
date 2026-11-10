@@ -54,6 +54,7 @@ export function selectionAction(
     if (key === 'enter') return e.shift ? 'removeState' : 'cycleState'
     if (key === 'z') return e.shift ? 'redo' : 'undo'
     if (key === 'y' && !e.shift) return 'redo'
+    if (key === 'k' && e.shift) return 'delete'
     return null
   }
   if (e.alt) {

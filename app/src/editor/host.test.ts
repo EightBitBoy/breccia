@@ -1,7 +1,7 @@
 import { EditorSelection, EditorState } from '@codemirror/state'
 import type { EditorView } from '@codemirror/view'
 import { beforeEach, expect, test } from 'vitest'
-import type { Client } from '../lib/api'
+import { createClient, type Client } from '../lib/api'
 import { patchRefs, refBlocks } from '../lib/refs'
 import type { BlockView, Command, Notice, Output, PageView, RefsView } from '../lib/types'
 import type { EditorHooks, mountEditor } from './blockEditor'
@@ -549,4 +549,149 @@ test('Ctrl Shift Enter while editing sends blocks.setState with no keyword', asy
   await host.edit(1, 0)
   host.act(1, 'removeState')
   expect(sent.at(-1)).toEqual({ type: 'blocks.setState', ids: [1], keyword: null })
+})
+
+// ---- Ctrl Shift K: delete the block -------------------------------------------------
+
+test('the delete key sends the typed text first, then block.delete', async () => {
+  const invoked: Command[] = []
+  const real = createClient((req) => (invoked.push(req.command), Promise.resolve(out(null))))
+  const h = new EditorHost(
+    {
+      client: real,
+      blocks: () => blocks,
+      pageOf: () => 'p',
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await h.edit(2, 4)
+  h.editor!.ed.insert('!') // still in the typing pause when the key is pressed
+  hooks.onAction('deleteBlock', { cursor16: 5 })
+  await real.flush()
+  expect(invoked).toEqual([
+    { type: 'block.setText', id: 2, text: 'beta!' },
+    { type: 'block.delete', id: 2 },
+  ])
+})
+
+test('after the delete the caret is at the end of the block above', async () => {
+  blocks = [block(1, 'alpha'), block(2, 'beta'), { ...block(5, 'kid'), depth: 1 }, block(3, 'gamma')]
+  await host.edit(2, 1)
+  hooks.onAction('deleteBlock', { cursor16: 1 })
+  const del = sent.at(-1)!
+  expect(del).toEqual({ type: 'block.delete', id: 2 })
+  blocks = [block(1, 'alpha'), block(3, 'gamma')]
+  host.apply(del, out(pageOf('p', blocks)), true)
+  await settle()
+  expect(host.editingId).toBe(1)
+  expect(host.editor!.ed.cursor16()).toBe(5)
+})
+
+test('deleting the first block puts the caret at the start of the block after its children', async () => {
+  blocks = [block(1, 'alpha'), { ...block(5, 'kid'), depth: 1 }, block(2, 'beta')]
+  await host.edit(1, 3)
+  hooks.onAction('deleteBlock', { cursor16: 3 })
+  const del = sent.at(-1)!
+  blocks = [block(2, 'beta')]
+  host.apply(del, out(pageOf('p', blocks)), true)
+  await settle()
+  expect(host.editingId).toBe(2)
+  expect(host.editor!.ed.cursor16()).toBe(0)
+})
+
+test('a delete key during a split waits for the new block, and keys after it are dropped', async () => {
+  await host.edit(1, 5)
+  hooks.onAction('split', { cursor16: 5 })
+  const split = sent.find((c) => c.type === 'block.split')!
+  // Pressed before the split answers.
+  hooks.onAction('deleteBlock', { cursor16: 5 })
+  hooks.onAction('indent', { cursor16: 5 })
+  const o = out(pageOf('p', [block(1, 'alpha'), block(8, ''), block(2, 'beta')]))
+  o.focus = { id: 8, at: 0 }
+  blocks = [block(1, 'alpha'), block(8, ''), block(2, 'beta')]
+  host.apply(split, o, true)
+  await settle()
+  expect(sent.filter((c) => c.type !== 'pages.list')).toEqual([split, { type: 'block.delete', id: 8 }])
+  expect(notices).toEqual([])
+})
+
+test('after deleting the only block the caret stays in it', async () => {
+  blocks = [block(1, 'solo'), { ...block(5, 'kid'), depth: 1 }]
+  await host.edit(1, 4)
+  hooks.onAction('deleteBlock', { cursor16: 4 })
+  const del = sent.at(-1)!
+  expect(del).toEqual({ type: 'block.delete', id: 1 })
+  blocks = [block(1, '')]
+  const o = out(pageOf('p', blocks))
+  o.focus = { id: 1, at: 0 }
+  host.apply(del, o, true)
+  await settle()
+  expect(host.editingId).toBe(1)
+  expect(host.editor!.ed.text()).toBe('')
+  expect(host.editor!.ed.cursor16()).toBe(0)
+})
+
+test('in the feed the caret stays on the block\'s own day', async () => {
+  // Two days in one feed: 1 and 2 on the day above, 3 and 4 on the lower day.
+  const day: Record<number, string> = { 1: 'a', 2: 'a', 3: 'b', 4: 'b' }
+  blocks = [block(1, 'one'), block(2, 'two'), block(3, 'three'), block(4, 'four')]
+  const h = new EditorHost(
+    {
+      client,
+      blocks: () => blocks,
+      order: () => blocks,
+      pageOf: (id) => day[id] ?? null,
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await h.edit(3, 0)
+  hooks.onAction('deleteBlock', { cursor16: 0 })
+  const del = sent.at(-1)!
+  expect(del).toEqual({ type: 'block.delete', id: 3 })
+  blocks = [block(1, 'one'), block(2, 'two'), block(4, 'four')]
+  h.apply(del, out(pageOf('b', [block(4, 'four')])), true)
+  await settle()
+  expect(h.editingId).toBe(4)
+  expect(h.editor!.ed.cursor16()).toBe(0)
+})
+
+test('deleting a linked reference with nothing else of its page shown ends editing', async () => {
+  // The reference shows only block 1 of page j; the core deletes it (j has other blocks).
+  const page: Record<number, string> = { 1: 'j', 2: 'k' }
+  blocks = [block(1, 'see [[a]]'), block(2, 'other')]
+  const h = new EditorHost(
+    {
+      client,
+      blocks: () => blocks,
+      pageOf: (id) => page[id] ?? null,
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await h.edit(1, 0)
+  hooks.onAction('deleteBlock', { cursor16: 0 })
+  const del = sent.at(-1)!
+  expect(del).toEqual({ type: 'block.delete', id: 1 })
+  blocks = [block(2, 'other')]
+  h.apply(del, out(pageOf('j', [block(0, 'top')])), true)
+  await settle()
+  expect(h.editingId).toBeNull()
+  expect(notices).toEqual([])
 })

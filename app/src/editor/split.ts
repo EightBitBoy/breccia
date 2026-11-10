@@ -123,6 +123,8 @@ export function replay(h: SplitHost, queue: Queued[]) {
       continue
     }
     h.act(h.editor.id, a)
+    // The block is being deleted: keys after it are dropped, as after a merge.
+    if (a === 'deleteBlock') return
     const s = h.splitting as Splitting | null
     if (s) {
       // A replayed split queues the rest; its carets are already in this editor.

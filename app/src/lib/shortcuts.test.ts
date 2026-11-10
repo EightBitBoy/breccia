@@ -20,6 +20,14 @@ describe('shortcuts', () => {
     const rows = shortcutRows(false)
     for (const keys of ['F1', 'Ctrl N', 'Backspace / Delete', 'Enter / Space']) expect(rows.some((r) => r.keys === keys), keys).toBe(true)
   })
+  it('lists the delete-block key on both platforms', () => {
+    const s = SHORTCUTS.find((x) => x.keys === 'Ctrl Shift K')
+    expect(s).toEqual({ group: 'Editing', keys: 'Ctrl Shift K', mac: 'Cmd Shift K', what: 'Delete the block with its sub-blocks' })
+    // Right after the Backspace line.
+    expect(SHORTCUTS[SHORTCUTS.indexOf(s!) - 1].keys).toBe('Backspace')
+    expect(shortcutGroups(false, 'delete').find((g) => g.name === 'Editing')?.rows.some((r) => r.keys === 'Ctrl Shift K')).toBe(true)
+    expect(shortcutRows(true).some((r) => r.keys === 'Cmd Shift K')).toBe(true)
+  })
   it('lists the date picker key', () => {
     expect(shortcutRows(false).find((r) => r.keys === 'Ctrl Shift D')?.what).toMatch(/date picker/)
     expect(shortcutRows(true).some((r) => r.keys === 'Cmd Shift D')).toBe(true)

@@ -74,3 +74,10 @@ test('mod shift enter removes the state of selected blocks', () => {
   expect(selectionAction(key('Enter', { meta: true, shift: true }), true)).toBe('removeState')
   expect(selectionAction(key('Enter', { ctrl: true, shift: true, alt: true }), false)).toBeNull()
 })
+
+test('Ctrl Shift K deletes the selected blocks', () => {
+  expect(selectionAction(key('K', { ctrl: true, shift: true }), false)).toBe('delete')
+  expect(selectionAction(key('K', { meta: true, shift: true }), true)).toBe('delete')
+  expect(selectionAction(key('k', { ctrl: true }), false)).toBeNull()
+  expect(selectionAction(key('K', { ctrl: true, shift: true, alt: true }), false)).toBeNull()
+})

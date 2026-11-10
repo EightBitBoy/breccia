@@ -124,3 +124,22 @@ test('Alt ← / Alt → go back and forward; Cmd [ / Cmd ] on a Mac', () => {
   expect(navKey(k('[', { meta: true, shift: true }), true)).toBeNull()
   expect(navKey(k('ArrowLeft', { alt: true }), true)).toBeNull()
 })
+
+test('Ctrl Shift K deletes the block', () => {
+  expect(decide(k('K', { ctrl: true, shift: true }), ctx)).toBe('deleteBlock')
+  expect(decide(k('k', { ctrl: true, shift: true }), ctx)).toBe('deleteBlock')
+  // Whatever the caret and the selection inside the block.
+  expect(decide(k('K', { ctrl: true, shift: true }), { ...ctx, selectionEmpty: false })).toBe('deleteBlock')
+  expect(decide(k('K', { ctrl: true, shift: true }), { ...ctx, atStart: true, onFirstLine: true, onLastLine: true })).toBe('deleteBlock')
+})
+
+test('Cmd Shift K deletes the block on a Mac', () => {
+  expect(decide(k('K', { meta: true, shift: true }), { ...ctx, mac: true })).toBe('deleteBlock')
+  expect(decide(k('K', { ctrl: true, shift: true }), { ...ctx, mac: true })).toBeNull()
+})
+
+test('Ctrl K, Ctrl Alt Shift K and Cmd Shift K on Windows do not delete the block', () => {
+  expect(decide(k('k', { ctrl: true }), ctx)).toBeNull()
+  expect(decide(k('K', { ctrl: true, alt: true, shift: true }), ctx)).toBeNull()
+  expect(decide(k('K', { meta: true, shift: true }), ctx)).toBeNull()
+})

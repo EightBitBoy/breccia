@@ -187,3 +187,7 @@ are its questions for you; each answer decides what a later plan does.
    with the small calendar of the date picker (the entry once called "Today's date" is now "Today"). `/date` lists all
    three. "Today" inserts a link to today's day (`[[YYYY-MM-DD]]`), "Yesterday" a link to yesterday's day, and "Date…"
    opens the date picker. Check "Yesterday" shortly after midnight once if you can.
+
+78. [ ] **Delete a block:** in a block with sub-blocks press `Ctrl Shift K`: it goes with its sub-blocks, the caret is
+   at the end of the block above, `Ctrl Z` brings all back. On a page's only block the block is emptied. With blocks
+   selected (`Shift ↓`) the key deletes them. F1 and Settings > Keyboard list it.
