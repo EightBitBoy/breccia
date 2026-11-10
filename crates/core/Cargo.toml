@@ -14,7 +14,7 @@ chrono = "0.4"
 thiserror = "2"
 pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
 notify = "8"
-notify-debouncer-full = "0.5"
+notify-debouncer-full = "0.7"
 toml_edit = "0.25.17"
 rusqlite = { version = "0.41.1", features = ["bundled"] }
 unicode-normalization = "0.1.26"
