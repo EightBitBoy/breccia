@@ -178,3 +178,8 @@ Task 1: minor (deferred): only the file-level RED was recorded for the workflow 
 Task 2: complete (commits bdaf036..0815964, review clean: spec compliant, quality approved).
 Task 2: minor (deferred): `CONTRIBUTING.md:102` says "issue numbers" where `CLAUDE.md` says "review or finding IDs, plan or task numbers".
 Task 2: minor (deferred): `app/scripts/docs.test.mjs:10` is a 140-character line.
+Task 3: complete (commits 6026834..5b0e497, review clean: spec compliant, quality approved). No RED run (the sides agreed); six mutations shown to fail.
+Task 3: minor (deferred): `contract.test.ts:66` a `Command` variant without `#[serde(rename)]` is not seen; assert variants == renames.
+Task 3: minor (deferred): `contract.test.ts:76,81` an event named outside `^[a-z]+:[a-z]+$` is ignored on both sides; assert Rust has none outside it.
+Task 3: minor (deferred): `contract.test.ts:76` the Rust regex matches any `const X: &str = "a:b"`, not only events.
+Task 3: minor (deferred): `contract.test.ts:55` `tsSection` ends at the next `export` line, so a non-exported declaration after it would be absorbed.
