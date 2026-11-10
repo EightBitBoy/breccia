@@ -22,6 +22,7 @@ import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 import { keepForeground } from './foreground.mjs'
+import { decodePng } from './png.mjs'
 import { summarize } from './trace.mjs'
 import { readVersions } from '../scripts/version.mjs'
 
@@ -3384,6 +3385,180 @@ try {
   await waitFor('127 the notice dismissed', () => notices127.count(), 0)
   await kb.press('Escape')
   console.log('PASS 127 after an internal error the notes reload, one notice says so, and typing saves again')
+
+  // 128: no line shows between the rows of a wash band (#75). For each theme and zoom, one capture of the window at
+  // device scale; for the inner boundaries of a named and a custom band, the largest per-channel difference between
+  // the middle of a row and every pixel down to the middle of the next, in a strip 4 CSS px wide at 3 CSS px from the
+  // band's left edge. The background is flat, so a clean band gives 0. Zooms in SEAM_ZOOMS are asserted; the others
+  // are measured and printed.
+  const SEAM_ZOOMS = [100]
+  const SEAM_TOLERANCE = 2
+  const THEMES128 = ['light', 'dark', 'violet', 'graphite', 'taupe', 'teal']
+  writeFileSync(join(pagesDir, 'Seam blue 128.md'), 'color:: blue\n- b\n')
+  writeFileSync(join(pagesDir, 'Seam hue 128.md'), 'color:: hue 212\n- h\n')
+  const key128 = dayKey(12) // set-up wrote it; no other step reads it
+  writeFileSync(
+    join(folder, 'journals', `${key128}.md`),
+    '- [[Seam blue 128]] one\n\t- two\n- [[Seam blue 128]] three\n- [[Seam blue 128]] four\n- plain\n' +
+      '- [[Seam hue 128]] five\n\t- six\n- [[Seam hue 128]] seven\n- [[Seam hue 128]] eight\n',
+  )
+  const day128 = await showDay(key128, 'eight') // step 127 left the journal shown
+  const rows128 = day128.locator('.block[data-block-id]')
+  await waitFor('128 washes', () => washesOf(rows128), 'blue blue blue blue - hue 212 hue 212 hue 212 hue 212')
+  const dpr128 = () => page.evaluate(() => window.devicePixelRatio)
+  await page.mouse.move(1, 1) // a hovered row shows its fold arrow
+  // The theme list is the status bar menu's, without System.
+  await theme125.click()
+  await menu125.waitFor()
+  const choices128 = await choices125.evaluateAll((es) => es.map((e) => e.dataset.themeChoice).filter((c) => c !== 'system'))
+  assert(JSON.stringify(choices128) === JSON.stringify(THEMES128), `128 the theme menu lists ${choices128}`)
+  await kb.press('Escape')
+  await menu125.waitFor({ state: 'detached' })
+  const themeBefore128 = (await attr125()) || 'system'
+  const zoomItem128 = page.locator('[data-testid="status-item"][data-id="zoom"]')
+  assert((await zoomItem128.count()) === 0, '128 the zoom is not 100 % at the start')
+  const base128 = await dpr128()
+  const pickTheme128 = async (t) => {
+    await theme125.click()
+    await menu125.waitFor()
+    await menu125.locator(`[role="menuitemradio"][data-theme-choice="${t}"]`).click()
+    await menu125.waitFor({ state: 'detached' })
+    await waitFor(`128 theme ${t}`, attr125, t === 'system' ? '' : t)
+  }
+  /** Waits until the device scale is the zoom's, then brings the bands into view again. */
+  const settleZoom128 = async (zoom) => {
+    await waitFor(`128 scale ${zoom}`, async () => Math.abs((await dpr128()) - (base128 * zoom) / 100) < 0.01, true)
+    // The feed draws its days anew for the new size, so a row can be replaced while it is scrolled to: try again.
+    const inView = async () => {
+      try {
+        if ((await rows128.count()) === 0) await showDay(key128, 'eight')
+        await rows128.last().scrollIntoViewIfNeeded({ timeout: 2000 })
+        await rows128.first().scrollIntoViewIfNeeded({ timeout: 2000 })
+        await frames()
+        return await rows128.evaluateAll(
+          (els) => els.length === 9 && els.every((e) => e.getBoundingClientRect().top >= 0 && e.getBoundingClientRect().bottom <= innerHeight),
+        )
+      } catch {
+        return false
+      }
+    }
+    await waitFor(`128 the bands in view at ${zoom} %`, inView, true, 20_000)
+  }
+  // The capture is CDP's own: under Breccia's zoom, page.screenshot counts in zoomed DIPs and resamples the image
+  // (1000 px for a 1100 px window at 110 %, measured), which could blur a 1 px line away.
+  const cdp128 = await page.context().newCDPSession(page)
+  /** One capture of the window: its pixels, and device px per CSS px from its width (asserted to be the device scale). */
+  const capture128 = async () => {
+    const png = decodePng(Buffer.from((await cdp128.send('Page.captureScreenshot', { format: 'png' })).data, 'base64'))
+    const view = await page.evaluate(() => ({ inner: window.innerWidth, dpr: window.devicePixelRatio }))
+    const factor = png.width / view.inner
+    assert(Math.abs(factor - view.dpr) < 0.01, `128 the capture is ${png.width} px for ${view.inner} CSS px, at scale ${view.dpr}`)
+    return { png, factor, dpr: view.dpr }
+  }
+  /**
+   * Each row's box in CSS px, the pixel its wash should show (its background painted over the first opaque one behind
+   * it), and that background's pixel.
+   */
+  const band128 = (from, to) =>
+    rows128.evaluateAll(
+      (els, [a, b]) => {
+        const cx = document.createElement('canvas').getContext('2d', { willReadFrequently: true })
+        const paint = (...colors) => {
+          cx.clearRect(0, 0, 1, 1)
+          for (const c of colors) {
+            cx.fillStyle = c
+            cx.fillRect(0, 0, 1, 1)
+          }
+          return [...cx.getImageData(0, 0, 1, 1).data].slice(0, 3)
+        }
+        const behind = (el) => {
+          for (let e = el.parentElement; e; e = e.parentElement) {
+            const c = getComputedStyle(e).backgroundColor
+            if (c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') return c
+          }
+          return 'white'
+        }
+        return els.slice(a, b).map((el) => {
+          const r = el.getBoundingClientRect()
+          const bg = behind(el)
+          return { left: r.left, top: r.top, height: r.height, wash: paint(bg, getComputedStyle(el).backgroundColor), bg: paint(bg) }
+        })
+      },
+      [from, to],
+    )
+  const diff128 = (p, q) => Math.max(...p.map((v, k) => Math.abs(v - q[k])))
+  /**
+   * The seam below row `i` of `band`: the largest per-channel difference from the middle of row `i` down to the middle
+   * of row `i + 1`, with the brightness change of that pixel (positive: lighter than the wash) and its distance in
+   * device px below row `i + 1`'s top edge.
+   */
+  const seamAt = (shot, band, i, what) => {
+    const { png, factor } = shot
+    const [a, b] = [band[i], band[i + 1]]
+    const px = (x, y) => [...png.rgba.subarray((y * png.width + x) * 4, (y * png.width + x) * 4 + 3)]
+    const x0 = Math.round((a.left + 3) * factor)
+    const x1 = Math.round((a.left + 7) * factor)
+    const y0 = Math.round((a.top + a.height / 2) * factor)
+    const y1 = Math.round((b.top + b.height / 2) * factor)
+    const ref = px(x0, y0)
+    // The reference is the wash, not the page or a wrong place, so a 0 below means "no seam".
+    assert(diff128(ref, a.wash) <= 3, `128 ${what}: the pixel in row ${i} is ${ref}, not the wash ${a.wash}`)
+    assert(diff128(ref, a.bg) > 3, `128 ${what}: the pixel in row ${i} is the page background ${a.bg}`)
+    let worst = { value: 0, light: 0, at: 0 }
+    for (let x = x0; x < x1; x++) {
+      for (let y = y0; y <= y1; y++) {
+        const p = px(x, y)
+        const value = diff128(p, ref)
+        if (value > worst.value) {
+          worst = { value, light: p[0] + p[1] + p[2] - (ref[0] + ref[1] + ref[2]), at: y - Math.round(b.top * factor) }
+        }
+      }
+    }
+    return worst
+  }
+  const results128 = []
+  const tone128 = (w) => (w.value === 0 ? 'flat' : `${w.light > 0 ? 'lighter' : w.light < 0 ? 'darker' : 'same brightness'} at ${w.at} px`)
+  for (const theme of THEMES128) {
+    await pickTheme128(theme)
+    for (const [z, zoom] of [100, 110, 125].entries()) {
+      if (z > 0) {
+        await kb.press('Control+Equal')
+        await waitFor(`128 item ${zoom}`, () => zoomItem128.innerText(), `${zoom} %`)
+      }
+      await settleZoom128(zoom)
+      // The rows are measured before and after the capture; they must not have moved in between.
+      let shot = null
+      let bands = null
+      await waitFor(`128 a still capture at ${theme} ${zoom} %`, async () => {
+        const before = [await band128(0, 4), await band128(5, 9)]
+        shot = await capture128()
+        bands = [await band128(0, 4), await band128(5, 9)]
+        return JSON.stringify(before) === JSON.stringify(bands)
+      }, true)
+      const worst = {}
+      for (const [kind, from] of [['named', 0], ['custom', 5]]) {
+        const band = bands[from === 0 ? 0 : 1]
+        worst[kind] = { value: -1 }
+        for (let i = 0; i < 3; i++) {
+          const what = `${theme} ${zoom} % ${kind}`
+          const w = seamAt(shot, band, i, what)
+          results128.push({ theme, zoom, kind, i, ...w })
+          if (w.value > worst[kind].value) worst[kind] = w
+        }
+      }
+      console.log(
+        `128 ${theme} ${zoom} % (scale ${shot.dpr}): named ${worst.named.value} (${tone128(worst.named)}), custom ${worst.custom.value} (${tone128(worst.custom)})`,
+      )
+    }
+    await kb.press('Control+Digit0')
+    await zoomItem128.waitFor({ state: 'detached' })
+    await settleZoom128(100)
+  }
+  await pickTheme128(themeBefore128)
+  await cdp128.detach()
+  const seams128 = results128.filter((r) => SEAM_ZOOMS.includes(r.zoom) && r.value > SEAM_TOLERANCE)
+  assert(seams128.length === 0, `128 seams: ${seams128.map((r) => `${r.theme} ${r.zoom} % ${r.kind} below row ${r.i}: ${r.value}`).join('; ')}`)
+  console.log('PASS 128 no seam between the rows of a wash band at ' + SEAM_ZOOMS.join(', ') + ' %, named and custom, in every theme')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
