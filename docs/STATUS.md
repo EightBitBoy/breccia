@@ -29,6 +29,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 4 | Follow-ups of plans 1 to 3 | done 2026-11-09 | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | `docs/plans/2026-11-09-04-followups-of-plans-1-3-followups.md` |
 | 5 | GitHub Pages site | done 2026-11-09 | `docs/plans/2026-11-09-05-github-pages-site.md` | `docs/plans/2026-11-09-05-github-pages-site-followups.md` |
 | 6 | Safety net (from the audit) | done 2026-11-10 | `docs/plans/2026-11-10-06-safety-net.md` | `docs/plans/2026-11-10-06-safety-net-followups.md` |
+| 7 | Wash seams, Today and Yesterday, delete a block | done 2026-11-10 | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block.md` | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -72,9 +73,13 @@ test between the core's and the frontend's names; read-only commands no longer s
 audit findings B5, B6, B7, M9, M17, M41, M52 and M54. The owner checks review items 70 to 75; nobody has yet clicked
 "Open log folder" or started Breccia twice for real.
 
-Next is plan 7: backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) together with backlog
-#77 ("Yesterday" and "Today" in the slash menu) and #78 (a shortcut that deletes the whole block), then backlog #76
-(the scroll wheel over the theme button, and more themes). Each is a normal plan, with the owner's review.
+Plan 7 is done (2026-11-10; owner decisions in the plan, ledger
+`.superpowers/sdd/2026-11-10-07-wash-seams-slash-dates-delete-block/progress.md`): no faint lines between the rows of a
+page color wash at zoom 110 % and 125 % (backlog #75, measured by e2e step 128); "Today" and "Yesterday" with a small
+calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with its sub-blocks (#78). The owner checks
+review items 76 to 78.
+
+Next is backlog #76 (the scroll wheel over the theme button, and more themes), a normal plan with the owner's review.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
@@ -85,14 +90,14 @@ Candidates for the next plan, to settle with the owner:
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 78 items; #71, #72, #73, #74 done, #64 done by plan 5);
+- backlog items the owner picks (`docs/backlog.md`, 78 items; #71 to #75, #77, #78 done, #64 done by plan 5);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 
 ## Test baseline
 
-- `just test`: Vitest (1015 tests) and cargo tests (core 725) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 189 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (1042 tests) and cargo tests (core 734) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 197 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.

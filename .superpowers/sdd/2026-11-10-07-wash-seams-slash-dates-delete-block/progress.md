@@ -47,3 +47,7 @@ Task 6: minor (deferred): no test of `Ctrl Shift K` then Escape before the answe
 Task 6: minor (deferred): `smoke.mjs:3657` the caret check for the emptied block passes for any empty line.
 
 ## Final review
+Final review (opus): ready after doc fixes; no Critical; all nine owner decisions ship as decided; the three features work together.
+Ruling: the fix wave is docs only: review items 76 (display scale 125/150 %, selected washed row), 42 and 43 (out of date), 77 (ask about the 22 px label offset); spec "(while editing)"; backlog #75, #77, #78 marked done. Everything else in the final review's triage goes to the follow-ups doc, which the same subagent writes. Changelog line 2 keeps its two changes (history is not rewritten; the owner may split it at the release pause).
+Docs fix wave: commit 0ed7e30 (review items 42, 43, 76, 77; spec "(while editing)"; backlog #75, #77, #78 done; follow-ups doc). Checked by the controller (docs only).
+Finish (controller, 2026-11-10): `just test` green (Vitest 1042, core 734), `just lint` clean, `just e2e` 197 PASS. `docs/STATUS.md` updated. Plan 7 done.
