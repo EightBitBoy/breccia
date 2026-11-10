@@ -997,6 +997,12 @@ fn config_override(var: Option<std::ffi::OsString>) -> Option<PathBuf> {
     var.filter(|p| !p.is_empty()).map(PathBuf::from)
 }
 
+/// Only one Breccia runs per user, except under `BRECCIA_CONFIG_DIR` (the test
+/// hook): e2e, `just dev` and the screenshots then run beside an installed Breccia.
+fn single_instance_wanted(config_override: Option<&Path>) -> bool {
+    config_override.is_none()
+}
+
 /// The window-state plugin, or `None` for an off-screen run: a restored
 /// state would bring the window back on screen and focus it, and a saved one
 /// would put it off screen on the next normal start.
@@ -1023,7 +1029,15 @@ pub fn run() {
     if offscreen {
         place_offscreen(&mut context.config_mut().app.windows);
     }
-    let mut builder = tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    if single_instance_wanted(config_override.as_deref()) {
+        // First, as the plugin requires: a second start must be caught before
+        // anything else is set up. The arguments are ignored; Breccia takes none.
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            show_main(app)
+        }));
+    }
+    builder = builder
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_opener::init());
     if let Some(window_state) = window_state(config_override.as_deref(), offscreen) {
@@ -1808,5 +1822,19 @@ mod tests {
             Some((_, Some(GitMsg::Init)))
         ));
         assert!(answer(Command::FolderStatus).is_none());
+    }
+
+    #[test]
+    fn single_instance_is_skipped_under_a_config_dir() {
+        assert!(single_instance_wanted(None));
+        assert!(!single_instance_wanted(Some(Path::new("cfg"))));
+    }
+
+    #[test]
+    fn single_instance_is_the_first_plugin() {
+        let src = include_str!("lib.rs");
+        let body = &src[src.find("pub fn run()").unwrap()..];
+        let first = body.find(".plugin(").unwrap();
+        assert!(body[first..].starts_with(".plugin(tauri_plugin_single_instance::init("));
     }
 }

@@ -170,3 +170,9 @@ are its questions for you; each answer decides what a later plan does.
    again. Check the wording (Q1). Close it and run `Remove-Item Env:BRECCIA_TEST_PANIC` before the next `just dev`.
    With an installed Breccia instead: quit it (tray > Exit), then
    `$env:BRECCIA_TEST_PANIC='boom'; & "$env:LOCALAPPDATA\Breccia\breccia.exe"` (adjust to where it is installed).
+
+75. [ ] **One Breccia at a time:** with Breccia in the tray (window closed), start it again from the Start menu: the
+   same window comes to the front, and there is still one tray icon. With Breccia open, start it again: the window
+   comes to the front, no second window flashes. Also: `just e2e` passes while an installed Breccia runs. If the
+   window only flashes in the taskbar instead of coming to the front, say so (a known Windows limit with a small
+   fix).
