@@ -428,6 +428,7 @@ export type Command =
   | { type: 'blocks.moveUp'; ids: BlockId[] }
   | { type: 'blocks.moveDown'; ids: BlockId[] }
   | { type: 'blocks.delete'; ids: BlockId[] }
+  | { type: 'block.delete'; id: BlockId }
   | { type: 'history.undo'; page: string }
   | { type: 'history.redo'; page: string }
   | { type: 'board.get'; index: number }

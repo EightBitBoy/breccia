@@ -64,6 +64,7 @@ describe('kindOf', () => {
     expect(kindOf('history.undo')).toBe('text')
     expect(kindOf('page.reload')).toBe('text')
     expect(kindOf('block.merge')).toBe('text')
+    expect(kindOf('block.delete')).toBe('text')
     // A drop on a board rewrites the card's text (state, priority), as a change of state does.
     expect(kindOf('board.place')).toBe('text')
     expect(kindOf('page.open')).toBe('other')

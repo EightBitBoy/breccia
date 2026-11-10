@@ -69,6 +69,7 @@ export function kindOf(type: Command['type']): Kind {
     case 'board.place':
     case 'blocks.setArchived':
     case 'blocks.delete':
+    case 'block.delete':
     case 'history.undo':
     case 'history.redo':
     case 'page.reload':

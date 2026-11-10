@@ -335,6 +335,24 @@ impl Document {
         Ok(())
     }
 
+    /// Removes the block with its subtree and returns `None`. If that would
+    /// leave the document without a block, the block stays instead: its text
+    /// is emptied, its children go, and its id is returned.
+    pub fn delete_block(&mut self, id: BlockId) -> Result<Option<BlockId>, EditError> {
+        let i = self.find(id)?;
+        if i == 0 && self.subtree_end(0) == self.blocks.len() {
+            // The text first: it re-reads its result and may be refused.
+            self.replace_keeping_structure(id, "")?;
+            let i = self.find(id)?;
+            let end = self.subtree_end(i);
+            self.blocks.drain(i + 1..end);
+            self.fix_indents();
+            return Ok(Some(id));
+        }
+        self.delete(id)?;
+        Ok(None)
+    }
+
     /// Makes the block the last child of its previous sibling (Tab).
     pub fn indent(&mut self, id: BlockId) -> Result<(), EditError> {
         let i = self.find(id)?;

@@ -792,6 +792,14 @@ impl Session {
             Command::BlocksMoveUp { ids } => self.on_roots(&ids, false, Document::move_up),
             Command::BlocksMoveDown { ids } => self.on_roots(&ids, true, Document::move_down),
             Command::BlocksDelete { ids } => self.on_roots(&ids, false, Document::delete),
+            Command::BlockDelete { id } => {
+                let key = self.page_of(id)?;
+                self.mutate(
+                    &key,
+                    false,
+                    Box::new(move |d, _, _| Ok(d.delete_block(id)?.map(|id| Focus { id, at: 0 }))),
+                )
+            }
 
             Command::HistoryUndo { page } => self.step_history(&page, false),
             Command::HistoryRedo { page } => self.step_history(&page, true),

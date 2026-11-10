@@ -56,6 +56,7 @@ fn command_names_deserialize() {
     for j in [
         json!({"type":"block.setText","id":1,"text":"x"}),
         json!({"type":"blocks.moveUp","ids":[1,2]}),
+        json!({"type":"block.delete","id":1}),
         json!({"type":"block.split","id":1,"at":3}),
         json!({"type":"history.undo","page":"p"}),
         json!({"type":"blocks.setState","ids":[1],"keyword":null}),
@@ -696,6 +697,104 @@ fn batch_with_a_block_of_another_page_is_refused() {
     assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
     assert_eq!(read(&t, "pages/Q.md"), "- q\n");
     assert_eq!(depths(&mut s, "p"), [0, 0]);
+}
+
+#[test]
+fn block_delete_is_one_undo_step() {
+    let original = "- a\n- b\n\t- c\n- d\n";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let b = ids(&mut s, "p")[1];
+    let out = ok(&mut s, json!({"type":"block.delete","id":b}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "- a\n- d\n");
+    assert!(out.focus.is_none());
+    assert_eq!(out.page.unwrap().blocks.len(), 2);
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
+fn block_delete_after_typing_undoes_to_the_typed_text() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n\t- c\n- d\n")]);
+    let b = ids(&mut s, "p")[1];
+    ok(
+        &mut s,
+        json!({"type":"block.setText","id":b,"text":"bee"}),
+        0,
+    );
+    ok(&mut s, json!({"type":"block.delete","id":b}), 100);
+    assert_eq!(read(&t, "pages/P.md"), "- a\n- d\n");
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 200);
+    assert_eq!(read(&t, "pages/P.md"), "- a\n- bee\n\t- c\n- d\n");
+}
+
+#[test]
+fn block_delete_of_the_only_block_keeps_it_empty() {
+    let original = "- a\n\t- c\n";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let a = ids(&mut s, "p")[0];
+    let out = ok(&mut s, json!({"type":"block.delete","id":a}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+    let focus = out.focus.unwrap();
+    assert_eq!((focus.id, focus.at), (a, 0));
+    let page = out.page.unwrap();
+    assert_eq!(page.blocks.len(), 1);
+    assert_eq!(page.blocks[0].text, "");
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
+fn block_delete_of_an_unknown_block_is_refused() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
+    let b = ids(&mut s, "p")[1];
+    let err = cmd(&mut s, json!({"type":"block.delete","id":999_999}), 0).unwrap_err();
+    assert_eq!(err.code, "unknownBlock");
+    assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
+    // No undo step was recorded: undo changes nothing.
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
+    assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
+    assert_eq!(ids(&mut s, "p")[1], b);
+}
+
+#[test]
+fn block_delete_in_a_journal_day() {
+    let original = "- one\n\t- sub\n- two\n";
+    let (t, mut s) = folder(&[("journals/2026-10-28.md", original)]);
+    let one = ids(&mut s, "2026-10-28")[0];
+    let out = ok(&mut s, json!({"type":"block.delete","id":one}), 0);
+    assert_eq!(read(&t, "journals/2026-10-28.md"), "- two\n");
+    assert!(out.focus.is_none());
+    let two = ids(&mut s, "2026-10-28")[0];
+    let out = ok(&mut s, json!({"type":"block.delete","id":two}), 10);
+    assert_eq!(read(&t, "journals/2026-10-28.md"), "-\n");
+    assert_eq!(out.focus.unwrap().id, two);
+    ok(
+        &mut s,
+        json!({"type":"history.undo","page":"2026-10-28"}),
+        20,
+    );
+    ok(
+        &mut s,
+        json!({"type":"history.undo","page":"2026-10-28"}),
+        30,
+    );
+    assert_eq!(read(&t, "journals/2026-10-28.md"), original);
+}
+
+#[test]
+fn block_delete_never_overwrites_a_file_changed_elsewhere() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
+    let b = ids(&mut s, "p")[1];
+    put(t.path(), "pages/P.md", "- theirs\n");
+    let out = ok(&mut s, json!({"type":"block.delete","id":b}), 0);
+    assert_eq!(out.notices.len(), 1);
+    assert!(matches!(
+        &out.notices[0],
+        Notice::SaveFailed { page, reason, .. }
+            if page == "p" && serde_json::to_value(reason).unwrap() == "changedOnDisk"
+    ));
+    assert_eq!(read(&t, "pages/P.md"), "- theirs\n");
+    assert_eq!(out.page.unwrap().blocks.len(), 1);
 }
 
 #[test]

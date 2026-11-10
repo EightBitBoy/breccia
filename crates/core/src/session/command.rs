@@ -227,6 +227,10 @@ pub enum Command {
     BlocksMoveDown { ids: Vec<BlockId> },
     #[serde(rename = "blocks.delete")]
     BlocksDelete { ids: Vec<BlockId> },
+    /// Deletes the block with its children in one undo step. The only block of
+    /// a page is emptied instead (its children go) and keeps the focus.
+    #[serde(rename = "block.delete")]
+    BlockDelete { id: BlockId },
     #[serde(rename = "history.undo")]
     HistoryUndo { page: String },
     #[serde(rename = "history.redo")]
@@ -336,6 +340,7 @@ impl Command {
             | Command::BlocksMoveUp { .. }
             | Command::BlocksMoveDown { .. }
             | Command::BlocksDelete { .. }
+            | Command::BlockDelete { .. }
             | Command::HistoryUndo { .. }
             | Command::HistoryRedo { .. }
             | Command::GitSync
@@ -356,5 +361,9 @@ mod tests {
             CommandKind::Background
         );
         assert_eq!(Command::PageToday.kind(), CommandKind::Edit);
+        assert_eq!(
+            Command::BlockDelete { id: BlockId(1) }.kind(),
+            CommandKind::Edit
+        );
     }
 }

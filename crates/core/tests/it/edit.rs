@@ -315,6 +315,54 @@ fn insert_and_delete() {
 }
 
 #[test]
+fn delete_block_takes_the_subtree() {
+    assert_eq!(
+        with("- a\n- b\n\t- c\n- d\n", |d, b, _| assert_eq!(
+            d.delete_block(b[1]),
+            Ok(None)
+        )),
+        "- a\n- d\n"
+    );
+    // A last child of a page of several blocks goes like any other block.
+    assert_eq!(
+        with("- a\n\t- c\n", |d, b, _| assert_eq!(
+            d.delete_block(b[1]),
+            Ok(None)
+        )),
+        "- a\n"
+    );
+}
+
+#[test]
+fn delete_block_keeps_an_emptied_only_block() {
+    assert_eq!(
+        with("- a\n\t- c\n\t\t- e\n", |d, b, _| assert_eq!(
+            d.delete_block(b[0]),
+            Ok(Some(b[0]))
+        )),
+        "-\n"
+    );
+    assert_eq!(
+        with("- a\n", |d, b, _| assert_eq!(
+            d.delete_block(b[0]),
+            Ok(Some(b[0]))
+        )),
+        "-\n"
+    );
+}
+
+#[test]
+fn delete_block_refuses_an_unknown_block() {
+    assert_eq!(
+        with("- a\n", |d, _, _| assert_eq!(
+            d.delete_block(BlockId(9999)),
+            Err(EditError::UnknownBlock)
+        )),
+        "- a\n"
+    );
+}
+
+#[test]
 fn set_text_with_bullet_lines_creates_blocks() {
     let out = with("- a\n- z\n", |d, b, ids| {
         let extra = d.set_text(b[0], "a\n- b\n  - c", ids).unwrap();
