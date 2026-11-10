@@ -99,6 +99,16 @@ export function getAppVersion(): Promise<string> {
   return invoke<string>('plugin:app|version')
 }
 
+/** The folder of Breccia's log file; null if the app has none. */
+export function logFolder(): Promise<string | null> {
+  return invoke<string | null>('log_folder')
+}
+
+/** Opens the log folder in the file manager; rejects with a message for the user. */
+export function openLogFolder(): Promise<void> {
+  return invoke<void>('open_log_folder')
+}
+
 /** The hidden board columns saved on this PC for notes folder `folder`: board name to state keywords. */
 export function hiddenColumns(folder: string): Promise<unknown> {
   return invoke<unknown>('hidden_columns', { folder })

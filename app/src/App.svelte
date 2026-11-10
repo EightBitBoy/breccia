@@ -19,6 +19,8 @@
     forgetFolder,
     getAppVersion,
     gitInstalled,
+    logFolder,
+    openLogFolder,
     trayEnabled,
     hiddenColumns,
     setHiddenColumns,
@@ -158,6 +160,9 @@
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
   let appVersion = $state<string | null>(null)
   let appVersionAsked = false
+  /** The log file's folder (the tooltip of Settings' "Open log folder"), fetched when Settings first opens. */
+  let logDir = $state<string | null>(null)
+  let logDirAsked = false
   /** The folder of a new, still untitled page (shown instead of the main view); null when none is being made. */
   let newPageFolder = $state<string | null>(null)
   /** Whether the `git` command exists on this computer, checked at startup; null until known. */
@@ -1075,7 +1080,19 @@
         () => void (appVersionAsked = false), // the line shows the name alone; asked again when Settings opens next
       )
     }
+    if (!logDirAsked) {
+      logDirAsked = true
+      logFolder().then(
+        (dir) => void (logDir = dir),
+        () => void (logDirAsked = false), // the button has no tooltip; asked again when Settings opens next
+      )
+    }
     await exec({ type: 'states.usage' })
+  }
+
+  /** Settings' "Open log folder"; a failure becomes a notice. */
+  function openLogs() {
+    openLogFolder().catch(refuse)
   }
 
   /** Asks a question from Settings; false when another dialog is open. */
@@ -1709,6 +1726,7 @@
                 version={configVersion}
                 {appVersion}
                 {hasGit}
+                logFolder={logDir}
                 onstates={setStates}
                 onconfirm={confirmSetting}
                 onready={settingsReady}
@@ -1727,6 +1745,7 @@
                 onopenfolder={(path) => void switchFolder('folder.open', path)}
                 onforgetfolder={(path) => void forgetRecent(path)}
                 onmissingfolder={recentMissing}
+                onopenlogs={openLogs}
               />
             {:else if network.shown}
               <!-- Loaded the first time the graph opens: the main bundle stays small. -->

@@ -29,6 +29,7 @@
     mac,
     appVersion,
     hasGit,
+    logFolder,
     onstates,
     onconfirm,
     onready,
@@ -46,6 +47,7 @@
     onopenfolder,
     onforgetfolder,
     onmissingfolder,
+    onopenlogs,
   }: {
     folder: string
     /** The recent folders other than the open one. */
@@ -69,6 +71,8 @@
     appVersion: string | null
     /** Whether the git command exists on this computer; null while not yet known. */
     hasGit: boolean | null
+    /** The log file's folder, shown as the button's tooltip; null until known or if there is none. */
+    logFolder: string | null
     onstates: (states: StateView[], renames: StateRename[], version: number) => Promise<void>
     onconfirm: (message: string, ok: string) => Promise<boolean>
     /** Settles once every config write sent before is answered and applied. */
@@ -90,6 +94,8 @@
     onopenfolder: (path: string) => void
     onforgetfolder: (path: string) => void
     onmissingfolder: (path: string) => void
+    /** "Open log folder": the parent opens it and tells the user if that fails. */
+    onopenlogs: () => void
   } = $props()
 
   let root = $state<HTMLElement | undefined>()
@@ -180,5 +186,12 @@
       <!-- Class ext: the app's link handler opens it in the system browser, never in the webview. -->
       <dd data-testid="app-source"><a class="ext" href="https://github.com/EightBitBoy/breccia">github.com/EightBitBoy/breccia</a></dd>
     </dl>
+  </section>
+  <section data-section="troubleshooting">
+    <h2>Troubleshooting</h2>
+    <p class="settings-hint">Breccia writes warnings and errors to a log file. It holds no note text.</p>
+    <div class="settings-folder-actions">
+      <button data-testid="open-log-folder" title={logFolder ?? undefined} onclick={onopenlogs}>Open log folder</button>
+    </div>
   </section>
 </div>

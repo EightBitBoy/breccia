@@ -1531,7 +1531,7 @@ try {
   await page.keyboard.press('Control+Comma')
   await screen.waitFor()
   const sections = await screen.locator('section[data-section]').evaluateAll((s) => s.map((e) => e.dataset.section))
-  assert(JSON.stringify(sections) === JSON.stringify(['folder', 'states', 'boards', 'git', 'journal', 'appearance', 'keyboard', 'about']), `sections: ${sections}`)
+  assert(JSON.stringify(sections) === JSON.stringify(['folder', 'states', 'boards', 'git', 'journal', 'appearance', 'keyboard', 'about', 'troubleshooting']), `sections: ${sections}`)
   await page.locator('[data-testid="nav-journal"]').click()
   await screen.waitFor({ state: 'detached' })
   await page.locator('[data-testid="nav-settings"]').click()
@@ -3298,6 +3298,30 @@ try {
   await page.locator('[data-testid="nav-journal"]').click()
   await screen.waitFor({ state: 'detached' })
   console.log('PASS 125 the status bar theme button lists the themes, applies and stores a choice, matches Settings, and keeps the edited block')
+
+  // 126: the log file is under the run's config dir; Settings ends with Troubleshooting and its "Open log folder"
+  const logDir126 = join(configDir, 'logs')
+  const log126 = () => readAt(join(logDir126, 'breccia.log'))
+  assert(log126().includes(`Breccia ${readVersions(root).cargo} started`), `126 the log file does not start with the version: ${JSON.stringify(log126().slice(0, 200))}`)
+  const folder126 = await page.evaluate(() => window.__TAURI_INTERNALS__.invoke('log_folder'))
+  assert(folder126 === logDir126, `126 log_folder answered ${JSON.stringify(folder126)}, not ${logDir126}`)
+  await page.keyboard.press('Control+Comma')
+  await screen.waitFor()
+  const lastSection126 = () => screen.locator('section').evaluateAll((es) => es.at(-1)?.dataset.section ?? '')
+  await waitFor('126 Troubleshooting is the last section', lastSection126, 'troubleshooting')
+  const trouble126 = screen.locator('section[data-section="troubleshooting"]')
+  assert((await trouble126.locator('h2').innerText()) === 'Troubleshooting', '126 the section heading')
+  const open126 = trouble126.locator('[data-testid="open-log-folder"]')
+  await open126.waitFor()
+  assert((await open126.innerText()) === 'Open log folder', `126 the button text: ${await open126.innerText()}`)
+  await waitFor('126 the button title is the folder', () => open126.getAttribute('title'), logDir126)
+  // Not clicked: that would open Explorer on the machine running e2e (as the source link in step 64).
+  for (const text of ['yesterday note', 'older note', 'DONE ship']) {
+    assert(!log126().includes(text), `126 the log file holds note text: ${text}`)
+  }
+  await page.locator('[data-testid="nav-journal"]').click()
+  await screen.waitFor({ state: 'detached' })
+  console.log("PASS 126 the log file is in the app's data folder, and Settings offers to open its folder")
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')

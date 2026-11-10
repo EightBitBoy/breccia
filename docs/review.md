@@ -157,3 +157,8 @@ are its questions for you; each answer decides what a later plan does.
 
 72. [ ] **Undo after typing a link:** type in a block, type `[[` so the page list opens, pick a page, keep typing
    within a second, then `Ctrl Z`: the typed text goes back in one step, as for any other run of typing.
+
+73. [ ] **Log folder:** Settings > Troubleshooting (the last section) > "Open log folder" opens Explorer on Breccia's
+   log folder (`%LOCALAPPDATA%\dev.breccia.app\logs` for an installed Breccia; check the path). `breccia.log` starts
+   with "Breccia <version> started" and holds no note text. The button's tooltip shows the folder. The click was not
+   tried in the automated checks.

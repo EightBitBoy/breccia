@@ -478,6 +478,9 @@ Appearance (theme), Keyboard (read-only list of shortcuts in the first version).
 Settings opens in the main area from the sidebar footer, with `Ctrl ,`, or by clicking the folder name; changes apply
 at once.
 
+Settings ends with a section "Troubleshooting" whose "Open log folder" opens the folder where Breccia keeps its log
+(warnings and errors, at most 2 MB).
+
 ### 7.13 Status bar
 
 A thin strip along the bottom of the window, as in VS Code, for short state the user may want to glance at: the search

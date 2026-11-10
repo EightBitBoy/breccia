@@ -103,6 +103,16 @@ struct App {
     /// The open notes folder, set with its watcher, so `git.log` finds the
     /// repository without the session lock (a pull's rebase holds it).
     notes_root: Mutex<Option<PathBuf>>,
+    /// The folder of the log file; `None` if the app has none.
+    log_dir: Option<PathBuf>,
+}
+
+/// The log folder, made if it is missing, ready to be opened; or the message
+/// for the user.
+fn ready_log_dir(dir: Option<&Path>) -> Result<PathBuf, String> {
+    let dir = dir.ok_or("Breccia has no log folder on this computer.")?;
+    std::fs::create_dir_all(dir).map_err(|e| format!("The log folder could not be made: {e}"))?;
+    Ok(dir.to_path_buf())
 }
 
 /// `BRECCIA_TODAY` as `YYYY-MM-DD`; anything else is ignored.
@@ -679,6 +689,30 @@ mod commands {
         }
     }
 
+    /// The log folder's path, for Settings; `None` if the app has none.
+    #[tauri::command]
+    pub fn log_folder(app: State<'_, App>) -> Option<String> {
+        app.log_dir
+            .as_ref()
+            .map(|d| d.to_string_lossy().into_owned())
+    }
+
+    /// Opens the log folder in the file manager, making it first if needed.
+    /// Off the main thread: starting the file manager may take a moment.
+    #[tauri::command]
+    pub async fn open_log_folder(app: AppHandle) -> Result<(), String> {
+        let dir = app.state::<App>().log_dir.clone();
+        tauri::async_runtime::spawn_blocking(move || {
+            use tauri_plugin_opener::OpenerExt;
+            let path = ready_log_dir(dir.as_deref())?;
+            app.opener()
+                .open_path(path.to_string_lossy().into_owned(), None::<&str>)
+                .map_err(|e| format!("The log folder could not be opened: {e}"))
+        })
+        .await
+        .map_err(|e| e.to_string())?
+    }
+
     /// The notices of the startup folder open, once; empty after that.
     #[tauri::command]
     pub fn startup_notices(state: State<'_, App>) -> Vec<Notice> {
@@ -843,13 +877,16 @@ pub fn run() {
             commands::recent_folders,
             commands::forget_folder,
             commands::git_installed,
-            commands::tray_enabled
+            commands::tray_enabled,
+            commands::log_folder,
+            commands::open_log_folder
         ])
         .setup(move |app| {
             // First, so that the warnings of the start are logged too.
+            let log_dir =
+                logfile::log_dir_for(config_override.as_deref(), app.path().app_log_dir().ok());
             logfile::init(
-                logfile::log_dir_for(config_override.as_deref(), app.path().app_log_dir().ok())
-                    .as_deref(),
+                log_dir.as_deref(),
                 trace_enabled(std::env::var_os("BRECCIA_TRACE")),
             );
             if offscreen {
@@ -881,6 +918,7 @@ pub fn run() {
                 close_gave_up: Arc::new(AtomicBool::new(false)),
                 indexing: AtomicU64::new(0),
                 notes_root: Mutex::new(None),
+                log_dir,
             };
             let mut watch = None;
             if let Some(path) = startup_folder(&state.config_dir) {
@@ -1284,6 +1322,28 @@ mod tests {
         assert_eq!(
             config_override(Some("cfg".into())),
             Some(PathBuf::from("cfg"))
+        );
+    }
+
+    #[test]
+    fn the_log_folder_is_made_before_it_is_opened() {
+        let t = tempfile::tempdir().unwrap();
+        let dir = t.path().join("cfg").join("logs");
+        assert_eq!(ready_log_dir(Some(&dir)), Ok(dir.clone()));
+        assert!(dir.is_dir());
+        // An existing folder is fine too.
+        assert_eq!(ready_log_dir(Some(&dir)), Ok(dir.clone()));
+        // No folder, and a folder that cannot be made: a message for the user.
+        assert_eq!(
+            ready_log_dir(None),
+            Err("Breccia has no log folder on this computer.".to_string())
+        );
+        let file = t.path().join("a-file");
+        std::fs::write(&file, "x").unwrap();
+        let err = ready_log_dir(Some(&file.join("logs"))).unwrap_err();
+        assert!(
+            err.starts_with("The log folder could not be made: "),
+            "{err}"
         );
     }
 
