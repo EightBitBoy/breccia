@@ -186,10 +186,52 @@ fn take_test_panic(slot: &Mutex<Option<String>>, cmd: &Command) -> Option<String
     }
 }
 
+/// Where the panic that led to a recovery happened.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Cause {
+    /// A step of the index loop.
+    Index,
+    /// A step of the Git thread.
+    Git,
+    /// A command or a watcher run.
+    Other,
+}
+
+/// What the shell does after a recovery.
+#[derive(Debug, PartialEq, Eq)]
+struct FollowUp {
+    /// Watch the reopened folder in this generation.
+    watch: Option<u64>,
+    /// Index the reopened folder in this generation.
+    index: Option<u64>,
+    /// Stop watching: no folder is open.
+    stop_watching: bool,
+    /// Tell the Git thread to look again.
+    tell_git: bool,
+}
+
+/// The follow-up of recovery `r`. A panic that repeats must not loop: a
+/// recovery the index loop caused does not start indexing again (search
+/// stays on what it has until the next folder open), and one the Git thread
+/// caused does not wake the Git thread.
+fn follow_up(r: &Recovery, cause: Cause) -> FollowUp {
+    let reopened = match r {
+        Recovery::Reopened { generation } => Some(*generation),
+        Recovery::Kept | Recovery::NoFolder => None,
+    };
+    FollowUp {
+        watch: reopened,
+        index: reopened.filter(|_| cause != Cause::Index),
+        stop_watching: *r == Recovery::NoFolder,
+        tell_git: cause != Cause::Git,
+    }
+}
+
 /// The shell's part of a recovery, run once the session lock is released:
 /// the watcher and the index follow the reopened folder (or stop with no
-/// folder), the Git thread looks again, and the window is told.
-fn after_recovery(app: &AppHandle, r: &Recovery) {
+/// folder), the Git thread looks again, and the window is told
+/// (see `follow_up`).
+fn after_recovery(app: &AppHandle, r: &Recovery, cause: Cause) {
     let what = match r {
         Recovery::Reopened { .. } => "reopened",
         Recovery::Kept => "kept",
@@ -197,40 +239,44 @@ fn after_recovery(app: &AppHandle, r: &Recovery) {
     };
     log::error!("the session was recovered ({what})");
     let state = app.state::<App>();
-    match r {
-        Recovery::Reopened { generation } => {
-            let generation = *generation;
-            // The folder of this generation; none if another one opened since.
-            let root = match with_session(&state.session, |s| {
-                s.git_target()
-                    .filter(|(_, g, _)| *g == generation)
-                    .map(|(root, _, _)| root)
-            }) {
-                Guarded::Ran(root) => root,
-                Guarded::Recovered(again) => {
-                    log::error!("the session was recovered again ({again:?})");
-                    None
-                }
-            };
-            if let Some(root) = root {
-                if let Some(notice) = start_watcher(app, &root, generation) {
-                    log::warn!("recovery: {notice:?}");
-                }
+    let follow = follow_up(r, cause);
+    if cause == Cause::Index && follow.watch.is_some() {
+        log::warn!("index: not started again after the recovery; search uses what it has");
+    }
+    if let Some(generation) = follow.watch {
+        // The folder of this generation; none if another one opened since.
+        let root = match with_session(&state.session, |s| {
+            s.git_target()
+                .filter(|(_, g, _)| *g == generation)
+                .map(|(root, _, _)| root)
+        }) {
+            Guarded::Ran(root) => root,
+            Guarded::Recovered(again) => {
+                log::error!("the session was recovered again ({again:?})");
+                None
+            }
+        };
+        if let Some(root) = root {
+            if let Some(notice) = start_watcher(app, &root, generation) {
+                log::warn!("recovery: {notice:?}");
+            }
+            if let Some(generation) = follow.index {
                 index_in_background(app, generation);
             }
         }
-        Recovery::NoFolder => {
-            let old = state
-                .watcher
-                .lock()
-                .unwrap_or_else(|e| e.into_inner())
-                .take();
-            drop(old);
-            *state.notes_root.lock().unwrap_or_else(|e| e.into_inner()) = None;
-        }
-        Recovery::Kept => {}
     }
-    send_git(app, GitMsg::Changed);
+    if follow.stop_watching {
+        let old = state
+            .watcher
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
+        drop(old);
+        *state.notes_root.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    }
+    if follow.tell_git {
+        send_git(app, GitMsg::Changed);
+    }
     let _ = app.emit(SESSION_RECOVERED, RecoveredEvent::of(r));
 }
 
@@ -478,7 +524,7 @@ fn index_loop(handle: &AppHandle, generation: u64) {
                 Guarded::Ran(ran) => ran,
                 // The follow-up starts the new generation's indexing; this
                 // loop's generation is gone.
-                Guarded::Recovered(r) => return after_recovery(handle, &r),
+                Guarded::Recovered(r) => return after_recovery(handle, &r, Cause::Index),
             };
             // std's Mutex is not fair: give a command that waited for this
             // chunk (a keystroke) the chance to take the lock before the next.
@@ -540,7 +586,7 @@ fn start_watcher(app: &AppHandle, root: &std::path::Path, generation: u64) -> Op
                 (result, wait, began.elapsed())
             }) {
                 Guarded::Ran(ran) => ran,
-                Guarded::Recovered(r) => return after_recovery(&handle, &r),
+                Guarded::Recovered(r) => return after_recovery(&handle, &r, Cause::Other),
             };
             if state.trace {
                 log::trace!(target: "trace", "{}", trace_line("watch", &format!("paths={n}"), wait, run));
@@ -651,7 +697,7 @@ mod commands {
         let (result, wait, run) = match guarded {
             Guarded::Ran(ran) => ran,
             Guarded::Recovered(r) => {
-                after_recovery(app, &r);
+                after_recovery(app, &r, Cause::Other);
                 return Err(recovered_error(&r));
             }
         };
@@ -1311,6 +1357,41 @@ mod tests {
         let session = Mutex::new(Session::new());
         let notices = open_startup_folder(&session, dir.path().to_path_buf(), clock());
         assert!(notices.is_empty(), "{notices:?}");
+    }
+
+    #[test]
+    fn an_index_panic_does_not_restart_indexing() {
+        let reopened = Recovery::Reopened { generation: 3 };
+        let after_index = follow_up(&reopened, Cause::Index);
+        assert_eq!(after_index.index, None, "a repeating panic must not loop");
+        assert_eq!(after_index.watch, Some(3));
+        assert!(after_index.tell_git);
+        // From elsewhere, indexing starts again for the new generation.
+        assert_eq!(follow_up(&reopened, Cause::Other).index, Some(3));
+        for cause in [Cause::Index, Cause::Git, Cause::Other] {
+            assert_eq!(follow_up(&Recovery::Kept, cause).index, None);
+            let none = follow_up(&Recovery::NoFolder, cause);
+            assert_eq!(
+                (none.index, none.watch, none.stop_watching),
+                (None, None, true)
+            );
+        }
+    }
+
+    #[test]
+    fn a_git_panic_does_not_wake_git_again() {
+        for r in [
+            Recovery::Reopened { generation: 3 },
+            Recovery::Kept,
+            Recovery::NoFolder,
+        ] {
+            assert!(!follow_up(&r, Cause::Git).tell_git, "{r:?}");
+            assert!(follow_up(&r, Cause::Other).tell_git, "{r:?}");
+        }
+        assert_eq!(
+            follow_up(&Recovery::Reopened { generation: 3 }, Cause::Git).index,
+            Some(3)
+        );
     }
 
     #[test]

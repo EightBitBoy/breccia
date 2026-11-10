@@ -13,7 +13,7 @@ use breccia_core::git::{Git, GitEngine, GitView, Now, Step};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::guard::{Guarded, with_session};
-use crate::{App, GIT_CHANGED, after_recovery, emit_all, index_if_large};
+use crate::{App, Cause, GIT_CHANGED, after_recovery, emit_all, index_if_large};
 
 /// How often the thread looks at the schedule when nothing else wakes it.
 const TICK: Duration = Duration::from_secs(10);
@@ -132,27 +132,44 @@ fn new_engine(cancel: &Arc<AtomicBool>) -> GitEngine {
     GitEngine::new(Git::new().with_cancel(cancel.clone()))
 }
 
-/// `run_step`, surviving a panic in it: the engine is replaced by a fresh one,
-/// and if the engine's part poisoned the session lock (it takes the lock
-/// itself), the session is recovered and the shell follows it.
+/// What woke the Git thread.
+#[derive(Clone, Copy, Debug)]
+enum Wake {
+    /// The schedule's timer (and the first look at start).
+    Timer,
+    /// Files changed, or the folder switched.
+    Changed,
+    /// A click on the Git item, or `git init`.
+    Asked,
+}
+
+/// Whether a step runs. After a step panicked (`paused`), the timer retries
+/// nothing: a panic that repeats must not loop. The next change or click
+/// tries again.
+fn step_runs(paused: bool, wake: Wake) -> bool {
+    !paused || !matches!(wake, Wake::Timer)
+}
+
+/// `run_step`, surviving a panic in it; true if it panicked. The engine is
+/// then replaced by a fresh one, and if the engine's part poisoned the session
+/// lock (it takes the lock itself), the session is recovered and the shell
+/// follows it, without waking this thread again.
 fn guarded_step(
     handle: &AppHandle,
     engine: &mut GitEngine,
     cancel: &Arc<AtomicBool>,
     asked: bool,
     f: impl FnOnce(&mut GitEngine, &Mutex<breccia_core::Session>, Now) -> Step,
-) {
+) -> bool {
     if catch_unwind(AssertUnwindSafe(|| run_step(handle, engine, asked, f))).is_ok() {
-        return;
+        return false;
     }
-    log::error!("git: a step panicked; the Git engine starts afresh");
+    log::error!("git: a step panicked; the Git engine starts afresh at the next change or click");
     *engine = new_engine(cancel);
-    // The old engine's schedule is gone: a change it was waiting to commit
-    // must not be forgotten.
-    engine.changed(now_of(&handle.state::<App>()));
     if let Guarded::Recovered(r) = with_session(&handle.state::<App>().session, |_| ()) {
-        after_recovery(handle, &r);
+        after_recovery(handle, &r, Cause::Git);
     }
+    true
 }
 
 pub fn start_git(app: &AppHandle) -> Sender<GitMsg> {
@@ -163,21 +180,29 @@ pub fn start_git(app: &AppHandle) -> Sender<GitMsg> {
     std::thread::spawn(move || {
         let mut engine = new_engine(&cancel);
         let tick = |e: &mut GitEngine, s: &Mutex<breccia_core::Session>, n| e.tick(s, n);
-        guarded_step(&handle, &mut engine, &cancel, false, tick);
+        let mut paused = guarded_step(&handle, &mut engine, &cancel, false, tick);
         loop {
             match rx.recv_timeout(TICK) {
                 Ok(GitMsg::Changed) => {
                     let now = now_of(&handle.state::<App>());
                     engine.changed(now);
-                    guarded_step(&handle, &mut engine, &cancel, false, tick);
+                    if step_runs(paused, Wake::Changed) {
+                        paused = guarded_step(&handle, &mut engine, &cancel, false, tick);
+                    }
                 }
                 Ok(GitMsg::SyncNow) => {
-                    guarded_step(&handle, &mut engine, &cancel, true, |e, s, n| {
-                        e.sync_now(s, n)
-                    });
+                    if step_runs(paused, Wake::Asked) {
+                        paused = guarded_step(&handle, &mut engine, &cancel, true, |e, s, n| {
+                            e.sync_now(s, n)
+                        });
+                    }
                 }
                 Ok(GitMsg::Init) => {
-                    guarded_step(&handle, &mut engine, &cancel, true, |e, s, n| e.init(s, n));
+                    if step_runs(paused, Wake::Asked) {
+                        paused = guarded_step(&handle, &mut engine, &cancel, true, |e, s, n| {
+                            e.init(s, n)
+                        });
+                    }
                 }
                 Ok(GitMsg::Exit(reply)) => {
                     if begin_close(&cancel, &gave_up) {
@@ -194,7 +219,9 @@ pub fn start_git(app: &AppHandle) -> Sender<GitMsg> {
                     return;
                 }
                 Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
-                    guarded_step(&handle, &mut engine, &cancel, false, tick);
+                    if step_runs(paused, Wake::Timer) {
+                        paused = guarded_step(&handle, &mut engine, &cancel, false, tick);
+                    }
                 }
                 Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => return,
             }
@@ -207,6 +234,14 @@ pub fn start_git(app: &AppHandle) -> Sender<GitMsg> {
 mod tests {
     use super::*;
     use std::time::Instant;
+
+    #[test]
+    fn after_a_panic_only_a_change_or_a_click_runs_a_step() {
+        assert!(step_runs(false, Wake::Timer));
+        assert!(!step_runs(true, Wake::Timer), "the timer retries nothing");
+        assert!(step_runs(true, Wake::Changed));
+        assert!(step_runs(true, Wake::Asked));
+    }
 
     #[test]
     fn a_close_that_has_not_given_up_runs() {

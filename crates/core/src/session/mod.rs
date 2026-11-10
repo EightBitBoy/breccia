@@ -962,15 +962,32 @@ impl Session {
     /// holding edits its files do not is kept as it is (`Kept`): reading the
     /// disk would drop them. A folder that cannot be opened again leaves the
     /// session with no folder.
+    ///
+    /// It is the two steps [`Session::begin_recovery`] and [`Session::reopen`];
+    /// a caller that guards against a panic in either runs them one by one.
     pub fn recover(&mut self) -> Recovery {
+        if self.begin_recovery() {
+            return Recovery::Kept;
+        }
+        self.reopen()
+    }
+
+    /// The first step of [`Session::recover`]: ends the typing run, and
+    /// answers whether some page holds edits its file does not. If so, the
+    /// session must be kept as it is.
+    pub fn begin_recovery(&mut self) -> bool {
         self.typing = None;
         self.typed_step = None;
+        self.ws.as_ref().is_some_and(|ws| !ws.unsaved().is_empty())
+    }
+
+    /// The second step of [`Session::recover`], only once
+    /// [`Session::begin_recovery`] answered false: reads the open folder
+    /// again from disk.
+    pub fn reopen(&mut self) -> Recovery {
         let Some(ws) = self.ws.as_ref() else {
             return Recovery::NoFolder;
         };
-        if !ws.unsaved().is_empty() {
-            return Recovery::Kept;
-        }
         let root = ws.root.clone();
         // As `folder.open`: a folder that is gone never opens as an empty one.
         let opened = if root.is_dir() {

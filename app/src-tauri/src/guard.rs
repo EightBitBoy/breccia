@@ -28,21 +28,45 @@ pub fn with_session<R>(session: &Mutex<Session>, f: impl FnOnce(&mut Session) ->
         Err(poisoned) => {
             let mut guard = poisoned.into_inner();
             session.clear_poison();
-            return Guarded::Recovered(recover(&mut guard, Session::recover));
+            return Guarded::Recovered(recover(
+                &mut guard,
+                Session::begin_recovery,
+                Session::reopen,
+            ));
         }
     };
     // The guard lives outside the closure, so it is not dropped while the
     // panic unwinds, and the lock is not poisoned.
     match catch_unwind(AssertUnwindSafe(|| f(&mut guard))) {
         Ok(r) => Guarded::Ran(r),
-        Err(_) => Guarded::Recovered(recover(&mut guard, Session::recover)),
+        Err(_) => Guarded::Recovered(recover(
+            &mut guard,
+            Session::begin_recovery,
+            Session::reopen,
+        )),
     }
 }
 
-/// Runs `recover` (`Session::recover`); if that panics too, the session is
-/// replaced by a fresh one without a folder.
-fn recover(session: &mut Session, recover: impl FnOnce(&mut Session) -> Recovery) -> Recovery {
-    match catch_unwind(AssertUnwindSafe(|| recover(session))) {
+/// `Session::recover` in its two steps, each guarded on its own. `unsaved`
+/// (`Session::begin_recovery`) says whether some page holds unsaved edits;
+/// if it says so, or panics, the session is kept: nothing may drop edits
+/// unless that check has run to the end and found none. Only then `reopen`
+/// (`Session::reopen`) runs; if it panics, the session is replaced by a
+/// fresh one without a folder.
+fn recover(
+    session: &mut Session,
+    unsaved: impl FnOnce(&mut Session) -> bool,
+    reopen: impl FnOnce(&mut Session) -> Recovery,
+) -> Recovery {
+    match catch_unwind(AssertUnwindSafe(|| unsaved(session))) {
+        Ok(false) => {}
+        Ok(true) => return Recovery::Kept,
+        Err(_) => {
+            log::error!("recovery: the check for unsaved pages failed; the session is kept");
+            return Recovery::Kept;
+        }
+    }
+    match catch_unwind(AssertUnwindSafe(|| reopen(session))) {
         Ok(r) => r,
         Err(_) => {
             session.reset();
@@ -146,10 +170,66 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let mut session = opened(dir.path());
         let g = session.generation();
-        let got = recover(&mut session, |_| panic!("recover fails too"));
+        // The unsaved check passed; the reopen panics.
+        let got = recover(&mut session, |_| false, |_| panic!("reopen fails"));
         assert_eq!(got, Recovery::NoFolder);
         assert!(session.git_target().is_none());
         assert!(session.generation() > g, "old block ids are stale");
+    }
+
+    #[test]
+    fn an_unsaved_check_that_panics_keeps_the_session() {
+        let dir = tempfile::tempdir().unwrap();
+        std::fs::create_dir_all(dir.path().join("pages")).unwrap();
+        std::fs::write(
+            dir.path().join("pages").join("P.md"),
+            "- a
+",
+        )
+        .unwrap();
+        let mut session = opened(dir.path());
+        let g = session.generation();
+        let run = |s: &mut Session, command| {
+            let generation = s.generation();
+            s.run(
+                Request {
+                    generation,
+                    command,
+                },
+                clock(),
+            )
+            .unwrap()
+        };
+        let page = run(&mut session, Command::PageGet { key: "p".into() });
+        let id = page.page.unwrap().blocks[0].id;
+        // The file changes first, so the save of the edit fails and the page stays unsaved.
+        std::fs::write(
+            dir.path().join("pages").join("P.md"),
+            "- theirs
+",
+        )
+        .unwrap();
+        run(
+            &mut session,
+            Command::BlockSetText {
+                id,
+                text: "mine".into(),
+            },
+        );
+        let mut reopened = false;
+        let got = recover(
+            &mut session,
+            |_| panic!("the unsaved check fails"),
+            |_| {
+                reopened = true;
+                Recovery::NoFolder
+            },
+        );
+        assert_eq!(got, Recovery::Kept);
+        assert!(!reopened, "no reopen and no reset without a passed check");
+        assert_eq!(session.generation(), g);
+        let page = run(&mut session, Command::PageGet { key: "p".into() });
+        assert_eq!(page.page.unwrap().blocks[0].text, "mine");
     }
 
     #[test]
