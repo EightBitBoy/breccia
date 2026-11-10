@@ -634,3 +634,26 @@ are not covered by a test:
   what a search can find.
 
 `README.md`, `docs/releasing.md`, `docs/compatibility.md` and `site/` (area 13) were not read in this audit.
+
+## T21: every edit sends, renders and compares the whole page (area 15, to measure)
+
+This is the one finding about the architecture as a whole, and it is a risk to measure, not a defect.
+
+A `block.setText` on a page of N blocks does this: the core clones the document for undo and compares the whole
+document to see whether it changed (`mutate_tracked`, `crates/core/src/session/mod.rs:1286` to `1291`); it
+renders the whole document, reads the file back and compares it before the atomic write
+(`Workspace::save_with`); it builds a `PageView` in which all N blocks are rendered to HTML again with
+pulldown-cmark (`PageView::of`); the shell turns that view to JSON three times (T15); the frontend stringifies it
+once more to recognise the echo and replaces the page's block array. All of it is linear in the size of the page
+and happens for each pause in typing. For a day's journal of 50 blocks it is nothing. Spec §8 asks for a folder
+of 100,000 blocks; it does not say how long one page may be, and people do keep single pages of thousands of
+lines.
+
+### M55: measure a long page, then choose
+
+Add a case to `crates/core/tests/it/scale.rs` and to `app/src/lib/scale.bench.ts`: one page of 5,000 blocks,
+`block.setText` on one of them, timed in the core and through the frontend's `apply`. If it stays under the
+typing budget (well under 100 ms end to end), write the number into `docs/STATUS.md` and stop. If not, the order
+of fixes by value is: M43 (drop the echo and two serialisations), then a per-block HTML cache keyed by the
+block's text and the config version (rendering is a pure function of both), then an answer that carries only the
+changed blocks. None of these needs a change to the file format or to the safety rules in `notes.md`.

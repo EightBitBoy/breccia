@@ -51,9 +51,9 @@ Rules for whoever continues:
 | 12 | Scripts, justfile, CI, release | `app/scripts/`, `justfile`, `.github/workflows/`, `cliff.toml`, build configs | partly: workflows, justfile and configs read; `app/scripts/` not read |
 | 13 | Site | `site/` | not read |
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | partly: only where the audit touched (T20) |
-| 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
+| 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | done |
 
-Next free keys: `B8`, `T21`, `M55`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
+Next free keys: `B8`, `T22`, `M56`, `Q7`. The owner questions Q1 to Q6 are in `README.md` and in `docs/review.md` (items 64 to 69).
 
 ## Log
 
@@ -67,10 +67,11 @@ Next free keys: `B8`, `T21`, `M55`. Owner questions so far: Q1 (deleting a page 
 - 2026-11-10: area 7 done (T13, T14; M36 to M42). B5 verified for link completion.
 - 2026-11-10: areas 8 and 9 done, sampled (T15, T16; M43 to M47).
 - 2026-11-10: areas 10 to 14 done as far as the table says (T17 to T20; M48 to M54).
+- 2026-11-10: area 15 done (T21; M55); `README.md` written. The audit is complete as far as the table above says. Next: the owner answers Q1 to Q6, then plan 1 of the README ("Safety net") is written as a normal plan.
 
 ## To check in later areas
 
 - Area 6: done, see M35.
 - Area 7: done, see T14 (types are mirrored by hand, no test).
-- Area 9: B5 is verified for `pages.list` (`app/src/editor/host.svelte.ts:426`); check the other queries while reading the editor.
-- Area 15: the cost of a full `PageView` per edit (see `notes.md`, area 3).
+- Area 9: B5 is verified for `pages.list` (`app/src/editor/host.svelte.ts:426`); the other queries were not traced.
+- Area 15: done, see T21 and M55.

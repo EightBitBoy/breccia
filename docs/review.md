@@ -127,3 +127,24 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
    republishes it.
 63. [ ] **The text:** read the page once. Every sentence comes from the README; say what to cut, add or reword. The
    download button names no version (it opens the newest release); say if you want the number shown.
+
+## Audit of 2026-11-10
+
+The whole-application audit is in `docs/audit/2026-11-10/` (start with its `README.md`). It changed no code. These
+are its questions for you; each answer decides what a later plan does.
+
+64. [ ] **Deleting a page:** today the file is removed for good; without Git there is no way back. Should a deleted
+   page go to the Windows recycle bin instead? (Audit Q1.)
+65. [ ] **Remote images in notes:** `![](https://…)` in a note is fetched as soon as the page is shown. A note
+   pulled from a shared repository can so make Breccia contact an outside address. Keep it, or show remote images
+   only after a click? (Audit Q2.)
+66. [ ] **Events for Breccia's own commands:** the audit proposes that the app no longer sends a command's own
+   result back to the window as events (it already has the answer). Nothing changes on screen; it removes a fragile
+   mechanism and changes how one sentence of the spec (§9) is met. Yes or no? (Audit Q3, move M43.)
+67. [ ] **Testing components:** keep the rule that logic lives outside the components and apply it to the six
+   large ones, or add a setup for component tests? (Audit Q4, move M46.)
+68. [ ] **A log file:** Breccia would write its warnings to a small file in its own data folder, with an "Open log
+   folder" entry in Settings, so that a problem on a user's machine can be looked into. Wanted? (Audit Q5, move M9.)
+69. [ ] **A second audit pass:** the release scripts, the website, and parts of the frontend and the tests were
+   only sampled or not read (the audit's `README.md` lists them). Read them now, or after the first plan from the
+   audit? (Audit Q6.)

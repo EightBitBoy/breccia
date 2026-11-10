@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-09. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-10. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -65,13 +65,20 @@ review items 61 to 63.
 Next is plan 6, backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %), then backlog #76
 (the scroll wheel over the theme button, and more themes). Each is a normal plan, with the owner's review.
 
+A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
+`README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
+55 refactor moves, and a proposed order of plans. The owner answers review items 64 to 69 first; then the audit's
+plan 1 ("Safety net": one running instance, recovery after an internal error, CI on every push, a contract test)
+is written as a normal plan. It does not conflict with plan 6 (backlog #75).
+
 Candidates for the next plan, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
 - backlog items the owner picks (`docs/backlog.md`, 76 items; #71, #72, #73, #74 done, #64 done by plan 5);
-- automatic updates (backlog #52).
+- automatic updates (backlog #52);
+- the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 
 ## Test baseline
 
