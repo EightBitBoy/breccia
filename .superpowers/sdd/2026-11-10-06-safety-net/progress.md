@@ -203,3 +203,7 @@ Task 6: minor (deferred): the click by hand in `just dev` was skipped; opening t
 Task 6: minor (deferred): `app/e2e/smoke.mjs:1539` step 51's PASS text says "seven sections"; there are nine.
 Task 6: minor (deferred): `lib.rs:713` if the background worker crashes, the notice shows a raw technical error.
 Task 6: minor (deferred): `SettingsView.svelte:194` the button stays enabled when there is no log folder.
+Task 5: fix round 1/5 (1 addressed, 0 open — I1 double-quoted text in the panic line; commits fa80a73..70d3f0b)
+Task 5: complete (commits 173ce0f..70d3f0b, review clean after one fix round).
+Task 5: minor (deferred): single-quoted Debug chars and unquoted Debug payloads in a panic message are not redacted.
+Task 7: implemented (commit c54c850; `just test`, `just lint` green, e2e 187). Beyond the brief: a fresh Git engine is told files may have changed after a Git step panics; `recover` checks the folder still exists before reopening. Concerns for the follow-ups: Kept may hold a half-applied edit (F20); a tiny race between the recovery take and `start_watcher` when another folder opens in between; a recovery during start-up starts no watcher and no index loop.
