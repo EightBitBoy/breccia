@@ -1,8 +1,10 @@
+import { addDays, dayKey } from './calendar'
+
 export type SlashItem =
   | { kind: 'state'; keyword: string; label: string; color?: string }
   | { kind: 'link'; label: string }
-  | { kind: 'date'; label: string }
-  | { kind: 'pickdate'; label: string }
+  | { kind: 'date'; label: string; days: 0 | -1; words: string; icon: 'calendar' }
+  | { kind: 'pickdate'; label: string; words: string; icon: 'calendar' | null }
 
 /** `start` is in UTF-16 units (a string index). A `/` at the start or after whitespace, then non-whitespace up to the cursor. */
 export function slashQuery(before: string): { start: number; query: string } | null {
@@ -11,9 +13,11 @@ export function slashQuery(before: string): { start: number; query: string } | n
   return { start: m.index + m[1].length, query: m[2] }
 }
 
-function matches(label: string, query: string): boolean {
+/** A word of the label or of the item's extra search words starts with the query, case ignored. */
+function matches(item: SlashItem, query: string): boolean {
   const q = query.toLowerCase()
-  return label
+  const words = 'words' in item ? item.words : ''
+  return `${item.label} ${words}`
     .toLowerCase()
     .split(/\s+/)
     .some((w) => w.startsWith(q))
@@ -23,10 +27,11 @@ export function slashItems(states: { keyword: string; color?: string }[], query:
   const all: SlashItem[] = [
     ...states.map((s): SlashItem => ({ kind: 'state', keyword: s.keyword, label: s.keyword, color: s.color })),
     { kind: 'link', label: 'Link to page' },
-    { kind: 'date', label: "Today's date" },
-    { kind: 'pickdate', label: 'Date…' },
+    { kind: 'date', label: 'Today', days: 0, words: 'date', icon: 'calendar' },
+    { kind: 'date', label: 'Yesterday', days: -1, words: 'date', icon: 'calendar' },
+    { kind: 'pickdate', label: 'Date…', words: '', icon: 'calendar' },
   ]
-  return all.filter((i) => matches(i.label, query))
+  return all.filter((i) => matches(i, query))
 }
 
 /**
@@ -40,10 +45,6 @@ export function removeSlash(text: string, start: number, end: number, dropSpace 
   return { text: text.slice(0, from) + text.slice(end), at: from }
 }
 
-function pad(n: number): string {
-  return String(n).padStart(2, '0')
-}
-
 /** The text a non-state item inserts at the caret (local `now`), and the caret offset in it; null for a state. */
 export function slashInsert(item: SlashItem, now: Date): { text: string; caret: number } | null {
   switch (item.kind) {
@@ -52,7 +53,7 @@ export function slashInsert(item: SlashItem, now: Date): { text: string; caret: 
     case 'link':
       return { text: '[[]]', caret: 2 }
     case 'date': {
-      const text = `[[${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}]]`
+      const text = `[[${addDays(dayKey(now), item.days)}]]`
       return { text, caret: text.length }
     }
     // The date picker inserts the picked day later; the query goes now.
