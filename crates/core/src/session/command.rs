@@ -259,3 +259,102 @@ pub enum Command {
     #[serde(rename = "git.log")]
     GitLog { skip: usize, limit: usize },
 }
+
+/// What a command does to the session, which decides how it treats the run
+/// of typing that undo coalesces.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum CommandKind {
+    /// Changes notes, the config or the session: ends the run of typing.
+    Edit,
+    /// Only reads (or writes the cache): the run of typing goes on across it.
+    Query,
+    /// Sent by the app itself, not by the user: the run goes on unless the
+    /// command changed what the user sees (`files.changed`).
+    Background,
+}
+
+impl Command {
+    /// The kind of this command. Every command is listed: a new one does not
+    /// compile until its kind is decided.
+    pub fn kind(&self) -> CommandKind {
+        match self {
+            Command::FolderStatus
+            | Command::FolderTree
+            | Command::ConfigGet
+            | Command::PageGet { .. }
+            | Command::PagesGet { .. }
+            | Command::PagesList
+            | Command::PagesTable
+            | Command::PageRefs { .. }
+            | Command::PageRenameReach { .. }
+            | Command::BoardGet { .. }
+            | Command::ArchiveList
+            | Command::StatesUsage
+            | Command::SessionDirty
+            | Command::GraphGet
+            | Command::GraphSaveLayout { .. }
+            | Command::JournalFeed
+            | Command::JournalDay { .. }
+            | Command::SearchQuery { .. }
+            | Command::GitStatus
+            | Command::GitLog { .. } => CommandKind::Query,
+            Command::ArchiveAuto { .. } | Command::FilesChanged { .. } => CommandKind::Background,
+            Command::FolderOpen { .. }
+            | Command::FolderCreate { .. }
+            | Command::PageToday
+            | Command::PageShow { .. }
+            | Command::PageOpen { .. }
+            | Command::PageCreate { .. }
+            | Command::DirCreate { .. }
+            | Command::PageRename { .. }
+            | Command::PageSetColor { .. }
+            | Command::PageMove { .. }
+            | Command::PageDelete { .. }
+            | Command::DirRename { .. }
+            | Command::DirDelete { .. }
+            | Command::PageReload { .. }
+            | Command::PageOverwrite { .. }
+            | Command::BoardPlace { .. }
+            | Command::JournalAppend { .. }
+            | Command::BoardArchive { .. }
+            | Command::BoardsSet { .. }
+            | Command::StatesSet { .. }
+            | Command::ConfigSetGit { .. }
+            | Command::ConfigSetBoard { .. }
+            | Command::BlockInsert { .. }
+            | Command::BlockSetText { .. }
+            | Command::BlockSplit { .. }
+            | Command::BlockMerge { .. }
+            | Command::BlockPaste { .. }
+            | Command::BlockCycleState { .. }
+            | Command::BlockStepState { .. }
+            | Command::BlockSettle { .. }
+            | Command::BlocksSetState { .. }
+            | Command::BlocksSetArchived { .. }
+            | Command::BlocksIndent { .. }
+            | Command::BlocksOutdent { .. }
+            | Command::BlocksMoveUp { .. }
+            | Command::BlocksMoveDown { .. }
+            | Command::BlocksDelete { .. }
+            | Command::HistoryUndo { .. }
+            | Command::HistoryRedo { .. }
+            | Command::GitSync
+            | Command::GitInit => CommandKind::Edit,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn command_kinds() {
+        assert_eq!(Command::PagesList.kind(), CommandKind::Query);
+        assert_eq!(
+            Command::ArchiveAuto { editing: None }.kind(),
+            CommandKind::Background
+        );
+        assert_eq!(Command::PageToday.kind(), CommandKind::Edit);
+    }
+}

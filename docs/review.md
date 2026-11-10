@@ -154,3 +154,6 @@ are its questions for you; each answer decides what a later plan does.
 71. [ ] **Dependabot, security policy, contribution guide:** read `SECURITY.md` and `CONTRIBUTING.md` once. Private
    vulnerability reporting is already on (Settings > Code security). From the start of next month Dependabot opens
    grouped pull requests; CI runs on each. Tauri's crate and npm updates are merged together.
+
+72. [ ] **Undo after typing a link:** type in a block, type `[[` so the page list opens, pick a page, keep typing
+   within a second, then `Ctrl Z`: the typed text goes back in one step, as for any other run of typing.

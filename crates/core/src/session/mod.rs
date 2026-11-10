@@ -21,7 +21,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 pub use board::{ArchivedView, BoardView, CardView, ColumnView};
-pub use command::{Clock, Command, Request, StateInput, StateRename};
+pub use command::{Clock, Command, CommandKind, Request, StateInput, StateRename};
 pub use graph::{GraphNode, GraphView, NodePosition, layout_file_name};
 pub use search::{DateView, IndexProgress, SEARCH_LIMIT, SearchGroup, SearchHit, SearchView};
 pub use table::PageRowView;
@@ -292,7 +292,31 @@ impl Session {
             .map(|ws| (self.generation, ws.tree_version(), ws.link_version()))
     }
 
+    /// Runs a command, then puts the typing run back when the command's kind
+    /// says it is not an edit: queries always, `archive.auto` always and
+    /// `files.changed` when it reported nothing. Edits end the run.
     fn dispatch(&mut self, req: Request, clock: Clock) -> Result<Output, CommandError> {
+        let typing = self.typing;
+        let kind = req.command.kind();
+        let files_changed = matches!(req.command, Command::FilesChanged { .. });
+        let result = self.execute(req, clock);
+        let keep = match kind {
+            CommandKind::Query => true,
+            CommandKind::Background if files_changed => result.as_ref().is_ok_and(|out| {
+                // The watcher reports Breccia's own saves too: a report that
+                // changed nothing leaves the typing run as it was.
+                out.notices.is_empty() && out.changed.is_empty() && out.removed.is_empty()
+            }),
+            CommandKind::Background => true,
+            CommandKind::Edit => false,
+        };
+        if keep {
+            self.typing = typing;
+        }
+        result
+    }
+
+    fn execute(&mut self, req: Request, clock: Clock) -> Result<Output, CommandError> {
         // Only a `block.setText` right after another one can coalesce.
         let typing = self.typing.take();
         let folder_command = matches!(
@@ -511,15 +535,10 @@ impl Session {
                     ..Output::default()
                 })
             }
-            Command::ArchiveList => {
-                let out = Output {
-                    archive: Some(board::archived_tasks(self.ws()?)),
-                    ..Output::default()
-                };
-                // A query, not an edit: a run of typing goes on across it.
-                self.typing = typing;
-                Ok(out)
-            }
+            Command::ArchiveList => Ok(Output {
+                archive: Some(board::archived_tasks(self.ws()?)),
+                ..Output::default()
+            }),
             Command::BoardPlace {
                 id,
                 keyword,
@@ -527,12 +546,7 @@ impl Session {
             } => self.place_card(id, &keyword, before, now),
             Command::JournalAppend { text } => self.journal_append(now, text),
             Command::BoardArchive { keyword } => self.archive_finished(&keyword, now),
-            Command::ArchiveAuto { editing } => {
-                let out = self.auto_archive(now, editing);
-                // Not the user's edit: a run of typing goes on across it.
-                self.typing = typing;
-                out
-            }
+            Command::ArchiveAuto { editing } => self.auto_archive(now, editing),
             Command::BoardsSet { boards, version } => {
                 // The list was made from the boards the session knows. If the
                 // file changed since (a pull, an editor), writing it would put
@@ -771,28 +785,9 @@ impl Session {
             Command::HistoryUndo { page } => self.step_history(&page, false),
             Command::HistoryRedo { page } => self.step_history(&page, true),
 
-            Command::FilesChanged { paths } => {
-                let out = self.files_changed(&paths)?;
-                // The watcher reports Breccia's own saves too: a report that
-                // changed nothing leaves the typing run as it was.
-                if out.notices.is_empty() && out.changed.is_empty() && out.removed.is_empty() {
-                    self.typing = typing;
-                }
-                Ok(out)
-            }
-            Command::SearchQuery { text } => {
-                let out = self.run_query(&text, clock.today);
-                // A search is not an edit, even a failed one: it leaves the
-                // typing run as it was.
-                self.typing = typing;
-                out
-            }
-            Command::JournalDay { key } => {
-                let out = self.journal_day(&key, clock.today);
-                // A query, not an edit: a run of typing goes on across it.
-                self.typing = typing;
-                out
-            }
+            Command::FilesChanged { paths } => self.files_changed(&paths),
+            Command::SearchQuery { text } => self.run_query(&text, clock.today),
+            Command::JournalDay { key } => self.journal_day(&key, clock.today),
             Command::GitStatus | Command::GitSync | Command::GitInit | Command::GitLog { .. } => {
                 Err(CommandError::new(
                     "shellOnly",

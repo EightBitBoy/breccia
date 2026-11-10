@@ -1973,3 +1973,80 @@ fn page_show_finds_a_page_opened_without_a_file() {
     let err = cmd(&mut s, json!({"type": "page.show", "key": anna}), 0).unwrap_err();
     assert_eq!(err.code, "unknownPage");
 }
+
+/// `a`, typed to `ab` at ms 0, then `step` at ms 100, then `abc` at ms 500,
+/// then one undo: the page text the undo leaves.
+fn undo_after_keystrokes_around(step: Value) -> String {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+    let id = ids(&mut s, "p")[0];
+    ok(
+        &mut s,
+        json!({"type": "block.setText", "id": id, "text": "ab"}),
+        0,
+    );
+    // A query may be answered with an error (no such board); the run goes on.
+    let _ = cmd(&mut s, step, 100);
+    ok(
+        &mut s,
+        json!({"type": "block.setText", "id": id, "text": "abc"}),
+        500,
+    );
+    ok(&mut s, json!({"type": "history.undo", "page": "p"}), 600);
+    read(&t, "pages/P.md")
+}
+
+#[test]
+fn a_query_between_two_keystrokes_keeps_one_undo_step() {
+    let queries = [
+        json!({"type": "pages.list"}),
+        json!({"type": "page.get", "key": "p"}),
+        json!({"type": "pages.get", "keys": ["p"]}),
+        json!({"type": "board.get", "index": 0}),
+        json!({"type": "config.get"}),
+        json!({"type": "states.usage"}),
+        json!({"type": "session.dirty"}),
+        json!({"type": "graph.get"}),
+        json!({"type": "journal.feed"}),
+        json!({"type": "folder.tree"}),
+        json!({"type": "folder.status"}),
+        json!({"type": "page.refs", "key": "p"}),
+        json!({"type": "page.renameReach", "key": "p", "name": "Q"}),
+        json!({"type": "pages.table"}),
+    ];
+    for q in queries {
+        assert_eq!(undo_after_keystrokes_around(q.clone()), "- a\n", "{q}");
+    }
+}
+
+#[test]
+fn an_edit_between_two_keystrokes_ends_the_run() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+    let id = ids(&mut s, "p")[0];
+    ok(
+        &mut s,
+        json!({"type": "block.setText", "id": id, "text": "ab"}),
+        0,
+    );
+    ok(
+        &mut s,
+        json!({"type": "block.insert", "page": "p", "after": id, "text": "x"}),
+        100,
+    );
+    ok(
+        &mut s,
+        json!({"type": "block.setText", "id": id, "text": "abc"}),
+        500,
+    );
+    ok(&mut s, json!({"type": "history.undo", "page": "p"}), 600);
+    assert_eq!(read(&t, "pages/P.md"), "- ab\n- x\n");
+}
+
+#[test]
+fn an_edit_that_leaves_no_step_still_ends_the_run() {
+    // `page.today` makes no undo step, but it is not a query: the second
+    // keystroke starts a new step, so one undo gives back "ab".
+    assert_eq!(
+        undo_after_keystrokes_around(json!({"type": "page.today"})),
+        "- ab\n"
+    );
+}

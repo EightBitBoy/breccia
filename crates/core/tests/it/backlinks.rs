@@ -22,12 +22,16 @@ fn dir(files: &[(&str, &str)]) -> TempDir {
 }
 
 fn cmd(s: &mut Session, command: Value) -> Output {
+    cmd_at(s, command, 0)
+}
+
+fn cmd_at(s: &mut Session, command: Value, ms: u64) -> Output {
     let req =
         serde_json::from_value(json!({"generation": s.generation(), "command": command})).unwrap();
     let clock = Clock {
         today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
         time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
+        ms,
     };
     s.run(req, clock).unwrap()
 }
@@ -92,9 +96,12 @@ fn index_follows_edits() {
         json!({"type": "block.setText", "id": id, "text": "see nothing"}),
     );
     assert_eq!(count(&mut s), 0);
-    cmd(
+    // A pause between the two edits, so each is its own undo step; the
+    // `page.refs` query between them does not end a run of typing.
+    cmd_at(
         &mut s,
         json!({"type": "block.setText", "id": id, "text": "see #a"}),
+        5000,
     );
     assert_eq!(count(&mut s), 1);
     cmd(&mut s, json!({"type": "history.undo", "page": "p"}));
