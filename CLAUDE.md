@@ -14,6 +14,8 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - Progress logs of plan runs: `.superpowers/sdd/<plan>/progress.md` (see "Portability" below).
 - Release pipeline: `.github/workflows/release.yml` (builds the installer and publishes a GitHub release for `vX.Y.Z`
   tags) and `docs/releasing.md` (how to cut a release).
+- CI: `.github/workflows/ci.yml` runs the tests and lint on every push and pull request. Dependabot runs monthly
+  (`.github/dependabot.yml`). `SECURITY.md` and `CONTRIBUTING.md` are at the repository root.
 - README for people outside the project: `README.md` (screenshots in `docs/images/`, made by `just screenshots`).
 - Website: `site/` (plain HTML, CSS and JS), published to GitHub Pages by `.github/workflows/pages.yml`.
 - Notes format reference: `docs/format.md`, checked by `crates/core/tests/it/format_doc.rs`. Update it with any format
@@ -62,9 +64,12 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - Environment variables:
   - `BRECCIA_CONFIG_DIR` replaces the app config dir. e2e always uses a temp dir, so it never touches the user's real
     settings.
-  - `BRECCIA_TRACE=1` makes the shell log command and watcher timings.
+  - `BRECCIA_TRACE=1` writes command and watcher timings to stderr and to the log file.
   - `BRECCIA_OFFSCREEN=1` starts the main window unfocused and off-screen. e2e sets it, so a run never takes the
     keyboard or comes to the front.
+  - `BRECCIA_TEST_PANIC=<text>`: the next `search.query` with exactly this text panics (e2e only).
+  - Breccia's log is `breccia.log` in the app's log folder, `<BRECCIA_CONFIG_DIR>/logs` under that variable.
+  - Only one Breccia runs per user, except under `BRECCIA_CONFIG_DIR`.
 - Toolchain known to work: Windows 11, Rust 1.90, Node 24, just 1.58, git-cliff 2.14.2 (`just release` and
   `just test` need it).
 

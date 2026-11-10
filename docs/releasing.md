@@ -17,6 +17,9 @@
 
 ## Cutting a release
 
+Before you start, check that the CI run of the commit on `main` you are releasing is green. The "CI" workflow
+(`ci.yml`) runs `just test` and `just lint` on every push, and the release script does not check it.
+
 1. Run `just e2e`. It is not part of the workflow, so this is the only time it runs before a release.
 2. Run `just release` for the next minor version (`v1.0.0` becomes 1.1.0; after a pre-release tag such as `v1.1.0-rc.1` it proposes 1.1.0), or `just release X.Y.Z` for another version. The first release of this repository is 1.0.0: with no `v*` tag yet there is no next minor, so run `just release 1.0.0`. The script first checks that you are on `main`, the working tree is clean, `main` is in sync with origin (it fetches first), the version is newer than the latest `v*` tag, the tag is free locally and on origin, git-cliff is installed, the version files agree (as `just check-version` checks), and `CHANGELOG.md` has no section for the version yet. If a check fails it says why and changes nothing of yours. Fix the cause and run it again.
 3. The script then sets the version everywhere (as `just version` does), runs git-cliff to write the new `## [X.Y.Z]` section at the top of `CHANGELOG.md`, prints that section, and pauses. Edit the section in `CHANGELOG.md` now if you like: this text becomes the release notes.
