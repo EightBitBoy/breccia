@@ -41,7 +41,7 @@ Rules for whoever continues:
 | 2 | Core: workspace | `crates/core/src/workspace/`, `watch.rs` | done |
 | 3 | Core: session | `crates/core/src/session/` | done |
 | 4 | Core: search and Git | `crates/core/src/search/`, `crates/core/src/git/` | done |
-| 5 | Core: tests | `crates/core/tests/` | open |
+| 5 | Core: tests | `crates/core/tests/` | done (sampled) |
 | 6 | Shell | `app/src-tauri/` | open |
 | 7 | Frontend: app shell and state | `app/src/App.svelte`, `app/src/api.ts`, `app/src/main.ts`, `app/src/lib/*.svelte.ts`, `app/src/lib/types.ts` | open |
 | 8 | Frontend: lib logic and its tests | `app/src/lib/` (the rest) | open |
@@ -53,7 +53,7 @@ Rules for whoever continues:
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B6`, `T11`, `M31`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?).
+Next free keys: `B6`, `T12`, `M33`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?).
 
 ## Log
 
@@ -62,6 +62,7 @@ Next free keys: `B6`, `T11`, `M31`. Owner questions so far: Q1 (deleting a page 
 - 2026-11-10: area 2 done (B3, B4; T5, T6; M10 to M15; Q1).
 - 2026-11-10: area 3 done (B5; T7 to T9; M16 to M25).
 - 2026-11-10: area 4 done (no defect; T10; M26 to M30).
+- 2026-11-10: area 5 done, sampled, not read in full (T11; M31, M32).
 
 ## To check in later areas
 

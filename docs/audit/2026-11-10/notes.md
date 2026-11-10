@@ -90,3 +90,16 @@ is wrong even if the tests pass.
 - **The engine owns no thread and no clock**: the shell calls `tick`, `sync_now`, `close`, `init` with a `Now`.
   `Schedule` is pure. Keep both testable that way.
 - **`index.lock` is never deleted** by Breccia; it is waited for, then explained (`Problem::Locked`).
+
+## Core: tests (area 5, sampled)
+
+- **Property tests guard the round trip**: `roundtrip.rs` checks `parse(s).render() == s` for arbitrary strings,
+  for whitespace-heavy strings and for strings built from outline tokens; `edit.rs` uses `proptest` too. Any
+  parser change must keep these green without loosening the generators.
+- **Tests speak the wire format**: `session.rs` sends commands as the JSON the frontend sends
+  (`{"type": "block.setText", …}`), so the command names and field names are tested, not only the Rust API.
+- **Git tests use real Git** in temp repositories (`gitenv/mod.rs`), including fake SSH that hangs, a held
+  `index.lock` and two clones; the few `sleep` calls are inside those fakes, not in assertions.
+- **One test program** (`tests/it/main.rs`) keeps link time down; a file runs alone with
+  `cargo test -p breccia-core <file>::`.
+- `docs/format.md` is checked against the code by `format_doc.rs`, and the demo folder by `demo.rs`.

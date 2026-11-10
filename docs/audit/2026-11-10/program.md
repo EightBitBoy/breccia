@@ -315,3 +315,25 @@ them out of the shipped binary and out of the public API.
 
 Also for M14 (one path classifier): `git/message.rs:50` to `58` is a fifth place that decides what
 `pages/**.md`, `journals/*.md` and `breccia/config.toml` are.
+
+## T11: the core's test files each rebuild the same helpers
+
+`crates/core/tests/it/` is one test program of 40 modules and about 1,000 tests. This area was sampled, not read
+in full: `main.rs`, `roundtrip.rs`, the helper sections of `session.rs` and `scale.rs`, and counts over all files.
+The suite is strong (see `notes.md`). The structural finding is that the modules share nothing except
+`gitenv/mod.rs`.
+
+### M31: a shared `support` module
+
+The same helper functions are defined again in many files: `put` (write a file under a temp root) in 17 files,
+`clock` in 14, `open` in 12, `ok` in 12, `cmd` in 10, `read` in 8, `folder` in 7. They differ in small ways (a
+fixed date here, a parameter there), which makes a test read differently depending on its file. Add
+`tests/it/support/mod.rs` with `put`, `read`, `clock(ms)`, `folder(files) -> (TempDir, Session)`, `cmd`, `ok` and
+`ids`, as `gitenv` already does for the Git tests, and delete the local copies file by file. No test changes.
+
+### M32: run the scale tests on a schedule
+
+`scale.rs` holds the performance bars of spec §8 (`scale_5000_pages`, `git_at_scale`) as `#[ignore]` tests that
+print `ok` or `OVER`. Nothing runs them: not `just test`, not a workflow. A slow-down is found only when someone
+remembers. Add a `just scale` recipe (release build, `--ignored --nocapture scale::`) that fails on an `OVER`
+line, and say in `docs/STATUS.md` when it was last run; a weekly scheduled workflow is the fuller version.
