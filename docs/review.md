@@ -167,7 +167,7 @@ are its questions for you; each answer decides what a later plan does.
    (the first search for exactly `boom` then fails inside Breccia, once per run). Type a few words into a block, then
    search for `boom`: one notice says "Breccia hit an internal error and reloaded your notes from disk. Everything
    saved is safe; undo starts afresh.", the journal shows, the words you typed are still there, and typing saves
-   again. Check the wording (Q1). Close it and run `Remove-Item Env:BRECCIA_TEST_PANIC` before the next `just dev`.
+   again. Check the wording (Q1). If the notes folder cannot be reopened after the error, the Welcome screen shows with the notice "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders."; judge that wording too. Close it and run `Remove-Item Env:BRECCIA_TEST_PANIC` before the next `just dev`.
    With an installed Breccia instead: quit it (tray > Exit), then
    `$env:BRECCIA_TEST_PANIC='boom'; & "$env:LOCALAPPDATA\Breccia\breccia.exe"` (adjust to where it is installed).
 

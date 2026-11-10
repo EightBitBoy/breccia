@@ -67,7 +67,7 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
   - `BRECCIA_TRACE=1` writes command and watcher timings to stderr and to the log file.
   - `BRECCIA_OFFSCREEN=1` starts the main window unfocused and off-screen. e2e sets it, so a run never takes the
     keyboard or comes to the front.
-  - `BRECCIA_TEST_PANIC=<text>`: the next `search.query` with exactly this text panics (e2e only).
+  - `BRECCIA_TEST_PANIC=<text>`: the next `search.query` with exactly this text panics (a test hook: e2e step 127 uses it, and it can check recovery by hand; never set it in normal use).
   - Breccia's log is `breccia.log` in the app's log folder, `<BRECCIA_CONFIG_DIR>/logs` under that variable.
   - Only one Breccia runs per user, except under `BRECCIA_CONFIG_DIR`.
 - Toolchain known to work: Windows 11, Rust 1.90, Node 24, just 1.58, git-cliff 2.14.2 (`just release` and
