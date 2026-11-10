@@ -26,3 +26,22 @@ is wrong even if the tests pass.
   creation time and permissions kept.
 - Style the code follows: module docs (`//!`) say what the module owns; doc comments state the rule, not the
   mechanics; errors are `thiserror` enums; no `unwrap` on data that comes from a file.
+
+## Core: workspace and watcher (area 2)
+
+- **Never write over bytes Breccia did not read.** `Workspace::save_with` (`workspace/mod.rs:748`) re-reads the
+  file and compares it with `on_disk` before every write; a page without a file is written only when nothing is at
+  its path (`path_taken`, case-insensitive). `rename_no_clobber` does the same for renames and moves. Every new
+  file operation must go through these.
+- **Unsaved edits win over the disk.** `apply_disk_changes` never reloads or removes a page for which `is_unsaved`
+  is true; it reports it in `kept_unsaved` and the user decides.
+- **Own writes are recognised by content, not by time.** `file_changed` ignores a file whose bytes equal `on_disk`
+  (`disk.rs:274`). There is no "ignore events for N ms" window; keep it that way.
+- **Block ids survive a reload** through `carry_ids`, also for a file moved on disk within one batch
+  (`DiskReport::gone`).
+- **A rename stands once the file is renamed** (`rename_page`): later failures are collected in the report
+  (`skipped`, `save_errors`) and never undo it. The state rename (`rename_state`) follows the same shape.
+- **Aliases are resolved at lookup**, not stored in the link index (`workspace/names.rs`); batches
+  (`begin_alias_batch`, `end_alias_batch`) keep opening a folder at one recompute, and a test counts it.
+- Open question for the owner, kept in `README.md`: `delete_page` (`pages.rs:453`) removes the file for good with
+  `fs::remove_file`; without Git there is no way back.

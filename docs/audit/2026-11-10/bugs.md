@@ -28,3 +28,35 @@ robustness, or only on a platform not shipped yet). `unverified` means the code 
   bytes they are given, so the shipped platform is not affected. Unverified (no macOS build exists).
 - **Fix:** decide before the first macOS build (spec §2 names macOS as a goal): normalise to NFC in `page_key`, and
   add a test with an NFD file name. It is one line now and a migration later.
+
+## B3: the watcher watches the whole notes folder, `.git` included (low)
+
+- **Where:** `crates/core/src/watch.rs:240` (`FolderWatcher::start`), against `watch.rs:129` (`watch_roots`).
+- **Problem:** `watch_roots` says which folders matter (`pages/` and `journals/` deep, the root and `breccia/` one
+  level) and its doc says "`.git` is not among them". But `start` calls `debouncer.watch(root,
+  RecursiveMode::Recursive)`: the operating system reports every change below the notes folder, `.git/objects`
+  and any other sub-folder included. `watch_roots` is used only to limit the file-id cache, and by a test
+  (`watch_roots_skip_dot_git`) that therefore proves nothing about what is watched.
+- **Failure scenario:** every commit, fetch and `git gc` writes many files under `.git`; each becomes an event the
+  debouncer queues, sorts and hands to `batch_paths`, which throws it away. With a large repository, or a notes
+  folder that also holds attachments or build output, the queue can overflow, and an overflow triggers `rescan`,
+  a walk of the whole folder. The cost was not measured.
+- **Fix:** either watch the four roots of `watch_roots` separately (the root watch then has to add `pages/` and
+  `journals/` when they appear), or keep the one recursive watch and say so: correct the doc of `watch_roots`,
+  rename the test, and measure a `git gc` on a large folder with `BRECCIA_TRACE`.
+
+## B4: a page file renamed outside Breccia to another case of its name is reported as a duplicate (low)
+
+- **Where:** `crates/core/src/workspace/disk.rs:152` to `159` (`apply_disk_changes_batched`), `disk.rs:194`
+  (`key_of_file`).
+- **Problem:** `key_of_file` compares paths exactly. On a case-insensitive file system (Windows, macOS), after
+  `pages/a.md` is renamed to `pages/A.md` by another program, both paths still answer `metadata` as a file. The old
+  path matches the known page and its bytes are unchanged, so nothing happens. The new path matches no page, is
+  read as a new file, gets the key `a`, which is taken, and `add_page` answers with
+  `LoadWarning::DuplicatePage { kept: pages/a.md, ignored: pages/A.md }`.
+- **Failure scenario:** the user renames `pages/a.md` to `pages/A.md` in Explorer while Breccia runs. Breccia
+  shows a duplicate-page warning for a file that is not a duplicate, and the page keeps the name `a` until the
+  next start. Unverified by a run; traced by reading.
+- **Fix:** when a present path matches no page exactly, look for a page whose path equals it ignoring case and
+  whose own path no longer exists under its exact name (`files::is_exact_file`); treat that as a rename: set
+  `rel_path`, then `reload` (which re-reads the name). Add the case to `crates/core/tests/it/disk.rs`.

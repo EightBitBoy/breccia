@@ -99,3 +99,74 @@ size-capped file in the app's data folder (`tauri-plugin-log`, or a few lines ov
 `BRECCIA_TRACE` through the same facade at `trace` level. Add "Open log folder" to Settings or the `?` overlay
 (this part is user-visible and needs the owner's yes). This is the precondition for diagnosing any bug report once
 the app has users.
+
+## T5: the workspace's bookkeeping is repeated at every call site
+
+`Workspace` (`crates/core/src/workspace/mod.rs:315`) keeps five things in step by hand: the page map, the block
+index, the link index with the alias table, the `touched` set and the version counters. Each operation that adds,
+replaces or removes a page repeats the steps, so each new operation (merge two pages, a trash, block references)
+is a new chance to forget one.
+
+### M10: one `remove_page`
+
+This sequence appears four times (`pages.rs:463` in `delete_page`, `pages.rs:571` in `delete_folder`,
+`disk.rs:256` in `file_gone`, `disk.rs:352` in `adopt`):
+
+```rust
+if let Some(page) = self.pages.remove(key) {
+    for b in &page.doc.blocks { self.block_index.remove(&b.id); }
+}
+self.unindex_page(key);
+self.touched.insert(key.to_string());
+```
+
+Make it `fn take_page(&mut self, key: &str) -> Option<Page>` next to `insert` in `mod.rs` and call it from the four
+places.
+
+### M11: one way to replace a page's blocks in the block index
+
+"Remove the old block ids, change the document, insert the new ids, mark touched, re-index" is written out in
+`edit_with_config` (`mod.rs:713`), `reload` (`disk.rs:46`), `rekey` (`pages.rs:191`) and `insert` (`mod.rs:494`).
+`reload` can be expressed through `edit_with_config` (the closure swaps the document and returns `Carried`); `rekey`
+through `take_page` and `insert`.
+
+### M12: change tracking as its own struct
+
+`tree_version`, `link_version`, `topic_changes`, `touched` and `warned` are five fields of `Workspace` that exist
+only so the session can ask "what changed since I last looked". Group them in a `Changes` struct with the `take_*`
+methods; the 15-field `Workspace` becomes a store plus a change log, and the rule "who bumps what" is in one file.
+
+### M13: fix the stray doc comment
+
+`mod.rs:511`: the line "The pages with edits their files do not hold, by key." belongs to `unsaved` (line 520) but
+sits on top of `matches_disk`'s doc comment.
+
+## T6: four places decide what a page file is
+
+Whether a path is a page file, and which page, is decided in `Workspace::open` (`mod.rs:380` to `403`, through
+`list_md` and `walk_pages`), in `dir_appeared` (`disk.rs:374`, which repeats the journal loop of `open` line for
+line), in `found_at` (`disk.rs:473`) and in `watch::relevant` (`watch.rs:22`). `watch.rs` also spells `"pages"`,
+`"journals"` and `"breccia"` as literals while `workspace/mod.rs` has the constants `PAGES` and `JOURNALS`. A new
+kind of file (templates, attachments, a `breccia/themes/*.css` from spec §7.10) has to be taught to all four.
+
+### M14: one classifier for relative paths
+
+Add to `workspace/files.rs`:
+
+```rust
+pub(crate) enum NotePath { Journal(NaiveDate), Page { folder: String, stem: String }, Config, Folder(String) }
+pub(crate) fn classify(rel: &Path) -> Result<Option<NotePath>, LoadWarning>
+```
+
+`found_at` becomes a thin wrapper, `watch::relevant` asks it (keeping its own "might be a folder" rule), and the
+journal loop shared by `open` and `dir_appeared` becomes one function `scan_journals(root, warnings) -> Vec<Found>`.
+Export `PAGES`, `JOURNALS` and a `CONFIG_DIR` constant from one place and use them in `watch.rs`, `config.rs`
+(`root.join("breccia").join("config.toml")` is written three times) and the Git code.
+
+### M15: a path index for disk changes
+
+`key_of_file` (`disk.rs:194`) and `gone_below` (`disk.rs:205`) scan every page for every changed path, and
+`gone_below` also clones every page's folder name per path. A pull that changes 2,000 files in a folder of 5,000
+pages is 10 million path comparisons on the main session lock. Keep a `HashMap<PathBuf, String>` (relative path to
+key) beside the page map, maintained in `insert`, `take_page` and the three places that set `rel_path`. Measure
+first with `crates/core/tests/it/scale.rs`; do it only if a large pull shows up in the trace.
