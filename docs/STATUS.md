@@ -71,7 +71,7 @@ theme button, and more themes). Each is a normal plan, with the owner's review.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
-55 refactor moves, and a proposed order of plans. Review items 64 to 67 and 69 are still open; none of them holds
+55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open; none of them holds
 up plan 6.
 
 Candidates for the next plan, to settle with the owner:
@@ -97,6 +97,7 @@ Candidates for the next plan, to settle with the owner:
 - The installer is not code signed (SmartScreen warns on the first run of each version).
 - Only the NSIS installer is built; an MSI only if someone asks (backlog #51).
 - The Git history view stays read-only: clicking a commit does nothing.
+- Deleting a page removes its file for good; it does not go to the recycle bin (review item 64, 2026-11-10).
 
 ## Setting up a new machine or account
 

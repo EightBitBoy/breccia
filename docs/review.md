@@ -133,8 +133,6 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 The whole-application audit is in `docs/audit/2026-11-10/` (start with its `README.md`). It changed no code. These
 are its questions for you; each answer decides what a later plan does.
 
-64. [ ] **Deleting a page:** today the file is removed for good; without Git there is no way back. Should a deleted
-   page go to the Windows recycle bin instead? (Audit Q1.)
 65. [ ] **Remote images in notes:** `![](https://…)` in a note is fetched as soon as the page is shown. A note
    pulled from a shared repository can so make Breccia contact an outside address. Keep it, or show remote images
    only after a click? (Audit Q2.)

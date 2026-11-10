@@ -79,6 +79,9 @@ Items from `docs/review.md` that the owner ticked off, with their notes, under t
 
 ## Audit of 2026-11-10
 
+64. [x] **Deleting a page:** today the file is removed for good; without Git there is no way back. Should a deleted
+   page go to the Windows recycle bin instead? (Audit Q1.)
+   - Owner, 2026-11-10: no recycle bin. Deleting a page keeps removing the file.
 68. [x] **A log file:** Breccia would write its warnings to a small file in its own data folder, with an "Open log
    folder" entry in Settings, so that a problem on a user's machine can be looked into. Wanted? (Audit Q5, move M9.)
    - Owner, 2026-11-10: yes. It is part of plan 6.
