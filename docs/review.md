@@ -150,3 +150,7 @@ are its questions for you; each answer decides what a later plan does.
 70. [ ] **CI on every push:** each push to any branch and each pull request runs the tests and the lint on GitHub
    (Actions tab, workflow CI). Check that the first run after this commit is green. Optional: make CI a required
    check for pull requests (Settings > Branches).
+
+71. [ ] **Dependabot, security policy, contribution guide:** read `SECURITY.md` and `CONTRIBUTING.md` once. Private
+   vulnerability reporting is already on (Settings > Code security). From the start of next month Dependabot opens
+   grouped pull requests; CI runs on each. Tauri's crate and npm updates are merged together.

@@ -7,7 +7,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..', '..')
 const read = (p) => readFileSync(join(root, p), 'utf8')
 
-const DOCS = ['README.md', 'docs/format.md', 'docs/compatibility.md', 'docs/releasing.md', 'CHANGELOG.md']
+const DOCS = ['README.md', 'docs/format.md', 'docs/compatibility.md', 'docs/releasing.md', 'CHANGELOG.md', 'SECURITY.md', 'CONTRIBUTING.md']
 
 // Drops fenced code blocks and inline code spans: link-like text there is an example, not a link.
 function withoutCode(md) {
