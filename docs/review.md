@@ -100,11 +100,14 @@ reused. Ticked items move to `docs/reviewed.md` with their notes.
 42. [ ] **States as chips:** type `/` in a block. Each state in the menu is drawn as the same colored chip it has on a
    page (TODO grey, DOING amber, and so on), still with the "state" note at the right; Link, date and time stay plain
    text. Change a state color in Settings and the menu follows.
+   Superseded in part by item 77 on 2026-11-10: the date entries are now Today, Yesterday and Date…, each with a
+   small calendar; there is no time entry.
 43. [ ] **Slash menu: no "Current time", new "Date…":** `/` no longer offers "Current time". "Today's date" stays. A
    new "Date…" (also found by typing `/date`) opens the date picker; picking a day inserts `[[2026-11-09]]`-style link
    at the caret and puts the focus back in the block. `Esc` closes the picker and returns to the block with nothing
    inserted. The picker still appears by the sidebar's Journal row (the sidebar is shown first if hidden); say if you
    want it at the caret.
+   Superseded in part by item 77 on 2026-11-10: "Today's date" is now called "Today" (and "Yesterday" is new).
 44. [ ] **Journals position in the sidebar:** Settings > Journal has three choices: "At the top", "At the bottom"
    (the default, as before) and "Among the folders, by name". The sidebar's Pages list follows at once and the choice
    survives a restart. "Among the folders" puts Journals between the top-level folders in alphabetical order (ignoring
@@ -181,12 +184,16 @@ are its questions for you; each answer decides what a later plan does.
 
 76. [ ] **No lines inside a color wash:** in the dark theme, on a journal day with a colored page's blocks (one with
    sub-blocks), zoom to 110 % and 125 % (`Ctrl +`): the wash is one band with no faint lines between the rows. Also at
-   100 %, and in one light theme. The colors look as before.
+   100 %, and in one light theme. The colors look as before. Once at a Windows display scale of 125 % or 150 %
+   (Settings > System > Display), at Breccia zoom 100 %: the same band, no lines. Select a washed row in the middle
+   of a band (`Shift ↓`): the selection shows over the wash, with no line above or below it.
 
 77. [ ] **Today and Yesterday:** in a block type `/`: after "Link to page" come "Today", "Yesterday" and "Date…", each
    with the small calendar of the date picker (the entry once called "Today's date" is now "Today"). `/date` lists all
    three. "Today" inserts a link to today's day (`[[YYYY-MM-DD]]`), "Yesterday" a link to yesterday's day, and "Date…"
-   opens the date picker. Check "Yesterday" shortly after midnight once if you can.
+   opens the date picker. Check "Yesterday" shortly after midnight once if you can. The three date labels start about 22 px further
+   right than "Link to page" and the states (room for the calendar): does that look right, or should the labels line
+   up in one column?
 
 78. [ ] **Delete a block:** in a block with sub-blocks press `Ctrl Shift K`: it goes with its sub-blocks, the caret is
    at the end of the block above, `Ctrl Z` brings all back. On a page's only block the block is emptied. With blocks

@@ -461,7 +461,7 @@ theme can be changed without opening Settings. It offers the same choices as Set
 themes) and behaves the same: the choice applies at once and is kept on this computer only. Implement it directly, as
 a small change without a plan, right after backlog #73; then release a new version.
 
-## 75. Faint lines between rows of a page color wash (Page colors)
+## 75. Faint lines between rows of a page color wash (Page colors) (done 2026-11-10, plan 7)
 
 Owner, 2026-11-09, with a screenshot (dark theme, a journal day, a blue wash behind a DOING row and behind a DONE
 row with sub-blocks): the washes are drawn as one band, but faint horizontal lines show between the rows inside it,
@@ -472,7 +472,8 @@ Owner, 2026-11-09 (follow-up): the Windows display scale is 100 %. The lines sho
 110 %, and not at 100 %. That fits the fractional-pixel guess below, because the app's own zoom gives fractional row
 heights. The owner wants it planned right after the 1.3.0 release.
 
-Not yet reproduced. Likely cause (a guess to test first): every block draws its own see-through wash background
+Plan 7 measured it: at zoom 110 % and 125 % the gap shows the page background (not a darkened overlap), and opaque
+named washes plus a 1 px reach under the next row fixed it. The first guess was: every block draws its own see-through wash background
 (`.block.wash` in `app/src/styles/app.css`), so at a fractional pixel height (zoom, or a zoom such as 110 % or 125 %)
 two neighbouring rows are anti-aliased at their shared edge and a thin seam of the page background shows. A custom
 wash is opaque and a named wash is see-through, so check whether named and custom colors both show it, and at which
@@ -493,7 +494,7 @@ copied files). Each new theme needs all tokens in `app/src/styles/tokens.css`, t
 existing themes (page colour washes, text and link contrast), a place in Settings > Appearance and the status bar
 menu, and a look at the card buttons (#73) in it. Plan it as one plan; ask the owner which themes to add.
 
-## 77. Slash menu: "Yesterday", and "Today" with a calendar icon (Editor)
+## 77. Slash menu: "Yesterday", and "Today" with a calendar icon (Editor) (done 2026-11-10, plan 7)
 
 Owner, 2026-11-10: the slash menu gets an entry "Yesterday" that inserts yesterday's date, the same way "Today's
 date" inserts today's (a link to that journal day). "Today's date" is renamed to "Today". Maybe a small calendar icon
@@ -501,7 +502,7 @@ next to both entries, the same one that is shown next to the "Journal" button. P
 safety net, with #75). To settle in the plan: whether the icon stays ("maybe"), whether "Date…" gets it too, the
 order of the entries, and that typing "date" in the menu still finds both (`app/src/lib/slash.ts`).
 
-## 78. A shortcut that deletes the whole block (Editor)
+## 78. A shortcut that deletes the whole block (Editor) (done 2026-11-10, plan 7)
 
 Owner, 2026-11-10: there needs to be a keyboard shortcut that deletes a whole block. Today a block goes away with
 `Backspace` only when it is empty, or after selecting it (`Shift ↑/↓`) and pressing delete (spec §7, editor keys). To

@@ -222,7 +222,8 @@ second click on the Git history button is Back.
   again at the first (default: none → TODO → DOING → DONE → TODO); it never removes the state. `Ctrl Shift Enter`
   removes the state, also on a selection; so does deleting the keyword; `Ctrl Shift K` deletes the block with its
   children, also on a selection; the caret moves to the end of the block above (the start of the next one for a page's
-  first block); the only block of a page is emptied instead; one `Ctrl Z` brings it back; `Ctrl Z` /
+  first block); the only block of a page is emptied instead (while editing; on a selection the key deletes every selected block,
+  as `Backspace` and `Delete` do); one `Ctrl Z` brings it back; `Ctrl Z` /
   `Ctrl Y` undo / redo, also across block boundaries (splits, merges, moves).
 - Blocks with children have a fold arrow; folding is remembered per block for the session. *(my call: Logseq writes
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
