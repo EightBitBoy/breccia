@@ -37,7 +37,7 @@ Rules for whoever continues:
 
 | # | Area | Files | State |
 |---|---|---|---|
-| 1 | Core: format and outline | `crates/core/src/{lib,error,fsio,outline,inline,render,edit,task,dates,naming,color,aliases,relink,index,config}.rs` | open |
+| 1 | Core: format and outline | `crates/core/src/{lib,error,fsio,outline,inline,render,edit,task,dates,naming,color,aliases,relink,index,config}.rs` | done |
 | 2 | Core: workspace | `crates/core/src/workspace/`, `watch.rs` | open |
 | 3 | Core: session | `crates/core/src/session/` | open |
 | 4 | Core: search and Git | `crates/core/src/search/`, `crates/core/src/git/` | open |
@@ -53,8 +53,9 @@ Rules for whoever continues:
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B1`, `T1`, `M1`.
+Next free keys: `B3`, `T5`, `M10`.
 
 ## Log
 
 - 2026-11-10: ledger and stubs created.
+- 2026-11-10: area 1 done (B1, B2; T1 to T4; M1 to M9).
