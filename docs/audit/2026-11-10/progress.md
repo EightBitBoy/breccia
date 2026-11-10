@@ -39,7 +39,7 @@ Rules for whoever continues:
 |---|---|---|---|
 | 1 | Core: format and outline | `crates/core/src/{lib,error,fsio,outline,inline,render,edit,task,dates,naming,color,aliases,relink,index,config}.rs` | done |
 | 2 | Core: workspace | `crates/core/src/workspace/`, `watch.rs` | done |
-| 3 | Core: session | `crates/core/src/session/` | open |
+| 3 | Core: session | `crates/core/src/session/` | done |
 | 4 | Core: search and Git | `crates/core/src/search/`, `crates/core/src/git/` | open |
 | 5 | Core: tests | `crates/core/tests/` | open |
 | 6 | Shell | `app/src-tauri/` | open |
@@ -53,10 +53,18 @@ Rules for whoever continues:
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B5`, `T7`, `M16`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?).
+Next free keys: `B6`, `T10`, `M26`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?).
 
 ## Log
 
 - 2026-11-10: ledger and stubs created.
 - 2026-11-10: area 1 done (B1, B2; T1 to T4; M1 to M9).
 - 2026-11-10: area 2 done (B3, B4; T5, T6; M10 to M15; Q1).
+- 2026-11-10: area 3 done (B5; T7 to T9; M16 to M25).
+
+## To check in later areas
+
+- Area 6: are the `git.*` variants in the core's `Command` enum (answered only by the shell) worth moving out?
+- Area 7: are the TypeScript types in `app/src/lib/types.ts` tied to the Rust view structs by a test or generated?
+- Area 9: verify B5 (which commands the editor sends between two `block.setText`).
+- Area 15: the cost of a full `PageView` per edit (see `notes.md`, area 3).

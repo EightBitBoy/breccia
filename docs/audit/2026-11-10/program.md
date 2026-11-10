@@ -170,3 +170,105 @@ Export `PAGES`, `JOURNALS` and a `CONFIG_DIR` constant from one place and use th
 pages is 10 million path comparisons on the main session lock. Keep a `HashMap<PathBuf, String>` (relative path to
 key) beside the page map, maintained in `insert`, `take_page` and the three places that set `rel_path`. Measure
 first with `crates/core/tests/it/scale.rs`; do it only if a large pull shows up in the trace.
+
+## T7: `Session::dispatch` is one 520-line `match`, and `Session` holds everything
+
+`crates/core/src/session/mod.rs` is 1,392 lines. `dispatch` (lines 295 to 812) has an arm for each of about 60
+commands. Most arms are one call, but ten hold their own logic inline (`folder.open`, `page.setColor`, `page.move`,
+`page.reload`, `page.refs`, `board.get`, `config.setGit`, `config.setBoard`, `block.setText`, `block.settle`), and
+rules that belong to all commands are applied arm by arm. `Session` itself has twelve fields: the workspace, undo,
+the typing run, disk marks, the search index, Git dates, the config version, failed saves and the tree's link
+lists. Spec §9 wants every action to be a named command that a plugin API can expose later; that needs a command
+table that can be read, listed and extended without opening a 500-line function.
+
+### M16: `dispatch` becomes a table of one-line arms
+
+Move the inline logic of the ten arms into named methods (`page_set_color`, `page_move`, `block_set_text`, …) in
+family files beside the ones that exist (`board.rs`, `journal.rs`, `search.rs`): `session/folder.rs`,
+`session/page.rs`, `session/block.rs`, `session/config.rs`. `mod.rs` keeps `Session`, `run`, `dispatch` and the
+shared plumbing (`mutate_tracked`, `save`, `note_save`, `page_output`). Target: no file over 600 lines, `dispatch`
+under 150.
+
+### M17: a command says what kind it is
+
+Add `Command::kind(&self) -> Kind` with `Edit`, `Query` and `Background` (`files.changed`, `archive.auto`), next to
+the enum in `command.rs`. `dispatch` then restores `self.typing` once, for every command that is not an `Edit`,
+instead of in five arms. This fixes B5 and gives later code one place to ask the same question: whether a command
+may run while a folder is read-only, whether it needs the generation check (today a second list, `folder_command`
+at `mod.rs:298`), whether a plugin may call it.
+
+### M18: settings validation belongs to the settings
+
+The limits "at most 1440 minutes" (`mod.rs:567`) and "1 to 3650 days" (`mod.rs:588`) are checked inside
+`dispatch`. `Config::check_states` and `Config::check_boards` already live in `config.rs`; add
+`GitSettings::check` and `BoardSettings::check` there, so a hand-edited `config.toml` and the Settings screen are
+held to the same limits (today a file with `pull_interval_minutes = 100000` loads without complaint).
+
+### M19: error codes as one enum
+
+`CommandError.code` is a `String` set from literals in six files: `stale`, `noFolder`, `folderMissing`, `create`,
+`open`, `reload`, `config`, `configChanged`, `invalidBoard`, `invalidState`, `invalidSetting`, `unknownBoard`,
+`unknownState`, `boardChanged`, `notFinished`, `unsaved`, `shellOnly`, `search`, `badDate`, `layout`, and those of
+the two `From` impls in `view.rs`. The frontend branches on some of them. Make it `enum ErrorCode` with
+`#[serde(rename_all = "camelCase")]`; the list of codes is then in one place and can be mirrored (or generated, see
+the IPC theme of area 7) on the TypeScript side.
+
+## T8: every command answers with the same bag of 26 optional fields
+
+`Output` (`crates/core/src/session/view.rs:29`) carries, in one struct, two different things: what a command did to
+the notes (`page`, `changed`, `removed`, `renamed`, `tree`, `notices`, `saved`, `focus`, `config`) and the answer
+to a question (`refs`, `names`, `feed`, `pages`, `board`, `table`, `search`, `day`, `usage`, `usage_skipped`,
+`graph`, `reach`, `git_log`, `archive`, `dirty`, `folder`, `git`). Nothing ties a command to the fields it fills:
+the caller has to know that `page.renameReach` answers in `reach`. Each new query adds a field to every reply.
+`Output::is_empty` has to serialise two values to find out whether anything is set.
+
+### M20: split `Output` into effects and an answer
+
+```rust
+pub struct Output { pub effects: Effects, pub answer: Option<Answer> }
+pub struct Effects { page, focus, changed, removed, renamed, tree, config, notices, saved }
+#[serde(tag = "kind")] pub enum Answer { Refs(RefsView), Names(Vec<NameView>), Board(BoardView), … }
+```
+
+The shell emits events from `effects` only; the frontend's `run` returns the `answer` typed per command. This
+changes the wire format, so it goes together with the frontend's `api.ts` and `types.ts` (area 7) and needs
+`just e2e`. It is the largest move in the core and the one with the most value for adding features.
+
+## T9: smaller structure and legibility findings in the session
+
+### M21: do not render cards to find a drop position
+
+`board::column_slots` (`board.rs:273`) calls `collect`, which builds a full `CardView` for every card of the
+column, including `card_html` and a `BlockView` (rendered HTML) for each block of each card's subtree, and then
+keeps only id, page and priority. Every drop on a board pays for rendering the whole target column. Split
+`collect` into a cheap pass that finds the tasks (`TaskRef { index, state, parent, counts }`) and a second that
+renders; `column_slots` uses only the first.
+
+### M22: name the tuples
+
+`ArchivedRow` (`board.rs:346`) is a four-field tuple read as `a.1`, `a.2`, `a.3`; `writes` in `place_card`
+(`board.rs:493`) is `Vec<(BlockId, String, Option<u32>)>` read as `writes[0].2`; `typed_step`
+(`mod.rs:57`) is `Option<(BlockId, String, Option<u64>)>`. Give each a small struct with named fields.
+
+### M23: one place for date formats
+
+The same display formats are written out in six places: `%-d %b` (`render.rs:411`, `render.rs:413`,
+`board.rs:248`), `%-d %b %Y` (`board.rs:342`), `%A, %-d %b %Y` (`naming.rs:79`), `%B` (`tree.rs:125`), and the ISO
+forms in `board.rs:358` to `392` and `task.rs`. Put the display ones in `naming.rs` (or a `display.rs`) as
+`day_short`, `day_with_year`, `day_long`, `month_name`. They are English only today; one module is also where a
+locale would go.
+
+### M24: one rule for view types
+
+Some workspace types serialise themselves (`StateUsage`, `PageColor`), others have a field-for-field copy in the
+session that exists only to be serialised: `TagView` for `TagEntry` (`tree.rs:21`), `NameView` for `NameEntry`
+(`view.rs:492`). Derive `Serialize` with `rename_all = "camelCase"` on `TagEntry` and `NameEntry` and delete the
+copies and their conversion code. (`StateView`, `BoardSummary` and `GitSettingsView` stay: their sources are read
+from TOML in snake_case.)
+
+### M25: repair the test strings in `history.rs`
+
+`rebase_changes_every_snapshot_of_the_page_and_its_size` (`history.rs:482` to `552`) has string literals broken
+across lines with real newlines inside them (`doc("- 1⏎")`), which reads like a damaged paste and which `rustfmt`
+cannot repair. Write them as `"- 1\n"` like every other test in the file. Also remove the doubled doc line at
+`session/search.rs:319`.

@@ -45,3 +45,28 @@ is wrong even if the tests pass.
   (`begin_alias_batch`, `end_alias_batch`) keep opening a folder at one recompute, and a test counts it.
 - Open question for the owner, kept in `README.md`: `delete_page` (`pages.rs:453`) removes the file for good with
   `fs::remove_file`; without Git there is no way back.
+
+## Core: session (area 3)
+
+- **One entry point.** `Session::run` is the only way in; the caller gives the time (`Clock`), so every command is
+  testable without a real clock. Keep `Clock` as a parameter.
+- **A failed save never fails the command.** The edit stays in memory, the page is tracked in `failed_saves`, a
+  `Notice::SaveFailed` goes out, and `Output.saved` reports it once the file is written (`note_save`,
+  `note_failed_save`).
+- **Edits are all-or-nothing.** `mutate_tracked` snapshots the document, puts it back on error, and records an undo
+  step only when the document really changed. Multi-page edits (`place_card`) do the same by hand and record one
+  grouped step.
+- **Block ids belong to a generation.** A request from another generation is refused with `stale`; opening a
+  folder bumps the generation and the config version.
+- **Settings are never written from stale knowledge.** `config_guard` re-reads the file, compares the version the
+  request was made from, and `write_config` passes `Expect::Text`, so a hand edit between read and write is never
+  lost.
+- **Typing over an outside change keeps both.** `marks` remembers blocks a reload changed or removed;
+  `set_text_on_marked` keeps the user's text and reports a `Notice::Conflict`.
+- **Undo has one memory budget** for all pages (`history.rs`, 64 MB, 200 steps a page), and changes Breccia makes
+  by itself (`archive.auto`) are rebased into the snapshots instead of becoming steps.
+- **The search index repairs itself** (`IndexState::guarded`, `recover`): a damaged file is rebuilt once, then the
+  index moves to memory with a notice.
+- Carried to the synthesis (area 15): every edit answers with a complete `PageView`, in which every block of the
+  page is rendered to HTML again (`PageView::of`, `view.rs:355`). That is simple and correct, and it is the first
+  thing to measure when a long page feels slow.

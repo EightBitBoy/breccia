@@ -60,3 +60,19 @@ robustness, or only on a platform not shipped yet). `unverified` means the code 
 - **Fix:** when a present path matches no page exactly, look for a page whose path equals it ignoring case and
   whose own path no longer exists under its exact name (`files::is_exact_file`); treat that as a rename: set
   `rel_path`, then `reload` (which re-reads the name). Add the case to `crates/core/tests/it/disk.rs`.
+
+## B5: read-only commands end a run of typing, so undo gets extra steps (low)
+
+- **Where:** `crates/core/src/session/mod.rs:297` (`let typing = self.typing.take();`) and the arms that put it
+  back (`mod.rs:520`, `533`, `779`, `787`, `793`).
+- **Problem:** typing into one block within a second joins the previous undo step only when the previous command
+  was a `block.setText`. `dispatch` clears that memory for every command and five arms restore it by hand
+  (`archive.list`, `archive.auto`, `files.changed` without changes, `search.query`, `journal.day`). Every other
+  command that changes nothing does not: `page.get`, `pages.get`, `page.refs`, `board.get`, `pages.list`,
+  `pages.table`, `config.get`, `states.usage`, `session.dirty`, `graph.get`, `folder.status`, `folder.tree`,
+  `page.renameReach`, `journal.feed`.
+- **Failure scenario:** the user types `[[` in a block; the editor asks for `pages.list` for the completion list
+  between two saves of the block. The second save no longer joins the first, and `Ctrl Z` takes back the text in
+  smaller pieces than the one-second rule promises. No text is lost. Which of these commands the frontend really
+  sends between two saves is checked in area 9; until then this is unverified.
+- **Fix:** M17 (the command says whether it is an edit; `dispatch` restores the typing run for everything else).
