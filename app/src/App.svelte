@@ -303,6 +303,7 @@
       boards.close() // the open card too; its typed text is pending already (leave)
       archiveView.close()
       journal.close()
+      pickerOpen = false // a pick after the reload would name a block of the old session
       page = null
       refs = null
       madeInRefs.clear()
