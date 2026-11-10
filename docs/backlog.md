@@ -500,3 +500,12 @@ date" inserts today's (a link to that journal day). "Today's date" is renamed to
 next to both entries, the same one that is shown next to the "Journal" button. Planned with plan 7 (after the
 safety net, with #75). To settle in the plan: whether the icon stays ("maybe"), whether "Date…" gets it too, the
 order of the entries, and that typing "date" in the menu still finds both (`app/src/lib/slash.ts`).
+
+## 78. A shortcut that deletes the whole block (Editor)
+
+Owner, 2026-11-10: there needs to be a keyboard shortcut that deletes a whole block. Today a block goes away with
+`Backspace` only when it is empty, or after selecting it (`Shift ↑/↓`) and pressing delete (spec §7, editor keys). To
+settle in the plan: the key (for example `Ctrl Shift K`, as in VS Code, or `Ctrl Shift Backspace`; it must not
+collide with an existing shortcut), what happens to the block's children (deleted with it, or moved up one level),
+where the caret goes afterwards, that `Ctrl Z` brings the block back, and a line in the F1 overlay and in Settings >
+Keyboard. Planned with plan 7 (with #75 and #77).
