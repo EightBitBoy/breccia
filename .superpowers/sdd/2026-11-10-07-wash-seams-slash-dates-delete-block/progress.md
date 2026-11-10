@@ -16,3 +16,13 @@ Task 1: minor (deferred): `smoke.mjs` `capture128` uses the rounded `png.width /
 Task 1: minor (deferred): `png.mjs:41`, `png.test.mjs:211` colour types 0, 3, 4 refused but untested; a PNG without IDAT throws a zlib error.
 Task 1: minor (deferred): `smoke.mjs` the pointer is moved off the rows once, not after each theme and zoom change.
 Task 2: implemented (commit d99bed0; e2e 190; step 128 passes at 100/110/125 % in all themes, worst residue 1 step at 125 %, tolerance 2 unchanged). Hovered and selected washed rows not looked at by eye.
+Task 3: implemented (commit f550a39, one commit for the rename and Yesterday; slash tests 12/12; only lib changed, no e2e).
+Task 2: complete (commits f612883..d99bed0, review clean on opus: same look everywhere a wash sits, the 1 px reach never paints a wrong colour, token rule kept).
+Task 2: minor (deferred, fix in the finish): `docs/review.md` item 76 should ask for one check at a Windows display scale of 125 % or 150 % and a selected washed row.
+Task 2: minor (deferred): step 128's margin is one step (worst 1 against tolerance 2) on one machine; if it turns flaky, measure again, never raise the tolerance.
+Task 2: minor (deferred): `pageColors.test.ts:72` matches exact CSS text, spaces included.
+Task 3: complete (commits 554c51d..f550a39, review clean: date arithmetic works on date keys, no hour arithmetic). The spec line (§7, "today's date") and a review item for the visible change were handed to Task 4, which edits both files.
+Task 3: minor (deferred): `slash.test.ts:84-85` the daylight-saving assertion can fail only in a European time zone (CI runs in UTC).
+Task 3: minor (deferred): `/toda` and `/d` are not tested directly.
+Task 3: minor (deferred): one commit holds the new entry and the rename (borderline against "one change per commit"; the subject reads fine).
+Task 4: implemented (commit 5cce0b5; e2e 192; spec §7.2 and review item 77 also cover Task 3's visible change).
