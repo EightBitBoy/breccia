@@ -152,9 +152,19 @@ test('a selected row shows its selection over a wash', () => {
   const washRules = [...appCss.matchAll(/\.block\.wash[\w-]*[^{]*\{/g)]
   expect(selection).toBeGreaterThan(0)
   expect(washRules.map((m) => m[0])).toEqual(
-    expect.arrayContaining(['.block.wash {', '.block.wash-top {', '.block.wash-bottom {', '.block.wash-gap {']),
+    expect.arrayContaining([
+      '.block.wash {',
+      '.block.wash:not(.wash-bottom) {',
+      '.block.wash-top {',
+      '.block.wash-bottom {',
+      '.block.wash-gap {',
+    ]),
   )
   for (const m of washRules) expect(m.index, m[0]).toBeLessThan(selection)
+})
+
+test('a washed row reaches one pixel into the next row of its band', () => {
+  expect(appCss).toMatch(/\.block\.wash:not\(\.wash-bottom\) \{ box-shadow: 0 1px 0 var\(--wash\); \}/)
 })
 
 describe('hues', () => {

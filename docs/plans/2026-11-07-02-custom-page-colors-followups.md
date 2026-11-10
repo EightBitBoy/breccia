@@ -15,8 +15,8 @@ reviews and the final whole-plan review (2026-11-07). The strength slider is bac
 4. ~~**Focus on open depends on frame order** against bits-ui's own auto-focus (one-frame refocus in
    `PageColorGrid.svelte`); sturdier: `onOpenAutoFocus` preventDefault in both hosts, keeping the frame retry.~~ Done in plan 4.
 5. ~~**The slider does not tell a screen reader it holds the saved color** (cells use `aria-selected`).~~ Done in plan 4 (Q7).
-6. **A custom wash is opaque**, while the named washes are see-through; they look the same today because every journal
-   row sits on the page background.
+6. ~~**A custom wash is opaque**, while the named washes are see-through; they look the same today because every journal
+   row sits on the page background.~~ Done in plan 7 (the named washes are opaque too).
 7. ~~**The slider thumb** hangs 4 px past the track at hue 0 and 359; the track is 140 px against the grid's 136 px.~~ Done in plan 4 (Q8).
 
 ## Tests

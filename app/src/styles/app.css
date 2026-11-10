@@ -134,6 +134,9 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 /* ---------- page color washes (journal only); before the selection rule, so a selection shows over them ----------
    A selection and the jump highlight (`.flash`, below) show over a wash but keep the band's rounded ends. */
 .block.wash { background: var(--wash); padding-right: 8px; }
+/* One pixel more downwards, under the next row: at a zoom like 110 % or 125 % two rows meet inside a device pixel, and
+   without this the page background shows there as a faint line. The washes are opaque, so the overlap cannot darken. */
+.block.wash:not(.wash-bottom) { box-shadow: 0 1px 0 var(--wash); }
 .block.wash-top { border-top-left-radius: 8px; border-top-right-radius: 8px; padding-top: 4px; }
 .block.wash-bottom { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; padding-bottom: 4px; }
 .block.wash-gap { margin-top: 6px; }

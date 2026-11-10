@@ -439,31 +439,32 @@
   --scroll-thumb: color-mix(in srgb, var(--muted) 60%, transparent);
 }
 
-/* Page colors: the wash behind a journal block, the page color at the theme's wash strength. */
+/* Page colors: the wash behind a journal block, the page color at the theme's wash strength, mixed over the page
+   background so it is opaque (rows of a band then never show through each other; see .block.wash in app.css). */
 :root {
-  --pc-crimson-wash: color-mix(in srgb, var(--pc-crimson) var(--pc-wash), transparent);
-  --pc-red-wash: color-mix(in srgb, var(--pc-red) var(--pc-wash), transparent);
-  --pc-coral-wash: color-mix(in srgb, var(--pc-coral) var(--pc-wash), transparent);
-  --pc-orange-wash: color-mix(in srgb, var(--pc-orange) var(--pc-wash), transparent);
-  --pc-amber-wash: color-mix(in srgb, var(--pc-amber) var(--pc-wash), transparent);
-  --pc-yellow-wash: color-mix(in srgb, var(--pc-yellow) var(--pc-wash), transparent);
-  --pc-olive-wash: color-mix(in srgb, var(--pc-olive) var(--pc-wash), transparent);
-  --pc-lime-wash: color-mix(in srgb, var(--pc-lime) var(--pc-wash), transparent);
-  --pc-green-wash: color-mix(in srgb, var(--pc-green) var(--pc-wash), transparent);
-  --pc-emerald-wash: color-mix(in srgb, var(--pc-emerald) var(--pc-wash), transparent);
-  --pc-teal-wash: color-mix(in srgb, var(--pc-teal) var(--pc-wash), transparent);
-  --pc-cyan-wash: color-mix(in srgb, var(--pc-cyan) var(--pc-wash), transparent);
-  --pc-sky-wash: color-mix(in srgb, var(--pc-sky) var(--pc-wash), transparent);
-  --pc-blue-wash: color-mix(in srgb, var(--pc-blue) var(--pc-wash), transparent);
-  --pc-indigo-wash: color-mix(in srgb, var(--pc-indigo) var(--pc-wash), transparent);
-  --pc-violet-wash: color-mix(in srgb, var(--pc-violet) var(--pc-wash), transparent);
-  --pc-purple-wash: color-mix(in srgb, var(--pc-purple) var(--pc-wash), transparent);
-  --pc-magenta-wash: color-mix(in srgb, var(--pc-magenta) var(--pc-wash), transparent);
-  --pc-pink-wash: color-mix(in srgb, var(--pc-pink) var(--pc-wash), transparent);
-  --pc-rose-wash: color-mix(in srgb, var(--pc-rose) var(--pc-wash), transparent);
-  --pc-brown-wash: color-mix(in srgb, var(--pc-brown) var(--pc-wash), transparent);
-  --pc-tan-wash: color-mix(in srgb, var(--pc-tan) var(--pc-wash), transparent);
-  --pc-sand-wash: color-mix(in srgb, var(--pc-sand) var(--pc-wash), transparent);
-  --pc-slate-wash: color-mix(in srgb, var(--pc-slate) var(--pc-wash), transparent);
-  --pc-grey-wash: color-mix(in srgb, var(--pc-grey) var(--pc-wash), transparent);
+  --pc-crimson-wash: color-mix(in srgb, var(--pc-crimson) var(--pc-wash), var(--bg));
+  --pc-red-wash: color-mix(in srgb, var(--pc-red) var(--pc-wash), var(--bg));
+  --pc-coral-wash: color-mix(in srgb, var(--pc-coral) var(--pc-wash), var(--bg));
+  --pc-orange-wash: color-mix(in srgb, var(--pc-orange) var(--pc-wash), var(--bg));
+  --pc-amber-wash: color-mix(in srgb, var(--pc-amber) var(--pc-wash), var(--bg));
+  --pc-yellow-wash: color-mix(in srgb, var(--pc-yellow) var(--pc-wash), var(--bg));
+  --pc-olive-wash: color-mix(in srgb, var(--pc-olive) var(--pc-wash), var(--bg));
+  --pc-lime-wash: color-mix(in srgb, var(--pc-lime) var(--pc-wash), var(--bg));
+  --pc-green-wash: color-mix(in srgb, var(--pc-green) var(--pc-wash), var(--bg));
+  --pc-emerald-wash: color-mix(in srgb, var(--pc-emerald) var(--pc-wash), var(--bg));
+  --pc-teal-wash: color-mix(in srgb, var(--pc-teal) var(--pc-wash), var(--bg));
+  --pc-cyan-wash: color-mix(in srgb, var(--pc-cyan) var(--pc-wash), var(--bg));
+  --pc-sky-wash: color-mix(in srgb, var(--pc-sky) var(--pc-wash), var(--bg));
+  --pc-blue-wash: color-mix(in srgb, var(--pc-blue) var(--pc-wash), var(--bg));
+  --pc-indigo-wash: color-mix(in srgb, var(--pc-indigo) var(--pc-wash), var(--bg));
+  --pc-violet-wash: color-mix(in srgb, var(--pc-violet) var(--pc-wash), var(--bg));
+  --pc-purple-wash: color-mix(in srgb, var(--pc-purple) var(--pc-wash), var(--bg));
+  --pc-magenta-wash: color-mix(in srgb, var(--pc-magenta) var(--pc-wash), var(--bg));
+  --pc-pink-wash: color-mix(in srgb, var(--pc-pink) var(--pc-wash), var(--bg));
+  --pc-rose-wash: color-mix(in srgb, var(--pc-rose) var(--pc-wash), var(--bg));
+  --pc-brown-wash: color-mix(in srgb, var(--pc-brown) var(--pc-wash), var(--bg));
+  --pc-tan-wash: color-mix(in srgb, var(--pc-tan) var(--pc-wash), var(--bg));
+  --pc-sand-wash: color-mix(in srgb, var(--pc-sand) var(--pc-wash), var(--bg));
+  --pc-slate-wash: color-mix(in srgb, var(--pc-slate) var(--pc-wash), var(--bg));
+  --pc-grey-wash: color-mix(in srgb, var(--pc-grey) var(--pc-wash), var(--bg));
 }

@@ -176,3 +176,9 @@ are its questions for you; each answer decides what a later plan does.
    comes to the front, no second window flashes. Also: `just e2e` passes while an installed Breccia runs. If the
    window only flashes in the taskbar instead of coming to the front, say so (a known Windows limit with a small
    fix).
+
+## Wash seams, slash dates, delete a block (plan 7)
+
+76. [ ] **No lines inside a color wash:** in the dark theme, on a journal day with a colored page's blocks (one with
+   sub-blocks), zoom to 110 % and 125 % (`Ctrl +`): the wash is one band with no faint lines between the rows. Also at
+   100 %, and in one light theme. The colors look as before.

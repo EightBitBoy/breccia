@@ -187,7 +187,7 @@ test('page colors have a shade in every theme', () => {
     expect(new Set(shades).size, s).toBe(PAGE_COLORS.length)
   }
   for (const n of PAGE_COLORS) {
-    expect(css, n).toContain(`--pc-${n}-wash: color-mix(in srgb, var(--pc-${n}) var(--pc-wash), transparent);`)
+    expect(css, n).toContain(`--pc-${n}-wash: color-mix(in srgb, var(--pc-${n}) var(--pc-wash), var(--bg));`)
   }
 })
 

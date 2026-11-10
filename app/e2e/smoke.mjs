@@ -3391,7 +3391,7 @@ try {
   // the middle of a row and every pixel down to the middle of the next, in a strip 4 CSS px wide at 3 CSS px from the
   // band's left edge. The background is flat, so a clean band gives 0. Zooms in SEAM_ZOOMS are asserted; the others
   // are measured and printed.
-  const SEAM_ZOOMS = [100]
+  const SEAM_ZOOMS = [100, 110, 125]
   const SEAM_TOLERANCE = 2
   const THEMES128 = ['light', 'dark', 'violet', 'graphite', 'taupe', 'teal']
   writeFileSync(join(pagesDir, 'Seam blue 128.md'), 'color:: blue\n- b\n')
