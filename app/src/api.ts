@@ -47,6 +47,8 @@ export const GIT_CHANGED = 'git:changed'
 export const CONFIG_CHANGED = 'config:changed'
 /** Keys of pages saved after a failed save (`string[]`): their "could not be saved" notice goes. */
 export const PAGES_SAVED = 'pages:saved'
+/** The session was recovered after an internal error (`{ reopened, notice }`; `reopened`: the window must reload). */
+export const SESSION_RECOVERED = 'session:recovered'
 
 /** The sidebar's saved width and visibility (machine-local, in settings.json). */
 export function uiState(): Promise<UiState> {

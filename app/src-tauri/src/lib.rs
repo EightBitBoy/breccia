@@ -1,6 +1,7 @@
 //! The Tauri shell: wiring only. All behaviour lives in `breccia_core`.
 
 mod git;
+mod guard;
 mod logfile;
 mod settings;
 
@@ -15,9 +16,12 @@ use breccia_core::git::{Discovered, Git, GitView, discover};
 use breccia_core::search::INDEX_CHUNK_PAGES;
 use breccia_core::session::Notice;
 use breccia_core::watch::FolderWatcher;
-use breccia_core::{Clock, Command, CommandError, IndexProgress, Output, Request, Session};
+use breccia_core::{
+    Clock, Command, CommandError, IndexProgress, Output, Recovery, Request, Session,
+};
 use chrono::NaiveDate;
 use git::{CLOSE_LIMIT, GitMsg, finish_close};
+use guard::{Guarded, recovery_notice, with_session};
 use tauri::menu::{Menu, MenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Emitter, Manager, RunEvent, State};
@@ -37,6 +41,38 @@ const PAGES_SAVED: &str = "pages:saved";
 const CONFIG_CHANGED: &str = "config:changed";
 /// The progress of the background build of the search index.
 const INDEX_CHANGED: &str = "index:changed";
+/// The session was recovered after an internal error (see `RecoveredEvent`).
+const SESSION_RECOVERED: &str = "session:recovered";
+
+/// The payload of `session:recovered`.
+#[derive(serde::Serialize, Clone, Debug, PartialEq, Eq)]
+#[serde(rename_all = "camelCase")]
+struct RecoveredEvent {
+    /// The window must reload: the notes were read again from disk, or no
+    /// folder is open any more. False when the session was kept as it was.
+    reopened: bool,
+    /// What the user is told.
+    notice: Notice,
+}
+
+impl RecoveredEvent {
+    fn of(r: &Recovery) -> RecoveredEvent {
+        RecoveredEvent {
+            reopened: !matches!(r, Recovery::Kept),
+            notice: recovery_notice(r),
+        }
+    }
+}
+
+/// The answer to a command that met a recovery: it did not run (or did not
+/// finish), and the message is the recovery's notice.
+fn recovered_error(r: &Recovery) -> CommandError {
+    let message = match recovery_notice(r) {
+        Notice::Refused { message } => message,
+        other => format!("{other:?}"),
+    };
+    commands::error("recovered", message)
+}
 
 /// The payload of `index:changed`: the progress of the build for one folder
 /// generation (a build of an older generation must not move the new one's status).
@@ -105,6 +141,8 @@ struct App {
     notes_root: Mutex<Option<PathBuf>>,
     /// The folder of the log file; `None` if the app has none.
     log_dir: Option<PathBuf>,
+    /// `BRECCIA_TEST_PANIC`: the search text whose `search.query` panics, once.
+    test_panic: Mutex<Option<String>>,
 }
 
 /// The log folder, made if it is missing, ready to be opened; or the message
@@ -125,6 +163,75 @@ fn today_override(var: Option<OsString>) -> Option<NaiveDate> {
         log::warn!("BRECCIA_TODAY must be YYYY-MM-DD; ignored");
     }
     parsed
+}
+
+/// `BRECCIA_TEST_PANIC` (the e2e hook): a `search.query` for exactly this
+/// text panics inside the session, once per process. Unset or empty: never.
+fn test_panic(var: Option<OsString>) -> Option<String> {
+    var.filter(|v| !v.is_empty())
+        .map(|v| v.to_string_lossy().into_owned())
+}
+
+/// The text to panic with if `cmd` is the `search.query` the test hook waits
+/// for; the hook is used up by it.
+fn take_test_panic(slot: &Mutex<Option<String>>, cmd: &Command) -> Option<String> {
+    let Command::SearchQuery { text } = cmd else {
+        return None;
+    };
+    let mut slot = slot.lock().unwrap_or_else(|e| e.into_inner());
+    if slot.as_deref() == Some(text.as_str()) {
+        slot.take()
+    } else {
+        None
+    }
+}
+
+/// The shell's part of a recovery, run once the session lock is released:
+/// the watcher and the index follow the reopened folder (or stop with no
+/// folder), the Git thread looks again, and the window is told.
+fn after_recovery(app: &AppHandle, r: &Recovery) {
+    let what = match r {
+        Recovery::Reopened { .. } => "reopened",
+        Recovery::Kept => "kept",
+        Recovery::NoFolder => "no folder",
+    };
+    log::error!("the session was recovered ({what})");
+    let state = app.state::<App>();
+    match r {
+        Recovery::Reopened { generation } => {
+            let generation = *generation;
+            // The folder of this generation; none if another one opened since.
+            let root = match with_session(&state.session, |s| {
+                s.git_target()
+                    .filter(|(_, g, _)| *g == generation)
+                    .map(|(root, _, _)| root)
+            }) {
+                Guarded::Ran(root) => root,
+                Guarded::Recovered(again) => {
+                    log::error!("the session was recovered again ({again:?})");
+                    None
+                }
+            };
+            if let Some(root) = root {
+                if let Some(notice) = start_watcher(app, &root, generation) {
+                    log::warn!("recovery: {notice:?}");
+                }
+                index_in_background(app, generation);
+            }
+        }
+        Recovery::NoFolder => {
+            let old = state
+                .watcher
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .take();
+            drop(old);
+            *state.notes_root.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        }
+        Recovery::Kept => {}
+    }
+    send_git(app, GitMsg::Changed);
+    let _ = app.emit(SESSION_RECOVERED, RecoveredEvent::of(r));
 }
 
 /// A large outside change (more pages than one index chunk) starts an index run.
@@ -362,14 +469,16 @@ fn index_loop(handle: &AppHandle, generation: u64) {
         let mut last_total = None;
         loop {
             let asked = Instant::now();
-            let (step, pages, wait, run) = match state.session.lock() {
-                Ok(mut session) => {
-                    let wait = asked.elapsed();
-                    let began = Instant::now();
-                    let step = session.index_step(generation, INDEX_CHUNK_PAGES);
-                    (step, session.index_step_pages(), wait, began.elapsed())
-                }
-                Err(_) => return log::error!("index: the session lock is poisoned"),
+            let (step, pages, wait, run) = match with_session(&state.session, |session| {
+                let wait = asked.elapsed();
+                let began = Instant::now();
+                let step = session.index_step(generation, INDEX_CHUNK_PAGES);
+                (step, session.index_step_pages(), wait, began.elapsed())
+            }) {
+                Guarded::Ran(ran) => ran,
+                // The follow-up starts the new generation's indexing; this
+                // loop's generation is gone.
+                Guarded::Recovered(r) => return after_recovery(handle, &r),
             };
             // std's Mutex is not fair: give a command that waited for this
             // chunk (a keystroke) the chance to take the lock before the next.
@@ -424,14 +533,14 @@ fn start_watcher(app: &AppHandle, root: &std::path::Path, generation: u64) -> Op
                 _ => 0,
             };
             let asked = Instant::now();
-            let (result, wait, run) = match state.session.lock() {
-                Ok(mut session) => {
-                    let wait = asked.elapsed();
-                    let began = Instant::now();
-                    let result = session.run(request, clock);
-                    (result, wait, began.elapsed())
-                }
-                Err(_) => return log::error!("watcher: the session lock is poisoned"),
+            let (result, wait, run) = match with_session(&state.session, |session| {
+                let wait = asked.elapsed();
+                let began = Instant::now();
+                let result = session.run(request, clock);
+                (result, wait, began.elapsed())
+            }) {
+                Guarded::Ran(ran) => ran,
+                Guarded::Recovered(r) => return after_recovery(&handle, &r),
             };
             if state.trace {
                 log::trace!(target: "trace", "{}", trace_line("watch", &format!("paths={n}"), wait, run));
@@ -526,17 +635,26 @@ mod commands {
             Command::FolderOpen { path } | Command::FolderCreate { path } => Some(path.clone()),
             _ => None,
         };
+        let panic_for = take_test_panic(&state.test_panic, &request.command);
         let clock = state.clock();
         let asked = Instant::now();
-        let mut session = state
-            .session
-            .lock()
-            .map_err(|_| error("internal", "the session lock is poisoned".into()))?;
-        let wait = asked.elapsed();
-        let began = Instant::now();
-        let result = session.run(request, clock);
-        let run = began.elapsed();
-        drop(session);
+        let guarded = with_session(&state.session, |session| {
+            let wait = asked.elapsed();
+            let began = Instant::now();
+            if let Some(text) = panic_for {
+                panic!("test panic for `{text}`");
+            }
+            let result = session.run(request, clock);
+            (result, wait, began.elapsed())
+        });
+        // The session lock is released here.
+        let (result, wait, run) = match guarded {
+            Guarded::Ran(ran) => ran,
+            Guarded::Recovered(r) => {
+                after_recovery(app, &r);
+                return Err(recovered_error(&r));
+            }
+        };
         if let Some(name) = name {
             log::trace!(target: "trace", "{}", trace_line("run", &name, wait, run));
         }
@@ -716,10 +834,12 @@ mod commands {
     /// The notices of the startup folder open, once; empty after that.
     #[tauri::command]
     pub fn startup_notices(state: State<'_, App>) -> Vec<Notice> {
-        match state.startup_notices.lock() {
-            Ok(mut slot) => std::mem::take(&mut *slot),
-            Err(_) => vec![poisoned()],
-        }
+        std::mem::take(
+            &mut *state
+                .startup_notices
+                .lock()
+                .unwrap_or_else(|e| e.into_inner()),
+        )
     }
 }
 
@@ -919,6 +1039,7 @@ pub fn run() {
                 indexing: AtomicU64::new(0),
                 notes_root: Mutex::new(None),
                 log_dir,
+                test_panic: Mutex::new(test_panic(std::env::var_os("BRECCIA_TEST_PANIC"))),
             };
             let mut watch = None;
             if let Some(path) = startup_folder(&state.config_dir) {
@@ -932,8 +1053,21 @@ pub fn run() {
                     command: Command::FolderStatus,
                 };
                 let clock = state.clock();
-                let mut session = state.session.lock().unwrap_or_else(|e| e.into_inner());
-                if let Ok(out) = session.run(status, clock)
+                let status = match with_session(&state.session, |s| s.run(status, clock)) {
+                    Guarded::Ran(status) => status.ok(),
+                    // `App` is not managed yet, so the follow-up cannot run;
+                    // no watcher or index starts, and the notice says why.
+                    Guarded::Recovered(r) => {
+                        log::error!("the session was recovered at start-up ({r:?})");
+                        state
+                            .startup_notices
+                            .lock()
+                            .unwrap_or_else(|e| e.into_inner())
+                            .push(recovery_notice(&r));
+                        None
+                    }
+                };
+                if let Some(out) = status
                     && let Some(folder) = out.folder
                     && let Some(root) = folder.path
                 {
@@ -989,19 +1123,16 @@ fn open_startup_folder(session: &Mutex<Session>, path: PathBuf, clock: Clock) ->
         generation: 0,
         command: Command::FolderOpen { path },
     };
-    let result = match session.lock() {
-        Ok(mut session) => session.run(request, clock),
-        Err(_) => return vec![poisoned()],
+    let result = match with_session(session, |s| s.run(request, clock)) {
+        Guarded::Ran(result) => result,
+        Guarded::Recovered(r) => {
+            log::error!("the session was recovered at start-up ({r:?})");
+            return vec![recovery_notice(&r)];
+        }
     };
     match result {
         Ok(output) => output.notices,
         Err(e) => vec![Notice::Refused { message: e.message }],
-    }
-}
-
-fn poisoned() -> Notice {
-    Notice::Refused {
-        message: "the session lock is poisoned".into(),
     }
 }
 
@@ -1180,6 +1311,62 @@ mod tests {
         let session = Mutex::new(Session::new());
         let notices = open_startup_folder(&session, dir.path().to_path_buf(), clock());
         assert!(notices.is_empty(), "{notices:?}");
+    }
+
+    #[test]
+    fn test_panic_needs_a_non_empty_value() {
+        assert_eq!(test_panic(None), None);
+        assert_eq!(test_panic(Some("".into())), None);
+        assert_eq!(test_panic(Some("boom".into())), Some("boom".to_string()));
+    }
+
+    #[test]
+    fn the_test_panic_fires_once_for_its_search_text() {
+        let slot = Mutex::new(Some("boom".to_string()));
+        let query = |text: &str| Command::SearchQuery { text: text.into() };
+        assert_eq!(take_test_panic(&slot, &query("other")), None);
+        assert_eq!(take_test_panic(&slot, &Command::FolderStatus), None);
+        assert_eq!(
+            take_test_panic(&slot, &query("boom")),
+            Some("boom".to_string())
+        );
+        assert_eq!(take_test_panic(&slot, &query("boom")), None, "once");
+        assert_eq!(take_test_panic(&Mutex::new(None), &query("boom")), None);
+    }
+
+    #[test]
+    fn recovered_event_payload() {
+        let event = RecoveredEvent {
+            reopened: true,
+            notice: Notice::Refused {
+                message: "m".into(),
+            },
+        };
+        assert_eq!(
+            serde_json::to_string(&event).unwrap(),
+            r#"{"reopened":true,"notice":{"kind":"refused","message":"m"}}"#
+        );
+        // The window reloads after a reopen and after the folder was closed;
+        // only a kept session stays as it is.
+        assert!(RecoveredEvent::of(&Recovery::Reopened { generation: 2 }).reopened);
+        assert!(RecoveredEvent::of(&Recovery::NoFolder).reopened);
+        assert!(!RecoveredEvent::of(&Recovery::Kept).reopened);
+        assert_eq!(
+            RecoveredEvent::of(&Recovery::Kept).notice,
+            recovery_notice(&Recovery::Kept)
+        );
+    }
+
+    #[test]
+    fn a_recovered_command_answers_with_the_notice_text() {
+        let err = recovered_error(&Recovery::Kept);
+        assert_eq!(err.code, "recovered");
+        assert_eq!(
+            Notice::Refused {
+                message: err.message
+            },
+            recovery_notice(&Recovery::Kept)
+        );
     }
 
     #[test]

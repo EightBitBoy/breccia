@@ -1,5 +1,5 @@
 use breccia_core::session::Notice;
-use breccia_core::{BlockId, Clock, Command, CommandError, Output, Session};
+use breccia_core::{BlockId, Clock, Command, CommandError, Output, Recovery, Session};
 use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
@@ -2049,4 +2049,83 @@ fn an_edit_that_leaves_no_step_still_ends_the_run() {
         undo_after_keystrokes_around(json!({"type": "page.today"})),
         "- ab\n"
     );
+}
+
+#[test]
+fn recover_reopens_a_saved_folder() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+    let g = s.generation();
+    let a = ids(&mut s, "p")[0];
+    ok(
+        &mut s,
+        json!({"type":"block.setText","id":a,"text":"a1"}),
+        0,
+    );
+    assert_eq!(read(&t, "pages/P.md"), "- a1\n");
+    // Written behind the session's back, and not yet seen by it.
+    put(t.path(), "pages/New.md", "- new\n");
+    assert_eq!(s.recover(), Recovery::Reopened { generation: g + 1 });
+    assert_eq!(s.generation(), g + 1);
+    ok(&mut s, json!({"type":"page.show","key":"new"}), 0);
+    // Undo starts afresh: nothing to take back.
+    let out = ok(&mut s, json!({"type":"history.undo","page":"p"}), 0);
+    assert_eq!(out.page.unwrap().blocks[0].text, "a1");
+    assert_eq!(read(&t, "pages/P.md"), "- a1\n");
+}
+
+#[test]
+fn recover_keeps_a_session_with_unsaved_pages() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+    let g = s.generation();
+    let a = ids(&mut s, "p")[0];
+    // The file changes first, so the save of the edit fails and the page stays unsaved.
+    put(t.path(), "pages/P.md", "- theirs\n");
+    ok(
+        &mut s,
+        json!({"type":"block.setText","id":a,"text":"mine"}),
+        0,
+    );
+    assert_eq!(s.recover(), Recovery::Kept);
+    assert_eq!(s.generation(), g);
+    let out = ok(&mut s, json!({"type":"page.get","key":"p"}), 0);
+    assert_eq!(out.page.unwrap().blocks[0].text, "mine");
+    assert_eq!(read(&t, "pages/P.md"), "- theirs\n");
+}
+
+#[test]
+fn recover_without_a_folder() {
+    let mut s = Session::new();
+    assert_eq!(s.recover(), Recovery::NoFolder);
+    // A folder that is gone by the time of the recovery: no folder is open after it.
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+    let g = s.generation();
+    let root = t.path().to_path_buf();
+    drop(t);
+    assert!(!root.exists());
+    assert_eq!(s.recover(), Recovery::NoFolder);
+    let status = ok(&mut s, json!({"type":"folder.status"}), 0);
+    let folder = status.folder.unwrap();
+    assert_eq!(folder.path, None);
+    assert!(folder.generation > g, "old block ids are stale");
+}
+
+#[test]
+fn reset_keeps_the_search_cache_and_moves_the_generation_on() {
+    let cache = tempfile::tempdir().unwrap();
+    let notes = tempfile::tempdir().unwrap();
+    put(notes.path(), "pages/P.md", "- a\n");
+    let mut s = Session::with_cache(cache.path().to_path_buf());
+    ok(&mut s, json!({"type":"folder.open","path":notes.path()}), 0);
+    let g = s.generation();
+    s.reset();
+    assert!(s.generation() > g);
+    assert!(s.git_target().is_none());
+    // The cache directory is kept: the next open stores its index there again.
+    let before: Vec<_> = fs::read_dir(cache.path()).unwrap().collect();
+    for f in fs::read_dir(cache.path()).unwrap() {
+        fs::remove_file(f.unwrap().path()).unwrap();
+    }
+    assert!(!before.is_empty());
+    ok(&mut s, json!({"type":"folder.open","path":notes.path()}), 0);
+    assert!(fs::read_dir(cache.path()).unwrap().next().is_some());
 }

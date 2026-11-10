@@ -84,6 +84,17 @@ fn config_changed() -> CommandError {
     )
 }
 
+/// What [`Session::recover`] did.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum Recovery {
+    /// The open folder was read again from disk; block ids of before are stale.
+    Reopened { generation: u64 },
+    /// Some page holds edits its file does not, so nothing was changed.
+    Kept,
+    /// No folder is open (none was, or it could not be opened again).
+    NoFolder,
+}
+
 /// What a reload from disk did to a block the UI may still be editing.
 enum DiskMark {
     /// The block's text on disk is now `theirs`.
@@ -942,6 +953,64 @@ impl Session {
         let (ws, warnings) = Workspace::open(path).map_err(|e| CommandError::new("open", e))?;
         let notices = warnings.iter().map(Notice::load_warning).collect();
         Ok(self.replace_folder(ws, notices))
+    }
+
+    /// Puts the session back on its feet after an internal error (a panic)
+    /// left it in an unknown state. The files are the truth and every edit is
+    /// saved at once, so the open folder is read again from disk, as
+    /// `folder.open` does: a new generation, a fresh undo history. A session
+    /// holding edits its files do not is kept as it is (`Kept`): reading the
+    /// disk would drop them. A folder that cannot be opened again leaves the
+    /// session with no folder.
+    pub fn recover(&mut self) -> Recovery {
+        self.typing = None;
+        self.typed_step = None;
+        let Some(ws) = self.ws.as_ref() else {
+            return Recovery::NoFolder;
+        };
+        if !ws.unsaved().is_empty() {
+            return Recovery::Kept;
+        }
+        let root = ws.root.clone();
+        // As `folder.open`: a folder that is gone never opens as an empty one.
+        let opened = if root.is_dir() {
+            Workspace::open(&root).map_err(|e| e.to_string())
+        } else {
+            Err("it no longer exists".to_string())
+        };
+        match opened {
+            Ok((ws, warnings)) => {
+                // Logged, not shown: the window gets the recovery's own notice.
+                let notices = warnings.iter().map(Notice::load_warning).collect();
+                for notice in self.replace_folder(ws, notices).notices {
+                    log::warn!("recovery: {notice:?}");
+                }
+                Recovery::Reopened {
+                    generation: self.generation,
+                }
+            }
+            Err(e) => {
+                log::error!("recovery: the notes folder could not be opened again: {e}");
+                self.reset();
+                Recovery::NoFolder
+            }
+        }
+    }
+
+    /// Replaces the session with a fresh one without a folder. The search
+    /// cache directory stays, and the generation and config version move on,
+    /// so no request or settings write of before is taken for a current one.
+    pub fn reset(&mut self) {
+        let search = match self.search.cache_dir() {
+            Some(dir) => IndexState::with_cache(dir.to_path_buf()),
+            None => IndexState::default(),
+        };
+        *self = Session {
+            search,
+            generation: self.generation + 1,
+            config_version: self.config_version + 1,
+            ..Session::default()
+        };
     }
 
     /// Switches to another folder; block IDs of the old one become stale.
