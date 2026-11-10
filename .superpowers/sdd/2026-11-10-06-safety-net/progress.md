@@ -167,3 +167,11 @@ and the step fails with Q2's text, so a clear failure message helps. The RED in 
 - T9 adds a crate not in `Cargo.lock`: `cargo` will fetch it; CI (T1) will build it; nothing earlier blocks it.
 - T2's Dependabot `github-actions` PRs must update `ci.yml` and `release.yml` together or T1's byte-for-byte test
   fails; Dependabot does so in one PR per ecosystem directory, so fine.
+
+## Tasks
+
+Task 1: complete (commits b4053d4..6a3e0b1, review clean: spec compliant, quality approved; first CI run green).
+Task 1: minor (deferred): a push to a branch with an open same-repo pull request runs CI twice (accepted, F17).
+Task 1: minor (deferred): cancel-in-progress on main can cancel a run before the cache is saved (accepted, F17).
+Task 1: minor (deferred): the step-equality test fails with a vague message if the release's version step is renamed.
+Task 1: minor (deferred): only the file-level RED was recorded for the workflow test, no mutation per test.
