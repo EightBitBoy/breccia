@@ -66,7 +66,8 @@ Next is plan 6, the audit's "Safety net" (owner's decision of 2026-11-10): one r
 internal error, a log file with "Open log folder" in Settings (review item 68: yes), CI on every push, a contract
 test between the core's and the frontend's types, Dependabot with `SECURITY.md` and `CONTRIBUTING.md`, and commands
 that say whether they change anything (audit keys B6, B7, M9, M52, M41, M54, M17 with B5). Then plan 7, backlog #75
-(faint lines between rows of a color wash at zoom 110 % and 125 %), then backlog #76 (the scroll wheel over the
+(faint lines between rows of a color wash at zoom 110 % and 125 %) together with backlog #77 ("Yesterday" and
+"Today" in the slash menu), then backlog #76 (the scroll wheel over the
 theme button, and more themes). Each is a normal plan, with the owner's review.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
@@ -79,7 +80,7 @@ Candidates for the next plan, to settle with the owner:
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 76 items; #71, #72, #73, #74 done, #64 done by plan 5);
+- backlog items the owner picks (`docs/backlog.md`, 77 items; #71, #72, #73, #74 done, #64 done by plan 5);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 

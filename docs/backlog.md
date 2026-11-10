@@ -492,3 +492,11 @@ Gruvbox, One Dark, Tokyo Night, Ayu; check each theme's licence and use only the
 copied files). Each new theme needs all tokens in `app/src/styles/tokens.css`, the readability checks of the
 existing themes (page colour washes, text and link contrast), a place in Settings > Appearance and the status bar
 menu, and a look at the card buttons (#73) in it. Plan it as one plan; ask the owner which themes to add.
+
+## 77. Slash menu: "Yesterday", and "Today" with a calendar icon (Editor)
+
+Owner, 2026-11-10: the slash menu gets an entry "Yesterday" that inserts yesterday's date, the same way "Today's
+date" inserts today's (a link to that journal day). "Today's date" is renamed to "Today". Maybe a small calendar icon
+next to both entries, the same one that is shown next to the "Journal" button. Planned with plan 7 (after the
+safety net, with #75). To settle in the plan: whether the icon stays ("maybe"), whether "Date…" gets it too, the
+order of the entries, and that typing "date" in the menu still finds both (`app/src/lib/slash.ts`).
