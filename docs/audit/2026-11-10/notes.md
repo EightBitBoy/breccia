@@ -70,3 +70,23 @@ is wrong even if the tests pass.
 - Carried to the synthesis (area 15): every edit answers with a complete `PageView`, in which every block of the
   page is rendered to HTML again (`PageView::of`, `view.rs:355`). That is simple and correct, and it is the first
   thing to measure when a long page feels slow.
+
+## Core: search and Git (area 4)
+
+- **The index is a cache.** `search/` never writes into the notes folder; a page's rows are current when
+  `page_hash` (schema version, kind, state keywords, block texts) matches. Bump `SCHEMA_VERSION` whenever what is
+  stored changes.
+- **Git never destroys.** `git/sync.rs` runs no `reset`, `stash`, `clean`, `--amend` or forced push; a rebase that
+  fails is aborted and the result checked (`after_failed_rebase`: aborted, HEAD restored, no operation left). A
+  rebase the user has in progress is never touched (`Repo::busy` first).
+- **Only the notes folder is committed** (`add -A -- .`, `commit --only -- .`), with Breccia's temp files
+  excluded; files staged elsewhere stay staged.
+- **Git's environment is cleaned** (`REPOSITORY_VARS` removed, `LC_ALL=C` so answers can be matched by text,
+  `GIT_TERMINAL_PROMPT=0`, no sign-in window from a timer).
+- **Network commands never hold the session lock**; the local rebase and the reload after it do
+  (`integrate_locked`). `GitEngine::last_lock_held` measures it. A local Git command may take up to
+  `LOCAL_LIMIT` (120 s), and during a rebase that is time the UI waits; look here first if the app ever freezes
+  at a pull.
+- **The engine owns no thread and no clock**: the shell calls `tick`, `sync_now`, `close`, `init` with a `Now`.
+  `Schedule` is pure. Keep both testable that way.
+- **`index.lock` is never deleted** by Breccia; it is waited for, then explained (`Problem::Locked`).

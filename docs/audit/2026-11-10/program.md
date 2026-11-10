@@ -272,3 +272,46 @@ from TOML in snake_case.)
 across lines with real newlines inside them (`doc("- 1⏎")`), which reads like a damaged paste and which `rustfmt`
 cannot repair. Write them as `"- 1\n"` like every other test in the file. Also remove the doubled doc line at
 `session/search.rs:319`.
+
+## T10: small duplications in search and Git
+
+No defect was found in `crates/core/src/search/` and `crates/core/src/git/`. The findings are repeats that make
+the next change touch two places.
+
+### M26: one set of Git helper functions
+
+`busy_name` is written twice, identically (`git/engine.rs:159`, `git/sync.rs:162`). `failed` (`engine.rs:126`,
+`sync.rs:146`) and `first_line` (`engine.rs:132`, `sync.rs:153`) exist twice with slightly different signatures.
+Keep one of each: `Busy::name(self)` on the enum in `repo.rs`, `Problem::failed(&GitError)` and a single
+`first_line(&str)` in `sync.rs`.
+
+### M27: the problem's tag from serde, not from a second `match`
+
+`Problem` (`git/sync.rs:53`) derives `Serialize` with `tag = "kind"`, and `ProblemView::of` (`git/view.rs:32`) maps
+every variant to the same camelCase name again by hand. A new problem has to be added in both. Either give
+`Problem` a `kind(&self) -> &'static str` that both use, or drop the derive on `Problem` (it is only ever sent as
+`ProblemView`).
+
+### M28: one damage recovery for the search index
+
+"The file is damaged: delete it and open it again" is implemented three times: `SearchIndex::open`
+(`search/mod.rs:67`), `IndexState::open` (`session/search.rs:222` to `227`) and `IndexState::recover`
+(`session/search.rs:255`). The first two run back to back on the same error. Let `SearchIndex::open` only open
+(and report damage), and keep the policy (delete once, then fall back to memory) in `IndexState` alone.
+
+### M29: `parse_query` returns the typed links
+
+`Session::run_query` (`session/search.rs:425` to `437`) parses the links of the query text a second time and
+relies on `parse_query` having listed them in the same order with the same de-duplication, addressing its result
+by position (`q.links.get_mut(seen.len() - 1)`). Let `Query` keep each link's typed target and kind
+(`links: Vec<QueryLink { target, kind, keys }>`), so the session widens `keys` without parsing again.
+
+### M30: test seams behind a feature
+
+`GitEngine` carries three hooks that only tests set (`after_fetch`, `before_lock`, `before_rebase`,
+`git/engine.rs:116` to `118`), public and `#[doc(hidden)]`. The integration tests are a separate crate, so
+`#[cfg(test)]` does not work; a cargo feature `test-seams` (enabled by the core's dev-dependency on itself) keeps
+them out of the shipped binary and out of the public API.
+
+Also for M14 (one path classifier): `git/message.rs:50` to `58` is a fifth place that decides what
+`pages/**.md`, `journals/*.md` and `breccia/config.toml` are.
