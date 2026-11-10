@@ -183,3 +183,8 @@ Task 3: minor (deferred): `contract.test.ts:66` a `Command` variant without `#[s
 Task 3: minor (deferred): `contract.test.ts:76,81` an event named outside `^[a-z]+:[a-z]+$` is ignored on both sides; assert Rust has none outside it.
 Task 3: minor (deferred): `contract.test.ts:76` the Rust regex matches any `const X: &str = "a:b"`, not only events.
 Task 3: minor (deferred): `contract.test.ts:55` `tsSection` ends at the next `export` line, so a non-exported declaration after it would be absorbed.
+Task 4: complete (commits ebfcb97..d3f72ef, review clean: spec compliant, quality approved). `backlinks::index_follows_edits` now gives its second edit a later time (`cmd_at`); the reviewer judged that it still proves what it did.
+Task 4: minor (deferred): `session.rs:439-441` the query loop reports only the first failing query.
+Task 4: minor (deferred): `session.rs:411` `let _ =` discards results, so `board.get` and `page.renameReach` may only run their error path.
+Task 4: minor (deferred): no test pins that `archive.auto` keeps the typing run.
+Task 4: minor (deferred): the doc comment of `CommandKind::Background` could say that `archive.auto` writes.
