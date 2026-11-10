@@ -1,0 +1,42 @@
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "ci"
+    groups:
+      actions:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "cargo"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps)"
+    # Merge the Tauri crate and npm pull requests together: the Tauri CLI
+    # refuses a build whose crate and npm versions differ in major.minor.
+    # The Tauri group comes first, because a dependency joins the first group that matches.
+    groups:
+      tauri:
+        patterns:
+          - "tauri*"
+        update-types: ["minor", "patch"]
+      cargo:
+        update-types: ["minor", "patch"]
+
+  - package-ecosystem: "npm"
+    directory: "/app"
+    schedule:
+      interval: "monthly"
+    commit-message:
+      prefix: "chore(deps)"
+    groups:
+      tauri:
+        patterns:
+          - "@tauri-apps/*"
+        update-types: ["minor", "patch"]
+      npm:
+        update-types: ["minor", "patch"]
