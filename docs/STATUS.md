@@ -28,6 +28,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 3 | Custom color vividness | done 2026-11-09 | `docs/plans/2026-11-09-03-custom-color-vividness.md` | `docs/plans/2026-11-09-03-custom-color-vividness-followups.md` |
 | 4 | Follow-ups of plans 1 to 3 | done 2026-11-09 | `docs/plans/2026-11-09-04-followups-of-plans-1-3.md` | `docs/plans/2026-11-09-04-followups-of-plans-1-3-followups.md` |
 | 5 | GitHub Pages site | done 2026-11-09 | `docs/plans/2026-11-09-05-github-pages-site.md` | `docs/plans/2026-11-09-05-github-pages-site-followups.md` |
+| 6 | Safety net (from the audit) | done 2026-11-10 | `docs/plans/2026-11-10-06-safety-net.md` | `docs/plans/2026-11-10-06-safety-net-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -62,18 +63,22 @@ app icons. It is not part of the app's release, and its commits are `chore`, `te
 requests) and `just site-shots` (the views at three widths, dark and light, into `target/site-shots/`). The owner checks
 review items 61 to 63.
 
-Next is plan 6, the audit's "Safety net" (owner's decision of 2026-11-10): one running instance, recovery after an
-internal error, a log file with "Open log folder" in Settings (review item 68: yes), CI on every push, a contract
-test between the core's and the frontend's types, Dependabot with `SECURITY.md` and `CONTRIBUTING.md`, and commands
-that say whether they change anything (audit keys B6, B7, M9, M52, M41, M54, M17 with B5). Then plan 7, backlog #75
-(faint lines between rows of a color wash at zoom 110 % and 125 %) together with backlog #77 ("Yesterday" and
-"Today" in the slash menu) and #78 (a shortcut that deletes the whole block), then backlog #76 (the scroll wheel over the
-theme button, and more themes). Each is a normal plan, with the owner's review.
+Plan 6, the audit's "Safety net", is done (2026-11-10; owner decisions in the plan's "Product questions", rulings in
+the ledger `.superpowers/sdd/2026-11-10-06-safety-net/progress.md`). Only one Breccia runs per user (a second start
+shows the open window); after an internal error Breccia reloads the notes from disk (or keeps them, and says so, when
+something is unsaved) instead of staying unusable until restart; a log file with "Open log folder" in Settings >
+Troubleshooting; CI on every push and pull request; monthly Dependabot, `SECURITY.md`, `CONTRIBUTING.md`; a contract
+test between the core's and the frontend's names; read-only commands no longer split undo while typing. It closed
+audit findings B5, B6, B7, M9, M17, M41, M52 and M54. The owner checks review items 70 to 75; nobody has yet clicked
+"Open log folder" or started Breccia twice for real.
+
+Next is plan 7: backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %) together with backlog
+#77 ("Yesterday" and "Today" in the slash menu) and #78 (a shortcut that deletes the whole block), then backlog #76
+(the scroll wheel over the theme button, and more themes). Each is a normal plan, with the owner's review.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
-55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open; none of them holds
-up plan 6.
+55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's next plans (2 to 5 in its "Priorities") wait for the owner.
 
 Candidates for the next plan, to settle with the owner:
 
@@ -86,10 +91,12 @@ Candidates for the next plan, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (978 tests) and cargo tests pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 186 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (1015 tests) and cargo tests (core 725) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 189 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
-  (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`).
+  (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
+  12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
+- CI (`.github/workflows/ci.yml`) runs `just test` and `just lint` on every push; e2e runs only locally.
 
 ## Owner decisions in force
 
@@ -98,6 +105,12 @@ Candidates for the next plan, to settle with the owner:
 - The installer is not code signed (SmartScreen warns on the first run of each version).
 - Only the NSIS installer is built; an MSI only if someone asks (backlog #51).
 - The Git history view stays read-only: clicking a commit does nothing.
+- One Breccia per user; a second start brings the open window to the front, with no notice (plan 6, Q3).
+- After an internal error with nothing unsaved, Breccia reloads the notes and shows the journal; with unsaved edits it
+  does not reload and asks for a restart (plan 6, Q1 and Q2).
+- The log keeps two files of 1 MB; it may hold paths, never note text, search text or credentials (plan 6, Q5, Q6).
+- Security reports go through GitHub's private vulnerability reporting; pull requests are welcome after an agreed
+  issue; Dependabot runs monthly (plan 6, Q7 to Q9).
 - Deleting a page removes its file for good; it does not go to the recycle bin (review item 64, 2026-11-10).
 
 ## Setting up a new machine or account

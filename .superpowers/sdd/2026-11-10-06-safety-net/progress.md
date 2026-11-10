@@ -252,3 +252,8 @@ Task 8: minor (deferred): the slash menu's date picker stays open through a relo
 Task 8: minor (deferred): a sidebar, All pages or Graph action made before `folder.status` answers is dropped without a notice.
 
 ## Final review
+Final review (opus): ready, with small fixes; no Critical or Important findings. All nine owner decisions ship as decided; B5, B6, B7, M9, M17, M41, M52, M54 closed; the `notes.md` invariants hold.
+Ruling: M1, the no-folder notice (never decided by the owner) becomes "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders." because the window then shows the Welcome screen, whose buttons are "Open folder…" and the "Recent folders" list; the line is added to review item 74 so the owner sees it. Cost if wrong: one string and its test.
+Ruling: the fix wave takes M1, M4 (close the date picker in `clear()`), M5 (the wrong comment in `lib.rs`), M6 ("(e2e only)" in `CLAUDE.md`) and one `just e2e` under `BRECCIA_TRACE=1`; everything else in the final review's triage goes to the follow-ups doc.
+Final fix wave: commits 13ac748..2875a05 (M1 notice text, M4 date picker closed on reload, M5 comment, M6 `CLAUDE.md`); re-review: all four ADDRESSED, no new breakage. `BRECCIA_TRACE=1 just e2e` printed the summary (12 unparsed `trace git state=…` lines, older than plan 6). CI green on 2875a05.
+Finish (controller, 2026-11-10): `just test` green (Vitest 1015, core 725), `just lint` clean, `just e2e` 189 PASS. Follow-ups doc written, `docs/STATUS.md` updated. Plan 6 done.
