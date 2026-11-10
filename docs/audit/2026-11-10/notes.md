@@ -103,3 +103,24 @@ is wrong even if the tests pass.
 - **One test program** (`tests/it/main.rs`) keeps link time down; a file runs alone with
   `cargo test -p breccia-core <file>::`.
 - `docs/format.md` is checked against the code by `format_doc.rs`, and the demo folder by `demo.rs`.
+
+## Shell (area 6)
+
+- **Everything runs off the main thread** (`spawn_blocking` for commands, the watcher callback and the index
+  loop; one plain thread for Git), and **nothing is emitted while the session lock is held**.
+- **The event payload keeps the answer's field order** (`serde_json` with `preserve_order`, tested by
+  `page_changed_payload_keeps_the_answer_field_order`), because the frontend recognises the echo of its own
+  command by comparing JSON strings. Any change to how pages are sent must keep or replace that test.
+- **The close is bounded**: the window goes at once, the last commit and push get `CLOSE_LIMIT` (15 s), a rebase
+  under the lock is waited for, and nothing starts after the shell gave up (`begin_close`, `finish_close`).
+- **Test hooks are environment variables** read in one place each (`BRECCIA_CONFIG_DIR`, `BRECCIA_FOLDER`,
+  `BRECCIA_TODAY`, `BRECCIA_TRACE`, `BRECCIA_OFFSCREEN`, `BRECCIA_NO_TRAY`), each with a small pure function and a
+  test. Keep new hooks in that shape.
+- **`settings.json` survives damage and newer versions**: each field is decoded alone, unknown keys are kept
+  (`Settings::other`), a file that is not JSON is copied to `settings.json.broken` before it is replaced.
+- **The content security policy is narrow**: scripts only from the app, connections only to the IPC. Images may
+  come from any `http` or `https` address (`img-src`), which a note needs for `![](https://…)`; it also means a
+  note pulled from a shared repository can make Breccia fetch a remote address when the page is shown. Open
+  question Q2 for the owner.
+- The capabilities (`capabilities/default.json`) grant only window calls, the open dialog, window state and
+  opening `http`, `https` and `mailto` addresses. No file-system or shell plugin is exposed to the page.

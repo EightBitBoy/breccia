@@ -337,3 +337,39 @@ fixed date here, a parameter there), which makes a test read differently dependi
 print `ok` or `OVER`. Nothing runs them: not `just test`, not a workflow. A slow-down is found only when someone
 remembers. Add a `just scale` recipe (release build, `--ignored --nocapture scale::`) that fails on an `OVER`
 line, and say in `docs/STATUS.md` when it was last run; a weekly scheduled workflow is the fuller version.
+
+## T12: the shell says "wiring only" and is one 960-line file with six jobs
+
+`app/src-tauri/src/lib.rs` (1,476 lines, 515 of them tests) holds the event names and the event list of an
+`Output`, the background index loop, the watcher start, the Tauri commands, the tray, the off-screen test hook and
+the app setup. `git.rs` and `settings.rs` show the shape the rest should have.
+
+### M33: split `lib.rs` by job
+
+`events.rs` (the nine event-name constants, `events`, `emit_all`), `indexing.rs` (`index_in_background`,
+`index_loop`, `progress_event`, `IndexEvent`), `watching.rs` (`start_watcher`), `commands.rs` (the `commands`
+module, `shell_answer`, `git_log_answer`), `tray.rs`, `window.rs` (`offscreen_enabled`, `place_offscreen`,
+`show_offscreen`, `show_inactive`, `window_state`), and `lib.rs` with `App`, `run` and the startup-folder code.
+Each module takes its tests with it. The seven places that lock the session move to one helper (see B7).
+
+### M34: one command for machine settings instead of one per field
+
+`settings.json` is reached through nine Tauri commands: `ui_state`, `set_ui_state`, `set_theme`, `set_zoom`,
+`set_journals_at`, `hidden_columns`, `set_hidden_columns`, `recent_folders`, `forget_folder`. `UiState`
+(`lib.rs:52`) is used for reading and for writing, with three fields that `set_ui_state` documents as ignored
+("`set_ui_state` never changes it"). Every new machine-local setting (spec §4 lists several; an update channel
+and a log level are coming) costs a field in `Settings`, a field in `UiState`, a command, a handler entry, a
+wrapper in `app/src/lib/api.ts` and a type. Replace the five field setters with `settings_get() -> Settings view`
+and `settings_patch(patch: Map<String, Value>)`, where the patch is checked against the known keys in
+`settings.rs`. Recent folders and hidden columns keep their own commands (they are lists with their own rules).
+
+### M35: the Git commands the shell answers do not belong in the core's `Command`
+
+`Command::GitStatus`, `GitSync`, `GitInit` and `GitLog` are variants of the core enum
+(`crates/core/src/session/command.rs:248` to `260`) only so that the shell can parse them; the session refuses
+them with `shellOnly` (`session/mod.rs:796`). `run_blocking` (`lib.rs:481`) therefore checks every request three
+times: `git_log_answer`, `shell_answer`, then the session. Give the shell its own small enum
+(`ShellCommand { GitStatus, GitSync, GitInit, GitLog { skip, limit } }`), parse a request as that first and as a
+core `Request` otherwise, and delete the four variants and the `shellOnly` arm from the core. Together with M17
+(a command says what kind it is), `writes_config` (`lib.rs:506`) and `opened` (`lib.rs:513`) can then ask the
+command instead of listing variants in the shell.

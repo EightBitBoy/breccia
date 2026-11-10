@@ -76,3 +76,37 @@ robustness, or only on a platform not shipped yet). `unverified` means the code 
   smaller pieces than the one-second rule promises. No text is lost. Which of these commands the frontend really
   sends between two saves is checked in area 9; until then this is unverified.
 - **Fix:** M17 (the command says whether it is an edit; `dispatch` restores the typing run for everything else).
+
+## B6: Breccia can run twice on the same notes folder (medium)
+
+- **Where:** `app/src-tauri/src/lib.rs:817` (`run`): no single-instance guard; `app/src-tauri/Cargo.toml` has no
+  `tauri-plugin-single-instance`.
+- **Problem:** with the tray icon, the close button hides the window and the process stays. Nothing stops a second
+  start. The second process opens the last folder too: its own session, its own watcher, its own Git thread, its
+  own search-index connection to the same SQLite file, its own read-modify-write of `settings.json` (the lock at
+  `settings.rs:120` is per process).
+- **Failure scenario:** the user closes the window (Breccia stays in the tray), later starts Breccia from the
+  Start menu. Two tray icons, two windows over time. Each process sees the other's saves as outside changes, so no
+  text is lost, but both commit and pull on their own timers (two rebases can meet: `index.lock`, a "busy" status),
+  each undo history ends at the other's save, and the last one to write `settings.json` wins. Verified by reading
+  only: there is no guard anywhere in the repository.
+- **Fix:** add `tauri-plugin-single-instance` as the first plugin; its callback shows and focuses the existing
+  window (`show_main`). e2e and `just dev` start their own instances on purpose: skip the plugin when
+  `BRECCIA_CONFIG_DIR` is set, or the runs would attach to an installed Breccia.
+
+## B7: one panic in a command makes every later command fail until restart (low)
+
+- **Where:** `app/src-tauri/src/lib.rs:519` to `522` (`run_blocking`), also `lib.rs:361`, `lib.rs:422`,
+  `crates/core/src/git/engine.rs:155`.
+- **Problem:** the session is behind a `std::sync::Mutex`. A panic inside `Session::run` (an index out of range, a
+  slice on a wrong byte offset) poisons the lock. From then on every command answers
+  `internal: the session lock is poisoned`, the watcher and the index loop stop, and Git reports a failed state.
+  The startup code handles the same case the other way (`unwrap_or_else(|e| e.into_inner())`, `lib.rs:889`).
+- **Failure scenario:** any undiscovered panic in the core, once. The window stays open and looks alive, but
+  nothing the user types is saved any more, and the only message is a notice with an internal error text. No such
+  panic is known; the point is what happens when one exists.
+- **Fix:** decide the policy in one helper (`fn session(&App) -> MutexGuard<Session>`). Since the files are the
+  truth and every edit is saved at once, the safe recovery is: take the guard with `into_inner`, re-open the same
+  folder (a fresh `Workspace` from disk, new generation), clear the poison, and send one notice ("Breccia hit an
+  internal error and reloaded your notes"). Log the panic (M9). Test it with a command that panics behind a test
+  flag.

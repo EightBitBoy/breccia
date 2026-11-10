@@ -42,7 +42,7 @@ Rules for whoever continues:
 | 3 | Core: session | `crates/core/src/session/` | done |
 | 4 | Core: search and Git | `crates/core/src/search/`, `crates/core/src/git/` | done |
 | 5 | Core: tests | `crates/core/tests/` | done (sampled) |
-| 6 | Shell | `app/src-tauri/` | open |
+| 6 | Shell | `app/src-tauri/` | done |
 | 7 | Frontend: app shell and state | `app/src/App.svelte`, `app/src/api.ts`, `app/src/main.ts`, `app/src/lib/*.svelte.ts`, `app/src/lib/types.ts` | open |
 | 8 | Frontend: lib logic and its tests | `app/src/lib/` (the rest) | open |
 | 9 | Frontend: editor | `app/src/editor/` | open |
@@ -53,7 +53,7 @@ Rules for whoever continues:
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B6`, `T12`, `M33`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?).
+Next free keys: `B8`, `T13`, `M36`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
 
 ## Log
 
@@ -63,10 +63,11 @@ Next free keys: `B6`, `T12`, `M33`. Owner questions so far: Q1 (deleting a page 
 - 2026-11-10: area 3 done (B5; T7 to T9; M16 to M25).
 - 2026-11-10: area 4 done (no defect; T10; M26 to M30).
 - 2026-11-10: area 5 done, sampled, not read in full (T11; M31, M32).
+- 2026-11-10: area 6 done (B6, B7; T12; M33 to M35; Q2).
 
 ## To check in later areas
 
-- Area 6: are the `git.*` variants in the core's `Command` enum (answered only by the shell) worth moving out?
+- Area 6: done, see M35.
 - Area 7: are the TypeScript types in `app/src/lib/types.ts` tied to the Rust view structs by a test or generated?
 - Area 9: verify B5 (which commands the editor sends between two `block.setText`).
 - Area 15: the cost of a full `PageView` per edit (see `notes.md`, area 3).
