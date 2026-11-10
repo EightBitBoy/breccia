@@ -2,6 +2,23 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.4.0] - 2026-11-10
+
+### Features
+
+- Breccia writes its warnings and errors to a log file
+- Settings: "Open log folder" opens the folder with Breccia's log
+- Slash menu: a "Yesterday" entry, and "Today's date" is now "Today"
+- Slash menu: the date entries show a small calendar
+- Editor: Ctrl Shift K deletes the whole block with its sub-blocks
+
+### Fixes
+
+- Undo: typing during which the page list opened is undone in one step
+- After an internal error Breccia reloads your notes and keeps saving
+- Starting Breccia again shows the open window instead of a second copy
+- Page colors: no faint lines between the rows of a wash when zoomed in
+
 ## [1.3.0] - 2026-11-09
 
 ### Features
