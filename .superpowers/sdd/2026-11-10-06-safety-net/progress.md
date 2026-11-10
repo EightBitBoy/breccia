@@ -198,3 +198,8 @@ Task 5: minor (deferred): `logfile.rs:935-941` no concurrent-write test.
 Task 5: minor (deferred): the watcher's `log::warn!("watcher: {}", e.message)` in `lib.rs` was not traced to the end for note text.
 Task 5: minor (deferred): the full e2e was not run under `BRECCIA_TRACE=1`; only the exe's stderr format was checked by hand.
 Task 6: implemented (commit 697a8a6; `just test`, `just lint` green, e2e 187). The button was not clicked (review item 73). Step 51 of e2e now expects the section `troubleshooting` too.
+Task 6: complete (commits 18819cd..697a8a6, review clean: spec compliant, quality approved, on opus). The step 51 change was judged required and correct.
+Task 6: minor (deferred): the click by hand in `just dev` was skipped; opening the folder is only in review item 73.
+Task 6: minor (deferred): `app/e2e/smoke.mjs:1539` step 51's PASS text says "seven sections"; there are nine.
+Task 6: minor (deferred): `lib.rs:713` if the background worker crashes, the notice shows a raw technical error.
+Task 6: minor (deferred): `SettingsView.svelte:194` the button stays enabled when there is no log folder.
