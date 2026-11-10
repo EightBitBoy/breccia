@@ -1,5 +1,6 @@
 <script lang="ts">
   import type { MenuView } from '../editor/menu'
+  import CalendarIcon from './CalendarIcon.svelte'
 
   let {
     menu,
@@ -22,7 +23,7 @@
         onchoose(i)
       }}
     >
-      {#if item.color}<span class="st" data-color={item.color}>{item.label}</span>{:else}{item.label}{/if}{#if item.note}<span class="kind">{item.note}</span>{/if}
+      {#if item.icon === 'calendar'}<CalendarIcon class="icon" />{/if}{#if item.color}<span class="st" data-color={item.color}>{item.label}</span>{:else}{item.label}{/if}{#if item.note}<span class="kind">{item.note}</span>{/if}
     </div>
   {/each}
 </div>

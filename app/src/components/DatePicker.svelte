@@ -4,6 +4,7 @@
   // the keys are `pickerKey`'s. A pick hands the day to `onpick`, which jumps as a typed date does.
   import { Popover } from 'bits-ui'
   import { untrack } from 'svelte'
+  import CalendarIcon from './CalendarIcon.svelte'
   import { WEEKDAYS, addMonths, dayKey, dayLabel, monthGrid, monthTitle, pickerKey, startDay } from '../lib/calendar'
 
   let {
@@ -73,11 +74,7 @@
 
 <Popover.Root bind:open>
   <Popover.Trigger class="date-pick-btn" data-testid="date-picker" aria-label="Go to a day" title="Go to a day (Ctrl Shift D)">
-    <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
-      <rect x="1.5" y="2.5" width="13" height="12" rx="2" fill="none" stroke="currentColor" stroke-width="1.3" />
-      <path d="M1.5 6h13M5 1v3M11 1v3" stroke="currentColor" stroke-width="1.3" fill="none" />
-      <rect x="9" y="9" width="3" height="3" rx=".5" fill="currentColor" />
-    </svg>
+    <CalendarIcon />
   </Popover.Trigger>
   <Popover.Portal>
     <Popover.Content

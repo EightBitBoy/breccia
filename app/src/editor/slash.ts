@@ -35,6 +35,7 @@ export function slashSource(hooks: Pick<SlashHooks, 'states' | 'setState' | 'pic
     label: (item) => item.label,
     note: (item) => (item.kind === 'state' ? 'state' : null),
     color: (item) => (item.kind === 'state' ? (item.color ?? 'grey') : null),
+    icon: (item) => ('icon' in item ? item.icon : null),
   }
 }
 

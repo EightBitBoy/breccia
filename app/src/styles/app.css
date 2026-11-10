@@ -153,6 +153,7 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .slash-item { display: flex; gap: 8px; padding: 3px 12px; cursor: pointer; }
 .slash-item.selected { background: var(--hover); }
 .slash-item .kind { margin-left: auto; color: var(--muted); font-size: 12px; }
+.slash-item .icon { flex: none; align-self: center; color: var(--muted); }
 
 /* ---------- the sidebar ---------- */
 .body { flex: 1; display: flex; min-height: 0; }

@@ -80,6 +80,18 @@ test('late items for an older query are dropped', async () => {
   expect(h.menu.active()).toBe(false)
 })
 
+test("a source's icon reaches the menu view", () => {
+  const h = harness({ ...at(), icon: (item) => (item === 'ab' ? 'calendar' : null) })
+  h.type('@ab')
+  expect(h.last()?.items.map((i) => i.icon)).toEqual(['calendar', null])
+})
+
+test('a source without icons gives null', () => {
+  const h = harness(at())
+  h.type('@ab')
+  expect(h.last()?.items.map((i) => i.icon)).toEqual([null, null])
+})
+
 test('sync looks for a query in text the editor was mounted with', () => {
   const h = harness(at())
   // A fresh editor holding text with a query: no update has run yet.

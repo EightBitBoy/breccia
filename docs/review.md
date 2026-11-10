@@ -182,3 +182,8 @@ are its questions for you; each answer decides what a later plan does.
 76. [ ] **No lines inside a color wash:** in the dark theme, on a journal day with a colored page's blocks (one with
    sub-blocks), zoom to 110 % and 125 % (`Ctrl +`): the wash is one band with no faint lines between the rows. Also at
    100 %, and in one light theme. The colors look as before.
+
+77. [ ] **Today and Yesterday:** in a block type `/`: after "Link to page" come "Today", "Yesterday" and "Date…", each
+   with the small calendar of the date picker (the entry once called "Today's date" is now "Today"). `/date` lists all
+   three. "Today" inserts a link to today's day (`[[YYYY-MM-DD]]`), "Yesterday" a link to yesterday's day, and "Date…"
+   opens the date picker. Check "Yesterday" shortly after midnight once if you can.

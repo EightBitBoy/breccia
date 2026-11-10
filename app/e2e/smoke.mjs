@@ -3560,6 +3560,49 @@ try {
   assert(seams128.length === 0, `128 seams: ${seams128.map((r) => `${r.theme} ${r.zoom} % ${r.kind} below row ${r.i}: ${r.value}`).join('; ')}`)
   console.log('PASS 128 no seam between the rows of a wash band at ' + SEAM_ZOOMS.join(', ') + ' %, named and custom, in every theme')
 
+  // 129: the slash menu's date entries (#77). `/date` lists Today, Yesterday and Date…, each with the calendar; Yesterday
+  // and Today insert links to their days. The menu takes the window's clock, not BRECCIA_TODAY, so the expected days
+  // come from this process's clock (the same machine and time zone), read before the first key and after the check.
+  const localKey129 = (k) => {
+    const x = new Date()
+    const y = new Date(x.getFullYear(), x.getMonth(), x.getDate() + k)
+    return `${y.getFullYear()}-${pad(y.getMonth() + 1)}-${pad(y.getDate())}`
+  }
+  const before129 = readAt(journal)
+  assert(/^- [^\n]*after recovery\n/.test(before129), `129 today's first block is not as step 127 left it: ${JSON.stringify(before129)}`)
+  const day129 = await showDay(today, 'after recovery')
+  await clickRow(day129.locator('.block[data-block-id]').first())
+  await page.locator('.cm-content').waitFor()
+  const slash129 = page.locator('[data-testid="slash-menu"]')
+  const items129 = slash129.locator('.slash-item')
+  const selected129 = () => slash129.locator('.slash-item.selected').innerText()
+  await kb.press('Control+End')
+  const days129 = [[localKey129(-1), localKey129(0)]]
+  await kb.type(' /date')
+  await waitFor('129 /date lists the date entries', () => items129.allInnerTexts(), ['Today', 'Yesterday', 'Date…'])
+  const svgs129 = await items129.evaluateAll((els) => els.map((e) => e.querySelectorAll('svg').length))
+  assert(JSON.stringify(svgs129) === '[1,1,1]', `129 the date entries' pictures: ${svgs129}`)
+  for (let i = 0; i < 6; i++) await kb.press('Backspace')
+  await slash129.waitFor({ state: 'detached' })
+  await waitFor('129 the query is gone', () => readAt(journal), before129)
+  await kb.type(' /yes')
+  await waitFor('129 Yesterday highlighted', selected129, 'Yesterday')
+  await kb.press('Enter')
+  await slash129.waitFor({ state: 'detached' })
+  // `/tod` would list TODO first: `/toda` lists Today alone.
+  await kb.type(' /toda')
+  await waitFor('129 Today highlighted', selected129, 'Today')
+  await kb.press('Enter')
+  await slash129.waitFor({ state: 'detached' })
+  days129.push([localKey129(-1), localKey129(0)])
+  // Across a midnight each entry may have taken either day: every pairing is accepted, and the one on disk is checked.
+  const want129 = [...new Set(days129.flatMap(([y]) => days129.map(([, t]) => before129.replace(/^[^\n]*/, (l) => `${l} [[${y}]] [[${t}]]`))))]
+  await waitFor('129 the links are on disk', () => want129.includes(readAt(journal)), true)
+  const got129 = want129.find((w) => w === readAt(journal))
+  await expectFile('129 Yesterday and Today insert their days', got129, journal)
+  await kb.press('Escape')
+  console.log('PASS 129 the slash menu offers Today, Yesterday and Date… with a calendar, and inserts the days')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
