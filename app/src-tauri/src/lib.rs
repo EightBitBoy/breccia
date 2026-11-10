@@ -522,8 +522,9 @@ fn index_loop(handle: &AppHandle, generation: u64) {
                 (step, session.index_step_pages(), wait, began.elapsed())
             }) {
                 Guarded::Ran(ran) => ran,
-                // The follow-up starts the new generation's indexing; this
-                // loop's generation is gone.
+                // This loop's generation is gone. When this loop caused the
+                // recovery, the follow-up does not start indexing again
+                // (search uses what it has); other causes start it there.
                 Guarded::Recovered(r) => return after_recovery(handle, &r, Cause::Index),
             };
             // std's Mutex is not fair: give a command that waited for this
