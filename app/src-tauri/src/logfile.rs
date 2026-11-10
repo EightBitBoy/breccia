@@ -216,24 +216,33 @@ pub fn redact(line: &str) -> String {
 }
 
 /// The line for a panic. A panic message can quote note text (a bad string
-/// slice quotes the string in backticks), so every backtick-quoted span is
-/// replaced; the location stays, it is what a bug report needs.
+/// slice quotes the string in backticks, an unwrap on an error or an assert
+/// shows it in double quotes), so every backtick-quoted and double-quoted
+/// span is replaced; the location stays, it is what a bug report needs.
 pub fn panic_line(message: &str, file: Option<&str>, line: Option<u32>) -> String {
     let mut text = String::new();
-    let mut rest = message;
-    while let Some(open) = rest.find('`') {
-        text.push_str(&rest[..open]);
-        text.push_str("`…`");
-        match rest[open + 1..].find('`') {
-            Some(close) => rest = &rest[open + 1 + close + 1..],
-            // An unclosed quote: drop the rest.
-            None => {
-                rest = "";
-                break;
+    let mut chars = message.chars();
+    while let Some(c) = chars.next() {
+        if c != '`' && c != '"' {
+            text.push(c);
+            continue;
+        }
+        text.push(c);
+        text.push('…');
+        text.push(c);
+        // Skip to the closing quote; a backslash escapes in a double-quoted
+        // (Debug) string. An unclosed quote drops the rest.
+        loop {
+            match chars.next() {
+                Some('\\') if c == '"' => {
+                    chars.next();
+                }
+                Some(d) if d == c => break,
+                Some(_) => {}
+                None => break,
             }
         }
     }
-    text.push_str(rest);
     let place = match (file, line) {
         (Some(f), Some(l)) => format!("{f}:{l}"),
         (Some(f), None) => f.to_string(),
@@ -454,6 +463,42 @@ mod tests {
         assert!(line.starts_with("panic at src/lib.rs:12: "), "{line}");
         // An unclosed quote loses the rest too.
         assert!(!panic_line("a `secret", None, None).contains("secret"));
+    }
+
+    #[test]
+    fn panic_line_drops_double_quoted_text() {
+        let line = panic_line(
+            "called `Result::unwrap()` on an `Err` value: Parse(\"héllo\")",
+            Some("src/lib.rs"),
+            Some(7),
+        );
+        assert!(!line.contains("héllo"), "{line}");
+        assert!(line.contains("Parse("), "{line}");
+        assert!(line.contains("src/lib.rs:7"), "{line}");
+        let line = panic_line(
+            "assertion `left == right` failed\n  left: \"héllo\"\n right: \"x\"",
+            None,
+            None,
+        );
+        assert!(!line.contains("héllo"), "{line}");
+        assert!(line.contains("left:"), "{line}");
+        // Escaped quotes inside a Debug string do not end the span.
+        let line = panic_line(r#"bad value: "a \"b\" secret c" end"#, None, None);
+        assert!(!line.contains("secret"), "{line}");
+        assert!(!line.contains("c\""), "{line}");
+        assert!(line.contains("bad value:"), "{line}");
+        assert!(line.ends_with(" end"), "{line}");
+        // An unbalanced quote loses the rest.
+        let line = panic_line("failed: \"secret text", None, None);
+        assert!(!line.contains("secret"), "{line}");
+        assert!(line.contains("failed:"), "{line}");
+        // Backticks inside a double-quoted span, and the reverse.
+        let line = panic_line("x \"a ` secret\" y `b \" other` z", None, None);
+        assert!(
+            !line.contains("secret") && !line.contains("other"),
+            "{line}"
+        );
+        assert!(line.ends_with(" z"), "{line}");
     }
 
     #[test]
