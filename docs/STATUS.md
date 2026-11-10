@@ -76,8 +76,8 @@ audit findings B5, B6, B7, M9, M17, M41, M52 and M54. The owner checks review it
 Plan 7 is done (2026-11-10; owner decisions in the plan, ledger
 `.superpowers/sdd/2026-11-10-07-wash-seams-slash-dates-delete-block/progress.md`): no faint lines between the rows of a
 page color wash at zoom 110 % and 125 % (backlog #75, measured by e2e step 128); "Today" and "Yesterday" with a small
-calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with its sub-blocks (#78). The owner checks
-review items 76 to 78.
+calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with its sub-blocks (#78). Plans 6 and 7 are released as 1.4.0 (2026-11-10,
+https://github.com/EightBitBoy/breccia/releases/tag/v1.4.0). The owner checks review items 70 to 78.
 
 Next is backlog #76 (the scroll wheel over the theme button, and more themes), a normal plan with the owner's review.
 
