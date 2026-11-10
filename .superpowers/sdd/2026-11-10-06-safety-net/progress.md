@@ -234,3 +234,6 @@ Task 8: minor (deferred): `smoke.mjs:3360` the "journal shown" wait passes on an
 Task 8: minor (deferred): `host.svelte.ts:311-313` the code-to-copyable and quiet decisions sit in the class, not a pure function in `lib/`.
 Task 8: minor (deferred): `docs/review.md` item 74 says the typed words are in the journal; words typed on another page are not.
 Task 9: implemented (commit 8c35f2a; plugin 2.5.5; `just test`, `just lint` green, e2e 189). Second start not tried for real (a breccia.exe was running). Unverified: front vs taskbar flash; NSIS closing a tray Breccia; a second start before the first has a window waits up to 1 s, then runs as a second instance.
+Task 9: complete (commits 96f911c..8c35f2a, review clean: spec compliant, quality approved). The reviewer read the plugin's Windows source: an early second start always exits (it never runs as a second instance); the gap is microseconds and at worst a double-click does nothing. The implementer's contrary note must not go into the follow-ups.
+Task 9: minor (deferred): `lib.rs:1833-1837` `single_instance_is_the_first_plugin` checks only the textual order of `.plugin(` calls.
+Task 9: unverified (review item 75 and follow-ups): the window comes to the front from the tray rather than flashing; the installer closes a Breccia in the tray before an update.
