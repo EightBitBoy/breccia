@@ -85,7 +85,7 @@ pub fn recovery_notice(r: &Recovery) -> Notice {
             "Breccia hit an internal error. Some changes are not saved yet, so your notes were not reloaded. Copy what you need from the 'could not be saved' notices, then restart Breccia."
         }
         Recovery::NoFolder => {
-            "Breccia hit an internal error and closed the notes folder. Open it again from Settings."
+            "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders."
         }
     };
     Notice::Refused {
@@ -248,7 +248,7 @@ mod tests {
         );
         assert_eq!(
             text(Recovery::NoFolder),
-            "Breccia hit an internal error and closed the notes folder. Open it again from Settings."
+            "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders."
         );
     }
 }
