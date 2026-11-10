@@ -207,3 +207,10 @@ Task 5: fix round 1/5 (1 addressed, 0 open — I1 double-quoted text in the pani
 Task 5: complete (commits 173ce0f..70d3f0b, review clean after one fix round).
 Task 5: minor (deferred): single-quoted Debug chars and unquoted Debug payloads in a panic message are not redacted.
 Task 7: implemented (commit c54c850; `just test`, `just lint` green, e2e 187). Beyond the brief: a fresh Git engine is told files may have changed after a Git step panics; `recover` checks the folder still exists before reopening. Concerns for the follow-ups: Kept may hold a half-applied edit (F20); a tiny race between the recovery take and `start_watcher` when another folder opens in between; a recovery during start-up starts no watcher and no index loop.
+Task 7: review (opus): spec compliant, quality needs fixes. Two Important findings enter the fix loop: (1) if the "unsaved" check in recovery panics, the fallback resets the session and drops unsaved pages, and the notice does not say so; (2) an index loop (or the Git thread) that panics every time loops recover, reopen, re-index, panic with no back-off.
+Task 7: minor (deferred): `lib.rs:204-213` a second recovery met by the follow-up's root lookup is only logged.
+Task 7: minor (deferred): `lib.rs:204-229`, `start_watcher` the race between a recovery from a background thread and a folder opened within microseconds; correction: store the generation with the watcher and the root, never let an older one replace or clear a newer one.
+Task 7: minor (deferred): `guard.rs:49` the reset runs outside `catch_unwind`.
+Task 7: minor (deferred, follow-ups): `git.rs:146-155` a Git panic mid-rebase leaves a rebase the fresh engine treats as the user's.
+Task 7: minor (deferred): commit `c54c850` is `refactor` although behaviour after a panic changes; Task 8 must carry the user-facing `fix(app)` line.
+Task 7: minor (deferred): `BRECCIA_TEST_PANIC` is not yet in `CLAUDE.md` (Task 10) nor in the audit notes' list of test hooks.
