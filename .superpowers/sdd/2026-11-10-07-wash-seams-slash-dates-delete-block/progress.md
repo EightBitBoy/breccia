@@ -11,3 +11,8 @@ Ruling: F12: if Task 1 cannot reproduce a seam, the controller stops and asks th
 ## Tasks
 
 Task 1: implemented (commit 5073551; e2e 190). Seam reproduced: none at 100 %, up to 6 (named) / 16 (custom) brightness steps at 125 %; it is a gap toward the page background on the one device-pixel row where two rows meet, not an overlap. Departures: CDP `Page.captureScreenshot` instead of Playwright (which resampled the image); `seamAt(shot, band, i, what)`. Step 115 failed once (flaky, untouched).
+Task 1: complete (commits d945de9..5073551, review clean: spec compliant, both departures judged justified, quality approved).
+Task 1: minor (deferred): `smoke.mjs` `capture128` uses the rounded `png.width / innerWidth` instead of `view.dpr` (under half a device pixel).
+Task 1: minor (deferred): `png.mjs:41`, `png.test.mjs:211` colour types 0, 3, 4 refused but untested; a PNG without IDAT throws a zlib error.
+Task 1: minor (deferred): `smoke.mjs` the pointer is moved off the rows once, not after each theme and zoom change.
+Task 2: implemented (commit d99bed0; e2e 190; step 128 passes at 100/110/125 % in all themes, worst residue 1 step at 125 %, tolerance 2 unchanged). Hovered and selected washed rows not looked at by eye.
