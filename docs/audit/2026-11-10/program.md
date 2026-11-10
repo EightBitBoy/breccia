@@ -545,3 +545,92 @@ parts users notice and e2e covers thinly. Decide which; today the rule exists on
 mine". Entries leave only when a folder is opened or a typed text moves to another block. In a long session it
 holds one string per block ever typed in. Drop an entry when its block's `block.setText` is answered and no
 conflict notice for the block is open (the `NoticeCenter` knows), or cap it like `Echoes`.
+
+## T17: components and styles (area 10, sampled)
+
+Read: `BlockRow.svelte`, `Outline.svelte`, `PageView.svelte`, the head of `Board.svelte`, the head of
+`styles/tokens.css`, the section list of `styles/app.css`, and counts over all components.
+
+### M48: styles next to their components
+
+All styling is in one global file, `app/src/styles/app.css` (732 dense lines, 25 sections), and only one of the
+41 components has a `<style>` block. Class names are global (`.block`, `.content`, `.menu`, `.col`), a component
+and its rules are in different files, and a rule nobody uses any more cannot be found by a tool. Move each
+section of `app.css` that belongs to one component into that component's scoped `<style>`. What must stay global:
+the base and layout rules, and everything that styles HTML the core rendered (`{@html block.html}`: `.content
+a.link`, `.st`, `.chip`, `.props`), because scoped styles do not reach it. Check with `just screenshots` before
+and after; the token test (`no colour literals outside tokens.css`) keeps working.
+
+### M49: components take the state object, not 25 props
+
+`SearchDialog`, `GitLogView`, `ArchiveView`, `AllPagesView`, `NetworkView` and `FlowDialog` each get their state
+class as one prop (`{search}`, `log={gitLog}`). `Board.svelte` takes 25 props, `SettingsView.svelte` about 30 and
+`Sidebar.svelte` about 25, most of them callbacks that `App.svelte` writes as inline arrow functions
+(`App.svelte:1639` to `1772`). After M38 (a `ConfigStore`) and with `Boards` and `HiddenColumns` as they are, pass
+`{boards}`, `{hiddenCols}` and `{config}`; the components call the methods themselves.
+
+### M50: name the stacking levels
+
+`z-index` values are literals in eleven rules: 1, 2, 3, 10, 30, 35, 40, 41. Which layer wins is knowledge spread
+over the file. Add tokens (`--z-sticky`, `--z-menu`, `--z-dialog`, `--z-notice`) to `tokens.css` and use them.
+
+## T18: the end-to-end test is one 3,500-line script (area 11, sampled)
+
+Read: the first 260 lines of `app/e2e/smoke.mjs` and counts.
+
+### M51: scenarios with a shared harness
+
+`app/e2e/smoke.mjs` starts the app once and runs about 180 numbered steps in one `try` block. Every step depends
+on the notes the steps before it left behind; the first failure ends the run; one scenario cannot be run alone;
+a step added in the middle can break any later one. Split it: `e2e/harness.mjs` (temp folders, Git environment,
+start and stop of the app, `waitFor`, `expectFile`, the `PASS` lines) and one file per subject (`editing.mjs`,
+`boards.mjs`, `git.mjs`, `colors.mjs`, …), each starting from its own fixture folder. `just e2e` runs them all and
+adds the counts; `just e2e boards` runs one. The 15 `sleep` and `setTimeout` uses are worth a look while moving
+(`CLAUDE.md`: "never by adding sleeps"); the ones seen are polling loops with a deadline, which is fine.
+
+## T19: nothing checks a commit before a release (area 12, partly read)
+
+Read: `justfile`, `.github/workflows/release.yml`, `.github/workflows/pages.yml`, `Cargo.toml`,
+`app/package.json`, `app/vite.config.ts`, `tauri.conf.json`. The scripts in `app/scripts/` were not read.
+
+### M52: a workflow for every push
+
+The workflows are careful (actions pinned by commit hash, `contents: read` by default, no stored credentials,
+versions of Rust, `just` and git-cliff fixed). But tests run in CI only when a tag is pushed: `release.yml` is the
+only workflow that runs `just test` and `just lint`. Work is committed straight to `main`, by people and by
+agents, and the repository is public. Add `ci.yml` on `push` and `pull_request` with the same steps as the
+`build` job up to and including `Lint` (the cache is already set up for `main`). Then a broken `main` is known
+minutes after the commit and not at the next release.
+
+### M53: run e2e before a release
+
+`just e2e` runs only on the owner's machine. The release workflow builds the installer from a tree whose wiring
+(the thing `CLAUDE.md` says only e2e can check) was never exercised in CI. `windows-latest` has WebView2; try
+`just e2e` as a step after `Lint`, first as `continue-on-error` to learn how stable it is on a hosted runner.
+
+### M54: dependency updates and the repository's front door
+
+There is no Dependabot or Renovate configuration, although the actions are pinned by hash (which only pays off
+when something proposes new hashes) and the Cargo and npm dependencies use ranges. Add `.github/dependabot.yml`
+for `github-actions`, `cargo` and `npm` (weekly, grouped). A public repository also lacks `SECURITY.md` (where to
+report a vulnerability) and `CONTRIBUTING.md` (the commit rules of `CLAUDE.md` apply to outside contributors too).
+
+## T20: where the docs and the code disagree (area 14, checked only where the audit touched)
+
+`docs/format.md` and `docs/demo/` are checked against the code by tests, which is the right way. These points
+are not covered by a test:
+
+- **Spec §9** says "Views register with the shell rather than being hard-wired". They are hard-wired (T13, M36).
+  Either do M36 or change the sentence.
+- **Spec §9** says "every change emits a named event" and "every open view updates from those events". The
+  frontend updates from command answers and treats its own events as echoes to drop (T15). M43 needs a decision
+  about this sentence.
+- **`crates/core/src/watch.rs:127`**: the doc of `watch_roots` describes what is watched; the watcher watches
+  more (B3).
+- **`app/src-tauri/src/lib.rs:1`** says "wiring only. All behaviour lives in `breccia_core`"; the file holds the
+  index loop's stop rules, the event order and the close protocol (T12).
+- **Spec §3** lists `rusqlite` FTS5 as "full-text search"; the index uses the trigram tokenizer and falls back to
+  `LIKE` for words under three characters (`search/store.rs`). Worth one sentence in the spec, because it decides
+  what a search can find.
+
+`README.md`, `docs/releasing.md`, `docs/compatibility.md` and `site/` (area 13) were not read in this audit.

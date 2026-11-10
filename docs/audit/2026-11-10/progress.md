@@ -46,14 +46,14 @@ Rules for whoever continues:
 | 7 | Frontend: app shell and state | `app/src/App.svelte`, `app/src/api.ts`, `app/src/main.ts`, `app/src/lib/*.svelte.ts`, `app/src/lib/types.ts` | done (`App.svelte`, both `api.ts`, the head of `types.ts`; the `*.svelte.ts` classes are read with area 8) |
 | 8 | Frontend: lib logic and its tests | `app/src/lib/` (the rest) | done (sampled, see `notes.md`) |
 | 9 | Frontend: editor | `app/src/editor/` | done (sampled, see `notes.md`) |
-| 10 | Frontend: components and styles | `app/src/components/`, `app/src/styles/` | open |
-| 11 | e2e | `app/e2e/` | open |
-| 12 | Scripts, justfile, CI, release | `app/scripts/`, `justfile`, `.github/workflows/`, `cliff.toml`, build configs | open |
-| 13 | Site | `site/` | open |
-| 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
+| 10 | Frontend: components and styles | `app/src/components/`, `app/src/styles/` | done (sampled) |
+| 11 | e2e | `app/e2e/` | done (sampled) |
+| 12 | Scripts, justfile, CI, release | `app/scripts/`, `justfile`, `.github/workflows/`, `cliff.toml`, build configs | partly: workflows, justfile and configs read; `app/scripts/` not read |
+| 13 | Site | `site/` | not read |
+| 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | partly: only where the audit touched (T20) |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B8`, `T17`, `M48`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
+Next free keys: `B8`, `T21`, `M55`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
 
 ## Log
 
@@ -66,6 +66,7 @@ Next free keys: `B8`, `T17`, `M48`. Owner questions so far: Q1 (deleting a page 
 - 2026-11-10: area 6 done (B6, B7; T12; M33 to M35; Q2).
 - 2026-11-10: area 7 done (T13, T14; M36 to M42). B5 verified for link completion.
 - 2026-11-10: areas 8 and 9 done, sampled (T15, T16; M43 to M47).
+- 2026-11-10: areas 10 to 14 done as far as the table says (T17 to T20; M48 to M54).
 
 ## To check in later areas
 
