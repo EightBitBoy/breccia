@@ -237,3 +237,18 @@ Task 9: implemented (commit 8c35f2a; plugin 2.5.5; `just test`, `just lint` gree
 Task 9: complete (commits 96f911c..8c35f2a, review clean: spec compliant, quality approved). The reviewer read the plugin's Windows source: an early second start always exits (it never runs as a second instance); the gap is microseconds and at worst a double-click does nothing. The implementer's contrary note must not go into the follow-ups.
 Task 9: minor (deferred): `lib.rs:1833-1837` `single_instance_is_the_first_plugin` checks only the textual order of `.plugin(` calls.
 Task 9: unverified (review item 75 and follow-ups): the window comes to the front from the tray rather than flashing; the installer closes a Breccia in the tray before an update.
+Task 8: fix round 1/5 (commit 72bfb1d; `just test`, `just lint` green, e2e 189); re-review running.
+Task 10: implemented (commit 6de0971, docs only).
+Task 10: complete (commits 55e0e3a..6de0971, review clean: spec compliant, quality approved; every added sentence checked against the code).
+Task 10: minor (deferred): `CLAUDE.md:55-56` the log-file and single-instance lines sit under "Environment variables" (brief placed them there).
+Task 10: minor (deferred): `CLAUDE.md:54` "e2e only" is a hint; `BRECCIA_TEST_PANIC` is honoured in any run (`lib.rs:168`).
+Task 8: fix round 1/5 (2 addressed, 0 open — a second error during a reload ends with the restart notice; the old view is left and cleared before anything waits; commits 84e4d63..72bfb1d)
+Task 8: complete (commits 90310fe..72bfb1d, review clean after one fix round; review and re-review on opus).
+Task 8: minor (deferred): `App.svelte:303` `clear()` closes the board without `closeCard()`, so a bare card just made by "+ Add" stays in the journal file.
+Task 8: minor (deferred): `recovery.ts:53` an error during the flush, before `folder.status` answers, ends with the restart notice although the reload then worked.
+Task 8: minor (deferred): `smoke.mjs:3354-3362,3372` the failure message of the new check claims more than it proves.
+Task 8: minor (deferred): shell events held back from the old session (`page:changed` with old block ids) may be applied after the new feed shows (unverified).
+Task 8: minor (deferred): the slash menu's date picker stays open through a reload with an old block id; a pick inserts the link into the new block with that number, visibly.
+Task 8: minor (deferred): a sidebar, All pages or Graph action made before `folder.status` answers is dropped without a notice.
+
+## Final review
