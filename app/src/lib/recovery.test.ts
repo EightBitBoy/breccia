@@ -24,6 +24,8 @@ function setup() {
   }
   const recovery = new Recovery({
     notify: (n) => void s.notices.push(n),
+    leave: () => void s.calls.push('leave'),
+    clear: () => void s.calls.push('clear'),
     flush: step('flush'),
     reload: step('reload'),
     now: () => s.clock,
@@ -40,21 +42,55 @@ function setup() {
 
 test('shows_the_notice_and_reloads_once', async () => {
   const { s, recovery, settle } = setup()
+  await Promise.all([recovery.recovered(reopened), settle()])
+  expect(s.notices).toEqual([reopened.notice])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+})
+
+test('a_second_error_during_the_reload_asks_for_a_restart_when_it_ends', async () => {
+  const { s, recovery, settle } = setup()
   const first = recovery.recovered(reopened)
-  const second = recovery.recovered(reopened) // while the first reload runs: it joins
+  s.finish.splice(0).forEach((f) => f()) // the flush ends; the reload runs
+  await new Promise((r) => setTimeout(r, 0))
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  const second = recovery.recovered(reopened) // the reload itself met an internal error
+  expect(s.notices).toEqual([reopened.notice]) // not yet: the reload still runs
   await settle()
   await Promise.all([first, second])
-  expect(s.notices).toEqual([reopened.notice])
-  expect(s.calls).toEqual(['flush', 'reload'])
+  // One reload, and the last word is the restart, not "reloaded".
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: AGAIN }])
+})
+
+test('a_kept_session_during_the_reload_shows_its_notice', async () => {
+  const { s, recovery, settle } = setup()
+  const first = recovery.recovered(reopened)
+  void recovery.recovered(kept)
+  expect(s.notices).toEqual([reopened.notice, kept.notice])
+  await Promise.all([first, settle()])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+})
+
+test('the_old_view_is_left_and_cleared_before_anything_waits', () => {
+  // Typed text goes first (leave), then no block of the old session can be clicked or edited (clear), both at once.
+  const { s, recovery } = setup()
+  void recovery.recovered(reopened)
+  expect(s.calls).toEqual(['leave', 'clear', 'flush'])
 })
 
 test('flush_comes_before_reload', async () => {
   const { s, recovery } = setup()
   void recovery.recovered(reopened)
-  expect(s.calls).toEqual(['flush'])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush'])
   s.finish.splice(0).forEach((f) => f())
   await new Promise((r) => setTimeout(r, 0))
-  expect(s.calls).toEqual(['flush', 'reload'])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+})
+
+test('a_kept_session_leaves_the_view_alone', async () => {
+  const { s, recovery } = setup()
+  await recovery.recovered(kept)
+  expect(s.calls).toEqual([])
 })
 
 test('kept_shows_the_notice_and_does_not_reload', async () => {
@@ -80,13 +116,13 @@ test('a_second_reload_within_a_minute_asks_for_a_restart_instead', async () => {
   await Promise.all([recovery.recovered(reopened), settle()])
   s.clock += 30_000
   await Promise.all([recovery.recovered(reopened), settle()])
-  expect(s.calls).toEqual(['flush', 'reload'])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
   expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: AGAIN }])
   expect(AGAIN).toBe('Breccia hit an internal error again. Please restart Breccia.')
   // After a minute it reloads again.
   s.clock += 61_000
   await Promise.all([recovery.recovered(reopened), settle()])
-  expect(s.calls).toEqual(['flush', 'reload', 'flush', 'reload'])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload', 'leave', 'clear', 'flush', 'reload'])
 })
 
 test('quiet_hides_recovered_always', () => {
@@ -124,7 +160,7 @@ test('quiet_never_hides_typed_text', () => {
 test('an_event_with_no_failed_command_still_reloads', async () => {
   const { s, recovery, settle } = setup()
   await Promise.all([recovery.recovered(reopened), settle()])
-  expect(s.calls).toEqual(['flush', 'reload'])
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
   expect(s.notices).toEqual([reopened.notice])
 })
 
@@ -156,6 +192,8 @@ test('a_failed_reload_ends_the_reload_and_rejects', async () => {
   const s = { clock: 0 }
   const recovery = new Recovery({
     notify: () => {},
+    leave: () => {},
+    clear: () => {},
     flush: () => Promise.resolve(),
     reload: () => Promise.reject(new Error('boom')),
     now: () => s.clock,

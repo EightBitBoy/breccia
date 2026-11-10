@@ -3348,6 +3348,16 @@ try {
   await clickRow(firstRow127())
   await page.locator('.cm-content').waitFor()
   await kb.type(' typed before the error')
+  // The old journal must go before the reload shows the new one (the new session reuses block ids): noted the moment
+  // no day is in the page any more.
+  await page.evaluate(() => {
+    window.__e2eFeedGone127 = false
+    new MutationObserver((_, o) => {
+      if (document.querySelector('[data-testid="day"]')) return
+      window.__e2eFeedGone127 = true
+      o.disconnect()
+    }).observe(document.body, { childList: true, subtree: true })
+  })
   // At once: opening the search box sends the typed text first, so the core has it before the error.
   await openSearch()
   await searchInput.fill('zz-panic-127')
@@ -3358,6 +3368,7 @@ try {
   await dialog.waitFor({ state: 'detached', timeout: 10_000 })
   await side.locator('[data-row="p:anna"]:not([data-e2e-before])').waitFor({ timeout: 10_000 })
   await page.locator(`[data-testid="day"][data-day="${today}"]`).waitFor()
+  assert(await page.evaluate(() => window.__e2eFeedGone127), '127 the old journal stayed shown and clickable during the reload')
   await waitFor('127 the text typed before the error is on disk', () => readAt(journal), typedIn127(' typed before the error'))
   await clickRow(firstRow127())
   await page.locator('.cm-content').waitFor()

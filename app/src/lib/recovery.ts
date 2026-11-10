@@ -17,7 +17,14 @@ export const AGAIN = 'Breccia hit an internal error again. Please restart Brecci
 export interface RecoveryEnv {
   /** Shows a notice; never filtered by `quietMessage`. */
   notify(n: Notice): void
-  /** Sends typed text first: leaves the edited block, then `client.flush()`. */
+  /** Leaves the edited block: what was typed there becomes pending text. */
+  leave(): void
+  /**
+   * Clears the shown view (feed, page, board, search, selection): from now until the reload shows the folder again, no
+   * block of the old session can be clicked or edited, as the new session reuses its block ids.
+   */
+  clear(): void
+  /** Sends the pending text (`client.flush()`): saved, or shown to copy. */
   flush(): Promise<void>
   /** `folder.status`, then the folder's views when a folder is open (else the Welcome screen). */
   reload(): Promise<void>
@@ -33,13 +40,20 @@ export class Recovery {
   private reloadEnd: number | null = null
   /** The flush and reload under way; later events join it. */
   private running: Promise<void> | null = null
+  /** Another error reopened the session while the reload ran: a restart is asked for when it ends. */
+  private againDuringReload = false
 
   constructor(private env: RecoveryEnv) {}
 
   /** The core recovered: one notice, and when the session was reopened, one reload. */
   recovered(e: RecoveredEvent): Promise<void> {
-    if (this.running) return this.running
     const now = this.env.now()
+    if (this.running) {
+      // An error during the reload: a kept session says so now; a reopened one makes the reload's end ask for a restart.
+      if (e.reopened) this.againDuringReload = true
+      else this.show(e.notice, now)
+      return this.running
+    }
     if (e.reopened && within(this.reloadAt, now, WINDOW_MS)) {
       // A reload a moment ago did not help; another could loop.
       this.show({ kind: 'refused', message: AGAIN }, now)
@@ -48,6 +62,9 @@ export class Recovery {
     if (!within(this.noticeAt, now, WINDOW_MS)) this.show(e.notice, now)
     if (!e.reopened) return Promise.resolve()
     this.reloadAt = now
+    // At once, before anything waits: typed text first, then nothing of the old session stays clickable.
+    this.env.leave()
+    this.env.clear()
     const run = (async () => {
       try {
         await this.env.flush()
@@ -55,6 +72,10 @@ export class Recovery {
       } finally {
         this.running = null
         this.reloadEnd = this.env.now()
+        if (this.againDuringReload) {
+          this.againDuringReload = false
+          this.show({ kind: 'refused', message: AGAIN }, this.reloadEnd)
+        }
       }
     })()
     this.running = run

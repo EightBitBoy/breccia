@@ -295,10 +295,19 @@
    */
   const recovery = new Recovery({
     notify: (n) => notices.notify(n),
-    flush: async () => {
-      host.leave()
-      await client.flush()
+    leave: () => host.leave(),
+    // Nothing that names a block of the old session stays shown: the new session numbers its blocks from 1 again.
+    clear: () => {
+      search.close()
+      sel.clear()
+      boards.close() // the open card too; its typed text is pending already (leave)
+      archiveView.close()
+      journal.close()
+      page = null
+      refs = null
+      madeInRefs.clear()
     },
+    flush: () => client.flush(),
     reload: async () => {
       await exec({ type: 'folder.status' })
       // No folder open any more: the Welcome screen shows.
