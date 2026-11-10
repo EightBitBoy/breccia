@@ -1,6 +1,7 @@
 //! The Tauri shell: wiring only. All behaviour lives in `breccia_core`.
 
 mod git;
+mod logfile;
 mod settings;
 
 use std::ffi::OsString;
@@ -111,7 +112,7 @@ fn today_override(var: Option<OsString>) -> Option<NaiveDate> {
         .to_str()
         .and_then(|s| NaiveDate::parse_from_str(s, "%Y-%m-%d").ok());
     if parsed.is_none() {
-        eprintln!("BRECCIA_TODAY must be YYYY-MM-DD; ignored");
+        log::warn!("BRECCIA_TODAY must be YYYY-MM-DD; ignored");
     }
     parsed
 }
@@ -238,7 +239,7 @@ impl App {
 
     fn remember_folder(&self, path: PathBuf) {
         if let Err(e) = settings::update(&self.config_dir, |s| settings::remember(s, path)) {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 }
@@ -358,19 +359,20 @@ fn index_loop(handle: &AppHandle, generation: u64) {
                     let step = session.index_step(generation, INDEX_CHUNK_PAGES);
                     (step, session.index_step_pages(), wait, began.elapsed())
                 }
-                Err(_) => return eprintln!("index: the session lock is poisoned"),
+                Err(_) => return log::error!("index: the session lock is poisoned"),
             };
             // std's Mutex is not fair: give a command that waited for this
             // chunk (a keystroke) the chance to take the lock before the next.
             std::thread::yield_now();
             if state.trace {
-                eprintln!(
+                log::trace!(
+                    target: "trace",
                     "{}",
                     trace_line("index", &format!("pages={pages}"), wait, run)
                 );
             }
             if let Err(e) = &step {
-                eprintln!("index: {}", e.message);
+                log::warn!("index: {}", e.message);
             }
             // The session lock is released before anything is emitted.
             let (event, stop) = progress_event(last_total, &step);
@@ -419,10 +421,10 @@ fn start_watcher(app: &AppHandle, root: &std::path::Path, generation: u64) -> Op
                     let result = session.run(request, clock);
                     (result, wait, began.elapsed())
                 }
-                Err(_) => return eprintln!("watcher: the session lock is poisoned"),
+                Err(_) => return log::error!("watcher: the session lock is poisoned"),
             };
             if state.trace {
-                eprintln!("{}", trace_line("watch", &format!("paths={n}"), wait, run));
+                log::trace!(target: "trace", "{}", trace_line("watch", &format!("paths={n}"), wait, run));
             }
             // The session lock is released before anything is emitted.
             match result {
@@ -431,7 +433,7 @@ fn start_watcher(app: &AppHandle, root: &std::path::Path, generation: u64) -> Op
                     index_if_large(&handle, generation, &output);
                 }
                 Err(e) if e.code == "stale" => {}
-                Err(e) => eprintln!("watcher: {}", e.message),
+                Err(e) => log::warn!("watcher: {}", e.message),
             }
             send_git(&handle, GitMsg::Changed);
         });
@@ -441,7 +443,7 @@ fn start_watcher(app: &AppHandle, root: &std::path::Path, generation: u64) -> Op
     let new = match started {
         Ok(w) => Some(w),
         Err(e) => {
-            eprintln!("could not watch the folder: {e}");
+            log::warn!("could not watch the folder: {e}");
             notice = Some(Notice::LoadWarning {
                 message: format!(
                     "Breccia cannot follow changes other programs make in this folder: {e}"
@@ -526,7 +528,7 @@ mod commands {
         let run = began.elapsed();
         drop(session);
         if let Some(name) = name {
-            eprintln!("{}", trace_line("run", &name, wait, run));
+            log::trace!(target: "trace", "{}", trace_line("run", &name, wait, run));
         }
         let mut output = result?;
         if let Some(path) = &opened {
@@ -565,7 +567,7 @@ mod commands {
     #[tauri::command]
     pub fn set_zoom(app: State<'_, App>, percent: Option<u32>) {
         if let Err(e) = settings::update(&app.config_dir, |s| s.zoom_percent = percent) {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 
@@ -573,7 +575,7 @@ mod commands {
     #[tauri::command]
     pub fn set_journals_at(app: State<'_, App>, at: Option<String>) {
         if let Err(e) = settings::update(&app.config_dir, |s| s.journals_at = at) {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 
@@ -581,7 +583,7 @@ mod commands {
     #[tauri::command]
     pub fn set_theme(app: State<'_, App>, theme: Option<String>) {
         if let Err(e) = settings::update(&app.config_dir, |s| s.theme = theme) {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 
@@ -635,7 +637,7 @@ mod commands {
         let dir = app.config_dir.clone();
         tauri::async_runtime::spawn_blocking(move || {
             if let Err(e) = settings::update(&dir, |s| settings::forget(s, &path)) {
-                eprintln!("could not save settings: {e}");
+                log::warn!("could not save settings: {e}");
             }
         })
         .await
@@ -661,7 +663,7 @@ mod commands {
         if let Err(e) = settings::update(&app.config_dir, |s| {
             settings::set_hidden(s, &folder, boards)
         }) {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 
@@ -673,7 +675,7 @@ mod commands {
             s.board_column_width = state.board_column_width;
         });
         if let Err(e) = result {
-            eprintln!("could not save settings: {e}");
+            log::warn!("could not save settings: {e}");
         }
     }
 
@@ -844,6 +846,12 @@ pub fn run() {
             commands::tray_enabled
         ])
         .setup(move |app| {
+            // First, so that the warnings of the start are logged too.
+            logfile::init(
+                logfile::log_dir_for(config_override.as_deref(), app.path().app_log_dir().ok())
+                    .as_deref(),
+                trace_enabled(std::env::var_os("BRECCIA_TRACE")),
+            );
             if offscreen {
                 show_offscreen(app)?;
             }

@@ -68,13 +68,13 @@ pub fn batch_paths(
         Ok(events) => events,
         Err(errors) => {
             for e in &errors {
-                eprintln!("watcher error: {e}");
+                log::warn!("watcher error: {e}");
             }
             return rescan(root);
         }
     };
     if events.iter().any(|e| e.event.need_rescan()) {
-        eprintln!("watcher lost events; rescanning the folder");
+        log::warn!("watcher lost events; rescanning the folder");
         return rescan(root);
     }
     let mut paths: Vec<PathBuf> = Vec::new();

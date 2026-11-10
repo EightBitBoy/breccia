@@ -55,13 +55,13 @@ fn write_atomic_with(
         if let Ok(meta) = fs::metadata(path)
             && let Err(e) = set_permissions(&file, meta.permissions())
         {
-            eprintln!("could not copy the permissions of {}: {e}", path.display());
+            log::warn!("could not copy the permissions of {}: {e}", path.display());
         }
         #[cfg(any(windows, target_os = "macos"))]
         if let Some(born) = fs::metadata(path).ok().and_then(|m| m.created().ok())
             && let Err(e) = file.set_times(fs::FileTimes::new().set_created(born))
         {
-            eprintln!(
+            log::warn!(
                 "could not keep the creation time of {}: {e}",
                 path.display()
             );

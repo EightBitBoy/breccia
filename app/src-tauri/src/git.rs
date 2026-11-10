@@ -118,7 +118,7 @@ fn run_step(
         remember(handle, &view);
     }
     if state.trace && news {
-        eprintln!("trace git state={:?}", view.state);
+        log::trace!(target: "trace", "trace git state={:?}", view.state);
     }
     for (generation, output) in &step.outputs {
         emit_all(handle, output, true);
