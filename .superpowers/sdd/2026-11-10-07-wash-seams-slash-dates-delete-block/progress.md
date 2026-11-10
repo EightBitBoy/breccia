@@ -33,3 +33,8 @@ Task 4: minor (deferred): `editor/slash.ts:~39` the icon pass-through has no uni
 Task 4: minor (deferred, fix in the finish): `docs/review.md:103` item 43 says "Today's date" stays, contradicting item 77.
 Task 4: minor (deferred, owner to judge in item 77): labels of entries with an icon sit about 22 px right of those without.
 Task 5: implemented (commit 05e5aca; core 734, Vitest 1024, lint clean; no e2e, only the type twin outside the core). Interface: `{ type: "block.delete", id }`, kind Edit / `kindOf` "text"; `focus` `{ id, at: 0 }` only when the only block was emptied, else null; unknown id refused `unknownBlock`, no write, no undo step.
+Task 5: complete (commits c2a76c4..05e5aca, review clean: `Document::delete` reused, indexes update through `edit_with_config`, unknown id has no side effects).
+Task 5: minor (deferred): `edit.rs:273-289`, `session.rs:378-391` no test empties an only block that has a task state, `key:: value` lines or a fence.
+Task 5: minor (deferred): `edit.rs:119` a redundant second `self.find(id)?`.
+Task 5: minor (deferred): `session/mod.rs:226` deleting an already-empty only block returns a focus although nothing changed.
+Task 6: implemented (commit f336357; Vitest 1042, lint clean, e2e 197). `split.ts` got the F7 line. Not tested: board cards. With every block of a page selected, the key deletes all (same path as Delete), leaving a page with no blocks.
