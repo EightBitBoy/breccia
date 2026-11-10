@@ -140,3 +140,24 @@ is wrong even if the tests pass.
   with fakes. New state follows this shape (M38, M39 extend it to what is still in `App.svelte`).
 - **Heavy views load on demand** (`NetworkView`, `GitLogView`, `ArchiveView` through `{#await import(…)}`).
 - **Settings writes are serialised** (`WriteQueue`) and each carries the config version its values came from.
+
+## Frontend: lib and editor (areas 8 and 9, sampled)
+
+Read in full: `lib/route.ts`, `lib/sync.ts`, `lib/external.ts`, `lib/echo.ts`, `lib/api.ts`,
+`editor/host.svelte.ts`, `editor/blockEditor.ts`. The other modules were checked by counts and searches only
+(type escapes, missing tests, timers); a later pass should read `lib/dnd.ts`, `lib/sigmaView.ts`,
+`lib/customColor.ts`, `lib/pageColors.ts`, `lib/boards.svelte.ts`, `lib/journal.svelte.ts` and the rest of
+`editor/`.
+
+- **Decisions are pure functions; classes carry them out.** `route`, `afterOutput`, `afterRefresh`, `carryOver`,
+  `mapCaret`, `heldDelete` take plain values and return what to do; `App.svelte` and `EditorHost` do it. This is
+  why the hard cases (typing during a split, an answer that arrives after the user left the block) have tests.
+  Keep new behaviour in this shape.
+- **The editor never loses typed text.** One CodeMirror instance exists, for the edited block only; it has no
+  history of its own (undo is the core's). Typing is sent 300 ms after the last key; any command flushes it first;
+  text for a block that is gone becomes a notice the user can copy from (`refuseCommand`); a split carries over
+  what was typed while it ran; the editor is locked only while a command that changes its text is in flight.
+- **Offsets cross the boundary as UTF-8 bytes** and are converted at the edge (`lib/offsets.ts`).
+- **The type discipline is good**: one `any`, six `as unknown`, no non-null assertions on member access outside
+  tests, no `@ts-ignore`. The 13 `svelte-ignore` comments are all accessibility rules with a reason next to most.
+- IME input is respected (`if (e.isComposing) return false` in `blockEditor.ts`).

@@ -476,3 +476,72 @@ The durable fix is to derive the TypeScript from the Rust types (`ts-rs` or `spe
 command structs, a test that writes `app/src/lib/generated.ts`, and `just lint` failing when the file is stale).
 Do it together with M20 (split `Output`) and M19 (error codes as an enum), because those change the wire format
 anyway; `Command::kind` (M17) is generated too, and `countsInFlight` reads it.
+
+## T15: the frontend works hard to ignore events it asked the shell not to need
+
+For every command the shell does two things with the same page: it returns it in the `Output`, and it emits it as
+`page:changed` (`emit_all(app, &output, false)`, `app/src-tauri/src/lib.rs:546`). There is one window, so the
+event tells the sender what its answer already said. A whole mechanism exists to recognise and drop these echoes:
+
+- `InFlight` and `WhenIdle` (`app/src/lib/external.ts`) hold every shell event while a command runs;
+- `Echoes` (`app/src/lib/echo.ts`) keeps the last eight pages as JSON strings and stringifies each arriving page
+  to compare (`echo.bench.ts` exists to measure that cost);
+- `route` collects `own` pages (`app/src/lib/route.ts`, ten `r.own.push` sites), and `Boards.changed`,
+  `AllPages.changed`, `Archive.changed`, `Network.changed` each take an `own` flag;
+- the shell depends on `serde_json`'s `preserve_order` feature and two tests so that the event's field order
+  equals the answer's (`lib.rs:1027`, `lib.rs:1296`), and `CLAUDE.md` lists that as a lesson that keeps coming
+  back;
+- each page is turned to JSON three times per edit: once as a `serde_json::Value` for the event, once when the
+  event is sent, once for the answer.
+
+### M43: do not send a command's own pages back as events
+
+Emit `page:changed`, `page:removed`, `page:renamed` and `tree:changed` only for runs that did not come from the
+window's own command: the watcher and the Git thread (`from_watcher == true`). The answer already carries
+everything, and `apply` already routes it. Then `Echoes`, `echo.ts`, `echo.bench.ts`, the `own` plumbing in
+`route` and in the four `changed(p, own)` methods, the field-order tests and the `preserve_order` feature can go;
+`InFlight` stays (an outside event must still wait for a running command). This is a decision about spec §9
+("every change emits a named event"): when a second window or a plugin API comes, events for others can come back
+with an `origin` field that says who caused them, which is a cleaner way to tell an echo than comparing JSON.
+
+Before doing it, list every consumer that today relies on its own echo. The `page:changed` handler in
+`App.svelte:1458` calls `search.refresh()` and `journal.changed(p)` before it asks whether the page is its own;
+each such call needs a line in `apply` instead, or a test that shows it is not needed. `just e2e` is the gate.
+
+### M44: one table says what each command is, checked by the compiler
+
+Three functions in the frontend classify commands by listing names: `countsInFlight` (`lib/sync.ts:49`, ten
+names on one 300-character line), `kindOf` (`lib/sync.ts:53`, with `default: return 'other'`), and
+`setsStateOf` (`editor/host.svelte.ts:568`). A new command falls into the defaults without anyone deciding:
+a new text-changing command would be `'other'` and the editor would not lock while it runs. Replace the first two
+with one table typed `Record<Command['type'], { editor: Kind; query: boolean }>` (`satisfies` makes a missing
+command a compile error). With M17 and M42 the `query` column comes from the core.
+
+## T16: the frontend has no linter and no formatter, and components have no tests
+
+### M45: format and lint TypeScript and Svelte
+
+`just lint` runs `cargo fmt --check`, clippy with `-D warnings`, `svelte-check` and `tsc`. For the 23,000 lines of
+TypeScript and Svelte there is no formatter and no linter (no Prettier, ESLint or Biome configuration in `app/`).
+The Rust side is uniform; the frontend's style is held by hand, and it shows in lines such as `lib/sync.ts:50` and
+`App.svelte:1837`. Add Prettier with `prettier-plugin-svelte` (settings that match what the code already does: no
+semicolons, single quotes, 120 columns) and ESLint with `eslint-plugin-svelte` and `typescript-eslint`, both in
+`just lint`. Format in one `chore` commit of its own so that `git blame` can skip it
+(`.git-blame-ignore-revs`).
+
+### M46: a way to test components
+
+`app/src/lib/` has a test file for nearly every module (the exceptions: `dnd.ts`, `sigmaView.ts`, `dom.ts` and
+`customColor.ts`, 727 lines together). `app/src/components/` has 4,300 lines and no test file; Vitest runs in the
+`node` environment, so a component cannot be mounted. Whatever logic sits in a component is covered only by
+`just e2e`. Either keep moving logic out (the larger ones: `PageColorGrid.svelte` 383 lines, `NetworkView.svelte`
+350, `Board.svelte` 314, `StatesSection.svelte` 274, `Sidebar.svelte` 274, `LinkColorMenu.svelte` 245), or add
+`@testing-library/svelte` with `jsdom` for a few component tests of keyboard handling and focus, which are the
+parts users notice and e2e covers thinly. Decide which; today the rule exists only for `App.svelte`.
+
+### M47: the editor's `typed` map only grows
+
+`EditorHost.typed` (`app/src/editor/host.svelte.ts:60`) keeps the last text typed into every block for "Keep
+mine". Entries leave only when a folder is opened or a typed text moves to another block. In a long session it
+holds one string per block ever typed in. Drop an entry when its block's `block.setText` is answered and no
+conflict notice for the block is open (the `NoticeCenter` knows), or cap it like `Echoes`.
