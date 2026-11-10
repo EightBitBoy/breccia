@@ -9,7 +9,7 @@ name = "breccia_core"
 
 [dependencies]
 serde = { version = "1.0.185", features = ["derive"] }
-toml = "0.9"
+toml = "1.1"
 chrono = "0.4"
 thiserror = "2"
 pulldown-cmark = { version = "0.13", default-features = false, features = ["html"] }
