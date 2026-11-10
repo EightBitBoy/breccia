@@ -60,45 +60,44 @@ only. #77 is a pure change in `lib/slash.ts` plus an icon passed through the car
   - `Ctrl Shift Delete`: free in Breccia, but Chromium browsers use it for "Clear browsing data"; whether WebView2
     passes it to the page was not checked. Not offered.
 
-## Product questions (open: owner decides)
+## Product questions (decided by the owner on 2026-11-10)
 
-Each question lists the options with the recommendation first. The tasks below are written for the
-recommendations; where an answer changes a task, the question says which.
+The owner answered all nine, each as recommended (a). The tasks below are written for these answers.
 
-- **Q1. The key that deletes the whole block** (#78). *Open: owner decides.*
+- **Q1. The key that deletes the whole block** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) `Ctrl Shift K` (`Cmd Shift K` on a Mac): the key VS Code uses to delete a line; it replaces an
   unlisted CodeMirror key that deletes one line inside the block. (b) `Ctrl Shift Backspace`: free everywhere, but
   close to `Ctrl Backspace` (delete a word), so a slip deletes a block instead of a word. (c) Both keys. Cost if
   wrong: one line in `decide`, one in `selectionAction`, the list entry, step 130.
-- **Q2. The block's children** (#78). *Open: owner decides.*
+- **Q2. The block's children** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) They go with it, as when you select a block and press `Delete`; one `Ctrl Z` brings all back.
   (b) They stay and move up one level into the deleted block's place. (c) They go with it, but only after a question
   (see Q4). Cost if wrong: (b) needs a new core edit (`Document::delete_lifting`) and other e2e bytes.
-- **Q3. Where the caret goes after the delete** (#78). *Open: owner decides.*
+- **Q3. Where the caret goes after the delete** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) To the end of the block shown just above it on the same page (as `Backspace` in an empty block
   does); for the first block of a page, to the start of the block that takes its place. (b) To the start of the block
   that takes its place (as VS Code); for the last block, to the end of the one above. (c) Editing ends and nothing is
   selected (then `Ctrl Z` needs a click into the page first). Cost if wrong: one function, `deleteFocus`.
-- **Q4. A confirmation** (#78). *Open: owner decides.*
+- **Q4. A confirmation** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) Never; `Ctrl Z` brings the block back. (b) Only when the block has children: "Delete this block
   and its N sub-blocks?". (c) Never, but a short notice "Block deleted. Ctrl Z brings it back." Cost if wrong: (b) is a
   dialog and a pure function for its text; (c) one notice.
-- **Q5. The only block of a page or of a journal day** (#78). *Open: owner decides.*
+- **Q5. The only block of a page or of a journal day** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) The block stays but is emptied (its text and its children go), with the caret in it, so `Ctrl Z`
   still works from the keyboard. (b) The block goes and the page shows "Start writing" (the day's file keeps no
   block); `Ctrl Z` then needs a click into the page first. Cost if wrong: one branch in the core and in
   `deleteFocus`.
-- **Q6. The key on selected blocks** (#78). *Open: owner decides.*
+- **Q6. The key on selected blocks** (#78). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) It also deletes the selected blocks, as `Backspace` and `Delete` do there. (b) Only while editing.
   Cost if wrong: one line in `selectionAction`.
-- **Q7. An icon next to "Today" and "Yesterday"** (#77). *Open: owner decides.*
+- **Q7. An icon next to "Today" and "Yesterday"** (#77). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) Yes, the small drawn calendar of the date picker button at the right of the Journal row (it takes
   the theme's text color). (b) Yes, the `📅` emoji at the start of the Journal row. (c) No icon. Cost if wrong: one
   component reference.
-- **Q8. "Date…" gets the icon too** (#77). *Open: owner decides.*
+- **Q8. "Date…" gets the icon too** (#77). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) Yes: the three date entries look alike. (b) No, only "Today" and "Yesterday". Cost if wrong: one
   flag on one item.
-- **Q9. The order of the entries** (#77). *Open: owner decides.*
+- **Q9. The order of the entries** (#77). *Decided 2026-11-10: (a), as recommended.*
   (a, recommended) The states, "Link to page", "Today", "Yesterday", "Date…" (where "Today's date" is now). (b) The
   states, "Link to page", "Yesterday", "Today", "Date…" (in calendar order). (c) The date entries before "Link to
   page". Cost if wrong: the order of one array, and steps 129 and 6a.
