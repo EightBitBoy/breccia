@@ -188,3 +188,13 @@ Task 4: minor (deferred): `session.rs:439-441` the query loop reports only the f
 Task 4: minor (deferred): `session.rs:411` `let _ =` discards results, so `board.get` and `page.renameReach` may only run their error path.
 Task 4: minor (deferred): no test pins that `archive.auto` keeps the typing run.
 Task 4: minor (deferred): the doc comment of `CommandKind::Background` could say that `archive.auto` writes.
+Task 5: implemented (commit 18819cd; `just test`, `just lint` green, e2e 186). Review: spec compliant, quality needs fixes, one Important finding (I1: `panic_line` removes only backtick spans; double-quoted and Debug-quoted values in a panic message reach the log). The fix round waits until Task 6's implementer has finished, because both work in the same tree.
+Task 5: minor (deferred): `logfile.rs:638` stderr gets the unredacted message, the file the redacted one.
+Task 5: minor (deferred): `logfile.rs:537` if reopening after a rotation fails, logging stops for the rest of the run.
+Task 5: minor (deferred): `logfile.rs:526-529` if the rename on rotation fails, the current log is deleted and its history lost.
+Task 5: minor (deferred): `logfile.rs:667-671` an unencoded `/`, `?` or `#` in a password leaves the part before it unmasked.
+Task 5: minor (deferred): `logfile.rs:730` if `set_logger` fails, `init` returns before the panic hook is installed.
+Task 5: minor (deferred): `logfile.rs:935-941` no concurrent-write test.
+Task 5: minor (deferred): the watcher's `log::warn!("watcher: {}", e.message)` in `lib.rs` was not traced to the end for note text.
+Task 5: minor (deferred): the full e2e was not run under `BRECCIA_TRACE=1`; only the exe's stderr format was checked by hand.
+Task 6: implemented (commit 697a8a6; `just test`, `just lint` green, e2e 187). The button was not clicked (review item 73). Step 51 of e2e now expects the section `troubleshooting` too.
