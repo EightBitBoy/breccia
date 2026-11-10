@@ -26,3 +26,10 @@ Task 3: minor (deferred): `slash.test.ts:84-85` the daylight-saving assertion ca
 Task 3: minor (deferred): `/toda` and `/d` are not tested directly.
 Task 3: minor (deferred): one commit holds the new entry and the rename (borderline against "one change per commit"; the subject reads fine).
 Task 4: implemented (commit 5cce0b5; e2e 192; spec §7.2 and review item 77 also cover Task 3's visible change).
+Task 4: complete (commits f550a39..5cce0b5, review clean: the icon exists once (`CalendarIcon.svelte`), `currentColor`, `aria-hidden`).
+Task 4: minor (deferred): `smoke.mjs:3597-3598` across midnight the cross product also accepts the impossible pairing.
+Task 4: minor (deferred): `smoke.mjs:3583` the "query is gone" wait can pass at once; the final bytes still cover the outcome.
+Task 4: minor (deferred): `editor/slash.ts:~39` the icon pass-through has no unit test.
+Task 4: minor (deferred, fix in the finish): `docs/review.md:103` item 43 says "Today's date" stays, contradicting item 77.
+Task 4: minor (deferred, owner to judge in item 77): labels of entries with an icon sit about 22 px right of those without.
+Task 5: implemented (commit 05e5aca; core 734, Vitest 1024, lint clean; no e2e, only the type twin outside the core). Interface: `{ type: "block.delete", id }`, kind Edit / `kindOf` "text"; `focus` `{ id, at: 0 }` only when the only block was emptied, else null; unknown id refused `unknownBlock`, no write, no undo step.
