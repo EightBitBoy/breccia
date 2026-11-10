@@ -143,8 +143,6 @@ are its questions for you; each answer decides what a later plan does.
    mechanism and changes how one sentence of the spec (§9) is met. Yes or no? (Audit Q3, move M43.)
 67. [ ] **Testing components:** keep the rule that logic lives outside the components and apply it to the six
    large ones, or add a setup for component tests? (Audit Q4, move M46.)
-68. [ ] **A log file:** Breccia would write its warnings to a small file in its own data folder, with an "Open log
-   folder" entry in Settings, so that a problem on a user's machine can be looked into. Wanted? (Audit Q5, move M9.)
 69. [ ] **A second audit pass:** the release scripts, the website, and parts of the frontend and the tests were
    only sampled or not read (the audit's `README.md` lists them). Read them now, or after the first plan from the
    audit? (Audit Q6.)

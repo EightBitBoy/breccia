@@ -76,3 +76,9 @@ Items from `docs/review.md` that the owner ticked off, with their notes, under t
    same slider and preview; after `Ctrl Z` the slider (opened again) sits at the hue that is saved now.
 41. [x] **Screen readers name the picker:** with Narrator on, opening the page color picker announces "Page color", and
    the journal's right-click picker announces "Color of <page>".
+
+## Audit of 2026-11-10
+
+68. [x] **A log file:** Breccia would write its warnings to a small file in its own data folder, with an "Open log
+   folder" entry in Settings, so that a problem on a user's machine can be looked into. Wanted? (Audit Q5, move M9.)
+   - Owner, 2026-11-10: yes. It is part of plan 6.

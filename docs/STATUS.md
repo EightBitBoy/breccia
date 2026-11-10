@@ -62,14 +62,17 @@ app icons. It is not part of the app's release, and its commits are `chore`, `te
 requests) and `just site-shots` (the views at three widths, dark and light, into `target/site-shots/`). The owner checks
 review items 61 to 63.
 
-Next is plan 6, backlog #75 (faint lines between rows of a color wash at zoom 110 % and 125 %), then backlog #76
-(the scroll wheel over the theme button, and more themes). Each is a normal plan, with the owner's review.
+Next is plan 6, the audit's "Safety net" (owner's decision of 2026-11-10): one running instance, recovery after an
+internal error, a log file with "Open log folder" in Settings (review item 68: yes), CI on every push, a contract
+test between the core's and the frontend's types, Dependabot with `SECURITY.md` and `CONTRIBUTING.md`, and commands
+that say whether they change anything (audit keys B6, B7, M9, M52, M41, M54, M17 with B5). Then plan 7, backlog #75
+(faint lines between rows of a color wash at zoom 110 % and 125 %), then backlog #76 (the scroll wheel over the
+theme button, and more themes). Each is a normal plan, with the owner's review.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
-55 refactor moves, and a proposed order of plans. The owner answers review items 64 to 69 first; then the audit's
-plan 1 ("Safety net": one running instance, recovery after an internal error, CI on every push, a contract test)
-is written as a normal plan. It does not conflict with plan 6 (backlog #75).
+55 refactor moves, and a proposed order of plans. Review items 64 to 67 and 69 are still open; none of them holds
+up plan 6.
 
 Candidates for the next plan, to settle with the owner:
 
