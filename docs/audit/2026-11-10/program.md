@@ -373,3 +373,106 @@ times: `git_log_answer`, `shell_answer`, then the session. Give the shell its ow
 core `Request` otherwise, and delete the four variants and the `shellOnly` arm from the core. Together with M17
 (a command says what kind it is), `writes_config` (`lib.rs:506`) and `opened` (`lib.rs:513`) can then ask the
 command instead of listing variants in the shell.
+
+## T13: `App.svelte` is the application's controller, and it cannot be tested
+
+`app/src/App.svelte` is 1,839 lines; its script is 1,590. It holds about 45 pieces of state and 70 functions:
+which view the main area shows, every dialog, the folder's settings and their versions, Back and Forward, the
+folder switch, the board dialog's save rules, what a removed or renamed page means, and `apply`, the 120-line
+function every command answer goes through. `CLAUDE.md` says "`App.svelte` has no unit-test harness. Put logic that
+needs tests in `app/src/lib/`", and much has been moved (`route`, `nav`, `configWrite`, `followRename`, …). What is
+left is the glue between those pieces, and the glue is where the rules are: only `just e2e` covers it.
+
+Spec §9 says "Views register with the shell rather than being hard-wired". Today a new main view has to be added
+in eight places (listed in M36).
+
+### M36: one value says what the main area shows
+
+Nine independent flags describe one fact: `page`, `journal.feed`, `boards.index`, `allPages.shown`,
+`archiveView.shown`, `settings.shown`, `network.shown`, `gitLog.shown`, `newPageFolder`. Because any of them could
+be set at once, the code keeps them exclusive by hand:
+
+- `leaveMainView(keep)` (`App.svelte:711`) closes every other view, one `if (keep !== …)` per view;
+- `placeHere` (`App.svelte:358`) reads all nine in priority order;
+- `route` returns `leaveBoard`, `leaveAllPages`, `leaveSettings`, `leaveGraph`, `leaveGitLog`, `leaveArchive`
+  (`App.svelte:627` to `632`);
+- `restore` (`App.svelte:426`) has an `if` chain over the place kinds;
+- the template (`App.svelte:1693` to `1824`) has the same chain again;
+- the `$effect` at `App.svelte:751` lists six of them to end the untitled page;
+- the `page:changed` handler (`App.svelte:1458`) asks each view in turn "is this yours?";
+- `apply` clears each view for a new folder (`App.svelte:556` to `575`).
+
+Replace them with one `$state` of a union type, `main: { kind: 'feed' } | { kind: 'page', key } | { kind: 'board',
+index } | { kind: 'allPages' } | …`, and give the view classes that exist (`Journal`, `Boards`, `AllPages`,
+`Archive`, `Network`, `GitLog`, `SettingsScreen`) one interface: `open()`, `close()`, `newFolder()`,
+`changed(page, own): boolean`, `refresh()`. A `views` table maps the kind to its object. Leaving a view is then
+`views[main.kind].close()`, and the six `leave…` results of `route` become one `leave: boolean`. `NavPlace` in
+`lib/nav.ts` is already this union; use it as the state instead of deriving it.
+
+### M37: one value says which overlay is open
+
+`dialogOpen()` (`App.svelte:1053`) lists seven conditions (`naming`, `settingsFor`, `flows.dialog`, `closing`,
+`settingUpGit`, `question`, `helpShown`), and `dialogOpen() || search.shown` is written at eight call sites, three
+of them with `|| pickerOpen`. Model the overlays as one optional value (`overlay: null | { kind: 'search' } |
+{ kind: 'help' } | { kind: 'confirm', … } | …`) with `canOpen()`; the four separate `ConfirmDialog` blocks in the
+template (`App.svelte:1602` to `1616`) become one.
+
+### M38: the folder's settings as a store in `lib/`
+
+`states`, `boardList`, `archiveDays`, `autoArchiveOn`, `gitSettings`, `configVersion`, `lastConfig`,
+`foreignVersion`, `settingsFor`, `settingsForName`, `settingsForVersion`, `boardSaving`, `settingWrites`, and the
+functions `applyConfig`, `sendConfig`, `setDialogBoards`, `saveBoard`, `deleteBoard`, `newBoard`, `setStates`,
+`setGit`, `setBoardSettings`, `moveBoardTo` (`App.svelte:513` to `539` and `937` to `1144`) are one subject: the
+shared settings and the rule that a write carries the version it was made from. Move them into a
+`ConfigStore` class in `lib/config.svelte.ts`, built like `Boards` or `Journal` (an `env` with `run`, `notify`,
+`flush`), and test it with a fake `run`: the refusal after a hand edit, two quick writes, the board dialog that
+follows its board by name. These are the most intricate rules in the file and have no unit test today.
+
+### M39: the rest of the controller into `lib/`
+
+After M36 to M38, move what remains of the behaviour into an `AppController` class in `lib/app.svelte.ts` with
+the Tauri and DOM calls injected: `apply`, `go` and `restore`, `switchFolder`, `jumpTo`, `pageRemoved`,
+`pageRenamed`, `clickGit`, the close handlers. `App.svelte` keeps the template, `onMount` wiring and the two DOM
+handlers (`onAnchorClick`, `onPointerDown`). Target: a script under 300 lines. Do it in steps, each with
+`just e2e` green.
+
+### M40: small repeats in `App.svelte`
+
+- Six `$effect` blocks do the same thing for a status item (`App.svelte:256`, `264`, `268`, `323`, `328`, `336`):
+  compute an item, then `untrack(() => (item ? status.set(item) : status.clear(id)))`. Add
+  `StatusItems.bind(id, () => item | null)`.
+- The status bar's click handler is a four-way nested conditional on one line (`App.svelte:1837`); use a map from
+  item id to handler.
+- `host.reconcile(null).catch((e) => console.error('editor update failed', e))` is written three times
+  (`App.svelte:654`, `1471`, `1484`).
+- Two doc comments are stacked on the wrong declarations: `App.svelte:294` to `296` ("The shown board and its open
+  card" sits above `hiddenCols`) and `App.svelte:394` to `399` (the comment of `go` sits above `going`).
+
+## T14: the contract between the core and the frontend is kept in step by hand
+
+`app/src/lib/types.ts` (574 lines) says in its first line that it "mirrors the wire contract of
+crates/core/src/session (command.rs, view.rs)". Nothing checks it. The 63 command names are the same on both
+sides today (compared for this audit), but a renamed field, a new `Output` field or a new error code compiles on
+both sides and fails at run time, in a place only `just e2e` reaches. The same knowledge is written twice in three
+more places:
+
+- the nine event names: `app/src-tauri/src/lib.rs:26` to `38` and `app/src/api.ts:10` to `50`;
+- which commands are queries: the restore list in `Session::dispatch` (see B5, M17) and `countsInFlight` in
+  `app/src/lib/sync.ts:49`, a hand-written list of ten command names;
+- the error codes: string literals in the core (M19) and string comparisons in the frontend (`'unknownPage'`,
+  `'stale'`, `'configChanged'`, `'boardChanged'`).
+
+### M41: a contract test now
+
+Add a Vitest file that reads `crates/core/src/session/command.rs`, `view.rs` and `app/src-tauri/src/lib.rs` as
+text (as `lib.rs` already does with `include_str!("../../e2e/smoke.mjs")`) and asserts: every
+`#[serde(rename = "…")]` command name is a member of the `Command` union and the reverse; every event constant has
+its twin; every field of `Output` (camelCased) is a key of the TypeScript `Output`. Cheap, and it turns silent
+drift into a failing `just test`.
+
+### M42: generate the types
+
+The durable fix is to derive the TypeScript from the Rust types (`ts-rs` or `specta`: a derive on the view and
+command structs, a test that writes `app/src/lib/generated.ts`, and `just lint` failing when the file is stale).
+Do it together with M20 (split `Output`) and M19 (error codes as an enum), because those change the wire format
+anyway; `Command::kind` (M17) is generated too, and `countsInFlight` reads it.

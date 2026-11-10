@@ -43,7 +43,7 @@ Rules for whoever continues:
 | 4 | Core: search and Git | `crates/core/src/search/`, `crates/core/src/git/` | done |
 | 5 | Core: tests | `crates/core/tests/` | done (sampled) |
 | 6 | Shell | `app/src-tauri/` | done |
-| 7 | Frontend: app shell and state | `app/src/App.svelte`, `app/src/api.ts`, `app/src/main.ts`, `app/src/lib/*.svelte.ts`, `app/src/lib/types.ts` | open |
+| 7 | Frontend: app shell and state | `app/src/App.svelte`, `app/src/api.ts`, `app/src/main.ts`, `app/src/lib/*.svelte.ts`, `app/src/lib/types.ts` | done (`App.svelte`, both `api.ts`, the head of `types.ts`; the `*.svelte.ts` classes are read with area 8) |
 | 8 | Frontend: lib logic and its tests | `app/src/lib/` (the rest) | open |
 | 9 | Frontend: editor | `app/src/editor/` | open |
 | 10 | Frontend: components and styles | `app/src/components/`, `app/src/styles/` | open |
@@ -53,7 +53,7 @@ Rules for whoever continues:
 | 14 | Docs against the code | `docs/spec.md`, `docs/format.md`, `README.md`, `CLAUDE.md`, `docs/compatibility.md`, `docs/releasing.md` | open |
 | 15 | Cross-cutting synthesis | architecture, boundaries, future-proofing; writes `README.md` | open |
 
-Next free keys: `B8`, `T13`, `M36`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
+Next free keys: `B8`, `T15`, `M43`. Owner questions so far: Q1 (deleting a page removes the file for good; recycle bin?), Q2 (remote images in notes are fetched when shown; keep, or ask first?).
 
 ## Log
 
@@ -64,10 +64,11 @@ Next free keys: `B8`, `T13`, `M36`. Owner questions so far: Q1 (deleting a page 
 - 2026-11-10: area 4 done (no defect; T10; M26 to M30).
 - 2026-11-10: area 5 done, sampled, not read in full (T11; M31, M32).
 - 2026-11-10: area 6 done (B6, B7; T12; M33 to M35; Q2).
+- 2026-11-10: area 7 done (T13, T14; M36 to M42). B5 verified for link completion.
 
 ## To check in later areas
 
 - Area 6: done, see M35.
-- Area 7: are the TypeScript types in `app/src/lib/types.ts` tied to the Rust view structs by a test or generated?
-- Area 9: verify B5 (which commands the editor sends between two `block.setText`).
+- Area 7: done, see T14 (types are mirrored by hand, no test).
+- Area 9: B5 is verified for `pages.list` (`app/src/editor/host.svelte.ts:426`); check the other queries while reading the editor.
 - Area 15: the cost of a full `PageView` per edit (see `notes.md`, area 3).

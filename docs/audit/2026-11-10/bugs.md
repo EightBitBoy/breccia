@@ -73,8 +73,8 @@ robustness, or only on a platform not shipped yet). `unverified` means the code 
   `page.renameReach`, `journal.feed`.
 - **Failure scenario:** the user types `[[` in a block; the editor asks for `pages.list` for the completion list
   between two saves of the block. The second save no longer joins the first, and `Ctrl Z` takes back the text in
-  smaller pieces than the one-second rule promises. No text is lost. Which of these commands the frontend really
-  sends between two saves is checked in area 9; until then this is unverified.
+  smaller pieces than the one-second rule promises. No text is lost. Verified by reading for this case: the link
+  menu asks for `pages.list` through the command queue each time it opens (`app/src/editor/host.svelte.ts:426`).
 - **Fix:** M17 (the command says whether it is an edit; `dispatch` restores the typing run for everything else).
 
 ## B6: Breccia can run twice on the same notes folder (medium)

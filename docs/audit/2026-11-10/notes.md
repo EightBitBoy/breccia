@@ -124,3 +124,19 @@ is wrong even if the tests pass.
   question Q2 for the owner.
 - The capabilities (`capabilities/default.json`) grant only window calls, the open dialog, window state and
   opening `http`, `https` and `mailto` addresses. No file-system or shell plugin is exposed to the page.
+
+## Frontend: app shell and state (area 7)
+
+- **One command at a time.** `createClient` (`app/src/lib/api.ts`) queues every command; `run` sends pending
+  typed text first, so the core never sees a command before the text typed ahead of it. The generation is
+  captured when a command is queued, not when it is sent. Every flow that leaves a view calls `host.leave()` and
+  `client.flush()` first; keep that order in any new flow.
+- **One place applies an answer.** `apply(out, cmd)` in `App.svelte` is the only function that turns an `Output`
+  into state; the decisions are in `route` (`lib/route.ts`), which is pure and tested.
+- **Own echoes are recognised, not suppressed.** Shell events wait while a command is in flight (`InFlight`) and
+  are compared with what the command returned (`Echoes`); that is why the payload's field order matters.
+- **State classes take an `env`.** `Journal`, `Boards`, `AllPages`, `Archive`, `Network`, `Search`, `GitLog`,
+  `PageFlows` are plain classes in `lib/*.svelte.ts` that get `run`, `notify` and friends injected and are tested
+  with fakes. New state follows this shape (M38, M39 extend it to what is still in `App.svelte`).
+- **Heavy views load on demand** (`NetworkView`, `GitLogView`, `ArchiveView` through `{#await import(…)}`).
+- **Settings writes are serialised** (`WriteQueue`) and each carries the config version its values came from.
