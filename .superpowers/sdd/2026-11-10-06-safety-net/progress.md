@@ -214,3 +214,11 @@ Task 7: minor (deferred): `guard.rs:49` the reset runs outside `catch_unwind`.
 Task 7: minor (deferred, follow-ups): `git.rs:146-155` a Git panic mid-rebase leaves a rebase the fresh engine treats as the user's.
 Task 7: minor (deferred): commit `c54c850` is `refactor` although behaviour after a panic changes; Task 8 must carry the user-facing `fix(app)` line.
 Task 7: minor (deferred): `BRECCIA_TEST_PANIC` is not yet in `CLAUDE.md` (Task 10) nor in the audit notes' list of test hooks.
+Task 7: fix round 1/5 (2 addressed, 0 open — unsaved check that panics keeps the session; a repeating index or Git panic cannot loop; commits e8ded17..faf6607; `just test`, `just lint` green, e2e 187)
+Task 7: complete (commits d1a71fa..faf6607, review clean after one fix round, review and re-review on opus). `recover` is now `Session::begin_recovery()` and `Session::reopen()`; the extra `engine.changed(now)` after a Git panic was dropped.
+Task 7: minor (deferred): `lib.rs:525-526` the comment "The follow-up starts the new generation's indexing" is wrong for an index-caused recovery.
+Task 7: minor (deferred, follow-ups): after a Git panic the fresh engine's pull is due at once; if the panic is in the pull, every save while paused recovers and reloads the window (user-paced).
+Task 7: minor (deferred, follow-ups): edits made before a Git panic are not scheduled for commit until the next change or click (the close still commits them); no test records it.
+Task 7: minor (deferred, follow-ups): after an index-caused recovery a search that indexes the same failing page recovers once per search (user-paced).
+Task 7: minor (deferred): the index-loop test checks the follow-up decision, not a running app.
+Task 8: implemented (commit d7ec747; `just test`, `just lint` green, e2e 189). No Rust changed. Concerns: the e2e cannot prove the notice filter (equal notices are merged anyway; unit tests cover it); step 127 dismisses an older open notice from step 37 first.
