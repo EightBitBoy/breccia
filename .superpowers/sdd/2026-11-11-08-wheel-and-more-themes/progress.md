@@ -11,3 +11,6 @@ Task 2: complete — 192b45e, 9665148, 095b3cf, b2cdb16, c7a1f60, 934ab79, 80d78
 Task 3: complete — d425c4e; review ✅/approved. Minors parked: a scaled delta rounding to 0 resets a partial count (same as zoom); no stepTheme unknown-id test (types prevent it). Vitest 1067, e2e 200.
 
 Task 4: complete — 7ea414f; review (opus) ✅/approved. Minor 1 carried to final fix wave: step 132 sub-check 7 should assert the menu is still open before Esc (smoke.mjs:3765-3770). Minor 2 (no test that preventDefault stops page scroll) parked. Vitest 1068, core 737, e2e 201.
+
+Task 5: complete — ba87f36; review ✅/approved. Minor to final review: spec 7.13 "at its right end" placement unchecked against other right-side items.
+All tasks complete. Final review package review-b36f15f..ba87f36.diff.
