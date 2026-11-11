@@ -3762,6 +3762,7 @@ try {
   await theme125.evaluate((b) => b.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, deltaMode: 0, bubbles: true, cancelable: true })))
   await frames()
   assert((await attr125()) === 'parchment', `132 the wheel switched the theme with the menu open: ${await attr125()}`)
+  assert(await menu125.isVisible(), '132 the wheel closed the menu')
   await kb.press('Escape')
   await menu125.waitFor({ state: 'detached' })
   assert((await attr125()) === 'parchment' && stored132() === 'parchment', '132 the theme changed with the menu open')
