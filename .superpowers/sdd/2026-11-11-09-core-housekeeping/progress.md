@@ -18,3 +18,5 @@ Task 5: complete (commits 8a1042a..3d5990c, review clean). lib 44, it 743 + 2 ig
 Task 6: complete (commits 7026ccd..7e84736, review clean). lib 44, it 744 + 2 ignored. Minors (deferred): color.rs test mixes qualified title_line with unqualified color_line; try_from(...).ok()? in color.rs can never fail (comment/expect would state the invariant).
 
 Task 7: complete (commits 23ac987..0baf21a, review clean, opus reviewer). lib 45, it 746 + 2 ignored. Minors (deferred): disk.rs:408-409 sends page.open "Other" twice, first result unused, no comment; alias test resolves via page.open rather than a [[Other]] link (acceptable proxy). Watch: second unexplained flaky failure, this time 1 Vitest test of 1068 while cargo ran in parallel (unnamed) — track at Finish.
+
+Task 8: complete (commits 81c6c02..6e4b57b, review clean). lib 48, it 746 + 2 ignored (--list 796). Per I-5, `warned` stays in Workspace; first_warning_is_true_once replaced by take_topics_is_sorted_and_empties. Minors (deferred): Changes derives Debug/Default unnecessarily. Watch: flaky `app/scripts/release.test.mjs` (1 of 24, passed on rerun) — likely the Vitest flake seen in Task 7; follow-ups item.
