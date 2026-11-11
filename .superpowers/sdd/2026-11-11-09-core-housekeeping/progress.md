@@ -38,3 +38,5 @@ Task 15: complete (commits 73c9a77..b16cb7d, review clean; haiku implementer wro
 All tasks complete. Final review package review-d6fae9d..HEAD.
 
 Final review (opus): final-review.md, 0 critical, 0 important, 7 minor. Ruling: fix wave takes the reviewer's four fix-now items (search.rs dead assertion; I-6 order test for setBoard/setGit with no folder; tie every_command() count to command.rs; watch.rs doc link + journals/*.MD), plus backlog #36 pointer, the module docs of session/board.rs and graph.rs, the Q1 backlog item, review item 87's case-only-rename note, the follow-ups doc and STATUS — all cheap and none visible — cost if wrong: small test/doc churn.
+
+Fix wave (opus, inline): commits 9d90e99 (tests: dead search check, I-6 order, command table tied to command.rs; each RED by mutation), 3fe9342 (watch.rs doc, board/graph module docs; cargo doc clean), c69acf0 (backlog #36 path, #80 Q1, review 87 note, follow-ups doc, STATUS). just test green: Vitest 1068, shell 76, core lib 50 + it 761 + 2 ignored; just lint clean; e2e not needed (no app code touched). Report: fix-wave-report.md.
