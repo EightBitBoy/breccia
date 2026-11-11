@@ -254,10 +254,10 @@ const RELEVANT_ROWS: &[(&str, Made, bool, bool)] = &[
     ("journals/2026-10-29.md", Made::File, true, true),
     ("journals/x.md", Made::File, true, true),
     ("journals/sub/2026-10-29.md", Made::File, false, false),
-    ("journals/2026-10-29.MD", Made::File, false, false),
+    ("journals/2026-10-29.MD", Made::File, true, true),
     ("pages/a.md", Made::File, true, true),
     ("pages/f/g/a.md", Made::File, true, true),
-    ("pages/a.MD", Made::File, false, false),
+    ("pages/a.MD", Made::File, true, true),
     ("pages/.h/a.md", Made::File, false, false),
     ("pages/v1.2", Made::Dir, false, true),
     ("pages/v1.2", Made::Missing, false, true),
@@ -289,4 +289,29 @@ fn relevant_table() {
             "relevant_now {rel}"
         );
     }
+}
+
+/// A page file whose extension is spelled `.MD` is passed on, so that
+/// `files.changed` warns about it while Breccia runs, as `open` does.
+#[test]
+fn an_upper_case_extension_reaches_files_changed() {
+    use breccia_core::watch::batch_paths;
+    use notify::{Event, EventKind};
+    use notify_debouncer_full::DebouncedEvent;
+    let t = tempfile::tempdir().unwrap();
+    let root = t.path();
+    std::fs::create_dir_all(root.join("pages")).unwrap();
+    std::fs::create_dir_all(root.join("journals")).unwrap();
+    std::fs::write(root.join("pages/a.MD"), "- a\n").unwrap();
+    std::fs::write(root.join("journals/2026-10-29.Md"), "- j\n").unwrap();
+    let page = PathBuf::from("pages").join("a.MD");
+    let journal = PathBuf::from("journals").join("2026-10-29.Md");
+    let event = Event::new(EventKind::Any).add_path(root.join(&page));
+    let batch = Ok(vec![DebouncedEvent::new(event, std::time::Instant::now())]);
+    assert_eq!(batch_paths(root, batch), vec![page.clone()]);
+    let found = rescan(root);
+    assert!(
+        found.contains(&page) && found.contains(&journal),
+        "{found:?}"
+    );
 }

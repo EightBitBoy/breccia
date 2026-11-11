@@ -20,10 +20,11 @@ pub struct WatchError(#[from] notify::Error);
 
 /// The relative path of `path` if a page file (or a possible folder of
 /// pages) lives there: a `.md` file directly in `journals/` (a name that is
-/// not a date too), a `.md` file anywhere under `pages/`,
+/// not a date too), a `.md` file anywhere under `pages/` (`.MD` too),
 /// `breccia/config.toml`, or an extension-less path under `pages/` (the
 /// watcher's own rule: it might be a folder). No component may start with `.`.
-/// The workspace's [`classify`] decides the files.
+/// The workspace's [`classify`] decides the files; a page file it cannot load
+/// is passed on, so that `files.changed` warns about it as `open` does.
 pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
     let rel = path.strip_prefix(root).ok()?;
     let mut parts = Vec::new();
@@ -35,8 +36,7 @@ pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
     }
     let ok = match classify(rel) {
         Ok(Some(NotePath::Journal(_) | NotePath::Page { .. } | NotePath::Config)) => true,
-        // Passed on so that `files.changed` reports it.
-        Err(LoadWarning::BadJournalName(_)) => true,
+        Err(LoadWarning::BadJournalName(_) | LoadWarning::ExtensionCase(_)) => true,
         Ok(None) => parts.len() >= 2 && parts[0] == PAGES && rel.extension().is_none(),
         Err(_) => false,
     };

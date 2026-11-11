@@ -3780,6 +3780,22 @@ try {
   await waitFor('132 system stored', stored132, null)
   console.log('PASS 132 the wheel over the theme button steps through the themes in the menu\'s order, wraps, and stores the choice')
 
+  // 133: a page file saved with an upper-case .MD extension while Breccia runs gets the warning `open` gives. The
+  // stem is this step's own (on a case-insensitive file system `X.MD` is `X.md`), and the notice names the path with
+  // the system's separator, so only the file name is matched. The file goes at the end, before Git set-up (45).
+  const upper133 = join(folder, 'pages', 'Upper case 133.MD')
+  writeFileSync(upper133, '- upper\n')
+  const notice133 = page
+    .locator('[data-testid="notice"]')
+    .filter({ hasText: 'extension must be lower-case .md, not loaded:' })
+    .filter({ hasText: 'Upper case 133.MD' })
+  await notice133.waitFor({ timeout: 10_000 })
+  assert((await notice133.count()) === 1, `133 one notice for the file, not ${await notice133.count()}`)
+  await notice133.locator('button.close').click()
+  await notice133.waitFor({ state: 'detached' })
+  unlinkSync(upper133)
+  console.log('PASS 133 a page file saved as .MD while Breccia runs is reported at once')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

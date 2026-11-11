@@ -228,3 +228,11 @@ are its questions for you; each answer decides what a later plan does.
    links and tags read well on each. Does Teal otherwise look as before? Are the selection and the highlight still seen
    well enough? A block being edited, and inline code, now have a slightly fainter tint than before: does that look
    right?
+
+## Core housekeeping (plan 9)
+
+87. [ ] **A page saved as `.MD` while Breccia runs:** with a notes folder open, save a file into its `pages` folder
+   from another program (Notepad, Explorer) with an upper-case extension, e.g. `Plan.MD`. A notice appears at once:
+   "extension must be lower-case .md, not loaded: pages\Plan.MD", the same as when the folder is opened; before, it
+   came only on reopening. The page does not appear. Saving the file again gives no second notice. Rename it to
+   `Plan.md`: the page appears. The same in `journals` with a day file such as `2026-11-11.MD`.
