@@ -512,7 +512,7 @@ collide with an existing shortcut), what happens to the block's children (delete
 where the caret goes afterwards, that `Ctrl Z` brings the block back, and a line in the F1 overlay and in Settings >
 Keyboard. Planned with plan 7 (with #75 and #77).
 
-## 79. The changelog inside the app (Settings)
+## 79. The changelog inside the app (Settings) (done 2026-11-11, plan 10)
 
 Owner, 2026-11-11: the About section of Settings should have a button that shows the changelog directly inside the
 application. To settle in the plan: where the text comes from (the `CHANGELOG.md` that `just release` writes, built

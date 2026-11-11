@@ -32,6 +32,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 7 | Wash seams, Today and Yesterday, delete a block | done 2026-11-10 | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block.md` | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block-followups.md` |
 | 8 | Theme wheel and four more themes | done 2026-11-11 | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | `docs/plans/2026-11-11-08-wheel-and-more-themes-followups.md` |
 | 9 | Core housekeeping (from the audit) | done 2026-11-11 | `docs/plans/2026-11-11-09-core-housekeeping.md` | `docs/plans/2026-11-11-09-core-housekeeping-followups.md` |
+| 10 | The changelog inside the app | done 2026-11-11 | `docs/plans/2026-11-11-10-changelog-in-app.md` | `docs/plans/2026-11-11-10-changelog-in-app-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -95,6 +96,12 @@ the watcher; workspace bookkeeping goes through one `Changes` record; link filte
 position (backlog #31). Out-of-range values in a hand-edited `config.toml` still load silently (Q1, backlog #80). It
 closed audit moves M1 to M8, M10 to M14, M16, M18, M22 to M31 and M33. The owner checks review item 87.
 
+Plan 10 is done (2026-11-11, backlog #79; ledger `.superpowers/sdd/2026-11-11-10-changelog-in-app/progress.md`):
+Settings > About has a "Show changelog" button that opens the bundled `CHANGELOG.md` offline as an overlay, newest release
+first, rendered as a small Markdown subset (tables, emphasis and numbered lists show as plain text); a development build
+adds a note. The running version is not marked (owner decisions Q1 and Q2). The owner checks review item 88; open
+follow-ups are in the plan's follow-ups file (D1: a hand-edited changelog heading can fail the release-time tests).
+
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
@@ -111,7 +118,7 @@ Candidates for the next plan, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1068 tests) and cargo tests (core: lib 50, integration 761 with 2 ignored; shell 76) pass
+- `just test`: Vitest (1091 tests) and cargo tests (core: lib 50, integration 761 with 2 ignored; shell 76) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 203 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
