@@ -89,6 +89,30 @@ pub enum Problem {
 }
 
 impl Problem {
+    pub(crate) fn failed(e: &GitError) -> Problem {
+        Problem::Failed {
+            message: e.to_string(),
+        }
+    }
+
+    /// The tag the frontend sees: equal to the serde `kind`.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            Problem::Identity => "identity",
+            Problem::Conflict { .. } => "conflict",
+            Problem::Busy { .. } => "busy",
+            Problem::Locked => "locked",
+            Problem::DirtyOutside { .. } => "dirtyOutside",
+            Problem::Detached => "detached",
+            Problem::NoRemoteChoice { .. } => "noRemoteChoice",
+            Problem::CommitRefused { .. } => "commitRefused",
+            Problem::Unreachable { .. } => "unreachable",
+            Problem::SshKey { .. } => "sshKey",
+            Problem::RebaseRefused { .. } => "rebaseRefused",
+            Problem::Failed { .. } => "failed",
+        }
+    }
+
     /// Everything but a remote that cannot be reached is shown red.
     pub fn red(&self) -> bool {
         !matches!(self, Problem::Unreachable { .. })
@@ -143,30 +167,17 @@ fn ssh_refusal(out: &GitOut) -> bool {
         || out.stderr.contains("Permission denied (publickey")
 }
 
-fn failed(e: GitError) -> Problem {
-    Problem::Failed {
-        message: e.to_string(),
-    }
-}
-
-/// The first non-empty line Git printed on stderr.
-fn first_line(out: &GitOut) -> String {
-    out.stderr
+/// The first non-empty line of Git's stderr.
+pub(crate) fn first_stderr_line(stderr: &str) -> Option<String> {
+    stderr
         .lines()
         .map(str::trim)
         .find(|l| !l.is_empty())
         .map(str::to_string)
-        .unwrap_or_else(|| format!("git failed ({})", out.code))
 }
 
-fn busy_name(b: Busy) -> &'static str {
-    match b {
-        Busy::Rebase => "rebase",
-        Busy::Merge => "merge",
-        Busy::CherryPick => "cherry-pick",
-        Busy::Revert => "revert",
-        Busy::Bisect => "bisect",
-    }
+fn first_line(out: &GitOut) -> String {
+    first_stderr_line(&out.stderr).unwrap_or_else(|| format!("git failed ({})", out.code))
 }
 
 impl Repo {
@@ -267,7 +278,7 @@ impl Repo {
             Ok(out) => Err(Problem::Unreachable {
                 message: first_line(&out),
             }),
-            Err(GitError::NotInstalled) => Err(failed(GitError::NotInstalled)),
+            Err(GitError::NotInstalled) => Err(Problem::failed(&GitError::NotInstalled)),
             Err(e) => Err(self.timed_out(&t.remote, false, &e)),
         }
     }
@@ -342,15 +353,15 @@ impl Repo {
             moved: false,
         };
         // Never touch an operation the user (or another tool) has in progress.
-        if let Some(b) = self.busy().map_err(failed)? {
+        if let Some(b) = self.busy().map_err(|e| Problem::failed(&e))? {
             return Err(Problem::Busy {
-                what: busy_name(b).into(),
+                what: b.name().into(),
             });
         }
-        let Some(old) = self.head_hash().map_err(failed)? else {
+        let Some(old) = self.head_hash().map_err(|e| Problem::failed(&e))? else {
             return Ok(nothing);
         };
-        let Some(remote) = self.remote_ref(t).map_err(failed)? else {
+        let Some(remote) = self.remote_ref(t).map_err(|e| Problem::failed(&e))? else {
             return Ok(nothing);
         };
         if t.upstream.is_none() {
@@ -367,7 +378,7 @@ impl Repo {
                 &["merge-base", "--is-ancestor", &remote, "HEAD"],
                 LOCAL_LIMIT,
             )
-            .map_err(failed)?;
+            .map_err(|e| Problem::failed(&e))?;
         match ancestor.code {
             0 => return Ok(nothing),
             1 => {}
@@ -377,7 +388,7 @@ impl Repo {
                 });
             }
         }
-        let outside = self.dirty_outside().map_err(failed)?;
+        let outside = self.dirty_outside().map_err(|e| Problem::failed(&e))?;
         if !outside.is_empty() {
             return Err(Problem::DirtyOutside { files: outside });
         }
@@ -386,12 +397,12 @@ impl Repo {
         let (ok, message) = match self.git.run(&self.folder, &args, LOCAL_LIMIT) {
             Ok(out) => (out.code == 0, first_line(&out)),
             Err(e @ GitError::TimedOut(_)) => (false, e.to_string()),
-            Err(e) => return Err(failed(e)),
+            Err(e) => return Err(Problem::failed(&e)),
         };
         if !ok {
             return Err(self.after_failed_rebase(&old, message));
         }
-        let new = self.head_hash().map_err(failed)?;
+        let new = self.head_hash().map_err(|e| Problem::failed(&e))?;
         let moved = new.as_deref() != Some(old.as_str());
         let out = self
             .git
@@ -410,7 +421,7 @@ impl Repo {
                 ],
                 LOCAL_LIMIT,
             )
-            .map_err(failed)?;
+            .map_err(|e| Problem::failed(&e))?;
         let changed = out
             .nul_list()
             .iter()
@@ -427,7 +438,7 @@ impl Repo {
         match self.busy() {
             Ok(Some(Busy::Rebase)) => {}
             Ok(_) => return Problem::RebaseRefused { message },
-            Err(e) => return failed(e),
+            Err(e) => return Problem::failed(&e),
         }
         let conflicted = self
             .git
@@ -476,7 +487,7 @@ impl Repo {
         args.extend([t.remote.as_str(), refspec.as_str()]);
         let out = match self.git.run(&self.folder, &args, self.git.network_limit()) {
             Ok(out) => out,
-            Err(GitError::NotInstalled) => return Err(failed(GitError::NotInstalled)),
+            Err(GitError::NotInstalled) => return Err(Problem::failed(&GitError::NotInstalled)),
             Err(e) => return Err(self.timed_out(&t.remote, true, &e)),
         };
         if out.code == 0 {

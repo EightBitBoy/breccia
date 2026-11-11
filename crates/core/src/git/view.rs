@@ -30,22 +30,8 @@ pub struct ProblemView {
 
 impl ProblemView {
     pub fn of(p: &Problem) -> ProblemView {
-        let kind = match p {
-            Problem::Identity => "identity",
-            Problem::Conflict { .. } => "conflict",
-            Problem::Busy { .. } => "busy",
-            Problem::Locked => "locked",
-            Problem::DirtyOutside { .. } => "dirtyOutside",
-            Problem::Detached => "detached",
-            Problem::NoRemoteChoice { .. } => "noRemoteChoice",
-            Problem::CommitRefused { .. } => "commitRefused",
-            Problem::Unreachable { .. } => "unreachable",
-            Problem::SshKey { .. } => "sshKey",
-            Problem::RebaseRefused { .. } => "rebaseRefused",
-            Problem::Failed { .. } => "failed",
-        };
         ProblemView {
-            kind: kind.into(),
+            kind: p.kind().into(),
             red: p.red(),
             message: p.message(),
         }

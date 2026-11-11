@@ -7,10 +7,10 @@
 //! the created dates. It is never held during `fetch`, `push`, `add`, `commit`
 //! or `log`, so typing never waits for the network.
 
-use super::repo::{Busy, Discovered, HeadState, Repo, discover};
+use super::repo::{Discovered, HeadState, Repo, discover};
 use super::run::Git;
 use super::schedule::{Due, Schedule};
-use super::sync::{Problem, Pushed, Target};
+use super::sync::{Problem, Pushed, Target, first_stderr_line};
 use super::view::{GitState, GitView, ProblemView};
 use super::{GitError, commit_message, init};
 use crate::config::GitSettings;
@@ -124,19 +124,11 @@ pub struct GitEngine {
 /// How long a refused pull waits before its one retry.
 const REFUSED_RETRY_MS: i64 = 10_000;
 
-fn failed(e: &GitError) -> Problem {
-    Problem::Failed {
-        message: e.to_string(),
-    }
-}
-
 fn first_line(e: &GitError) -> String {
     match e {
-        GitError::Failed { stderr, .. } => stderr
-            .lines()
-            .map(str::trim)
-            .find(|l| !l.is_empty())
-            .map_or_else(|| e.to_string(), str::to_string),
+        GitError::Failed { stderr, .. } => {
+            first_stderr_line(stderr).unwrap_or_else(|| e.to_string())
+        }
         e => e.to_string(),
     }
 }
@@ -155,16 +147,6 @@ fn poisoned() -> Problem {
 
 fn lock(session: &Mutex<Session>) -> Result<MutexGuard<'_, Session>, Problem> {
     session.lock().map_err(|_| poisoned())
-}
-
-fn busy_name(b: Busy) -> &'static str {
-    match b {
-        Busy::Rebase => "rebase",
-        Busy::Merge => "merge",
-        Busy::CherryPick => "cherry-pick",
-        Busy::Revert => "revert",
-        Busy::Bisect => "bisect",
-    }
 }
 
 impl GitEngine {
@@ -284,7 +266,7 @@ impl GitEngine {
                     };
                     self.work(session, now, ready, Mode::Init, &mut outputs);
                 }
-                Err(e) => self.found = Found::Failed(failed(&e)),
+                Err(e) => self.found = Found::Failed(Problem::failed(&e)),
             }
         }
         self.finish(before, outputs)
@@ -362,7 +344,7 @@ impl GitEngine {
             Ok(Discovered::NotInstalled) => self.found = Found::NoGit,
             Ok(Discovered::NotARepo) => self.found = Found::NotRepo,
             Ok(Discovered::Repo(repo)) => self.set_repo(repo),
-            Err(e) => self.found = Found::Failed(failed(&e)),
+            Err(e) => self.found = Found::Failed(Problem::failed(&e)),
         }
     }
 
@@ -478,12 +460,12 @@ impl GitEngine {
     }
 
     fn guard(repo: &Repo) -> Result<String, Problem> {
-        if let Some(b) = repo.busy().map_err(|e| failed(&e))? {
+        if let Some(b) = repo.busy().map_err(|e| Problem::failed(&e))? {
             return Err(Problem::Busy {
-                what: busy_name(b).into(),
+                what: b.name().into(),
             });
         }
-        match repo.head().map_err(|e| failed(&e))? {
+        match repo.head().map_err(|e| Problem::failed(&e))? {
             HeadState::Branch(name) | HeadState::Unborn(name) => Ok(name),
             HeadState::Detached => Err(Problem::Detached),
         }
@@ -495,7 +477,7 @@ impl GitEngine {
             if is_lock(&e) {
                 Stop::Locked
             } else {
-                Stop::Problem(failed(&e))
+                Stop::Problem(Problem::failed(&e))
             }
         })?;
         if changes.is_empty() {
@@ -536,7 +518,7 @@ impl GitEngine {
         match cx.repo.identity_ok() {
             Ok(true) => {}
             Ok(false) => return Err(Stop::Problem(Problem::Identity)),
-            Err(e) => return Err(Stop::Problem(failed(&e))),
+            Err(e) => return Err(Stop::Problem(Problem::failed(&e))),
         }
         Self::commit_changes(cx.repo)
     }
@@ -653,7 +635,7 @@ impl GitEngine {
                 None
             }
             Err(e) => {
-                self.flag(failed(&e));
+                self.flag(Problem::failed(&e));
                 None
             }
         };
@@ -855,7 +837,7 @@ impl GitEngine {
         match cx.repo.ahead(&t.remote) {
             Ok(0) => return,
             Ok(_) => {}
-            Err(e) => return self.flag(failed(&e)),
+            Err(e) => return self.flag(Problem::failed(&e)),
         }
         for attempt in 0..2 {
             match net.push(t) {

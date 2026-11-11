@@ -1,7 +1,7 @@
 use crate::gitenv::*;
 use crate::support::read;
 use breccia_core::git::{
-    Discovered, Git, LOCAL_LIMIT, Problem, Pushed, Repo, Target, discover, is_ssh_url,
+    Busy, Discovered, Git, LOCAL_LIMIT, Problem, Pushed, Repo, Target, discover, is_ssh_url,
 };
 use std::path::{Path, PathBuf};
 
@@ -680,4 +680,36 @@ fn a_rebase_git_refuses_to_start_is_a_refusal() {
         r.integrate(&t),
         Err(Problem::RebaseRefused { .. })
     ));
+}
+
+#[test]
+fn problem_kind_matches_its_serde_tag() {
+    let s = || "x".to_string();
+    let all = [
+        Problem::Identity,
+        Problem::Conflict { files: vec![s()] },
+        Problem::Busy { what: s() },
+        Problem::Locked,
+        Problem::DirtyOutside { files: vec![s()] },
+        Problem::Detached,
+        Problem::NoRemoteChoice { remotes: vec![s()] },
+        Problem::CommitRefused { message: s() },
+        Problem::Unreachable { message: s() },
+        Problem::SshKey { remote: s() },
+        Problem::RebaseRefused { message: s() },
+        Problem::Failed { message: s() },
+    ];
+    for p in &all {
+        let v = serde_json::to_value(p).unwrap();
+        assert_eq!(v["kind"], p.kind(), "{p:?}");
+    }
+}
+
+#[test]
+fn busy_names() {
+    assert_eq!(Busy::Rebase.name(), "rebase");
+    assert_eq!(Busy::Merge.name(), "merge");
+    assert_eq!(Busy::CherryPick.name(), "cherry-pick");
+    assert_eq!(Busy::Revert.name(), "revert");
+    assert_eq!(Busy::Bisect.name(), "bisect");
 }

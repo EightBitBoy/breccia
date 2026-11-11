@@ -35,6 +35,19 @@ pub enum Busy {
     Bisect,
 }
 
+impl Busy {
+    /// The name Git and the explanation use for the operation.
+    pub fn name(self) -> &'static str {
+        match self {
+            Busy::Rebase => "rebase",
+            Busy::Merge => "merge",
+            Busy::CherryPick => "cherry-pick",
+            Busy::Revert => "revert",
+            Busy::Bisect => "bisect",
+        }
+    }
+}
+
 /// `Ok(None)` is "not a repository"; `Ok(Some((top, prefix)))` is a repository.
 /// Exit 128 is also Git's answer to "dubious ownership", an unreadable `.git`
 /// or a broken `HEAD`, so only Git's own "not a git repository" counts as none.
