@@ -3424,6 +3424,7 @@ try {
     await menu125.locator(`[role="menuitemradio"][data-theme-choice="${t}"]`).click()
     await menu125.waitFor({ state: 'detached' })
     await waitFor(`128 theme ${t}`, attr125, t === 'system' ? '' : t)
+    await page.mouse.move(1, 1) // the longer menu now ends over the rows: a hovered row shows its fold arrow
   }
   /** Waits until the device scale is the zoom's, then brings the bands into view again. */
   const settleZoom128 = async (zoom) => {
