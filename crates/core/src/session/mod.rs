@@ -791,7 +791,7 @@ impl Session {
             Command::BlocksOutdent { ids } => self.on_roots(&ids, false, Document::outdent),
             Command::BlocksMoveUp { ids } => self.on_roots(&ids, false, Document::move_up),
             Command::BlocksMoveDown { ids } => self.on_roots(&ids, true, Document::move_down),
-            Command::BlocksDelete { ids } => {
+            Command::BlocksDelete { ids, keep_one } => {
                 let key = self.page_of_selection(&ids)?;
                 self.mutate(
                     &key,
@@ -800,8 +800,12 @@ impl Session {
                         // The last block left stays, emptied, so the page keeps one to write in.
                         let mut focus = None;
                         for id in batch::roots(d, &ids)? {
-                            if let Some(id) = d.delete_block(id)? {
-                                focus = Some(Focus { id, at: 0 });
+                            if keep_one {
+                                if let Some(id) = d.delete_block(id)? {
+                                    focus = Some(Focus { id, at: 0 });
+                                }
+                            } else {
+                                d.delete(id)?;
                             }
                         }
                         Ok(focus)

@@ -427,7 +427,7 @@ export type Command =
   | { type: 'blocks.outdent'; ids: BlockId[] }
   | { type: 'blocks.moveUp'; ids: BlockId[] }
   | { type: 'blocks.moveDown'; ids: BlockId[] }
-  | { type: 'blocks.delete'; ids: BlockId[] }
+  | { type: 'blocks.delete'; ids: BlockId[]; keepOne?: boolean }
   | { type: 'block.delete'; id: BlockId }
   | { type: 'history.undo'; page: string }
   | { type: 'history.redo'; page: string }

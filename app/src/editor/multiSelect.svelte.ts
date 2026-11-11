@@ -87,7 +87,7 @@ export class MultiSelect {
     const ids = live.map((b) => b.id)
     switch (a) {
       case 'delete':
-        run({ type: 'blocks.delete', ids })
+        run({ type: 'blocks.delete', ids, keepOne: true })
         return
       case 'removeState':
         run({ type: 'blocks.setState', ids, keyword: null })

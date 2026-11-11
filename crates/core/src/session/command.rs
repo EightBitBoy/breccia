@@ -226,7 +226,12 @@ pub enum Command {
     #[serde(rename = "blocks.moveDown")]
     BlocksMoveDown { ids: Vec<BlockId> },
     #[serde(rename = "blocks.delete")]
-    BlocksDelete { ids: Vec<BlockId> },
+    BlocksDelete {
+        ids: Vec<BlockId>,
+        /// A user's selection delete: if every block would go, one empty block stays.
+        #[serde(default, rename = "keepOne")]
+        keep_one: bool,
+    },
     /// Deletes the block with its children in one undo step. The only block of
     /// a page is emptied instead (its children go) and keeps the focus.
     #[serde(rename = "block.delete")]

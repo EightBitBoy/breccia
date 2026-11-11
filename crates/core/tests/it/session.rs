@@ -748,7 +748,11 @@ fn blocks_delete_of_every_block_keeps_one_empty_block() {
     let original = "- a\n\t- c\n- b\n";
     let (t, mut s) = folder(&[("pages/P.md", original)]);
     let all = ids(&mut s, "p");
-    let out = ok(&mut s, json!({"type":"blocks.delete","ids":all}), 0);
+    let out = ok(
+        &mut s,
+        json!({"type":"blocks.delete","ids":all,"keepOne":true}),
+        0,
+    );
     assert_eq!(read(&t, "pages/P.md"), "-\n");
     let focus = out.focus.unwrap();
     assert_eq!(focus.at, 0);
@@ -758,6 +762,20 @@ fn blocks_delete_of_every_block_keeps_one_empty_block() {
     assert_eq!(page.blocks[0].text, "");
     ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
     assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
+fn blocks_delete_without_keep_one_can_leave_no_block() {
+    let (t, mut s) = folder(&[(
+        "pages/P.md",
+        "- a
+- b
+",
+    )]);
+    let all = ids(&mut s, "p");
+    let out = ok(&mut s, json!({"type":"blocks.delete","ids":all}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "");
+    assert!(out.focus.is_none());
 }
 
 #[test]
