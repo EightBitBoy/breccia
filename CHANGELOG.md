@@ -2,6 +2,24 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.5.0] - 2026-11-11
+
+### Features
+
+- Themes: light themes come first in the menu and in Settings
+- Themes: Vampire, a dark theme with pink and red accents
+- Themes: Fjord, a dark theme in cool arctic blue-grey
+- Themes: Ember, a dark theme in warm brown with orange accents
+- Themes: Parchment, a light cream theme with blue accents
+- Status bar: the mouse wheel over the theme button switches the theme
+
+### Fixes
+
+- Deleting every selected block keeps one empty block to write in
+- Teal theme: selected and highlighted text is easier to read
+- Teal theme: selected text shows its highlight while editing
+- A page file saved with an upper-case .MD extension is reported at once, not only on reopen
+
 ## [1.4.0] - 2026-11-10
 
 ### Features
