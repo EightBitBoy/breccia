@@ -10,3 +10,5 @@ Task 2: complete (commits dd400dd..64c3ae9, review clean). Minors (deferred): pa
 
 Task 3: fix round 1/5 (2 addressed, 0 open — CRLF fixture really CRLF; toml_keep imports; commits f3116c2..98655dd).
 Task 3: complete (commits 84407fd..98655dd, review clean). Ruling: accept that the CRLF test cannot be made RED by removing `.replace("\r\n","\n")` in config/file.rs edit_file — toml_edit already writes LF, so the replace is a redundant safeguard; the test still pins CRLF-in → LF-out with comments kept — cost if wrong: a future toml_edit that keeps CRLF would be caught by this test anyway. Minors (deferred): comment on the redundant replace at file.rs:171; long doc line on HAND_LF; core it 738 + 2 ignored.
+
+Task 4: complete (commits ca96f36..a2d5345, review clean). it 742 + 2 ignored. Minors (deferred): parse_and_check_states_agree_on_keywords compares Debug prefixes (matches! sturdier); RED demo for first-state-first skipped (reviewer showed it can fail). Watch: one unexplained red `just test` run before a green rerun (diff is pure; likely an fs/watcher-timing test) — recheck at Finish.
