@@ -77,7 +77,12 @@ fn set_color_on_a_tag_only_page_creates_its_file() {
     assert_eq!(read(&t, "pages/garden.md"), "color:: red\n");
     assert!(out.page.unwrap().has_file);
     assert!(out.tree.is_some());
-    pick(&mut s, "other", Value::Null);
+    let out = pick(&mut s, "other", Value::Null);
+    // The pick is answered with the page as it is: still no file, and no color.
+    let page = out.page.unwrap();
+    assert_eq!(page.key, "other");
+    assert!(!page.has_file);
+    assert_eq!(page.color, None);
     assert!(!t.path().join("pages/other.md").exists());
 }
 
