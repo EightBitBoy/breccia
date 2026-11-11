@@ -59,7 +59,7 @@ pub struct Session {
     /// The block, page and undo step of the last `block.setText` that changed
     /// text: a `block.settle` on that block joins the step while it is still
     /// the page's newest.
-    typed_step: Option<(BlockId, String, Option<u64>)>,
+    typed_step: Option<TypedStep>,
     /// Blocks another program changed or deleted since the UI last showed
     /// them. Typing into one keeps the user's text and reports both.
     marks: HashMap<BlockId, DiskMark>,
@@ -84,6 +84,14 @@ fn config_changed() -> CommandError {
         "configChanged",
         "breccia/config.toml changed on disk, so this change was not saved. Breccia has read the new file; make the change again.",
     )
+}
+
+/// The last `block.setText` that changed text, for `block.settle`.
+struct TypedStep {
+    id: BlockId,
+    page: String,
+    /// The page's newest undo step then.
+    seq: Option<u64>,
 }
 
 /// What a reload from disk did to a block the UI may still be editing.

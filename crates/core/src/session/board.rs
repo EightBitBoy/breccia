@@ -313,9 +313,16 @@ fn drop_value(slots: &[Slot], at: usize, own: Option<u32>) -> Option<u32> {
     }
 }
 
+/// One priority to write: the block, the key of its page, the new value.
+struct PriorityWrite {
+    id: BlockId,
+    page: String,
+    priority: Option<u32>,
+}
+
 /// The cards above index `at` raised so each is higher than the one below
 /// it, from the dropped card's `value` upwards, until the order holds.
-fn raises(slots: &[Slot], at: usize, value: Option<u32>) -> Vec<(BlockId, String, Option<u32>)> {
+fn raises(slots: &[Slot], at: usize, value: Option<u32>) -> Vec<PriorityWrite> {
     let Some(mut floor) = value else {
         return Vec::new();
     };
@@ -325,7 +332,11 @@ fn raises(slots: &[Slot], at: usize, value: Option<u32>) -> Vec<(BlockId, String
             break;
         }
         floor = floor.saturating_add(1);
-        out.push((s.id, s.page.clone(), Some(floor)));
+        out.push(PriorityWrite {
+            id: s.id,
+            page: s.page.clone(),
+            priority: Some(floor),
+        });
     }
     out
 }
@@ -343,12 +354,13 @@ fn card_source(d: &NaiveDate) -> String {
 }
 
 /// One archived task with what its place in the list depends on.
-type ArchivedRow = (
-    ArchivedView,
-    Option<NaiveDateTime>,
-    Option<NaiveDateTime>,
-    usize,
-);
+struct ArchivedRow {
+    view: ArchivedView,
+    done: Option<NaiveDateTime>,
+    archived: Option<NaiveDateTime>,
+    /// The block's place in its page.
+    index: usize,
+}
 
 /// Every archived task (a block in a configured state with an `archived::`
 /// line), newest done date and time first (none last), then newest archived date and time, then
@@ -372,8 +384,8 @@ pub(crate) fn archived_tasks(ws: &Workspace) -> Vec<ArchivedView> {
             }
             let done = done_at(b.text());
             let archived = archived_at(b.text());
-            rows.push((
-                ArchivedView {
+            rows.push(ArchivedRow {
+                view: ArchivedView {
                     id: b.id(),
                     page: page.key.clone(),
                     page_name: page.name.clone(),
@@ -401,17 +413,17 @@ pub(crate) fn archived_tasks(ws: &Workspace) -> Vec<ArchivedView> {
                 },
                 done,
                 archived,
-                i,
-            ));
+                index: i,
+            });
         }
     }
     rows.sort_by(|a, b| {
-        newest_first(&a.1, &b.1)
-            .then_with(|| newest_first(&a.2, &b.2))
-            .then_with(|| a.0.page.cmp(&b.0.page))
-            .then_with(|| a.3.cmp(&b.3))
+        newest_first(&a.done, &b.done)
+            .then_with(|| newest_first(&a.archived, &b.archived))
+            .then_with(|| a.view.page.cmp(&b.view.page))
+            .then_with(|| a.index.cmp(&b.index))
     });
-    rows.into_iter().map(|r| r.0).collect()
+    rows.into_iter().map(|r| r.view).collect()
 }
 
 /// Whether a block is due for archiving: a task in a finished state, not yet
@@ -509,13 +521,17 @@ impl Session {
             None => slots.len(),
         };
         let own_priority = priority(page.doc.blocks()[i].text());
-        let mut writes = vec![(id, key.clone(), drop_value(&slots, at, own_priority))];
-        writes.extend(raises(&slots, at, writes[0].2));
+        let mut writes = vec![PriorityWrite {
+            id,
+            page: key.clone(),
+            priority: drop_value(&slots, at, own_priority),
+        }];
+        writes.extend(raises(&slots, at, writes[0].priority));
         // The pages in the order of their first write; the dropped card's first.
         let mut keys: Vec<String> = Vec::new();
-        for (_, k, _) in &writes {
-            if !keys.contains(k) {
-                keys.push(k.clone());
+        for w in &writes {
+            if !keys.contains(&w.page) {
+                keys.push(w.page.clone());
             }
         }
         for k in &keys {
@@ -538,8 +554,8 @@ impl Session {
             befores.push((k.clone(), page.doc.clone()));
             let mine: Vec<(BlockId, Option<u32>)> = writes
                 .iter()
-                .filter(|(_, wk, _)| wk == k)
-                .map(|(w, _, v)| (*w, *v))
+                .filter(|w| w.page == *k)
+                .map(|w| (w.id, w.priority))
                 .collect();
             let state_too = *k == key && !same;
             let result = ws.edit_with_config(k, |d, _, cfg| -> Result<(), EditError> {

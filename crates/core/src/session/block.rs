@@ -9,7 +9,7 @@ use crate::outline::{BlockId, Document};
 use super::batch;
 use super::history::Typing;
 use super::view::{CommandError, Focus, Notice, Output, PageView};
-use super::{DiskMark, Session};
+use super::{DiskMark, Session, TypedStep};
 
 impl Session {
     pub(super) fn block_insert(
@@ -59,7 +59,11 @@ impl Session {
         // typing that changes nothing does not start one.
         if changed {
             self.typing = Some(Typing { id, ms });
-            self.typed_step = Some((id, key.clone(), self.history.newest_seq(&key)));
+            self.typed_step = Some(TypedStep {
+                id,
+                page: key.clone(),
+                seq: self.history.newest_seq(&key),
+            });
         }
         Ok(out)
     }
@@ -83,8 +87,8 @@ impl Session {
         }
         // The lines join the typing that gave or took the state while
         // that is still the page's newest step: one undo takes both.
-        let coalesce = self.typed_step.as_ref().is_some_and(|(t, k, seq)| {
-            *t == id && *k == key && seq.is_some() && *seq == self.history.newest_seq(&key)
+        let coalesce = self.typed_step.as_ref().is_some_and(|t| {
+            t.id == id && t.page == key && t.seq.is_some() && t.seq == self.history.newest_seq(&key)
         });
         self.mutate(
             &key,
