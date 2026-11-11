@@ -487,6 +487,8 @@ Appearance (theme), Keyboard (read-only list of shortcuts in the first version).
 Settings opens in the main area from the sidebar footer, with `Ctrl ,`, or by clicking the folder name; changes apply
 at once.
 
+The About section shows the app's name, version, developer, licence and source link, and a "Show changelog" button. It opens the changelog (`CHANGELOG.md`, built into the app, so it needs no network) as an overlay over Settings, newest release first, rendered as Markdown; `Esc` or a click outside closes it and returns to Settings. A development build (`just dev`) shows the same text with a note that it is a development build.
+
 Settings ends with a section "Troubleshooting" whose "Open log folder" opens the folder where Breccia keeps its log
 (warnings and errors, at most 2 MB).
 

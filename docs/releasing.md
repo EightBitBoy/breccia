@@ -47,6 +47,7 @@ Before you start, check that the CI run of the commit on `main` you are releasin
 - `just release` writes the real section. The workflow takes the release text from that section in the tagged `CHANGELOG.md` (the run fails if the section is missing), so what you edited at the pause is what the release says.
 - Pre-releases: `just release 1.1.0-rc.1`. git-cliff counts a pre-release tag as a version, so after an rc the final release lists only the commits since the rc. Merge the two sections by hand at the pause.
 - The first release, 1.0.0, has no earlier tag, so its section lists every commit since the start. Shorten it by hand at the pause if you like. If no commit is listed (as with only the initial commit), the section says "First public release." instead of "No user-visible changes.".
+- The app shows `CHANGELOG.md` in Settings > About; it is built into the installer from the tagged commit, so your edits at the pause appear there too.
 
 ## Trying the pipeline without a release
 
