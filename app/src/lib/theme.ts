@@ -1,10 +1,17 @@
-// The six built-in themes: ids, names, and applying one to the document.
+// The built-in themes: ids, names, and applying one to the document.
 export const THEMES = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember'] as const
 export type ThemeId = (typeof THEMES)[number]
 export type ThemeChoice = 'system' | ThemeId
 
 /** The menu's and Settings' choices, in order: System first, then every theme. */
 export const THEME_CHOICES: readonly ThemeChoice[] = ['system', ...THEMES]
+
+/** The next (1, down the menu) or previous (-1) choice, wrapping at both ends. */
+export function stepTheme(c: ThemeChoice, by: 1 | -1): ThemeChoice {
+  const n = THEME_CHOICES.length
+  const i = THEME_CHOICES.indexOf(c)
+  return THEME_CHOICES[(((i < 0 ? 0 : i) + by) % n + n) % n]
+}
 
 export const THEME_NAMES: Record<ThemeChoice, string> = {
   system: 'System',

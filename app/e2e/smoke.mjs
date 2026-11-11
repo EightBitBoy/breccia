@@ -3235,7 +3235,7 @@ try {
   assert(before125 === null, `125 the stored theme before the step: ${before125}`)
   const rightIds125 = await page.locator('.status-side.right [data-testid="status-item"]').evaluateAll((es) => es.map((e) => e.dataset.id))
   assert(rightIds125.slice(-2).join() === 'theme,help', `125 the right side of the status bar: ${rightIds125}`)
-  assert((await theme125.getAttribute('aria-label')) === 'Theme' && (await theme125.getAttribute('title')) === 'Theme', '125 the button is not named Theme')
+  assert((await theme125.getAttribute('aria-label')) === 'Theme' && (await theme125.getAttribute('title')) === 'Theme: System. Scroll to switch.', '125 the button is not named Theme')
   await page.locator('[data-testid="nav-journal"]').click()
   await page.locator('.block .content', { hasText: 'from outside' }).last().click()
   await waitFor('125 editing', focused125, 'editor')

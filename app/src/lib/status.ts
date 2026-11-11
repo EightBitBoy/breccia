@@ -1,4 +1,5 @@
 // The status bar's items (§7.13): short state along the bottom of the window.
+import { THEME_NAMES, type ThemeChoice } from './theme'
 import type { IndexProgress } from './types'
 
 export interface StatusItem {
@@ -65,7 +66,7 @@ export function helpItem(shown: boolean): StatusItem {
 }
 
 /** The button just left of "?" that opens the theme menu (the same choices as Settings > Appearance). */
-export function themeItem(): StatusItem {
+export function themeItem(c: ThemeChoice): StatusItem {
   return {
     id: 'theme',
     side: 'right',
@@ -74,7 +75,7 @@ export function themeItem(): StatusItem {
     progress: null,
     tone: 'normal',
     action: true,
-    tip: 'Theme',
+    tip: `Theme: ${THEME_NAMES[c]}. Scroll to switch.`,
     label: 'Theme',
   }
 }

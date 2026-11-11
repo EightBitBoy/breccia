@@ -363,7 +363,7 @@
   })
   /** The theme button left of "?": its menu offers the Settings > Appearance choices (`chooseTheme`). */
   $effect(() => {
-    const item = folder ? themeItem() : null
+    const item = folder ? themeItem(theme) : null
     untrack(() => (item ? status.set(item) : status.clear('theme')))
   })
   /** The Git history; `git.log` skips the command queue, so a slow log never holds typed text up. */

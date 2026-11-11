@@ -48,13 +48,16 @@ describe('helpItem', () => {
 
 describe('themeItem', () => {
   it('is a button named Theme with a symbol for its text', () => {
-    const t = themeItem()
-    expect(t).toMatchObject({ id: 'theme', side: 'right', action: true, tip: 'Theme', label: 'Theme', progress: null, tone: 'normal' })
+    const t = themeItem('system')
+    expect(t).toMatchObject({ id: 'theme', side: 'right', action: true, tip: 'Theme: System. Scroll to switch.', label: 'Theme', progress: null, tone: 'normal' })
     expect(t.text).toBe('◐')
     expect(t.icon).toBeUndefined()
   })
+  it('names the chosen theme in the tip', () => {
+    expect(themeItem('vampire').tip).toBe('Theme: Vampire. Scroll to switch.')
+  })
   it('sits just before the ? button, after the zoom and the history button', () => {
-    const placed = placeItems([helpItem(false), themeItem(), item('zoom', 'right', 30), item('gitLog', 'right', 11)])
+    const placed = placeItems([helpItem(false), themeItem('system'), item('zoom', 'right', 30), item('gitLog', 'right', 11)])
     expect(placed.right.map((i) => i.id)).toEqual(['gitLog', 'zoom', 'theme', 'help'])
   })
 })
