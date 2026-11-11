@@ -352,6 +352,30 @@ impl Command {
             | Command::GitInit => CommandKind::Edit,
         }
     }
+
+    /// Whether the command runs whatever generation the request names: the
+    /// folder commands, which work with no folder or switch it. Every other
+    /// command from another generation is refused with `stale`.
+    pub fn ignores_generation(&self) -> bool {
+        matches!(
+            self,
+            Command::FolderOpen { .. }
+                | Command::FolderCreate { .. }
+                | Command::FolderStatus
+                | Command::FolderTree
+        )
+    }
+
+    /// Whether the command writes `breccia/config.toml`.
+    pub fn writes_config(&self) -> bool {
+        matches!(
+            self,
+            Command::BoardsSet { .. }
+                | Command::StatesSet { .. }
+                | Command::ConfigSetGit { .. }
+                | Command::ConfigSetBoard { .. }
+        )
+    }
 }
 
 #[cfg(test)]

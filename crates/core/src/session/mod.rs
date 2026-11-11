@@ -328,14 +328,7 @@ impl Session {
     fn execute(&mut self, req: Request, clock: Clock) -> Result<Output, CommandError> {
         // Only a `block.setText` right after another one can coalesce.
         let typing = self.typing.take();
-        let folder_command = matches!(
-            req.command,
-            Command::FolderOpen { .. }
-                | Command::FolderCreate { .. }
-                | Command::FolderStatus
-                | Command::FolderTree
-        );
-        if !folder_command && req.generation != self.generation {
+        if !req.command.ignores_generation() && req.generation != self.generation {
             return Err(CommandError::new(
                 "stale",
                 format_args!(

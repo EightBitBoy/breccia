@@ -63,6 +63,193 @@ fn command_names_deserialize() {
     }
 }
 
+/// Every command, one JSON each (all serde names in `command.rs`), with whether it
+/// ignores the generation check and whether it writes `config.toml`.
+fn every_command() -> Vec<(Value, bool, bool)> {
+    vec![
+        (json!({"type": "folder.open", "path": "x"}), true, false),
+        (json!({"type": "folder.create", "path": "x"}), true, false),
+        (json!({"type": "folder.status"}), true, false),
+        (json!({"type": "folder.tree"}), true, false),
+        (json!({"type": "config.get"}), false, false),
+        (json!({"type": "page.today"}), false, false),
+        (json!({"type": "page.show", "key": "p"}), false, false),
+        (json!({"type": "page.open", "name": "P"}), false, false),
+        (
+            json!({"type": "page.create", "name": "P", "folder": ""}),
+            false,
+            false,
+        ),
+        (json!({"type": "dir.create", "path": "d"}), false, false),
+        (
+            json!({"type": "page.rename", "key": "p", "name": "Q"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "page.setColor", "key": "p", "color": null}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "page.move", "key": "p", "folder": "d"}),
+            false,
+            false,
+        ),
+        (json!({"type": "page.delete", "key": "p"}), false, false),
+        (
+            json!({"type": "dir.rename", "path": "d", "to": "e"}),
+            false,
+            false,
+        ),
+        (json!({"type": "dir.delete", "path": "d"}), false, false),
+        (json!({"type": "page.get", "key": "p"}), false, false),
+        (json!({"type": "journal.feed"}), false, false),
+        (json!({"type": "pages.table"}), false, false),
+        (json!({"type": "graph.get"}), false, false),
+        (
+            json!({"type": "graph.saveLayout", "positions": []}),
+            false,
+            false,
+        ),
+        (json!({"type": "pages.get", "keys": ["p"]}), false, false),
+        (json!({"type": "page.reload", "key": "p"}), false, false),
+        (json!({"type": "page.overwrite", "key": "p"}), false, false),
+        (json!({"type": "page.refs", "key": "p"}), false, false),
+        (
+            json!({"type": "page.renameReach", "key": "p", "name": "Q"}),
+            false,
+            false,
+        ),
+        (json!({"type": "board.get", "index": 0}), false, false),
+        (
+            json!({"type": "board.place", "id": 1, "keyword": "DONE"}),
+            false,
+            false,
+        ),
+        (json!({"type": "archive.list"}), false, false),
+        (json!({"type": "journal.append", "text": "x"}), false, false),
+        (
+            json!({"type": "board.archive", "keyword": "DONE"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "boards.set", "boards": [], "version": 0}),
+            false,
+            true,
+        ),
+        (json!({"type": "states.usage"}), false, false),
+        (
+            json!({"type": "states.set", "states": [], "renames": [], "version": 0}),
+            false,
+            true,
+        ),
+        (
+            json!({"type": "config.setGit", "enabled": true, "commitDelayMinutes": 5, "pullIntervalMinutes": 5, "version": 0}),
+            false,
+            true,
+        ),
+        (
+            json!({"type": "config.setBoard", "archiveAfterDays": 30, "version": 0}),
+            false,
+            true,
+        ),
+        (json!({"type": "pages.list"}), false, false),
+        (
+            json!({"type": "block.insert", "page": "p", "after": null, "text": "x"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "block.setText", "id": 1, "text": "x"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "block.split", "id": 1, "at": 0}),
+            false,
+            false,
+        ),
+        (json!({"type": "block.merge", "id": 1}), false, false),
+        (
+            json!({"type": "block.paste", "id": 1, "at": 0, "text": "x"}),
+            false,
+            false,
+        ),
+        (json!({"type": "block.cycleState", "id": 1}), false, false),
+        (json!({"type": "block.stepState", "id": 1}), false, false),
+        (
+            json!({"type": "block.settle", "id": 1, "before": null}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "blocks.setState", "ids": [1], "keyword": null}),
+            false,
+            false,
+        ),
+        (json!({"type": "archive.auto"}), false, false),
+        (
+            json!({"type": "blocks.setArchived", "ids": [1], "archived": true}),
+            false,
+            false,
+        ),
+        (json!({"type": "blocks.indent", "ids": [1]}), false, false),
+        (json!({"type": "blocks.outdent", "ids": [1]}), false, false),
+        (json!({"type": "blocks.moveUp", "ids": [1]}), false, false),
+        (json!({"type": "blocks.moveDown", "ids": [1]}), false, false),
+        (json!({"type": "blocks.delete", "ids": [1]}), false, false),
+        (json!({"type": "block.delete", "id": 1}), false, false),
+        (json!({"type": "history.undo", "page": "p"}), false, false),
+        (json!({"type": "history.redo", "page": "p"}), false, false),
+        (json!({"type": "files.changed", "paths": []}), false, false),
+        (json!({"type": "search.query", "text": "x"}), false, false),
+        (
+            json!({"type": "journal.day", "key": "2026-01-01"}),
+            false,
+            false,
+        ),
+        (json!({"type": "session.dirty"}), false, false),
+        (json!({"type": "git.status"}), false, false),
+        (json!({"type": "git.sync"}), false, false),
+        (json!({"type": "git.init"}), false, false),
+        (
+            json!({"type": "git.log", "skip": 0, "limit": 200}),
+            false,
+            false,
+        ),
+    ]
+}
+
+fn command_of(j: &Value) -> Command {
+    serde_json::from_value(j.clone()).unwrap_or_else(|e| panic!("{j}: {e}"))
+}
+
+#[test]
+fn every_command_lists_each_name_once() {
+    let names: std::collections::BTreeSet<String> = every_command()
+        .iter()
+        .map(|(j, _, _)| j["type"].as_str().unwrap().to_string())
+        .collect();
+    assert_eq!(names.len(), 64);
+    assert_eq!(every_command().len(), 64);
+}
+
+#[test]
+fn commands_that_ignore_the_generation() {
+    for (j, ignores, _) in every_command() {
+        assert_eq!(command_of(&j).ignores_generation(), ignores, "{j}");
+    }
+}
+
+#[test]
+fn commands_that_write_the_config() {
+    for (j, _, writes) in every_command() {
+        assert_eq!(command_of(&j).writes_config(), writes, "{j}");
+    }
+}
+
 #[test]
 fn git_commands_belong_to_the_shell() {
     let (_t, mut s) = folder(&[("pages/P.md", "- a\n")]);
