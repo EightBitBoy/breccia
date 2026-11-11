@@ -351,6 +351,7 @@ dependencies = [
 name = "breccia-core"
 version = "1.4.0"
 dependencies = [
+ "breccia-core",
  "chrono",
  "log",
  "notify",
