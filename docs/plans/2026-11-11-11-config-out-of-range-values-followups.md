@@ -23,3 +23,9 @@ Work the plan deferred. Open items are taken by later plans or moved to `docs/ba
 
 9. **Task 1:** the wrong-types test also passes before the change (a regression guard only); the key and label strings
    are duplicated in `crates/core/src/config/range.rs`; the doc comment there is untidy.
+
+## Found by the final review and the finish
+
+- A comment in `crates/core/src/config/range.rs` says "file order", but the records come out in a fixed order.
+- Spec §6 and `docs/format.md` §11 say the file is left unchanged; it should read "when it is read", because a later Settings save overwrites the number.
+- e2e flake seen once on 2026-11-11 (first run stopped after step 119 in the vividness step: "locator.scrollIntoViewIfNeeded: Element is not attached to the DOM"; the rerun passed all 203). Unrelated to config; worth making that step wait for a stable element.
