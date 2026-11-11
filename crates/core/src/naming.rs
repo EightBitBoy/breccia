@@ -76,8 +76,31 @@ pub fn parse_journal_name(s: &str) -> Option<NaiveDate> {
 
 /// Long English form of a journal date, e.g. `Thursday, 29 Oct 2026`.
 pub fn journal_display(date: NaiveDate) -> String {
-    date.format("%A, %-d %b %Y").to_string()
+    day_long(date)
 }
+
+/// `29 Oct`.
+pub fn day_short(d: NaiveDate) -> String {
+    d.format("%-d %b").to_string()
+}
+
+/// `29 Oct 2026`.
+pub fn day_with_year(d: NaiveDate) -> String {
+    d.format("%-d %b %Y").to_string()
+}
+
+/// `Thursday, 29 Oct 2026`.
+pub fn day_long(d: NaiveDate) -> String {
+    d.format("%A, %-d %b %Y").to_string()
+}
+
+/// The month's English name, e.g. `October`.
+pub fn month_name(d: NaiveDate) -> String {
+    d.format("%B").to_string()
+}
+
+/// How `created::` and `archived::` lines write a date and time.
+pub(crate) const STAMP_FORMAT: &str = "%Y-%m-%d %H:%M:%S";
 
 /// A folder path under `pages/`: components joined with `/`, each a valid page
 /// name that is also a valid file name as typed (folders have no `title::`).

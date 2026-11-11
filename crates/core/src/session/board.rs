@@ -8,6 +8,7 @@ use serde::Serialize;
 
 use crate::config::Config;
 use crate::error::EditError;
+use crate::naming::{day_short, day_with_year};
 use crate::outline::{BlockId, Document};
 use crate::render::{card_html, crumb, plain_line, took};
 use crate::task::{
@@ -47,7 +48,7 @@ pub struct CardView {
     pub page: String,
     pub page_name: String,
     pub page_kind: PageViewKind,
-    /// `29 Oct 2026` (`%-d %b %Y`) for a journal, else the page name.
+    /// `29 Oct 2026` for a journal, else the page name.
     pub source: String,
     /// `card_html` of the block.
     pub html: String,
@@ -57,7 +58,7 @@ pub struct CardView {
     pub subtasks_total: usize,
     /// `crumb` of the nearest task ancestor's text without its keyword.
     pub parent: Option<String>,
-    /// The done date as `29 Oct` (`%-d %b`), for a finished state with one.
+    /// The done date as `29 Oct`, for a finished state with one.
     pub done: Option<String>,
 }
 
@@ -245,7 +246,7 @@ fn collect(ws: &Workspace, page: &Page, columns: &mut [Column]) {
                 subtasks_done: counts[i].0,
                 subtasks_total: counts[i].1,
                 parent: parent[i].map(|p| crumb(&with_state(blocks[p].text(), None, cfg))),
-                done: done.map(|d| d.format("%-d %b").to_string()),
+                done: done.map(|d| day_short(d.date())),
             },
             done,
             priority: if state.finished {
@@ -350,7 +351,7 @@ fn board_changed() -> CommandError {
 
 /// A journal day as a card names it: `29 Oct 2026`.
 fn card_source(d: &NaiveDate) -> String {
-    d.format("%-d %b %Y").to_string()
+    day_with_year(*d)
 }
 
 /// One archived task with what its place in the list depends on.

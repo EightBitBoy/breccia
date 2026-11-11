@@ -73,3 +73,17 @@ fn linkable_names_have_no_brackets() {
         assert!(!is_linkable_name(bad), "{bad:?}");
     }
 }
+
+#[test]
+fn display_formats() {
+    let oct = NaiveDate::from_ymd_opt(2026, 10, 1).unwrap();
+    let nov = NaiveDate::from_ymd_opt(2026, 11, 29).unwrap();
+    assert_eq!(day_short(oct), "1 Oct");
+    assert_eq!(day_with_year(oct), "1 Oct 2026");
+    assert_eq!(day_long(oct), "Thursday, 1 Oct 2026");
+    assert_eq!(month_name(oct), "October");
+    assert_eq!(day_short(nov), "29 Nov");
+    assert_eq!(day_with_year(nov), "29 Nov 2026");
+    assert_eq!(day_long(nov), "Sunday, 29 Nov 2026");
+    assert_eq!(month_name(nov), "November");
+}

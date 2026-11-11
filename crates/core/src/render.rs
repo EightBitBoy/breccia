@@ -4,7 +4,7 @@ use pulldown_cmark::{CowStr, Event, Options, Parser, Tag, TagEnd, html};
 
 use crate::config::Config;
 use crate::inline::{self, Link, LinkKind};
-use crate::naming::{journal_display, parse_journal_name};
+use crate::naming::{self, journal_display, parse_journal_name};
 use crate::outline::front_matter_len;
 use crate::task::{created_at, done_date, done_time, journal_date_in, task_state, with_state};
 use chrono::NaiveDateTime;
@@ -408,9 +408,9 @@ pub fn block_html(text: &str, cfg: &Config) -> String {
                     .and_then(|c| took(c, d.and_time(t)))
                     .map(|s| format!(" after {s}"))
                     .unwrap_or_default();
-                format!("{} {}{took}", d.format("%-d %b"), t.format("%H:%M"))
+                format!("{} {}{took}", naming::day_short(d), t.format("%H:%M"))
             }
-            None => d.format("%-d %b").to_string(),
+            None => naming::day_short(d),
         };
         format!("<span class=\"chip\">\u{2713} {when}</span>")
     });

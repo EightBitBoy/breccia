@@ -6,7 +6,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 use crate::config::{Config, State};
 use crate::error::EditError;
 use crate::inline::{self, LinkKind};
-use crate::naming::parse_journal_name;
+use crate::naming::{STAMP_FORMAT, parse_journal_name};
 use crate::outline::{BlockId, Document};
 
 /// Whether `text`'s first line starts with `keyword` followed by a space or
@@ -195,11 +195,7 @@ fn with_created(text: &str, on: Option<NaiveDateTime>) -> String {
 fn with_stamp(text: &str, key: &str, on: Option<NaiveDateTime>) -> String {
     match on {
         Some(_) if inline::has_property(text, key) => text.to_string(),
-        Some(now) => inline::with_property(
-            text,
-            key,
-            Some(&now.format("%Y-%m-%d %H:%M:%S").to_string()),
-        ),
+        Some(now) => inline::with_property(text, key, Some(&now.format(STAMP_FORMAT).to_string())),
         None => inline::with_property(text, key, None),
     }
 }

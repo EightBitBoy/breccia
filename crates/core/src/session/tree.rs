@@ -3,7 +3,7 @@
 use chrono::Datelike;
 use serde::Serialize;
 
-use crate::naming::journal_display;
+use crate::naming::{journal_display, month_name};
 use crate::workspace::{PageKind, Workspace};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
@@ -122,7 +122,7 @@ impl TreeView {
             if months.last().is_none_or(|m| m.month != date.month()) {
                 months.push(JournalMonth {
                     month: date.month(),
-                    label: date.format("%B").to_string(),
+                    label: month_name(date),
                     days: Vec::new(),
                 });
             }
