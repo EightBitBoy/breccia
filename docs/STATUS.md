@@ -30,6 +30,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 5 | GitHub Pages site | done 2026-11-09 | `docs/plans/2026-11-09-05-github-pages-site.md` | `docs/plans/2026-11-09-05-github-pages-site-followups.md` |
 | 6 | Safety net (from the audit) | done 2026-11-10 | `docs/plans/2026-11-10-06-safety-net.md` | `docs/plans/2026-11-10-06-safety-net-followups.md` |
 | 7 | Wash seams, Today and Yesterday, delete a block | done 2026-11-10 | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block.md` | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block-followups.md` |
+| 8 | Theme wheel and four more themes | in progress | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -79,7 +80,8 @@ page color wash at zoom 110 % and 125 % (backlog #75, measured by e2e step 128);
 calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with its sub-blocks (#78). Plans 6 and 7 are released as 1.4.0 (2026-11-10,
 https://github.com/EightBitBoy/breccia/releases/tag/v1.4.0). The owner checks review items 70 to 78.
 
-Next is backlog #76 (the scroll wheel over the theme button, and more themes), a normal plan with the owner's review.
+Plan 8 (backlog #76: the scroll wheel over the theme button; Vampire, Fjord, Ember and Parchment; light themes first;
+Teal's selection contrast) is in progress (owner decisions in the plan, 2026-11-11).
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
