@@ -3243,7 +3243,7 @@ try {
   // Open by a click: seven choices in order, System checked
   await theme125.click()
   await menu125.waitFor()
-  await waitFor('125 seven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Dark', 'Violet', 'Graphite', 'Taupe', 'Teal'])
+  await waitFor('125 seven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Dark', 'Graphite', 'Violet', 'Teal'])
   await waitFor('125 System is checked', checked125, ['system'])
   // Esc closes the menu, changes nothing, and the focus goes back to the edited block
   await kb.press('Escape')
@@ -3393,7 +3393,7 @@ try {
   // are measured and printed.
   const SEAM_ZOOMS = [100, 110, 125]
   const SEAM_TOLERANCE = 2
-  const THEMES128 = ['light', 'dark', 'violet', 'graphite', 'taupe', 'teal']
+  const THEMES128 = ['light', 'taupe', 'dark', 'graphite', 'violet', 'teal']
   writeFileSync(join(pagesDir, 'Seam blue 128.md'), 'color:: blue\n- b\n')
   writeFileSync(join(pagesDir, 'Seam hue 128.md'), 'color:: hue 212\n- h\n')
   const key128 = dayKey(12) // set-up wrote it; no other step reads it

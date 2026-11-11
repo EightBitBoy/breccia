@@ -2,7 +2,6 @@
   import { THEME_CHOICES, THEME_NAMES, type ThemeChoice, type ThemeId } from '../../lib/theme'
 
   let { theme, ontheme }: { theme: ThemeChoice; ontheme: (c: ThemeChoice) => void } = $props()
-
 </script>
 
 {#snippet preview(id: ThemeId)}

@@ -110,6 +110,12 @@ test('parseTheme', () => {
   expect(parseTheme(3)).toBe('system')
 })
 
+test('light themes come first in the list', () => {
+  const kinds = THEMES.map((t) => windowTheme(t))
+  expect(kinds.indexOf('dark')).toBe(kinds.filter((k) => k === 'light').length)
+  expect(kinds.lastIndexOf('light')).toBeLessThan(kinds.indexOf('dark'))
+})
+
 test('THEME_CHOICES is System then every theme', () => {
   expect(THEME_CHOICES).toEqual(['system', ...THEMES])
 })
