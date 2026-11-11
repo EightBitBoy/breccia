@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
+import { THEMES, THEME_CHOICES, applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
 import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
 import {
   CUSTOM_CHROMA,
@@ -30,12 +30,14 @@ function block(selector: string): Record<string, string> {
   return props(css.slice(open + 1, css.indexOf('}', open)))
 }
 
+const selectorOf = (t: string): string => (t === 'light' ? ':root, [data-theme="light"]' : `[data-theme="${t}"]`)
+
 test('every theme defines every token', () => {
   const light = block(':root, [data-theme="light"]')
   const names = Object.keys(light).sort()
   expect(names.length).toBeGreaterThan(20)
-  for (const t of ['dark', 'violet', 'graphite', 'taupe', 'teal']) {
-    expect(Object.keys(block(`[data-theme="${t}"]`)).sort(), t).toEqual(names)
+  for (const t of THEMES) {
+    expect(Object.keys(block(selectorOf(t))).sort(), t).toEqual(names)
   }
   const media = block(':root:not([data-theme])')
   expect(media).toEqual(block('[data-theme="dark"]'))
@@ -66,7 +68,7 @@ function contrast(a: string, b: string): number {
 }
 
 test('faded is visible but quieter than text in every theme', () => {
-  const sels = [':root, [data-theme="light"]', ...['dark', 'violet', 'graphite', 'taupe', 'teal'].map((t) => `[data-theme="${t}"]`), ':root:not([data-theme])']
+  const sels = [...THEMES.map(selectorOf), ':root:not([data-theme])']
   for (const s of sels) {
     const b = block(s)
     const faded = contrast(b['--faded'], b['--bg'])
@@ -108,10 +110,15 @@ test('parseTheme', () => {
   expect(parseTheme(3)).toBe('system')
 })
 
+test('THEME_CHOICES is System then every theme', () => {
+  expect(THEME_CHOICES).toEqual(['system', ...THEMES])
+})
+
 test('windowTheme and storedTheme', () => {
-  expect(['light', 'taupe', 'dark', 'violet', 'graphite', 'teal', 'system'].map((t) => windowTheme(t as never))).toEqual([
-    'light', 'light', 'dark', 'dark', 'dark', 'dark', null,
-  ])
+  const light = THEMES.filter((t) => windowTheme(t) === 'light')
+  expect(light).toEqual(['light', 'taupe'])
+  for (const t of THEMES) expect(['light', 'dark'], t).toContain(windowTheme(t))
+  expect(windowTheme('system')).toBeNull()
   expect(storedTheme('system')).toBeNull()
   expect(storedTheme('taupe')).toBe('taupe')
 })
@@ -138,11 +145,7 @@ test('applyTheme sets or clears the attribute and the window theme', async () =>
 
 // ---- page colors ----
 
-const THEME_SELECTORS = [
-  ':root, [data-theme="light"]',
-  ...['dark', 'violet', 'graphite', 'taupe', 'teal'].map((t) => `[data-theme="${t}"]`),
-  ':root:not([data-theme])',
-]
+const THEME_SELECTORS = [...THEMES.map(selectorOf), ':root:not([data-theme])']
 
 function rgb(hex: string): number[] {
   if (!/^#[0-9a-f]{6}$/i.test(hex)) throw new Error(`not a #rrggbb colour: ${hex}`)
@@ -254,7 +257,7 @@ function near(a: string, b: string, tol = 1): boolean {
 }
 
 test('theme blocks carry the shade parameters', () => {
-  expect(THEME_SELECTORS.length).toBe(Object.keys(PARAMS).length)
+  expect(Object.keys(PARAMS).sort()).toEqual([...THEME_SELECTORS].sort())
   for (const s of THEME_SELECTORS) {
     const b = block(s)
     expect([b['--pc-l'], b['--pc-cs'], b['--pc-ds']].map(Number), s).toEqual(PARAMS[s])
@@ -373,12 +376,21 @@ function shadeDigest(s: string, vivid?: number): string {
 }
 
 // Digests of plan 2's customShade(h, t) per theme block, taken before vividness existed (plan 3, R4).
-const TODAYS_SHADES = ['3c5fa875', 'd47bf017', 'c5f5959a', 'ebb31daa', '83a5b0a9', 'd7f75c44', 'd47bf017']
+const TODAYS_SHADES: Record<string, string> = {
+  ':root, [data-theme="light"]': '3c5fa875',
+  '[data-theme="dark"]': 'd47bf017',
+  '[data-theme="violet"]': 'c5f5959a',
+  '[data-theme="graphite"]': 'ebb31daa',
+  '[data-theme="taupe"]': '83a5b0a9',
+  '[data-theme="teal"]': 'd7f75c44',
+  ':root:not([data-theme])': 'd47bf017',
+}
 
 test("vividness 100 is today's look", () => {
-  THEME_SELECTORS.forEach((s, i) => {
-    expect(shadeDigest(s, 100), `${s} explicit 100`).toBe(TODAYS_SHADES[i])
-    expect(shadeDigest(s), `${s} default`).toBe(TODAYS_SHADES[i])
+  expect(Object.keys(TODAYS_SHADES).sort()).toEqual([...THEME_SELECTORS].sort())
+  THEME_SELECTORS.forEach((s) => {
+    expect(shadeDigest(s, 100), `${s} explicit 100`).toBe(TODAYS_SHADES[s])
+    expect(shadeDigest(s), `${s} default`).toBe(TODAYS_SHADES[s])
     const t = tokensOf(s)
     for (let h = 0; h < 360; h++) {
       expect(customShade(h, t, 100), `${s} hue ${h}`).toEqual(customShade(h, t))

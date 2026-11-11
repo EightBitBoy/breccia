@@ -3,6 +3,9 @@ export const THEMES = ['light', 'dark', 'violet', 'graphite', 'taupe', 'teal'] a
 export type ThemeId = (typeof THEMES)[number]
 export type ThemeChoice = 'system' | ThemeId
 
+/** The menu's and Settings' choices, in order: System first, then every theme. */
+export const THEME_CHOICES: readonly ThemeChoice[] = ['system', ...THEMES]
+
 export const THEME_NAMES: Record<ThemeChoice, string> = {
   system: 'System',
   light: 'Light',

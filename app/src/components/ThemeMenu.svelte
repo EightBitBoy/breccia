@@ -2,11 +2,10 @@
   // The status bar's theme button and its menu: the same choices as Settings > Appearance, applied at once.
   import { DropdownMenu } from 'bits-ui'
   import type { StatusItem } from '../lib/status'
-  import { THEMES, THEME_NAMES, parseTheme, type ThemeChoice } from '../lib/theme'
+  import { THEME_CHOICES, THEME_NAMES, parseTheme, type ThemeChoice } from '../lib/theme'
 
   let { item, theme, ontheme }: { item: StatusItem; theme: ThemeChoice; ontheme: (c: ThemeChoice) => void } = $props()
 
-  const choices: ThemeChoice[] = ['system', ...THEMES]
   /**
    * Where the focus was when the menu opened (a block's editor, for one); it goes back there on close. A press on
    * the button does not move the focus (App's press handler), so this is the editor while a block is edited.
@@ -54,7 +53,7 @@
       }}
     >
       <DropdownMenu.RadioGroup value={theme} onValueChange={(v) => ontheme(parseTheme(v))} aria-label="Theme">
-        {#each choices as c (c)}
+        {#each THEME_CHOICES as c (c)}
           <DropdownMenu.RadioItem class="menu-item theme-menu-item" value={c} data-theme-choice={c}>
             {THEME_NAMES[c]}
           </DropdownMenu.RadioItem>

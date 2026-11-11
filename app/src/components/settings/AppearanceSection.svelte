@@ -1,9 +1,8 @@
 <script lang="ts">
-  import { THEMES, THEME_NAMES, type ThemeChoice, type ThemeId } from '../../lib/theme'
+  import { THEME_CHOICES, THEME_NAMES, type ThemeChoice, type ThemeId } from '../../lib/theme'
 
   let { theme, ontheme }: { theme: ThemeChoice; ontheme: (c: ThemeChoice) => void } = $props()
 
-  const choices: ThemeChoice[] = ['system', ...THEMES]
 </script>
 
 {#snippet preview(id: ThemeId)}
@@ -20,7 +19,7 @@
 
 <p class="settings-hint">This computer only: the theme is not stored in the notes folder.</p>
 <div class="theme-options" role="radiogroup" aria-label="Theme">
-  {#each choices as c (c)}
+  {#each THEME_CHOICES as c (c)}
     <button
       type="button"
       class="theme-option"

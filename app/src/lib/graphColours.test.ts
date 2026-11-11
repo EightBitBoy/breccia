@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { GRAPH_TOKENS, readColours } from './graphColours'
+import { THEMES } from './theme'
 import tokensCss from '../styles/tokens.css?raw'
 
 function block(selector: string): string[] {
@@ -12,7 +13,7 @@ function block(selector: string): string[] {
 
 test('every graph token exists in every theme', () => {
   expect(GRAPH_TOKENS.backdrop).toBe('--bg')
-  const sels = [':root, [data-theme="light"]', ...['dark', 'violet', 'graphite', 'taupe', 'teal'].map((t) => `[data-theme="${t}"]`)]
+  const sels = THEMES.map((t) => (t === 'light' ? ':root, [data-theme="light"]' : `[data-theme="${t}"]`))
   for (const s of sels) {
     const names = block(s)
     for (const v of Object.values(GRAPH_TOKENS)) expect(names, `${s} ${v}`).toContain(v)

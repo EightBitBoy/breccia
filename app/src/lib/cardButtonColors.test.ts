@@ -1,13 +1,9 @@
 import { expect, test } from 'vitest'
+import { THEMES } from './theme'
 import tokensCss from '../styles/tokens.css?raw'
 
 const SELECTORS = [
-  ':root, [data-theme="light"]',
-  '[data-theme="dark"]',
-  '[data-theme="violet"]',
-  '[data-theme="graphite"]',
-  '[data-theme="teal"]',
-  '[data-theme="taupe"]',
+  ...THEMES.map((t) => (t === 'light' ? ':root, [data-theme="light"]' : `[data-theme="${t}"]`)),
   ':root:not([data-theme])',
 ]
 
