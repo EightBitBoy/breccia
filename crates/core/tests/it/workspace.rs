@@ -883,3 +883,67 @@ fn an_untouched_new_page_writes_nothing() {
     assert_eq!(ws.save(&key).unwrap(), SaveOutcome::NotCreated);
     assert!(!t.path().join("n/pages/Q&A_ x.md").exists());
 }
+
+#[test]
+fn locate_follows_every_page_change() {
+    let (t, mut ws) = open(&[
+        ("pages/Keep.md", "- k\n"),
+        ("pages/Ren.md", "- r1\n- r2\n"),
+        ("pages/Del.md", "- d\n"),
+        ("pages/Gone.md", "- g\n"),
+    ]);
+    ws.create_folder("sub").unwrap();
+    ws.create_page("Inner", "sub").unwrap();
+    ws.edit("inner", |d, ids| d.insert_after(None, "", ids).unwrap())
+        .unwrap();
+    let ids_of = |ws: &Workspace, key: &str| -> Vec<breccia_core::BlockId> {
+        ws.page(key)
+            .unwrap()
+            .doc
+            .blocks()
+            .iter()
+            .map(|b| b.id())
+            .collect()
+    };
+    let (keep, ren, del, gone, inner) = (
+        ids_of(&ws, "keep"),
+        ids_of(&ws, "ren"),
+        ids_of(&ws, "del"),
+        ids_of(&ws, "gone"),
+        ids_of(&ws, "inner"),
+    );
+    let key_of = |ws: &Workspace, id| ws.locate(id).map(|(p, _)| p.key.clone());
+
+    ws.delete_page("del").unwrap();
+    assert!(del.iter().all(|&id| key_of(&ws, id).is_none()));
+
+    ws.delete_folder("sub").unwrap();
+    assert!(inner.iter().all(|&id| key_of(&ws, id).is_none()));
+
+    ws.rename_page("ren", "Ren2").unwrap();
+    assert!(
+        ren.iter()
+            .all(|&id| key_of(&ws, id).as_deref() == Some("ren2"))
+    );
+
+    fs::remove_file(t.path().join("pages/Gone.md")).unwrap();
+    ws.apply_disk_changes(&["pages/Gone.md".into()]);
+    assert!(gone.iter().all(|&id| key_of(&ws, id).is_none()));
+
+    // A blank page without a file, adopted by a new file of its name.
+    assert_eq!(ws.ensure_page("Fresh").unwrap(), "fresh");
+    put(t.path(), "pages/Fresh.md", b"- f1\n- f2\n");
+    ws.apply_disk_changes(&["pages/Fresh.md".into()]);
+    let fresh = ids_of(&ws, "fresh");
+    assert_eq!(fresh.len(), 2);
+    assert!(
+        fresh
+            .iter()
+            .all(|&id| key_of(&ws, id).as_deref() == Some("fresh"))
+    );
+
+    assert!(
+        keep.iter()
+            .all(|&id| key_of(&ws, id).as_deref() == Some("keep"))
+    );
+}

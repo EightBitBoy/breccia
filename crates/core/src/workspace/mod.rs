@@ -518,7 +518,6 @@ impl Workspace {
         std::mem::take(&mut self.touched).into_iter().collect()
     }
 
-    /// The pages with edits their files do not hold, by key.
     /// Whether page `key`'s file still holds what Breccia last read or wrote
     /// (a page without a file counts as matching); false for an unknown page.
     pub(crate) fn matches_disk(&self, key: &str) -> bool {
@@ -527,6 +526,7 @@ impl Workspace {
             .is_some_and(|p| self.check_on_disk(p).is_ok())
     }
 
+    /// The pages with edits their files do not hold, by key.
     pub fn unsaved(&self) -> Vec<&Page> {
         let mut out: Vec<&Page> = self.pages.values().filter(|p| p.is_unsaved()).collect();
         out.sort_by(|a, b| a.key.cmp(&b.key));
@@ -720,11 +720,33 @@ impl Workspace {
         key: &str,
         f: impl FnOnce(&mut Document, &mut IdGen, &Config) -> R,
     ) -> Option<R> {
+        self.with_page(key, |p, ids, cfg| f(&mut p.doc, ids, cfg))
+    }
+
+    /// Removes a page, its block ids and its links, and marks its key
+    /// touched. The one way a page leaves the workspace.
+    fn take_page(&mut self, key: &str) -> Option<Page> {
+        let page = self.pages.remove(key)?;
+        for b in &page.doc.blocks {
+            self.block_index.remove(&b.id);
+        }
+        self.unindex_page(key);
+        self.touched.insert(key.to_string());
+        Some(page)
+    }
+
+    /// Runs `f` on a page, then indexes its blocks and links again. The one
+    /// way a page's blocks are replaced in place.
+    fn with_page<R>(
+        &mut self,
+        key: &str,
+        f: impl FnOnce(&mut Page, &mut IdGen, &Config) -> R,
+    ) -> Option<R> {
         let page = self.pages.get_mut(key)?;
         for b in &page.doc.blocks {
             self.block_index.remove(&b.id);
         }
-        let result = f(&mut page.doc, &mut self.ids, &self.config);
+        let result = f(page, &mut self.ids, &self.config);
         for b in &page.doc.blocks {
             self.block_index.insert(b.id, page.key.clone());
         }
@@ -819,5 +841,57 @@ impl Workspace {
             self.tree_version += 1;
         }
         Ok(SaveOutcome::Written(path))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn put(root: &Path, rel: &str, text: &str) {
+        let p = root.join(rel);
+        fs::create_dir_all(p.parent().unwrap()).unwrap();
+        fs::write(p, text).unwrap();
+    }
+
+    /// Every block of every page is in the block index, and nothing else.
+    fn assert_index_exact(ws: &Workspace, what: &str) {
+        let blocks: usize = ws.pages.values().map(|p| p.doc.blocks.len()).sum();
+        assert_eq!(ws.block_index.len(), blocks, "{what}");
+    }
+
+    #[test]
+    fn the_block_index_holds_exactly_the_blocks_of_the_pages() {
+        let t = tempfile::tempdir().unwrap();
+        for (rel, text) in [
+            ("pages/Keep.md", "- k\n"),
+            ("pages/Ren.md", "- r1\n- r2\n"),
+            ("pages/Del.md", "- d\n"),
+            ("pages/Gone.md", "- g\n"),
+        ] {
+            put(t.path(), rel, text);
+        }
+        let (mut ws, _) = Workspace::open(t.path()).unwrap();
+        ws.create_folder("sub").unwrap();
+        ws.create_page("Inner", "sub").unwrap();
+        ws.edit("inner", |d, ids| d.insert_after(None, "", ids).unwrap())
+            .unwrap();
+        assert_index_exact(&ws, "open");
+
+        ws.delete_page("del").unwrap();
+        assert_index_exact(&ws, "delete_page");
+        ws.delete_folder("sub").unwrap();
+        assert_index_exact(&ws, "delete_folder");
+        ws.rename_page("ren", "Ren2").unwrap();
+        assert_index_exact(&ws, "rename");
+
+        fs::remove_file(t.path().join("pages/Gone.md")).unwrap();
+        ws.apply_disk_changes(&["pages/Gone.md".into()]);
+        assert_index_exact(&ws, "file_gone");
+
+        ws.ensure_page("Fresh").unwrap();
+        put(t.path(), "pages/Fresh.md", "- f1\n- f2\n");
+        ws.apply_disk_changes(&["pages/Fresh.md".into()]);
+        assert_index_exact(&ws, "adopt");
     }
 }

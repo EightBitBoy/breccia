@@ -751,3 +751,15 @@ fn a_case_only_title_change_updates_the_tree() {
     assert_eq!(out.page.unwrap().name, "foo bar");
     assert!(out.tree.is_some(), "the tree keeps the old spelling");
 }
+
+#[test]
+fn reload_of_a_fileless_page_indexes_its_aliases() {
+    let (t, mut s) = fileless_page_beside_its_file("pages/Q.md");
+    // Only front matter, no block text: the page counts as having content
+    // through its file alone.
+    put(t.path(), "pages/Q.md", "---\naliases: [Other]\n---\n");
+    ok(&mut s, json!({"type": "page.reload", "key": "q"}));
+    ok(&mut s, json!({"type": "page.open", "name": "Other"}));
+    let out = ok(&mut s, json!({"type": "page.open", "name": "Other"}));
+    assert_eq!(out.page.unwrap().key, "q");
+}

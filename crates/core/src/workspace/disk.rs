@@ -29,33 +29,31 @@ impl Workspace {
     pub fn reload(&mut self, key: &str) -> Result<Reloaded, ReloadError> {
         let page = self
             .pages
-            .get_mut(key)
+            .get(key)
             .ok_or_else(|| ReloadError::UnknownPage(key.to_string()))?;
         let fileless = page.on_disk.is_none();
-        if fileless && !is_exact_file(&self.root.join(&page.rel_path)) {
+        let path = self.root.join(&page.rel_path);
+        if fileless && !is_exact_file(&path) {
             return Err(ReloadError::NoFile(key.to_string()));
         }
-        let bytes = fs::read(self.root.join(&page.rel_path))?;
+        let bytes = fs::read(&path)?;
         let text =
             String::from_utf8(bytes).map_err(|_| ReloadError::NotUtf8(page.rel_path.clone()))?;
         if fileless {
             self.tree_version += 1;
         }
-        let mut doc = parse(&text, &mut self.ids);
-        let carried = carry_ids(&page.doc, &mut doc);
-        for b in &page.doc.blocks {
-            self.block_index.remove(&b.id);
-        }
-        page.doc = doc;
-        page.on_disk = Some(text);
-        let meta = fs::metadata(self.root.join(&page.rel_path)).ok();
-        page.edited = meta.as_ref().and_then(|m| m.modified().ok());
-        page.created = meta.as_ref().and_then(|m| m.created().ok());
-        for b in &page.doc.blocks {
-            self.block_index.insert(b.id, page.key.clone());
-        }
-        self.touched.insert(page.key.clone());
-        self.index_page(key);
+        let meta = fs::metadata(&path).ok();
+        let carried = self
+            .with_page(key, |page, ids, _| {
+                let mut doc = parse(&text, ids);
+                let carried = carry_ids(&page.doc, &mut doc);
+                page.doc = doc;
+                page.on_disk = Some(text);
+                page.edited = meta.as_ref().and_then(|m| m.modified().ok());
+                page.created = meta.as_ref().and_then(|m| m.created().ok());
+                carried
+            })
+            .expect("page checked above");
         let page = &self.pages[key];
 
         let mut new_name = None;
@@ -253,13 +251,9 @@ impl Workspace {
             push_once(&mut report.kept_unsaved, key);
             return;
         }
-        if let Some(page) = self.pages.remove(key) {
-            for b in &page.doc.blocks {
-                self.block_index.remove(&b.id);
-            }
+        if let Some(page) = self.take_page(key) {
             report.gone.insert(key.to_string(), page.doc);
         }
-        self.unindex_page(key);
         report.removed.push(key.to_string());
     }
 
@@ -349,12 +343,7 @@ impl Workspace {
     /// file of its key. Blocks keep their IDs where they correspond.
     fn adopt(&mut self, mut page: Page) -> Reloaded {
         let mut carried = Carried::default();
-        if let Some(old) = self.pages.remove(&page.key) {
-            for b in &old.doc.blocks {
-                self.block_index.remove(&b.id);
-            }
-            self.unindex_page(&old.key);
-            self.touched.insert(old.key.clone());
+        if let Some(old) = self.take_page(&page.key) {
             carried = carry_ids(&old.doc, &mut page.doc);
         }
         let key = page.key.clone();

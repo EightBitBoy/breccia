@@ -192,18 +192,11 @@ impl Workspace {
         if old == new {
             return;
         }
-        let Some(mut page) = self.pages.remove(old) else {
+        let Some(mut page) = self.take_page(old) else {
             return;
         };
-        self.unindex_page(old);
-        self.touched.insert(old.to_string());
         page.key = new.to_string();
-        for b in &page.doc.blocks {
-            self.block_index.insert(b.id, new.to_string());
-        }
-        self.touched.insert(new.to_string());
-        self.pages.insert(new.to_string(), page);
-        self.index_page(new);
+        self.insert(page);
     }
 
     /// Renames a page: its file (in the same folder), its `title::` line,
@@ -460,13 +453,7 @@ impl Workspace {
             fs::remove_file(self.root.join(&page.rel_path))?;
             self.tree_version += 1;
         }
-        if let Some(page) = self.pages.remove(key) {
-            for b in &page.doc.blocks {
-                self.block_index.remove(&b.id);
-            }
-        }
-        self.unindex_page(key);
-        self.touched.insert(key.to_string());
+        self.take_page(key);
         Ok(())
     }
 
@@ -568,13 +555,7 @@ impl Workspace {
         gone.sort();
         self.begin_alias_batch();
         for key in &gone {
-            if let Some(page) = self.pages.remove(key) {
-                for b in &page.doc.blocks {
-                    self.block_index.remove(&b.id);
-                }
-            }
-            self.unindex_page(key);
-            self.touched.insert(key.clone());
+            self.take_page(key);
         }
         self.end_alias_batch();
         self.folders.retain(|f| !is_within(f, &folder));
