@@ -71,6 +71,7 @@
   import { StatusItems } from './lib/status.svelte'
   import { Zoom } from './lib/zoom.svelte'
   import { WheelSteps, zoomItem, zoomKey } from './lib/zoom'
+  import { wheelTheme } from './lib/themeWheel'
   import { helpItem, indexItem, themeItem } from './lib/status'
   import { GitStatus } from './lib/git.svelte'
   import { gitClick } from './lib/git'
@@ -1199,6 +1200,9 @@
     setJournalsAt(at).catch(refuse)
   }
 
+  /** The wheel over the status bar's theme button: one notch, one theme (as the Ctrl+wheel zoom counts notches). */
+  const themeSteps = new WheelSteps()
+
   function chooseTheme(c: ThemeChoice) {
     theme = c
     applyTheme(c, document.documentElement, (t) => getCurrentWindow().setTheme(t))
@@ -1887,6 +1891,11 @@
         onmissing={recentMissing}
       />
     {/if}
-    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme} ontheme={chooseTheme} />
+    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
+      ontheme={chooseTheme}
+      onthemewheel={(dy) => {
+        const c = wheelTheme(theme, themeSteps, dy, zoom.percent)
+        if (c !== null) chooseTheme(c)
+      }} />
   </div>
 {/if}

@@ -37,6 +37,7 @@ export const SHORTCUTS: Shortcut[] = [
   { group: 'Window and zoom', keys: 'Ctrl +', mac: 'Cmd +', what: 'Zoom in (Ctrl and the mouse wheel too)' },
   { group: 'Window and zoom', keys: 'Ctrl -', mac: 'Cmd -', what: 'Zoom out' },
   { group: 'Window and zoom', keys: 'Ctrl 0', mac: 'Cmd 0', what: 'Back to 100 %' },
+  { group: 'Window and zoom', keys: 'Wheel', mac: 'Wheel', what: 'Over the theme button (◐) in the status bar: next or previous theme' },
   { group: 'Graph', keys: '↑ ↓ ← →', mac: '↑ ↓ ← →', what: 'In the graph: pan' },
   { group: 'Graph', keys: '+ / -', mac: '+ / -', what: 'In the graph: zoom in / out' },
   { group: 'Graph', keys: '0', mac: '0', what: 'In the graph: show everything' },

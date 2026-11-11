@@ -10,6 +10,7 @@
     onitem,
     theme,
     ontheme,
+    onthemewheel,
   }: {
     left: StatusItem[]
     right: StatusItem[]
@@ -18,6 +19,8 @@
     /** The theme item's current choice and its pick (the same as Settings > Appearance). */
     theme: ThemeChoice
     ontheme: (c: ThemeChoice) => void
+    /** The wheel over the theme item (`deltaY`): next or previous theme. */
+    onthemewheel: (deltaY: number) => void
   } = $props()
 </script>
 
@@ -40,7 +43,7 @@
   <div class="status-side {side}">
     {#each list as item (item.id)}
       {#if item.id === 'theme'}
-        <ThemeMenu {item} {theme} {ontheme} />
+        <ThemeMenu {item} {theme} {ontheme} onwheel={onthemewheel} />
       {:else if item.action}
         <button
           type="button"

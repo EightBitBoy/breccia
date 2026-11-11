@@ -3702,6 +3702,83 @@ try {
   await page.locator('.cm-content').waitFor({ state: 'detached' })
   console.log('PASS 131 deleting every selected block keeps one empty block to write in')
 
+  // 132: the wheel over the theme button steps through the menu's order (down = next), wraps both ways, stores the
+  // choice, keeps the edited block; Ctrl + wheel there zooms instead; nothing happens while the menu is open.
+  const stored132 = () => settingsJson().theme ?? null
+  const wheel132 = async (dy) => {
+    await theme125.hover()
+    await page.mouse.wheel(0, dy)
+  }
+  assert((await attr125()) === '' && stored132() === null, '132 the theme is not System at the start')
+  await page.locator('[data-testid="nav-journal"]').click()
+  await page.locator('.block .content', { hasText: 'from outside' }).last().click()
+  await waitFor('132 editing', focused125, 'editor')
+  const text132 = await page.locator('.cm-content').innerText()
+  // 1. One notch down: Light, stored; the block is still edited; the tooltip names it
+  await wheel132(100)
+  await waitFor('132 light applied', attr125, 'light')
+  await waitFor('132 light stored', stored132, 'light')
+  await waitFor('132 still editing', focused125, 'editor')
+  assert((await page.locator('.cm-editor').count()) === 1, '132 the block is no longer edited')
+  assert((await page.locator('.cm-content').innerText()) === text132, '132 the edited text changed')
+  await waitFor('132 tooltip', () => theme125.getAttribute('title'), 'Theme: Light. Scroll to switch.')
+  // 2. Down through the rest, then wrap to System
+  for (const t of ['taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember']) {
+    await wheel132(100)
+    await waitFor(`132 ${t} applied`, attr125, t)
+  }
+  await wheel132(100)
+  await waitFor('132 wrapped to System', attr125, '')
+  await waitFor('132 System stored', stored132, null)
+  // 3. Up from System wraps to Ember
+  await wheel132(-100)
+  await waitFor('132 ember applied', attr125, 'ember')
+  await waitFor('132 ember stored', stored132, 'ember')
+  // 4. A trackpad: four small deltas make one step
+  await theme125.hover()
+  for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -25)
+  await frames()
+  assert((await attr125()) === 'ember', `132 a part notch switched the theme: ${await attr125()}`)
+  await page.mouse.wheel(0, -25)
+  await waitFor('132 fjord after four small deltas', attr125, 'fjord')
+  // 5. A fast spin: the stored theme ends as the one shown
+  for (let i = 0; i < 5; i++) await page.mouse.wheel(0, 100)
+  await waitFor('132 spin applied', attr125, 'parchment')
+  await waitFor('132 spin stored', stored132, 'parchment')
+  // 6. Ctrl + wheel over the button zooms the window and leaves the theme
+  const zoomItem132 = page.locator('[data-testid="status-item"][data-id="zoom"]')
+  await theme125.hover()
+  await kb.down('Control')
+  await page.mouse.wheel(0, -100)
+  await kb.up('Control')
+  await waitFor('132 zoomed', () => zoomItem132.innerText(), '110 %')
+  assert((await attr125()) === 'parchment', `132 Ctrl + wheel switched the theme: ${await attr125()}`)
+  await zoomItem132.click()
+  await zoomItem132.waitFor({ state: 'detached' })
+  // 7. While the menu is open the wheel over the button (by the mouse, and sent to it directly) changes nothing
+  await theme125.click()
+  await menu125.waitFor()
+  await page.mouse.wheel(0, 100)
+  await theme125.evaluate((b) => b.dispatchEvent(new WheelEvent('wheel', { deltaY: 100, deltaMode: 0, bubbles: true, cancelable: true })))
+  await frames()
+  assert((await attr125()) === 'parchment', `132 the wheel switched the theme with the menu open: ${await attr125()}`)
+  await kb.press('Escape')
+  await menu125.waitFor({ state: 'detached' })
+  assert((await attr125()) === 'parchment' && stored132() === 'parchment', '132 the theme changed with the menu open')
+  // 8. Settings shows the wheel's choice; back to System
+  await page.keyboard.press('Control+Comma')
+  await screen.waitFor()
+  await waitFor('132 Settings shows parchment', selected125, ['parchment'])
+  await page.locator('[data-testid="nav-journal"]').click()
+  await screen.waitFor({ state: 'detached' })
+  await theme125.click()
+  await menu125.waitFor()
+  await choices125.filter({ hasText: 'System' }).click()
+  await menu125.waitFor({ state: 'detached' })
+  await waitFor('132 system applied', attr125, '')
+  await waitFor('132 system stored', stored132, null)
+  console.log('PASS 132 the wheel over the theme button steps through the themes in the menu\'s order, wraps, and stores the choice')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

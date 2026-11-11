@@ -4,7 +4,18 @@
   import type { StatusItem } from '../lib/status'
   import { THEME_CHOICES, THEME_NAMES, parseTheme, type ThemeChoice } from '../lib/theme'
 
-  let { item, theme, ontheme }: { item: StatusItem; theme: ThemeChoice; ontheme: (c: ThemeChoice) => void } = $props()
+  let {
+    item,
+    theme,
+    ontheme,
+    onwheel,
+  }: {
+    item: StatusItem
+    theme: ThemeChoice
+    ontheme: (c: ThemeChoice) => void
+    /** The wheel over the button (not with Ctrl or Cmd, which zoom, and not while the menu is open). */
+    onwheel: (deltaY: number) => void
+  } = $props()
 
   /**
    * Where the focus was when the menu opened (a block's editor, for one); it goes back there on close. A press on
@@ -12,6 +23,20 @@
    */
   let before: HTMLElement | null = null
   let open = $state(false)
+  let button = $state<HTMLElement | null>(null)
+
+  // Not Svelte's onwheel: the listener must be able to preventDefault, so the page under it does not scroll.
+  $effect(() => {
+    const el = button
+    if (!el) return
+    const wheel = (e: WheelEvent) => {
+      if (open || e.ctrlKey || e.metaKey || e.deltaY === 0) return
+      e.preventDefault()
+      onwheel(e.deltaY)
+    }
+    el.addEventListener('wheel', wheel, { passive: false })
+    return () => el.removeEventListener('wheel', wheel)
+  })
 </script>
 
 <DropdownMenu.Root
@@ -21,6 +46,7 @@
   }}
 >
   <DropdownMenu.Trigger
+    bind:ref={button}
     class="status-item"
     data-testid="status-item"
     data-id={item.id}

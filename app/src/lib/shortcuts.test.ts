@@ -16,6 +16,15 @@ describe('shortcuts', () => {
     expect(shortcutRows(false).filter((r) => /^(Zoom|Back to 100)/.test(r.what)).map((r) => r.keys)).toEqual(['Ctrl +', 'Ctrl -', 'Ctrl 0'])
     expect(shortcutRows(true).filter((r) => /^(Zoom|Back to 100)/.test(r.what)).map((r) => r.keys)).toEqual(['Cmd +', 'Cmd -', 'Cmd 0'])
   })
+  it('lists the wheel over the theme button, after Ctrl 0, on both platforms', () => {
+    const what = 'Over the theme button (◐) in the status bar: next or previous theme'
+    for (const mac of [false, true]) {
+      const rows = shortcutRows(mac)
+      const i = rows.findIndex((r) => r.keys === 'Wheel' && r.what === what)
+      expect(i, String(mac)).toBeGreaterThan(0)
+      expect(rows[i - 1].keys).toBe(mac ? 'Cmd 0' : 'Ctrl 0')
+    }
+  })
   it('lists the keys that were missing: F1, new page, deleting selected blocks, the open card', () => {
     const rows = shortcutRows(false)
     for (const keys of ['F1', 'Ctrl N', 'Backspace / Delete', 'Enter / Space']) expect(rows.some((r) => r.keys === keys), keys).toBe(true)
