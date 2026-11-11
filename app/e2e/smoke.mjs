@@ -3193,7 +3193,7 @@ try {
   const card124 = cardTitled('Write release notes')
   await card124.waitFor()
   const bg124 = (loc) => loc.evaluate((el) => getComputedStyle(el).backgroundColor)
-  for (const theme of ['light', 'violet', 'teal', 'graphite', 'ember', 'fjord', 'vampire']) {
+  for (const theme of ['light', 'violet', 'teal', 'graphite', 'parchment', 'ember', 'fjord', 'vampire']) {
     await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
     await page.mouse.move(1, 1)
     await card124.hover()
@@ -3243,7 +3243,7 @@ try {
   // Open by a click: seven choices in order, System checked
   await theme125.click()
   await menu125.waitFor()
-  await waitFor('125 seven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember'])
+  await waitFor('125 seven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Parchment', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember'])
   await waitFor('125 System is checked', checked125, ['system'])
   // Esc closes the menu, changes nothing, and the focus goes back to the edited block
   await kb.press('Escape')
@@ -3393,7 +3393,7 @@ try {
   // are measured and printed.
   const SEAM_ZOOMS = [100, 110, 125]
   const SEAM_TOLERANCE = 2
-  const THEMES128 = ['light', 'taupe', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember']
+  const THEMES128 = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember']
   writeFileSync(join(pagesDir, 'Seam blue 128.md'), 'color:: blue\n- b\n')
   writeFileSync(join(pagesDir, 'Seam hue 128.md'), 'color:: hue 212\n- h\n')
   const key128 = dayKey(12) // set-up wrote it; no other step reads it

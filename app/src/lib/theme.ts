@@ -1,5 +1,5 @@
 // The six built-in themes: ids, names, and applying one to the document.
-export const THEMES = ['light', 'taupe', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember'] as const
+export const THEMES = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember'] as const
 export type ThemeId = (typeof THEMES)[number]
 export type ThemeChoice = 'system' | ThemeId
 
@@ -13,6 +13,7 @@ export const THEME_NAMES: Record<ThemeChoice, string> = {
   violet: 'Violet',
   graphite: 'Graphite',
   taupe: 'Taupe',
+  parchment: 'Parchment',
   teal: 'Teal',
   ember: 'Ember',
   fjord: 'Fjord',
@@ -27,7 +28,7 @@ export function parseTheme(v: unknown): ThemeChoice {
 /** The window chrome's scheme for a choice; null follows the operating system. */
 export function windowTheme(c: ThemeChoice): 'light' | 'dark' | null {
   if (c === 'system') return null
-  return c === 'light' || c === 'taupe' ? 'light' : 'dark'
+  return c === 'light' || c === 'taupe' || c === 'parchment' ? 'light' : 'dark'
 }
 
 /** What `settings.json` stores for a choice; null for `system`. */

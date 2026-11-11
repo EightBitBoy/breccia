@@ -122,7 +122,7 @@ test('THEME_CHOICES is System then every theme', () => {
 
 test('windowTheme and storedTheme', () => {
   const light = THEMES.filter((t) => windowTheme(t) === 'light')
-  expect(light).toEqual(['light', 'taupe'])
+  expect(light).toEqual(['light', 'taupe', 'parchment'])
   for (const t of THEMES) expect(['light', 'dark'], t).toContain(windowTheme(t))
   expect(windowTheme('system')).toBeNull()
   expect(storedTheme('system')).toBeNull()
@@ -239,6 +239,7 @@ test('neighbouring page colors differ', () => {
 const PARAMS: Record<string, [number, number, number]> = {
   ':root, [data-theme="light"]': [0.66, 1, 1],
   '[data-theme="taupe"]': [0.71, 0.8, 0.8],
+  '[data-theme="parchment"]': [0.71, 0.8, 0.8],
   '[data-theme="ember"]': [0.64, 0.85, 0.6],
   '[data-theme="fjord"]': [0.62, 0.7, 0.6],
   '[data-theme="vampire"]': [0.66, 0.95, 0.6],
@@ -391,6 +392,7 @@ const TODAYS_SHADES: Record<string, string> = {
   '[data-theme="violet"]': 'c5f5959a',
   '[data-theme="graphite"]': 'ebb31daa',
   '[data-theme="taupe"]': '83a5b0a9',
+  '[data-theme="parchment"]': '93d51a9d',
   '[data-theme="ember"]': '69a10b74',
   '[data-theme="fjord"]': '84005bd8',
   '[data-theme="vampire"]': 'dfd317f',
