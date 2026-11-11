@@ -25,4 +25,6 @@ pub enum ConfigError {
     InvalidBoard(String),
     #[error("invalid state: {0}")]
     InvalidState(String),
+    #[error("{0}")]
+    InvalidSetting(&'static str),
 }

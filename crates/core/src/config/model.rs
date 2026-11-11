@@ -60,6 +60,46 @@ pub struct Config {
     pub git: GitSettings,
 }
 
+/// State `i` has a valid keyword that no earlier state has.
+fn check_keyword(states: &[State], i: usize) -> Result<(), ConfigError> {
+    let keyword = &states[i].keyword;
+    if !valid_keyword(keyword) {
+        return Err(ConfigError::InvalidKeyword(keyword.clone()));
+    }
+    if states[..i].iter().any(|p| &p.keyword == keyword) {
+        return Err(ConfigError::DuplicateState(keyword.clone()));
+    }
+    Ok(())
+}
+
+impl GitSettings {
+    pub const MAX_MINUTES: u32 = 1440;
+
+    pub fn check(&self) -> Result<(), ConfigError> {
+        if self.commit_delay_minutes > Self::MAX_MINUTES
+            || self.pull_interval_minutes > Self::MAX_MINUTES
+        {
+            return Err(ConfigError::InvalidSetting(
+                "the minutes must be at most 1440 (one day)",
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl BoardSettings {
+    pub const DAYS: std::ops::RangeInclusive<u32> = 1..=3650;
+
+    pub fn check(&self) -> Result<(), ConfigError> {
+        if !Self::DAYS.contains(&self.archive_after_days) {
+            return Err(ConfigError::InvalidSetting(
+                "archive after days must be between 1 and 3650",
+            ));
+        }
+        Ok(())
+    }
+}
+
 impl Default for BoardSettings {
     fn default() -> Self {
         BoardSettings {
@@ -205,12 +245,7 @@ impl Config {
             return Err(ConfigError::NoStates);
         }
         for (i, s) in states.iter().enumerate() {
-            if !valid_keyword(&s.keyword) {
-                return Err(ConfigError::InvalidKeyword(s.keyword.clone()));
-            }
-            if states[..i].iter().any(|p| p.keyword == s.keyword) {
-                return Err(ConfigError::DuplicateState(s.keyword.clone()));
-            }
+            check_keyword(states, i)?;
             let kept = current
                 .iter()
                 .any(|c| c.keyword == s.keyword && c.color == s.color);
@@ -249,13 +284,8 @@ impl Config {
         if self.states.is_empty() {
             return Err(ConfigError::NoStates);
         }
-        for (i, s) in self.states.iter().enumerate() {
-            if !valid_keyword(&s.keyword) {
-                return Err(ConfigError::InvalidKeyword(s.keyword.clone()));
-            }
-            if self.states[..i].iter().any(|p| p.keyword == s.keyword) {
-                return Err(ConfigError::DuplicateState(s.keyword.clone()));
-            }
+        for i in 0..self.states.len() {
+            check_keyword(&self.states, i)?;
         }
         Ok(())
     }

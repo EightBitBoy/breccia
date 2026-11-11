@@ -589,19 +589,14 @@ impl Session {
                 pull_interval_minutes,
                 version,
             } => {
-                const DAY: u32 = 1440;
-                if commit_delay_minutes > DAY || pull_interval_minutes > DAY {
-                    return Err(CommandError::new(
-                        "invalidSetting",
-                        "the minutes must be at most 1440 (one day)",
-                    ));
-                }
-                self.config_guard(version)?;
                 let git = GitSettings {
                     enabled,
                     commit_delay_minutes,
                     pull_interval_minutes,
                 };
+                git.check()
+                    .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
+                self.config_guard(version)?;
                 self.write_config(|root, expect| Config::write_git(root, expect, &git))?;
                 self.config_output()
             }
@@ -610,12 +605,12 @@ impl Session {
                 auto_archive,
                 version,
             } => {
-                if !(1..=3650).contains(&archive_after_days) {
-                    return Err(CommandError::new(
-                        "invalidSetting",
-                        "archive after days must be between 1 and 3650",
-                    ));
+                BoardSettings {
+                    archive_after_days,
+                    auto_archive: false,
                 }
+                .check()
+                .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
                 self.config_guard(version)?;
                 let current = self.ws()?.config.board.auto_archive;
                 let board = BoardSettings {

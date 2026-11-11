@@ -785,3 +785,71 @@ fn writers_keep_the_users_file_bytes() {
         "# my settings\nboards = [\n  { name = \"Work\", columns = [\"DONE\", \"NEXT\"] }, # main\n  { name = \"Other\", columns = [\"DONE\"] },\n]\n\n# the first state\n[[states]]\nkeyword = \"NEXT\" # open\ncolor = \"grey\"\nin_cycle = true\nmine = 1\n# waiting is going away\n\n# the last state\n[[states]]\nkeyword = \"DONE\"\ncolor = \"green\"\nfinished = true\nin_cycle = true\n\n[board]\narchive_after_days = 30 # days\n\n# sync\n[git]\nenabled = false\nsecret = \"x\"\n"
     );
 }
+
+#[test]
+fn git_settings_check_limits() {
+    let g = |c, p| GitSettings {
+        enabled: true,
+        commit_delay_minutes: c,
+        pull_interval_minutes: p,
+    };
+    assert!(g(1440, 1440).check().is_ok());
+    assert!(g(0, 0).check().is_ok());
+    for bad in [g(1441, 5), g(5, 1441)] {
+        let e = bad.check().unwrap_err();
+        assert!(matches!(e, ConfigError::InvalidSetting(_)));
+        assert_eq!(e.to_string(), "the minutes must be at most 1440 (one day)");
+    }
+}
+
+#[test]
+fn board_settings_check_limits() {
+    let b = |d| BoardSettings {
+        archive_after_days: d,
+        auto_archive: true,
+    };
+    assert!(b(1).check().is_ok());
+    assert!(b(3650).check().is_ok());
+    for bad in [b(0), b(3651)] {
+        let e = bad.check().unwrap_err();
+        assert!(matches!(e, ConfigError::InvalidSetting(_)));
+        assert_eq!(
+            e.to_string(),
+            "archive after days must be between 1 and 3650"
+        );
+    }
+}
+
+#[test]
+fn check_states_reports_the_first_state_first() {
+    let d = Config::default().states;
+    let states = [
+        st("A", "nope", false, false),
+        st("B b", "grey", false, false),
+    ];
+    assert!(matches!(
+        Config::check_states(&states, &d),
+        Err(ConfigError::InvalidState(m)) if m.contains("nope")
+    ));
+}
+
+#[test]
+fn parse_and_check_states_agree_on_keywords() {
+    let d = Config::default().states;
+    let cases: [(&[&str], &str); 3] = [
+        (&["bad word"], "InvalidKeyword"),
+        (&[""], "InvalidKeyword"),
+        (&["TODO", "TODO"], "DuplicateState"),
+    ];
+    for (kws, want) in cases {
+        let text: String = kws
+            .iter()
+            .map(|k| format!("[[states]]\nkeyword = \"{k}\"\ncolor = \"grey\"\n"))
+            .collect();
+        let states: Vec<State> = kws.iter().map(|k| st(k, "grey", false, false)).collect();
+        let a = format!("{:?}", Config::parse(&text).unwrap_err());
+        let b = format!("{:?}", Config::check_states(&states, &d).unwrap_err());
+        assert!(a.starts_with(want), "{a}");
+        assert!(b.starts_with(want), "{b}");
+    }
+}
