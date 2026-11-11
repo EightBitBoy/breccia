@@ -6,9 +6,10 @@ use crate::naming::{journal_display, journal_name};
 
 use crate::task::task_state;
 
+use super::Session;
+use super::block::caret_at_end;
 use super::tree::JournalDay;
 use super::view::{CommandError, FeedView, Focus, Output, PageView};
-use super::{Session, caret_at_end};
 use crate::workspace::PageKind;
 
 impl Session {

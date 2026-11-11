@@ -11,7 +11,8 @@ use crate::naming::{journal_display, parse_journal_name};
 use crate::search::folder_hash;
 use crate::workspace::Workspace;
 
-use super::view::{CommandError, PageViewKind, title_of};
+use super::Session;
+use super::view::{CommandError, Output, PageViewKind, title_of};
 
 /// A dot of the network view.
 #[derive(Clone, Debug, Serialize)]
@@ -194,5 +195,32 @@ fn target_node(ws: &Workspace, key: &str, spelling: Option<&String>) -> GraphNod
         exists: false,
         tag: false,
         tag_only: false,
+    }
+}
+
+impl Session {
+    /// `graph.get`, with the layout saved in the cache, if any.
+    pub(super) fn graph_get(&self) -> Result<Output, CommandError> {
+        let ws = self.ws()?;
+        let mut graph = GraphView::of(ws);
+        if let Some(dir) = self.search.cache_dir() {
+            graph.load_layout(&dir.join(layout_file_name(&ws.root)));
+        }
+        Ok(Output {
+            graph: Some(graph),
+            ..Output::default()
+        })
+    }
+
+    /// `graph.saveLayout`: the positions go to the cache, if there is one.
+    pub(super) fn graph_save_layout(
+        &self,
+        positions: &[NodePosition],
+    ) -> Result<Output, CommandError> {
+        let root = self.ws()?.root.clone();
+        if let Some(dir) = self.search.cache_dir() {
+            save_layout(&dir.join(layout_file_name(&root)), positions)?;
+        }
+        Ok(Output::default())
     }
 }

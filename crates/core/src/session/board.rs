@@ -430,6 +430,25 @@ fn archived_note(n: usize, days: u32) -> String {
 }
 
 impl Session {
+    /// `board.get`: board `index` as it is now. Its cards were shown, so their
+    /// blocks are no longer marked as changed on disk.
+    pub(super) fn board_get(&mut self, index: usize) -> Result<Output, CommandError> {
+        let board = BoardView::of(self.ws()?, index).ok_or_else(|| {
+            CommandError::new("unknownBoard", format_args!("unknown board: {index}"))
+        })?;
+        for c in &board.columns {
+            for card in &c.cards {
+                for b in &card.blocks {
+                    self.marks.remove(&b.id);
+                }
+            }
+        }
+        Ok(Output {
+            board: Some(board),
+            ..Output::default()
+        })
+    }
+
     /// `board.place`: card `id` goes into column `keyword` above
     /// card `before` (at the end without one). The column is taken from the
     /// notes as they are now, so a board shown before a change cannot place
