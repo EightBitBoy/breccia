@@ -634,6 +634,16 @@ button.status-item.pressed, button.status-item[data-state='open'] { background: 
 .shortcuts-group dd { margin: 0; }
 .shortcuts-group kbd { font-family: inherit; font-size: 12px; padding: 0 6px; min-width: 1.4em; text-align: center; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--bg); white-space: nowrap; }
 .shortcuts-group .sep { color: var(--muted); }
+.dialog.changelog-dialog { top: 8%; width: min(720px, 94vw); max-height: 84vh; display: flex; flex-direction: column; }
+.changelog-note { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
+.changelog-body { overflow-y: auto; min-height: 0; outline: none; font-size: 13.5px; line-height: 1.5; }
+.changelog-body h3 { margin: 18px 0 4px; padding-bottom: 3px; font-size: 15px; font-weight: 600; border-bottom: 1px solid var(--line); }
+.changelog-body h3:first-child, .changelog-body p:first-child { margin-top: 0; }
+.changelog-body h4 { margin: 10px 0 2px; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--muted); }
+.changelog-body p { margin: 6px 0; }
+.changelog-body ul { margin: 2px 0 6px; padding-left: 20px; }
+.changelog-body li { margin: 1px 0; }
+.changelog-body code { padding: 0 3px; border-radius: 3px; background: var(--edit); font-size: 12.5px; }
 .search-list { max-height: 60vh; overflow: auto; margin-top: 6px; }
 .search-rows { position: relative; }
 .search-row {

@@ -238,3 +238,11 @@ are its questions for you; each answer decides what a later plan does.
    `Plan.md`: the page appears. The same in `journals` with a day file such as `2026-11-11.MD`. Known edge (found in
    review, a follow-up): on Windows, renaming a loaded page from `Plan.md` to `Plan.MD` (case only) shows the notice,
    while the page may stay loaded until the folder is opened again.
+
+## Changelog in the app (plan 10)
+
+88. [ ] **The changelog:** Settings > About, "Show changelog": an overlay with the changelog, newest release first,
+   starting at the top; headings, groups (Features, Fixes) and bullets read well in a light and a dark theme.
+   `Esc` closes it and Settings stays where it was; open it again: it is at the top. Turn off the network: it still
+   opens. With `just dev`, a note at the top says it is a development build. Is "Show changelog" below the About
+   list the right label and place (Q1)? Should the running version be marked (Q2)?

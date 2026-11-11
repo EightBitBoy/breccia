@@ -126,6 +126,7 @@
   import StatusBar from './components/StatusBar.svelte'
   import SearchDialog from './components/SearchDialog.svelte'
   import ShortcutsDialog from './components/ShortcutsDialog.svelte'
+  import ChangelogDialog from './components/ChangelogDialog.svelte'
   import SettingsView from './components/SettingsView.svelte'
   import NewPageView from './components/NewPageView.svelte'
   import { isMac as mac } from './lib/platform'
@@ -1098,7 +1099,8 @@
       closing !== null ||
       settingUpGit ||
       question !== null ||
-      helpShown
+      helpShown ||
+      settings.changelog
     )
   }
 
@@ -1685,6 +1687,9 @@
     {#if helpShown}
       <ShortcutsDialog {mac} onclose={() => (helpShown = false)} />
     {/if}
+    {#if settings.changelog}
+      <ChangelogDialog version={appVersion} onclose={() => settings.hideChangelog()} />
+    {/if}
     {#if naming !== null}
       <NameDialog title="New board" initial="" onok={(name) => void newBoard(name)} oncancel={() => (naming = null)} />
     {/if}
@@ -1784,6 +1789,7 @@
                 onforgetfolder={(path) => void forgetRecent(path)}
                 onmissingfolder={recentMissing}
                 onopenlogs={openLogs}
+                onchangelog={() => settings.showChangelog()}
               />
             {:else if network.shown}
               <!-- Loaded the first time the graph opens: the main bundle stays small. -->

@@ -48,6 +48,7 @@
     onforgetfolder,
     onmissingfolder,
     onopenlogs,
+    onchangelog,
   }: {
     folder: string
     /** The recent folders other than the open one. */
@@ -96,6 +97,8 @@
     onmissingfolder: (path: string) => void
     /** "Open log folder": the parent opens it and tells the user if that fails. */
     onopenlogs: () => void
+    /** "Show changelog": the parent opens the changelog overlay over Settings. */
+    onchangelog: () => void
   } = $props()
 
   let root = $state<HTMLElement | undefined>()
@@ -186,6 +189,9 @@
       <!-- Class ext: the app's link handler opens it in the system browser, never in the webview. -->
       <dd data-testid="app-source"><a class="ext" href="https://github.com/EightBitBoy/breccia">github.com/EightBitBoy/breccia</a></dd>
     </dl>
+    <div class="settings-folder-actions">
+      <button data-testid="show-changelog" onclick={onchangelog}>Show changelog</button>
+    </div>
   </section>
   <section data-section="troubleshooting">
     <h2>Troubleshooting</h2>

@@ -2179,8 +2179,69 @@ try {
   // The icon is shown large (32 px was too small).
   const iconSize = await page.locator('[data-testid="app-icon"]').evaluate((e) => [e.clientWidth, e.clientHeight])
   assert(iconSize[0] === 96 && iconSize[1] === 96, `about: icon is ${iconSize}, not 96 x 96`)
-  await page.locator('[data-testid="nav-journal"]').click()
   console.log('PASS 64 Settings shows the version of the running app')
+
+  // 134: Settings > About shows the changelog built into the app (CHANGELOG.md, in the bundle); Esc returns to Settings
+  {
+    const md = readFileSync(join(root, 'CHANGELOG.md'), 'utf8')
+    const versions = [...md.matchAll(/^## \[([^\]]+)\]/gm)].map((m) => m[1])
+    const items = (md.match(/^\s*[-*+] /gm) ?? []).length
+    const showBtn = page.locator('[data-testid="show-changelog"]')
+    const overlay = page.locator('[data-testid="changelog"]')
+    const body = overlay.locator('[data-testid="changelog-body"]')
+    const scrollTop = () => body.evaluate((e) => e.scrollTop)
+    const focusedTestid = () => page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
+    // 1. the button opens the overlay
+    assert((await showBtn.innerText()) === 'Show changelog', `134 button text: ${await showBtn.innerText()}`)
+    await showBtn.click()
+    await overlay.waitFor()
+    assert((await overlay.locator('.dialog-title').innerText()) === 'Changelog', '134 title is not Changelog')
+    // 2. every release, newest first, and every bullet
+    const shown = await overlay.locator('[data-version]').evaluateAll((els) => els.map((e) => e.getAttribute('data-version')))
+    assert(JSON.stringify(shown) === JSON.stringify(versions), `134 versions: ${JSON.stringify(shown)} vs ${JSON.stringify(versions)}`)
+    assert(shown[0] === readVersions(root).cargo, `134 newest ${shown[0]} is not the running version ${readVersions(root).cargo}`)
+    const lis = await overlay.locator('li').count()
+    assert(lis === items, `134 ${lis} list items, CHANGELOG.md has ${items}`)
+    // 3. a release build: no dev note; links open in the system browser
+    assert((await page.locator('[data-testid="changelog-dev-note"]').count()) === 0, '134 dev note in a release build')
+    const linkClasses = await overlay.locator('a').evaluateAll((els) => els.map((e) => e.classList.contains('ext')))
+    assert(linkClasses.every(Boolean), `134 a link without class ext: ${JSON.stringify(linkClasses)}`)
+    // 4. focus on the body at the top; PageDown scrolls it
+    await waitFor('134 focus', focusedTestid, 'changelog-body')
+    assert((await scrollTop()) === 0, `134 opens at ${await scrollTop()}, not the top`)
+    await kb.press('PageDown')
+    await waitFor('134 PageDown scrolls', async () => (await scrollTop()) > 0, true)
+    // 5. F1 opens no shortcut list over it
+    await kb.press('F1')
+    await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))))
+    assert((await page.locator('[data-testid="shortcuts"]').count()) === 0, '134 F1 opened the shortcuts over the changelog')
+    // 6. the oldest release is reachable; Esc closes it, Settings stays, focus is back on the button
+    await body.evaluate((e) => (e.scrollTop = e.scrollHeight))
+    const inView = () =>
+      body.evaluate((e) => {
+        const h = e.querySelector('[data-version="1.0.0"]')
+        if (!h) return 'missing'
+        const a = e.getBoundingClientRect()
+        const b = h.getBoundingClientRect()
+        return b.top >= a.top && b.bottom <= a.bottom
+      })
+    await waitFor('134 1.0.0 in view', inView, true)
+    await kb.press('Escape')
+    await overlay.waitFor({ state: 'detached' })
+    assert(await page.locator('[data-testid="settings"]').isVisible(), '134 Settings gone after Esc')
+    assert(await page.locator('section[data-section="about"]').isVisible(), '134 About gone after Esc')
+    await waitFor('134 focus back', focusedTestid, 'show-changelog')
+    // 7. it opens at the top again; a click outside closes it
+    await showBtn.click()
+    await overlay.waitFor()
+    await waitFor('134 focus again', focusedTestid, 'changelog-body')
+    assert((await scrollTop()) === 0, `134 reopens at ${await scrollTop()}, not the top`)
+    await page.locator('.overlay').click({ position: { x: 4, y: 4 } })
+    await overlay.waitFor({ state: 'detached' })
+    assert(await page.locator('[data-testid="settings"]').isVisible(), '134 Settings gone after a click outside')
+  }
+  await page.locator('[data-testid="nav-journal"]').click()
+  console.log('PASS 134 Settings > About shows the changelog built into the app; Esc returns to Settings')
 
   // 59: the Graph entry opens the network view; the defaults; nothing is written
   const net = page.locator('[data-testid="network"]')
