@@ -481,73 +481,21 @@ mod tests {
     #[test]
     fn rebase_changes_every_snapshot_of_the_page_and_its_size() {
         let mut h = Histories::new(UNDO_BYTES);
-        h.record(
-            "a",
-            doc("- 1
-"),
-        );
-        h.record(
-            "a",
-            doc("- 2
-"),
-        );
-        h.push_redo(
-            "a",
-            doc("- 3
-"),
-            None,
-        );
-        h.record(
-            "b",
-            doc("- b
-"),
-        );
-        let other = doc("- b
-")
-        .approx_bytes();
-        h.rebase("a", |d| {
-            *d = doc("- longer text
-")
-        });
-        let long = doc("- longer text
-")
-        .approx_bytes();
+        h.record("a", doc("- 1\n"));
+        h.record("a", doc("- 2\n"));
+        h.push_redo("a", doc("- 3\n"), None);
+        h.record("b", doc("- b\n"));
+        let other = doc("- b\n").approx_bytes();
+        h.rebase("a", |d| *d = doc("- longer text\n"));
+        let long = doc("- longer text\n").approx_bytes();
         assert_eq!(
             h.bytes(),
             3 * long + other,
             "two undo steps and one redo step of a"
         );
-        assert_eq!(
-            text(h.take_redo("a")),
-            Some(
-                "- longer text
-"
-                .to_string()
-            )
-        );
-        assert_eq!(
-            text(h.take_undo("a")),
-            Some(
-                "- longer text
-"
-                .to_string()
-            )
-        );
-        assert_eq!(
-            text(h.take_undo("a")),
-            Some(
-                "- longer text
-"
-                .to_string()
-            )
-        );
-        assert_eq!(
-            text(h.take_undo("b")),
-            Some(
-                "- b
-"
-                .to_string()
-            )
-        );
+        assert_eq!(text(h.take_redo("a")), Some("- longer text\n".to_string()));
+        assert_eq!(text(h.take_undo("a")), Some("- longer text\n".to_string()));
+        assert_eq!(text(h.take_undo("a")), Some("- longer text\n".to_string()));
+        assert_eq!(text(h.take_undo("b")), Some("- b\n".to_string()));
     }
 }

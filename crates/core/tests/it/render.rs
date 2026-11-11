@@ -162,8 +162,7 @@ fn unsafe_links_lose_their_anchor() {
 fn allowed_links_are_ext() {
     assert_eq!(
         h("[x](https://e.com/?a=1&b=\"2\")"),
-        "<p><a class=\"ext\" href=\"https://e.com/?a=1&amp;b=&quot;2&quot;\">x</a></p>
-"
+        "<p><a class=\"ext\" href=\"https://e.com/?a=1&amp;b=&quot;2&quot;\">x</a></p>\n"
     );
     assert!(h("[m](mailto:a@b.c)").contains("class=\"ext\" href=\"mailto:a@b.c\""));
 }
@@ -321,21 +320,8 @@ fn preamble_html_hides_the_color_line() {
 #[test]
 fn preamble_html_shows_an_invalid_hue() {
     use breccia_core::render::preamble_html;
-    assert!(
-        !preamble_html(
-            "color:: hue 212
-note
-"
-        )
-        .contains("color::")
-    );
-    assert!(
-        preamble_html(
-            "color:: hue 360
-"
-        )
-        .contains("hue 360")
-    );
+    assert!(!preamble_html("color:: hue 212\nnote\n").contains("color::"));
+    assert!(preamble_html("color:: hue 360\n").contains("hue 360"));
 }
 
 #[test]

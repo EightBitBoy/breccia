@@ -7,8 +7,8 @@
 //! - ```` ```text file-names ```` holds `name → stem` lines for `file_stem_for`;
 //! - ```` ```text page-colors ```` is `PAGE_COLORS`, five to a line;
 //! - a ```` ```markdown before ```` fence is followed by a ```` ```markdown after-<name> ````
-//!   fence (`<name>` a page color, `hue-<h>`, `hue-<h>-vivid-<v>` or `none`): the `after` text is the `before`
-//!   text with its preamble recolored with that color.
+//!   fence (`<name>` a page color, `hue-<h>`, `hue-<h>-vivid-<v>` or `none`): the `after` text is the
+//!   `before` text with its preamble recolored with that color.
 
 use breccia_core::aliases::aliases;
 use breccia_core::color::{

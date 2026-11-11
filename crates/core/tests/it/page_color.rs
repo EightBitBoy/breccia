@@ -181,18 +181,7 @@ fn undoing_a_pick_on_a_tag_only_page_empties_its_file() {
     assert_eq!(out.page.unwrap().color, None);
 }
 
-const DAY: &str = "- [[Project]]: Today [[Sam]] gave me tasks
-\t- [[Hiring]]: stays with its parent
-- [[2026-10-28]]: follow-up on [[Project]]
-- [[Nowhere]] then #hiring
-- [[Plain]] then [[Project]]
-- no link at all
-- `[[Project]]` in code, then [[Hiring]]
-- [[Project#Goals]] heading link
-- #k8s rollout
-- standup notes
-  with:: [[Hiring]]
-";
+const DAY: &str = "- [[Project]]: Today [[Sam]] gave me tasks\n\t- [[Hiring]]: stays with its parent\n- [[2026-10-28]]: follow-up on [[Project]]\n- [[Nowhere]] then #hiring\n- [[Plain]] then [[Project]]\n- no link at all\n- `[[Project]]` in code, then [[Hiring]]\n- [[Project#Goals]] heading link\n- #k8s rollout\n- standup notes\n  with:: [[Hiring]]\n";
 
 fn topics_folder() -> (TempDir, Session) {
     folder(&[
@@ -471,32 +460,15 @@ fn adding_and_removing_an_alias_updates_the_journal_days() {
 
 #[test]
 fn set_color_with_a_hue() {
-    let (t, mut s) = folder(&[(
-        "pages/Garden.md",
-        "- a
-	- b
-",
-    )]);
+    let (t, mut s) = folder(&[("pages/Garden.md", "- a\n\t- b\n")]);
     let out = pick(&mut s, "garden", json!("hue 212"));
-    assert_eq!(
-        read(&t, "pages/Garden.md"),
-        "color:: hue 212
-- a
-	- b
-"
-    );
+    assert_eq!(read(&t, "pages/Garden.md"), "color:: hue 212\n- a\n\t- b\n");
     let view = serde_json::to_value(out.page.unwrap()).unwrap();
     assert_eq!(view["color"], "hue 212");
     pick(&mut s, "garden", json!("HUE 012"));
-    assert!(read(&t, "pages/Garden.md").starts_with(
-        "color:: hue 12
-"
-    ));
+    assert!(read(&t, "pages/Garden.md").starts_with("color:: hue 12\n"));
     pick(&mut s, "garden", json!("red"));
-    assert!(read(&t, "pages/Garden.md").starts_with(
-        "color:: red
-"
-    ));
+    assert!(read(&t, "pages/Garden.md").starts_with("color:: red\n"));
     let before = read(&t, "pages/Garden.md");
     for bad in ["hue 360", "hue x"] {
         let e = cmd(
@@ -512,21 +484,11 @@ fn set_color_with_a_hue() {
 
 #[test]
 fn a_pick_of_the_saved_hue_records_no_step() {
-    let (t, mut s) = folder(&[(
-        "pages/Garden.md",
-        "- a
-	- b
-",
-    )]);
+    let (t, mut s) = folder(&[("pages/Garden.md", "- a\n\t- b\n")]);
     pick(&mut s, "garden", json!("hue 40"));
     pick(&mut s, "garden", json!("hue 40"));
     undo(&mut s, "garden");
-    assert_eq!(
-        read(&t, "pages/Garden.md"),
-        "- a
-	- b
-"
-    );
+    assert_eq!(read(&t, "pages/Garden.md"), "- a\n\t- b\n");
 }
 
 #[test]

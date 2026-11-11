@@ -87,7 +87,7 @@ fn parse_color_reads_names_and_hues() {
     assert_eq!(parse_color("hue 212"), Some(hue(212)));
     assert_eq!(parse_color("HUE 0212"), Some(hue(212)));
     assert_eq!(parse_color("Hue  7"), Some(hue(7)));
-    assert_eq!(parse_color("hue	7"), Some(hue(7)));
+    assert_eq!(parse_color("hue\t7"), Some(hue(7)));
     assert_eq!(parse_color("hue 0"), Some(hue(0)));
     assert_eq!(parse_color("hue 359"), Some(hue(359)));
     for bad in [
@@ -111,27 +111,13 @@ fn parse_color_reads_names_and_hues() {
 
 #[test]
 fn page_color_reads_a_hue_line() {
+    assert_eq!(page_color("color:: HUE 012\n"), Some(PageColor::hue(12)));
     assert_eq!(
-        page_color(
-            "color:: HUE 012
-"
-        ),
-        Some(PageColor::hue(12))
-    );
-    assert_eq!(
-        page_color(
-            "color:: hue 999
-color:: hue 5
-"
-        ),
+        page_color("color:: hue 999\ncolor:: hue 5\n"),
         Some(PageColor::hue(5))
     );
     assert_eq!(
-        color_line(
-            "title:: x
-color:: hue 40
-"
-        ),
+        color_line("title:: x\ncolor:: hue 40\n"),
         Some((1, PageColor::hue(40)))
     );
 }
@@ -140,47 +126,18 @@ color:: hue 40
 fn recolor_writes_and_replaces_a_hue() {
     let lf = LineEnding::Lf;
     assert_eq!(
-        recolor(
-            "- a
-",
-            Some("hue 212"),
-            lf
-        ),
-        "color:: hue 212
-- a
-"
+        recolor("- a\n", Some("hue 212"), lf),
+        "color:: hue 212\n- a\n"
     );
     assert_eq!(
-        recolor(
-            "color:: red
-x
-",
-            Some("hue 9"),
-            lf
-        ),
-        "color:: hue 9
-x
-"
+        recolor("color:: red\nx\n", Some("hue 9"), lf),
+        "color:: hue 9\nx\n"
     );
     assert_eq!(
-        recolor(
-            "color:: hue 9
-",
-            Some("teal"),
-            lf
-        ),
-        "color:: teal
-"
+        recolor("color:: hue 9\n", Some("teal"), lf),
+        "color:: teal\n"
     );
-    assert_eq!(
-        recolor(
-            "color:: hue 999
-",
-            None,
-            lf
-        ),
-        ""
-    );
+    assert_eq!(recolor("color:: hue 999\n", None, lf), "");
 }
 
 fn vivid(h: u16, v: u8) -> PageColor {

@@ -316,7 +316,6 @@ impl IndexState {
         }
     }
 
-    /// Updates the first `max` pending pages (all with `None`).
     /// Updates up to `max` pending pages and returns how many it updated.
     fn flush(&mut self, ws: &Workspace, max: Option<usize>) -> Result<usize, SearchError> {
         let Some(index) = &mut self.index else {
