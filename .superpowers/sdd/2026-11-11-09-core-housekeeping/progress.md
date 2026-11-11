@@ -14,3 +14,5 @@ Task 3: complete (commits 84407fd..98655dd, review clean). Ruling: accept that t
 Task 4: complete (commits ca96f36..a2d5345, review clean). it 742 + 2 ignored. Minors (deferred): parse_and_check_states_agree_on_keywords compares Debug prefixes (matches! sturdier); RED demo for first-state-first skipped (reviewer showed it can fail). Watch: one unexplained red `just test` run before a green rerun (diff is pure; likely an fs/watcher-timing test) — recheck at Finish.
 
 Task 5: complete (commits 8a1042a..3d5990c, review clean). lib 44, it 743 + 2 ignored. delete_block keeps its second find (replace_keeping_structure runs between; brief allowed it). Minors (deferred): task.rs:636-640 expected string built by .replace (write literal); no test pins empty-valued property lines (`priority::`) or CRLF in task.rs characterization; with_property's `i == end` + post-loop append needs a comment.
+
+Task 6: complete (commits 7026ccd..7e84736, review clean). lib 44, it 744 + 2 ignored. Minors (deferred): color.rs test mixes qualified title_line with unqualified color_line; try_from(...).ok()? in color.rs can never fail (comment/expect would state the invariant).
