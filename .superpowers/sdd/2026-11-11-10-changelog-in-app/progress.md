@@ -32,3 +32,6 @@ Ruling: 8. Task 1's plugin test narrows the hook (`typeof h === 'function' ? h :
 Task 1: minor (deferred): test fixture loses a backslash, so escaping is untested
 Task 1: minor (deferred): existsSync/readFileSync race, harmless
 Task 1: complete (commits 411805d..8da2132, review clean)
+Task 2: minor (deferred): literal U+FEFF in source/test, use \uFEFF
+Task 2: minor (deferred): empty-text link, weak toContain word tests, comment before h1, untested +/* bullets and empty markers
+Task 2: complete (commits c9e38e8..6976d2f, review clean)
