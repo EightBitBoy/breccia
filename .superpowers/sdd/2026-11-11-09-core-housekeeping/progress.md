@@ -36,3 +36,5 @@ Task 14: complete (commits b4010ba..4fc8fbc, review clean, opus). Shell lib.rs 1
 
 Task 15: complete (commits 73c9a77..b16cb7d, review clean; haiku implementer wrote no report file, report was its reply).
 All tasks complete. Final review package review-d6fae9d..HEAD.
+
+Final review (opus): final-review.md, 0 critical, 0 important, 7 minor. Ruling: fix wave takes the reviewer's four fix-now items (search.rs dead assertion; I-6 order test for setBoard/setGit with no folder; tie every_command() count to command.rs; watch.rs doc link + journals/*.MD), plus backlog #36 pointer, the module docs of session/board.rs and graph.rs, the Q1 backlog item, review item 87's case-only-rename note, the follow-ups doc and STATUS — all cheap and none visible — cost if wrong: small test/doc churn.
