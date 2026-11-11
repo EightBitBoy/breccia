@@ -744,6 +744,32 @@ fn block_delete_of_the_only_block_keeps_it_empty() {
 }
 
 #[test]
+fn blocks_delete_of_every_block_keeps_one_empty_block() {
+    let original = "- a\n\t- c\n- b\n";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let all = ids(&mut s, "p");
+    let out = ok(&mut s, json!({"type":"blocks.delete","ids":all}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+    let focus = out.focus.unwrap();
+    assert_eq!(focus.at, 0);
+    let page = out.page.unwrap();
+    assert_eq!(page.blocks.len(), 1);
+    assert_eq!(page.blocks[0].id, focus.id);
+    assert_eq!(page.blocks[0].text, "");
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
+fn blocks_delete_that_leaves_a_block_sets_no_focus() {
+    let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n- c\n")]);
+    let all = ids(&mut s, "p");
+    let out = ok(&mut s, json!({"type":"blocks.delete","ids":&all[..2]}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "- c\n");
+    assert!(out.focus.is_none());
+}
+
+#[test]
 fn block_delete_of_an_unknown_block_is_refused() {
     let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
     let b = ids(&mut s, "p")[1];

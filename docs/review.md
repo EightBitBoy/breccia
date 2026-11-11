@@ -198,3 +198,8 @@ are its questions for you; each answer decides what a later plan does.
 78. [ ] **Delete a block:** in a block with sub-blocks press `Ctrl Shift K`: it goes with its sub-blocks, the caret is
    at the end of the block above, `Ctrl Z` brings all back. On a page's only block the block is emptied. With blocks
    selected (`Shift ↓`) the key deletes them. F1 and Settings > Keyboard list it.
+
+79. [ ] **Deleting every selected block keeps one:** on a page select all its blocks (`Shift ↓` from the first block
+   down to the last) and press `Delete`, `Backspace` or `Ctrl Shift K` (try each on a fresh selection): one empty
+   block stays, the caret is in it and you can type at once. `Ctrl Z` brings all the blocks back in one step.
+   Deleting some blocks, so that others stay, works as before. Same on a journal day.

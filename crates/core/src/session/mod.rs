@@ -791,7 +791,23 @@ impl Session {
             Command::BlocksOutdent { ids } => self.on_roots(&ids, false, Document::outdent),
             Command::BlocksMoveUp { ids } => self.on_roots(&ids, false, Document::move_up),
             Command::BlocksMoveDown { ids } => self.on_roots(&ids, true, Document::move_down),
-            Command::BlocksDelete { ids } => self.on_roots(&ids, false, Document::delete),
+            Command::BlocksDelete { ids } => {
+                let key = self.page_of_selection(&ids)?;
+                self.mutate(
+                    &key,
+                    false,
+                    Box::new(move |d, _, _| {
+                        // The last block left stays, emptied, so the page keeps one to write in.
+                        let mut focus = None;
+                        for id in batch::roots(d, &ids)? {
+                            if let Some(id) = d.delete_block(id)? {
+                                focus = Some(Focus { id, at: 0 });
+                            }
+                        }
+                        Ok(focus)
+                    }),
+                )
+            }
             Command::BlockDelete { id } => {
                 let key = self.page_of(id)?;
                 self.mutate(

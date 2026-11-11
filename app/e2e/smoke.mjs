@@ -3680,6 +3680,27 @@ try {
   await settings130.waitFor({ state: 'detached' })
   console.log('PASS 130 Ctrl Shift K deletes the block with its children, the caret moves up, and Ctrl Z brings it back')
 
+  // 131: deleting every selected block of a page (Delete) keeps one empty block with the caret in it; Ctrl Z brings all back
+  const file131 = join(pagesDir, 'Keep 131.md')
+  const text131 = '- one\n\t- kid\n- two\n- three\n'
+  writeFileSync(file131, text131)
+  await side.locator('[data-row="p:keep 131"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:keep 131"]').click()
+  await title.filter({ hasText: 'Keep 131' }).waitFor()
+  await (await content130('one')).click()
+  await unlocked130.waitFor()
+  await (await content130('three')).click({ modifiers: ['Shift'] })
+  await waitFor('131 all blocks selected', () => page.locator('.main .block.selected').count(), 4)
+  await kb.press('Delete')
+  await expectFile('131 one empty block is kept', '-\n', file131)
+  await unlocked130.waitFor()
+  await waitFor('131 the kept block is edited, caret in it', caret130, ['', true])
+  await kb.press('Control+z')
+  await expectFile('131 one undo brings every block back', text131, file131)
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  console.log('PASS 131 deleting every selected block keeps one empty block to write in')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

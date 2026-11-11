@@ -11,6 +11,7 @@ scan, the per-task reviews and the final whole-plan review (2026-11-10). The pla
 2. **Question: should deleting every selected block keep one empty block?** Today `Ctrl Shift K` on a selection runs
    the same command as `Backspace` and `Delete`, which can leave a page without a block; only the block being edited
    is emptied when it is the page's only one. Decide whether all three keys should keep one empty block.
+   **Answered (owner, 2026-11-11): yes, all three keys keep one empty block. Done** (review item 79).
 
 ## Wash check (e2e step 128)
 

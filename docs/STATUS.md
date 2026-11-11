@@ -96,8 +96,8 @@ Candidates for the next plan, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1042 tests) and cargo tests (core 734) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 197 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (1042 tests) and cargo tests (core 736) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 200 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
@@ -108,6 +108,8 @@ Candidates for the next plan, to settle with the owner:
 - Notes files are always saved with LF line endings; files Breccia did not change stay byte-identical (spec §2, §4).
 - Commits carry no attribution lines; `.claude/settings.json` turns Claude Code's attribution off.
 - The installer is not code signed (SmartScreen warns on the first run of each version).
+- Deleting every selected block (`Delete`, `Backspace` or `Ctrl Shift K`) keeps one empty block with the caret in it
+  (owner, 2026-11-11; review 79).
 - Only the NSIS installer is built; an MSI only if someone asks (backlog #51).
 - The Git history view stays read-only: clicking a commit does nothing.
 - One Breccia per user; a second start brings the open window to the front, with no notice (plan 6, Q3).
