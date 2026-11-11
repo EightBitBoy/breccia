@@ -1,6 +1,9 @@
 //! The settings as values: the states, boards and Git settings, their defaults and their rules.
 
+use std::ops::RangeInclusive;
+
 use serde::Deserialize;
+use toml_edit::DocumentMut;
 
 use super::ConfigError;
 use super::file::match_boards;
@@ -9,6 +12,17 @@ use super::file::match_boards;
 pub const PALETTE: [&str; 8] = [
     "grey", "amber", "violet", "green", "dim", "blue", "red", "teal",
 ];
+
+/// A number in `config.toml` outside its range, read as its default (the file is not changed).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Replaced {
+    /// `"[git] commit_delay_minutes"`, `"[git] pull_interval_minutes"` or `"[board] archive_after_days"`.
+    pub key: &'static str,
+    /// The number as written.
+    pub value: i64,
+    pub range: RangeInclusive<u32>,
+    pub default: u32,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 pub struct State {
@@ -74,10 +88,11 @@ fn check_keyword(states: &[State], i: usize) -> Result<(), ConfigError> {
 
 impl GitSettings {
     pub const MAX_MINUTES: u32 = 1440;
+    pub const MINUTES: RangeInclusive<u32> = 0..=Self::MAX_MINUTES;
 
     pub fn check(&self) -> Result<(), ConfigError> {
-        if self.commit_delay_minutes > Self::MAX_MINUTES
-            || self.pull_interval_minutes > Self::MAX_MINUTES
+        if !Self::MINUTES.contains(&self.commit_delay_minutes)
+            || !Self::MINUTES.contains(&self.pull_interval_minutes)
         {
             return Err(ConfigError::InvalidSetting(
                 "the minutes must be at most 1440 (one day)",
@@ -88,7 +103,7 @@ impl GitSettings {
 }
 
 impl BoardSettings {
-    pub const DAYS: std::ops::RangeInclusive<u32> = 1..=3650;
+    pub const DAYS: RangeInclusive<u32> = 1..=3650;
 
     pub fn check(&self) -> Result<(), ConfigError> {
         if !Self::DAYS.contains(&self.archive_after_days) {
@@ -194,10 +209,28 @@ fn valid_keyword(k: &str) -> bool {
 }
 
 impl Config {
+    /// Like [`parse_reporting`](Config::parse_reporting), without the records.
     pub fn parse(s: &str) -> Result<Config, ConfigError> {
-        let config: Config = toml::from_str(s).map_err(|e| ConfigError::Toml(e.to_string()))?;
-        config.validate()?;
-        Ok(config)
+        Config::parse_reporting(s).map(|(c, _)| c)
+    }
+
+    /// Parses `s`; a whole number outside its range (`[git]` minutes, `[board] archive_after_days`) is read as its
+    /// default and reported. The text is never changed. Other errors are those of the plain parse.
+    pub fn parse_reporting(s: &str) -> Result<(Config, Vec<Replaced>), ConfigError> {
+        let plain = |text: &str| -> Result<Config, ConfigError> {
+            let config: Config =
+                toml::from_str(text).map_err(|e| ConfigError::Toml(e.to_string()))?;
+            config.validate()?;
+            Ok(config)
+        };
+        let Ok(mut doc) = s.parse::<DocumentMut>() else {
+            return plain(s).map(|c| (c, Vec::new()));
+        };
+        let records = super::range::replace_out_of_range(&mut doc);
+        if records.is_empty() {
+            return plain(s).map(|c| (c, records));
+        }
+        plain(&doc.to_string()).map(|c| (c, records))
     }
 
     /// Names trimmed non-blank and unique ignoring case; columns non-empty,

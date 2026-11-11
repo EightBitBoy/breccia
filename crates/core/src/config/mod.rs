@@ -2,6 +2,7 @@
 
 mod file;
 mod model;
+mod range;
 mod toml_keep;
 
 pub use file::Expect;

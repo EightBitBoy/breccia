@@ -853,3 +853,129 @@ fn parse_and_check_states_agree_on_keywords() {
         assert!(b.starts_with(want), "{b}");
     }
 }
+
+const BAD_ALL: &str = "[git]\ncommit_delay_minutes = 1441\npull_interval_minutes = 100000\n[board]\narchive_after_days = 0\n";
+
+fn rep(
+    key: &'static str,
+    value: i64,
+    range: std::ops::RangeInclusive<u32>,
+    default: u32,
+) -> Replaced {
+    Replaced {
+        key,
+        value,
+        range,
+        default,
+    }
+}
+
+#[test]
+fn out_of_range_values_are_replaced_by_defaults() {
+    let (c, records) = Config::parse_reporting(BAD_ALL).unwrap();
+    assert_eq!(c.git.commit_delay_minutes, 5);
+    assert_eq!(c.git.pull_interval_minutes, 5);
+    assert_eq!(c.board.archive_after_days, 14);
+    assert_eq!(
+        records,
+        vec![
+            rep("[git] commit_delay_minutes", 1441, 0..=1440, 5),
+            rep("[git] pull_interval_minutes", 100000, 0..=1440, 5),
+            rep("[board] archive_after_days", 0, 1..=3650, 14),
+        ]
+    );
+    assert_eq!(Config::parse(BAD_ALL).unwrap(), c);
+}
+
+#[test]
+fn edge_values_are_kept() {
+    let text = "[git]\nenabled = false\ncommit_delay_minutes = 0\npull_interval_minutes = 1440\n[board]\nauto_archive = false\narchive_after_days = 1\n";
+    let (c, records) = Config::parse_reporting(text).unwrap();
+    assert!(records.is_empty());
+    assert_eq!(
+        (
+            c.git.commit_delay_minutes,
+            c.git.pull_interval_minutes,
+            c.board.archive_after_days
+        ),
+        (0, 1440, 1)
+    );
+    let (c, records) = Config::parse_reporting("[board]\narchive_after_days = 3650\n").unwrap();
+    assert!(records.is_empty());
+    assert_eq!(c.board.archive_after_days, 3650);
+    let (c, records) =
+        Config::parse_reporting("[git]\nenabled = false\npull_interval_minutes = 9999\n[board]\nauto_archive = false\narchive_after_days = 0\n")
+            .unwrap();
+    assert_eq!(records.len(), 2);
+    assert!(!c.git.enabled);
+    assert!(!c.board.auto_archive);
+}
+
+#[test]
+fn negative_values_are_replaced() {
+    let (c, records) = Config::parse_reporting(
+        "[git]\ncommit_delay_minutes = -5\n[board]\narchive_after_days = -1\n",
+    )
+    .unwrap();
+    assert_eq!(c.git.commit_delay_minutes, 5);
+    assert_eq!(c.board.archive_after_days, 14);
+    assert_eq!(
+        records,
+        vec![
+            rep("[git] commit_delay_minutes", -5, 0..=1440, 5),
+            rep("[board] archive_after_days", -1, 1..=3650, 14),
+        ]
+    );
+}
+
+#[test]
+fn inline_and_dotted_sections_are_checked() {
+    let (c, records) =
+        Config::parse_reporting("git = { enabled = false, pull_interval_minutes = 100000 }\n")
+            .unwrap();
+    assert_eq!(c.git.pull_interval_minutes, 5);
+    assert!(!c.git.enabled);
+    assert_eq!(records.len(), 1);
+    let (c, records) = Config::parse_reporting("git.pull_interval_minutes = 100000\n").unwrap();
+    assert_eq!(c.git.pull_interval_minutes, 5);
+    assert_eq!(records.len(), 1);
+}
+
+#[test]
+fn wrong_types_are_still_refused() {
+    for text in [
+        "[git]\npull_interval_minutes = \"5\"\n",
+        "[board]\narchive_after_days = 5.5\n",
+    ] {
+        assert!(
+            matches!(Config::parse_reporting(text), Err(ConfigError::Toml(_))),
+            "{text}"
+        );
+    }
+}
+
+#[test]
+fn a_bad_value_does_not_change_other_errors() {
+    let bad = "[git]\npull_interval_minutes = 100000\n[[states]]\nkeyword = 1\n";
+    let good = "[git]\npull_interval_minutes = 5\n[[states]]\nkeyword = 1\n";
+    let e = Config::parse(bad).unwrap_err().to_string();
+    assert_eq!(e, Config::parse(good).unwrap_err().to_string());
+    assert!(e.contains("line 4"), "{e}");
+    assert!(matches!(
+        Config::parse("[git]\npull_interval_minutes = 100000\n[[states]]\nkeyword = \"todo\"\n"),
+        Err(ConfigError::InvalidKeyword(_))
+    ));
+}
+
+#[test]
+fn load_with_text_reports_and_keeps_the_file() {
+    let text = "# mine\n[board]\narchive_after_days = 0 # hand\n";
+    let dir = root_with(Some(text));
+    let (c, got, records) = Config::load_with_text(dir.path()).unwrap();
+    assert_eq!(c.board.archive_after_days, 14);
+    assert_eq!(got.as_deref(), Some(text));
+    assert_eq!(records.len(), 1);
+    assert_eq!(on_disk(&dir), text);
+    let empty = root_with(None);
+    assert!(Config::load_with_text(empty.path()).unwrap().2.is_empty());
+}

@@ -13,7 +13,7 @@ use super::toml_keep::{
     put_comments_after, rebuild_array, rebuild_tables, set_columns, set_keeping_decor,
     write_section,
 };
-use super::{Board, BoardSettings, Config, ConfigError, GitSettings, State};
+use super::{Board, BoardSettings, Config, ConfigError, GitSettings, Replaced, State};
 use crate::layout;
 
 /// What a config writer expects `config.toml` to hold before it writes.
@@ -330,13 +330,16 @@ impl Config {
 
     /// Like [`load`](Config::load), also returning the text it was read from
     /// (`None`: the file is missing).
-    pub fn load_with_text(root: &Path) -> Result<(Config, Option<String>), ConfigError> {
+    /// Also returns the numbers read as their defaults (nothing is written).
+    pub fn load_with_text(
+        root: &Path,
+    ) -> Result<(Config, Option<String>, Vec<Replaced>), ConfigError> {
         let text = Config::read_text(root)?;
-        let config = match &text {
-            Some(text) => Config::parse(text)?,
-            None => Config::default(),
+        let (config, replaced) = match &text {
+            Some(text) => Config::parse_reporting(text)?,
+            None => (Config::default(), Vec::new()),
         };
-        Ok((config, text))
+        Ok((config, text, replaced))
     }
 
     /// The text of `<root>/breccia/config.toml`; `None` when it is missing.

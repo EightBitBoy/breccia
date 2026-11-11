@@ -366,13 +366,13 @@ impl Workspace {
         fs::create_dir_all(root.join(JOURNALS))?;
         fs::create_dir_all(root.join(PAGES))?;
         write_atomic(&layout::config_path(root), Config::default_toml())?;
-        let (config, text) = Config::load_with_text(root)?;
+        let (config, text, _) = Config::load_with_text(root)?;
         Ok(Workspace::empty(root, config, text))
     }
 
     /// Opens a notes folder and loads every page into memory.
     pub fn open(root: &Path) -> Result<(Workspace, Vec<LoadWarning>), OpenError> {
-        let (config, text) = Config::load_with_text(root)?;
+        let (config, text, _) = Config::load_with_text(root)?;
         let mut ws = Workspace::empty(root, config, text);
         let mut warnings = Vec::new();
 
