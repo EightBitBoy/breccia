@@ -247,3 +247,14 @@ are its questions for you; each answer decides what a later plan does.
    opens. With `just dev`, a note at the top says it is a development build (only unit-tested so far: please
    look once). Label and place are as you chose ("Show changelog" below the About list); the running version is not
    marked.
+
+## Config values out of range (plan 11)
+
+89. [ ] **A number out of range in `config.toml`:** with a folder open, edit `breccia/config.toml` in another
+   editor: under `[git]` set `pull_interval_minutes = 100000`, save. A notice appears at once: "breccia/config.toml:
+   [git] pull_interval_minutes = 100000 is outside 0 to 1440, so Breccia uses 5 instead. Change it in Settings or in
+   the file." Settings > Git shows 5. The file is unchanged (your comments too). Set `archive_after_days = 0` under
+   `[board]`: a second notice, the board settings show 14. Close Breccia and start it again: the notices come again.
+   Fix both values: no notice, the new values are used. Then put `100000` back and change "Git enabled" in Settings:
+   the file now says `pull_interval_minutes = 5` (R7). Is the wording right (Q1), the place (Q2), one notice per key
+   (Q3), only that key replaced (Q4), and the Settings save writing the default (Q5)?

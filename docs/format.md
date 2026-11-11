@@ -992,8 +992,9 @@ commit_delay_minutes = 5
 pull_interval_minutes = 5
 ```
 
-The file accepts any whole number ≥ 0 for the numbers below. Settings offers a smaller range: 0 to 1440 minutes for
-Git, 1 to 3650 days for archiving.
+The numbers below have a range: 0 to 1440 for the Git minutes, 1 to 3650 for `archive_after_days`. A whole number
+outside it (a negative one too) is read as the key's default, with a notice naming the key; Breccia does not change
+the file.
 
 | Key | Type | Default when missing | Meaning |
 |---|---|---|---|
@@ -1005,11 +1006,11 @@ Git, 1 to 3650 days for archiving.
 | `[[boards]]` | list of tables | the board "Tasks" above | the boards, in order; `boards = []` means none |
 | `name` | string, required | | the board's name |
 | `columns` | list of strings | `[]` | the state keyword of each column, in order |
-| `[board] archive_after_days` | integer ≥ 0 | `14` | tasks in a finished state whose done date is more than this many days ago are archived (`archived::`, section 8): by Breccia itself while `auto_archive` is on, and by a finished column's "Archive finished …" |
+| `[board] archive_after_days` | integer, 1 to 3650 | `14` | tasks in a finished state whose done date is more than this many days ago are archived (`archived::`, section 8): by Breccia itself while `auto_archive` is on, and by a finished column's "Archive finished …" |
 | `[board] auto_archive` | boolean | `true` | Breccia archives such tasks by itself, in all pages and journals: when a folder opens, once an hour, and when this setting or `archive_after_days` changes (section 8) |
 | `[git] enabled` | boolean | `true` | Breccia commits and pulls when the folder is in a Git repository |
-| `[git] commit_delay_minutes` | integer ≥ 0 | `5` | commit after this many minutes without changes; `0` turns off the timed commit, and changes are still committed before each pull, when the Git item is clicked and when Breccia closes |
-| `[git] pull_interval_minutes` | integer ≥ 0 | `5` | pull this often; `0` pulls only once, at start |
+| `[git] commit_delay_minutes` | integer, 0 to 1440 | `5` | commit after this many minutes without changes; `0` turns off the timed commit, and changes are still committed before each pull, when the Git item is clicked and when Breccia closes |
+| `[git] pull_interval_minutes` | integer, 0 to 1440 | `5` | pull this often; `0` pulls only once, at start |
 
 The colour names:
 
@@ -1021,7 +1022,7 @@ grey amber violet green dim blue red teal
 (`states = []` is an error). Each keyword is an upper-case ASCII letter followed by upper-case letters, digits and
 `_` (`[A-Z][A-Z0-9_]*`), and keywords are unique. A file that breaks these rules stops the folder from opening, and
 the error is reported. Colours and board columns are not checked when the file is read: a column naming a state that is
-not configured is shown as missing. Unknown keys are ignored.
+not configured is shown as missing. Unknown keys are ignored. A number of the wrong type (`"5"`, `5.5`) is an error like any other type.
 
 **A missing file** means the defaults above. Breccia writes the file when it creates a notes folder and when the user
 changes a setting.

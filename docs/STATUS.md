@@ -33,6 +33,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 8 | Theme wheel and four more themes | done 2026-11-11 | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | `docs/plans/2026-11-11-08-wheel-and-more-themes-followups.md` |
 | 9 | Core housekeeping (from the audit) | done 2026-11-11 | `docs/plans/2026-11-11-09-core-housekeeping.md` | `docs/plans/2026-11-11-09-core-housekeeping-followups.md` |
 | 10 | The changelog inside the app | done 2026-11-11 | `docs/plans/2026-11-11-10-changelog-in-app.md` | `docs/plans/2026-11-11-10-changelog-in-app-followups.md` |
+| 11 | Out-of-range values in config.toml | done 2026-11-11 | `docs/plans/2026-11-11-11-config-out-of-range-values.md` | `docs/plans/2026-11-11-11-config-out-of-range-values-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -93,7 +94,7 @@ is loaded" notice at once (Q2, review item 87). The session's command dispatch i
 (`crates/core/src/session/`, `mod.rs` 1,494 to 522 lines), the settings code by job (`crates/core/src/config/`), the
 shell's main file by job (`app/src-tauri/src/lib.rs` 1,841 to 437 lines); one path classifier serves folder open and
 the watcher; workspace bookkeeping goes through one `Changes` record; link filters in search are no longer paired by
-position (backlog #31). Out-of-range values in a hand-edited `config.toml` still load silently (Q1, backlog #80). It
+position (backlog #31). Out-of-range values in a hand-edited `config.toml` were left to plan 11 (Q1, backlog #80). It
 closed audit moves M1 to M8, M10 to M14, M16, M18, M22 to M31 and M33. The owner checks review item 87.
 
 Plan 10 is done (2026-11-11, backlog #79; ledger `.superpowers/sdd/2026-11-11-10-changelog-in-app/progress.md`):
@@ -101,6 +102,14 @@ Settings > About has a "Show changelog" button that opens the bundled `CHANGELOG
 first, rendered as a small Markdown subset (tables, emphasis and numbered lists show as plain text); a development build
 adds a note. The running version is not marked (owner decisions Q1 and Q2). The owner checks review item 88; open
 follow-ups are in the plan's follow-ups file (D1: a hand-edited changelog heading can fail the release-time tests).
+
+Plan 11 is done (2026-11-11, backlog #80; ledger `.superpowers/sdd/2026-11-11-11-config-out-of-range-values/progress.md`):
+a whole number in a hand-edited `breccia/config.toml` outside its range (Git minutes 0 to 1440, archive days 1 to 3650,
+negative ones too) no longer loads silently. The key is read as its default and one notice per key names it; the file
+is not changed (a later Settings save of that section writes the default over it). Owner decisions Q1 to Q5: the
+planned wording, the notice list only (no line in Settings), one notice per key, only that key replaced, a Settings
+save may write the default. A wrong type (`"5"`) still refuses the file. The owner checks review item 89; open
+follow-ups are in the plan's follow-ups file.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with

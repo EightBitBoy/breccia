@@ -520,7 +520,7 @@ into the app, so it works offline and needs no network request), how it is shown
 Markdown), whether it opens at the running version, how it is closed (`Esc`), and what it shows in a dev build before
 the first release.
 
-## 80. Out-of-range values in a hand-edited `config.toml` (Settings)
+## 80. Out-of-range values in a hand-edited `config.toml` (Settings) (done 2026-11-11, plan 11)
 
 Owner, 2026-11-11 (plan 9, Q1): Settings refuses a Git interval over 1,440 minutes and "archive after" outside 1 to
 3,650 days, but a `breccia/config.toml` edited by hand with, say, `pull_interval_minutes = 100000` or
