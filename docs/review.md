@@ -203,3 +203,28 @@ are its questions for you; each answer decides what a later plan does.
    down to the last) and press `Delete`, `Backspace` or `Ctrl Shift K` (try each on a fresh selection): one empty
    block stays, the caret is in it and you can type at once. `Ctrl Z` brings all the blocks back in one step.
    Deleting some blocks, so that others stay, works as before. Same on a journal day.
+
+## Wheel and more themes (plan 8)
+
+80. [ ] **The wheel:** with the pointer on ◐ in the status bar, turn the wheel down: System, Light, Taupe, Parchment,
+   Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember, then System again; up from System goes to Ember. A block being
+   edited stays edited. A trackpad swipe moves about one theme per notch-worth, not all at once. The tooltip names the
+   theme. Restart Breccia: the last theme is kept. `Ctrl` and the wheel there still zoom.
+
+81. [ ] **Vampire:** journal, a page, the board (hover a card: the ↗ and … buttons), search, the graph, Settings; a few
+   page colors and a custom hue at vividness 50 and 200. Dark and reddish enough? Links pink, tags lilac.
+
+82. [ ] **Fjord:** the same tour. Cool and calm, not too grey?
+
+83. [ ] **Ember:** the same tour. Warm, orange accent, yellow links, green tags: too busy?
+
+84. [ ] **Parchment:** the same tour; the window title bar is light. Cream not too yellow; text dark slate.
+
+85. [ ] **The list:** Settings > Appearance and the status bar menu show eleven choices in the same order: System,
+   Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember; F1 lists the wheel.
+
+86. [ ] **Teal, easier to read:** in Teal, select a few rows (`Shift ↓`), edit a block and select a word in it (the
+   selection shows), follow a link to a block (the jump highlight), open the theme menu (the pressed button): text,
+   links and tags read well on each. Does Teal otherwise look as before? Are the selection and the highlight still seen
+   well enough? A block being edited, and inline code, now have a slightly fainter tint than before: does that look
+   right?

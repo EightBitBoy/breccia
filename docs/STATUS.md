@@ -9,7 +9,7 @@ The app is complete in its first form, as the spec describes it (`docs/spec.md` 
 picker; pages with `[[links]]`, `#tags`, aliases and linked references; a page tree with folders and drag and drop;
 configurable task states, cycling with `Ctrl Enter`, `created::` and `done::` times; Kanban boards over every task
 block, with priority by dragging, hidden columns and automatic archiving; the Archive and All pages views; search
-(`Ctrl K`) with filters and typed dates; Git sync and a Git history view; six themes plus System; zoom; back and
+(`Ctrl K`) with filters and typed dates; Git sync and a Git history view; ten themes plus System; zoom; back and
 forward between views; the `F1` shortcut overlay; the graph; a tray icon; a Windows installer built by the release
 workflow. Since 1.1.0 (released 2026-11-07, plans 1 and 2): page colors, 25 named colors or a custom hue per page, shown as soft
 washes behind journal blocks, set from a swatch on the page title or by right-clicking a link in the journal, with a
@@ -30,7 +30,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 5 | GitHub Pages site | done 2026-11-09 | `docs/plans/2026-11-09-05-github-pages-site.md` | `docs/plans/2026-11-09-05-github-pages-site-followups.md` |
 | 6 | Safety net (from the audit) | done 2026-11-10 | `docs/plans/2026-11-10-06-safety-net.md` | `docs/plans/2026-11-10-06-safety-net-followups.md` |
 | 7 | Wash seams, Today and Yesterday, delete a block | done 2026-11-10 | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block.md` | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block-followups.md` |
-| 8 | Theme wheel and four more themes | in progress | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | |
+| 8 | Theme wheel and four more themes | done 2026-11-11 | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | `docs/plans/2026-11-11-08-wheel-and-more-themes-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -80,8 +80,9 @@ page color wash at zoom 110 % and 125 % (backlog #75, measured by e2e step 128);
 calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with its sub-blocks (#78). Plans 6 and 7 are released as 1.4.0 (2026-11-10,
 https://github.com/EightBitBoy/breccia/releases/tag/v1.4.0). The owner checks review items 70 to 78.
 
-Plan 8 (backlog #76: the scroll wheel over the theme button; Vampire, Fjord, Ember and Parchment; light themes first;
-Teal's selection contrast) is in progress (owner decisions in the plan, 2026-11-11).
+Plan 8 is done (2026-11-11, backlog #76): the mouse wheel over the theme button switches the theme; four new themes
+(Vampire, Fjord, Ember, Parchment), ten plus System in all, with the light ones first; Teal's text, selection and
+highlights read better. The owner checks review items 80 to 86.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
@@ -98,8 +99,8 @@ Candidates for the next plan, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1042 tests) and cargo tests (core 737) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 200 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just test`: Vitest (1068 tests) and cargo tests (core 737) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just e2e`: 201 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.

@@ -146,7 +146,7 @@ vividness 100 or below. Wash strengths: 34 % for the three dark themes, 28 % for
   `Parchment`.
 - e2e: steps 124, 125 and 128 are extended (Task 2, Task 4); one new step 132 after step 131 and before step 45
   (Task 4). Steps wait for states, never sleep, and assert the stored `settings.json` where the choice changes.
-  Expected after the plan: 198 PASS lines (197 + step 132). The counted number is the rule.
+  Expected after the plan: 201 PASS lines (197 + step 132). The counted number is the rule.
 - `docs/review.md`: new heading `## Wheel and more themes (plan 8)`, items 80 to 86 (79 is taken).
 - Commits: conventional subjects; `feat`/`fix` only for what a user sees, in plain words, no code names, at most about
   90 characters, no trailing period, no attribution lines. Commit on `main` and push after each commit.
@@ -610,7 +610,7 @@ Two commits: the test lists (no user-visible change), then the plain-surface tes
   `ThemeMenu` as `onwheel`. In `App.svelte`: one `const themeSteps = new WheelSteps()` and
   `onthemewheel={(dy) => { const c = wheelTheme(theme, themeSteps, dy, zoom.percent); if (c !== null) chooseTheme(c) }}`.
   Nothing else in `App.svelte` changes.
-- [ ] **Step 4: Verify.** `npx vitest run`, `just lint`, `just e2e`: 198 PASS lines, step 132 among them.
+- [ ] **Step 4: Verify.** `npx vitest run`, `just lint`, `just e2e`: 201 PASS lines, step 132 among them.
 - [ ] **Step 5: Commit** `feat(app): Status bar: the mouse wheel over the theme button switches the theme`; push.
 
 ### Task 5: Spec, README and website (model: haiku)
@@ -641,17 +641,17 @@ Two commits: the test lists (no user-visible change), then the plain-surface tes
 
 ## Finish (the controller, not a task)
 
-- `just test`, `just lint`, `just e2e` (198 PASS expected) on the final `main`; CI green on the last commit.
+- `just test`, `just lint`, `just e2e` (201 PASS expected) on the final `main`; CI green on the last commit.
 - Follow-ups doc `docs/plans/2026-11-11-08-wheel-and-more-themes-followups.md`, at least: Teal's jump highlight and
   selected row are quieter after the fix (1.24 and 1.15 against its background; a lighter Teal text would give room,
   at the cost of its look and its custom-color pins); the wheel uses only `deltaY` in pixels (WebView2 always sends pixels; line or page `deltaMode`
   is not handled); the theme menu now has eleven entries (whether it should group light and dark later); whether the
   Settings > Appearance previews want a second row label.
-- `docs/STATUS.md`: plan 8 done, ten themes, the test baseline (Vitest count, 198 e2e PASS), review items 80 to 86,
+- `docs/STATUS.md`: plan 8 done, ten themes, the test baseline (Vitest count, 201 e2e PASS), review items 80 to 86,
   the owner's answers to Q1 to Q6 and the Teal fix.
 - `docs/review.md`, heading `## Wheel and more themes (plan 8)`:
-  - 80. **The wheel:** with the pointer on ◐ in the status bar, turn the wheel down: Light, Dark, … Parchment, then
-    System again; up from System goes to Ember. A block being edited stays edited. A trackpad swipe moves about one
+  - 80. **The wheel:** with the pointer on ◐ in the status bar, turn the wheel down: System, Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire,
+    Fjord, Ember, then System again; up from System goes to Ember. A block being edited stays edited. A trackpad swipe moves about one
     theme per notch-worth, not all at once. The tooltip names the theme. Restart Breccia: the last theme is kept.
     `Ctrl` and the wheel there still zoom.
   - 81. **Vampire:** journal, a page, the board (hover a card: the ↗ and … buttons), search, the graph, Settings; a few
