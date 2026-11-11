@@ -12,8 +12,11 @@ use breccia_core::Session;
 use breccia_core::git::{Git, GitEngine, GitView, Now, Step};
 use tauri::{AppHandle, Emitter, Manager};
 
+use crate::App;
+use crate::events::{GIT_CHANGED, emit_all};
 use crate::guard::{Guarded, with_session};
-use crate::{App, Cause, GIT_CHANGED, after_recovery, emit_all, index_if_large};
+use crate::indexing::index_if_large;
+use crate::recovery::{Cause, after_recovery};
 
 /// How often the thread looks at the schedule when nothing else wakes it.
 const TICK: Duration = Duration::from_secs(10);
