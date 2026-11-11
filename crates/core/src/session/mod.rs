@@ -24,6 +24,7 @@ mod view;
 use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+pub use crate::workspace::TagEntry;
 pub use board::{ArchivedView, BoardView, CardView, ColumnView};
 pub use command::{Clock, Command, CommandKind, Request, StateInput, StateRename};
 pub use folder::Recovery;
@@ -31,10 +32,10 @@ pub use graph::{GraphNode, GraphView, NodePosition, layout_file_name};
 pub use search::{DateView, IndexProgress, SEARCH_LIMIT, SearchGroup, SearchHit, SearchView};
 pub use table::PageRowView;
 use tree::LinkLists;
-pub use tree::{JournalDay, JournalMonth, JournalYear, TagView, TreeNode, TreeView};
+pub use tree::{JournalDay, JournalMonth, JournalYear, TreeNode, TreeView};
 pub use view::{
     BlockView, BoardSummary, CommandError, ConfigView, DirtyView, FeedView, Focus, FolderView,
-    GitSettingsView, NameView, Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView,
+    GitSettingsView, Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView,
     RenameView, SaveFailReason, StateUsage, StateView,
 };
 
@@ -365,13 +366,7 @@ impl Session {
                 version,
             } => self.config_set_board(archive_after_days, auto_archive, version),
             Command::PagesList => Ok(Output {
-                names: Some(
-                    self.ws()?
-                        .page_names()
-                        .into_iter()
-                        .map(NameView::of)
-                        .collect(),
-                ),
+                names: Some(self.ws()?.page_names()),
                 ..Output::default()
             }),
             Command::PageOverwrite { key } => self.page_overwrite(&key),

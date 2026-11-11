@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::time::SystemTime;
 
 use chrono::NaiveDate;
+use serde::Serialize;
 
 use crate::color::{PageColor, page_color};
 use crate::config::{Config, ConfigError};
@@ -124,7 +125,8 @@ pub struct Backlinks<'a> {
 }
 
 /// A name used as `#tag`, for the sidebar's Tags section.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct TagEntry {
     pub key: String,
     /// The page's name when there is a page, else the first spelling.
@@ -136,7 +138,8 @@ pub struct TagEntry {
 }
 
 /// A page name for completion: an existing page or a link target without one.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct NameEntry {
     pub key: String,
     pub name: String,

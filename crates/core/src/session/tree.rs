@@ -4,7 +4,7 @@ use chrono::Datelike;
 use serde::Serialize;
 
 use crate::naming::{journal_display, month_name};
-use crate::workspace::{PageKind, Workspace};
+use crate::workspace::{PageKind, TagEntry, Workspace};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -12,19 +12,7 @@ pub struct TreeView {
     pub pages: Vec<TreeNode>,
     pub journals: Vec<JournalYear>,
     /// The sidebar's Tags section ([`Workspace::tags`]).
-    pub tags: Vec<TagView>,
-}
-
-/// A name used as `#tag`.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TagView {
-    pub key: String,
-    pub name: String,
-    /// The blocks that have the tag.
-    pub count: usize,
-    /// No file and no text of its own.
-    pub linked_only: bool,
+    pub tags: Vec<TagEntry>,
 }
 
 /// The parts of the tree that follow the links: the linked-only pages and
@@ -32,23 +20,14 @@ pub struct TagView {
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub(crate) struct LinkLists {
     pub(crate) pages: Vec<(String, String)>,
-    pub(crate) tags: Vec<TagView>,
+    pub(crate) tags: Vec<TagEntry>,
 }
 
 impl LinkLists {
     pub(crate) fn of(ws: &Workspace) -> LinkLists {
         LinkLists {
             pages: ws.linked_only_pages(),
-            tags: ws
-                .tags()
-                .into_iter()
-                .map(|t| TagView {
-                    key: t.key,
-                    name: t.name,
-                    count: t.count,
-                    linked_only: t.linked_only,
-                })
-                .collect(),
+            tags: ws.tags(),
         }
     }
 }

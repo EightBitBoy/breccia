@@ -34,7 +34,7 @@ pub struct Output {
     pub folder: Option<FolderView>,
     pub config: Option<ConfigView>,
     pub refs: Option<RefsView>,
-    pub names: Option<Vec<NameView>>,
+    pub names: Option<Vec<NameEntry>>,
     pub tree: Option<TreeView>,
     /// Pages other than `page` that the command changed.
     pub changed: Vec<PageView>,
@@ -486,24 +486,6 @@ pub struct RefView {
     pub crumbs: Vec<String>,
     /// The root and its subtree, with `depth` relative to the root.
     pub blocks: Vec<BlockView>,
-}
-
-#[derive(Clone, Debug, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct NameView {
-    pub key: String,
-    pub name: String,
-    pub exists: bool,
-}
-
-impl NameView {
-    pub(crate) fn of(e: NameEntry) -> NameView {
-        NameView {
-            key: e.key,
-            name: e.name,
-            exists: e.exists,
-        }
-    }
 }
 
 impl RefsView {

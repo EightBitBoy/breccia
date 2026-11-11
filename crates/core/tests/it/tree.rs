@@ -1,5 +1,5 @@
 use crate::support::{self, DAY, clock_on, put, run};
-use breccia_core::session::{JournalDay, TagView, TreeNode};
+use breccia_core::session::{JournalDay, TagEntry, TreeNode};
 use breccia_core::{Clock, Command, CommandError, Output, Session};
 use serde_json::{Value, json};
 use std::fs;
@@ -371,8 +371,8 @@ fn the_all_pages_table_has_linked_only_rows() {
     );
 }
 
-fn tag(key: &str, name: &str, count: usize, linked_only: bool) -> TagView {
-    TagView {
+fn tag(key: &str, name: &str, count: usize, linked_only: bool) -> TagEntry {
+    TagEntry {
         key: key.into(),
         name: name.into(),
         count,
