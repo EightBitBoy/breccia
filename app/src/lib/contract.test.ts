@@ -3,9 +3,13 @@
 import { expect, test } from 'vitest'
 import commandRs from '../../../crates/core/src/session/command.rs?raw'
 import viewRs from '../../../crates/core/src/session/view.rs?raw'
-import libRs from '../../src-tauri/src/lib.rs?raw'
 import typesTs from './types.ts?raw'
 import apiTs from '../api.ts?raw'
+
+// Every shell source, joined: the event names live wherever the shell keeps them.
+const shellRs = Object.values(
+  import.meta.glob<string>('../../src-tauri/src/*.rs', { query: '?raw', import: 'default', eager: true }),
+).join('\n')
 
 const lines = (s: string) => s.replace(/\r\n/g, '\n').split('\n')
 
@@ -57,7 +61,7 @@ test('command_names_match', () => {
 
 test('event_names_match', () => {
   const rust = new Set<string>()
-  for (const m of libRs.matchAll(/^const [A-Z_]+: &str = "([^"]+)";/gm)) rust.add(m[1])
+  for (const m of shellRs.matchAll(/^(?:pub(?:\([a-z]+\))? )?const [A-Z_]+: &str = "([^"]+)";/gm)) rust.add(m[1])
   const ts = new Set<string>()
   for (const m of apiTs.matchAll(/^export const [A-Z_]+ = '([^']+)'/gm)) {
     if (/^[a-z]+:[a-z]+$/.test(m[1])) ts.add(m[1])
