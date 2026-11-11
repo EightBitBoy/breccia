@@ -114,8 +114,11 @@ pub struct GitEngine {
     /// steps that all found it so.
     locked_since: Option<i64>,
     locked_for: Option<Duration>,
+    #[cfg(feature = "test-seams")]
     after_fetch: Option<Box<dyn FnMut() + Send>>,
+    #[cfg(feature = "test-seams")]
     before_lock: Option<Box<dyn FnMut() + Send>>,
+    #[cfg(feature = "test-seams")]
     before_rebase: Option<Box<dyn FnMut() + Send>>,
     /// A rebase was refused and the pull is being tried once more.
     refused_once: bool,
@@ -165,8 +168,11 @@ impl GitEngine {
             need_dates: false,
             locked_since: None,
             locked_for: None,
+            #[cfg(feature = "test-seams")]
             after_fetch: None,
+            #[cfg(feature = "test-seams")]
             before_lock: None,
+            #[cfg(feature = "test-seams")]
             before_rebase: None,
             refused_once: false,
         }
@@ -183,21 +189,21 @@ impl GitEngine {
 
     /// A test seam: `f` runs right after each fetch, before the commit that
     /// precedes the lock, which is where a save of the user's can land.
-    #[doc(hidden)]
+    #[cfg(feature = "test-seams")]
     pub fn after_fetch(&mut self, f: Box<dyn FnMut() + Send>) {
         self.after_fetch = Some(f);
     }
 
     /// A test seam: `f` runs after that commit, just before the lock is
     /// taken: a save landing now is left for the commit under the lock.
-    #[doc(hidden)]
+    #[cfg(feature = "test-seams")]
     pub fn before_lock(&mut self, f: Box<dyn FnMut() + Send>) {
         self.before_lock = Some(f);
     }
 
     /// A test seam: `f` runs inside the locked part, just before the rebase:
     /// a write landing now makes Git refuse to start it.
-    #[doc(hidden)]
+    #[cfg(feature = "test-seams")]
     pub fn before_rebase(&mut self, f: Box<dyn FnMut() + Send>) {
         self.before_rebase = Some(f);
     }
@@ -697,6 +703,7 @@ impl GitEngine {
             self.net_problem(p);
             return false;
         }
+        #[cfg(feature = "test-seams")]
         if let Some(hook) = self.after_fetch.as_mut() {
             hook();
         }
@@ -714,6 +721,7 @@ impl GitEngine {
                 return false;
             }
         }
+        #[cfg(feature = "test-seams")]
         if let Some(hook) = self.before_lock.as_mut() {
             hook();
         }
@@ -760,6 +768,7 @@ impl GitEngine {
         if Self::commit_changes(repo)?.is_some() {
             self.need_dates = true;
         }
+        #[cfg(feature = "test-seams")]
         if let Some(hook) = self.before_rebase.as_mut() {
             hook();
         }

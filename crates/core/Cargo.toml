@@ -21,6 +21,11 @@ unicode-normalization = "0.1.26"
 serde_json = "1"
 log = "0.4"
 
+[features]
+# Hooks the Git engine tests use to land a save at an exact moment.
+test-seams = []
+
 [dev-dependencies]
+breccia-core = { path = ".", features = ["test-seams"] }
 tempfile = "3"
 proptest = "1"
