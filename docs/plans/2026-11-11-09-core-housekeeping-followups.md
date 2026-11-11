@@ -69,7 +69,7 @@ plan 2 follow-ups 8 and 12, plan 3 follow-ups 5 and 7, plan 6 follow-up 18 and p
   deciders differed only in the `.MD` case that Q2 changed.
 - Task 12's self dev-dependency (`breccia-core` with `test-seams` as its own dev-dependency) worked: the test hooks are
   behind the feature, and the shell's feature tree does not turn it on.
-- Sizes reached: `crates/core/src/session/mod.rs` 1,494 to 519 lines (`execute` 138 lines); `app/src-tauri/src/lib.rs`
+- Sizes reached: `crates/core/src/session/mod.rs` 1,494 to 522 lines (`execute` 138 lines); `app/src-tauri/src/lib.rs`
   1,841 to 437 lines.
 - The final review found no critical or important issue. Its fix wave added a test that out-of-range Git and board
   settings answer `invalidSetting` with no folder open, tied the command table in `it/session.rs` to the commands in

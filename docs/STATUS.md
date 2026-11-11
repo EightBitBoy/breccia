@@ -89,7 +89,7 @@ Plan 9, the audit's core housekeeping, is done (2026-11-11; owner decisions Q1 a
 questions", rulings in the ledger `.superpowers/sdd/2026-11-11-09-core-housekeeping/progress.md`). It is a refactor of
 the core and the shell with one visible fix: a page file saved as `.MD` while Breccia runs now gives the "only `.md`
 is loaded" notice at once (Q2, review item 87). The session's command dispatch is split by area
-(`crates/core/src/session/`, `mod.rs` 1,494 to 519 lines), the settings code by job (`crates/core/src/config/`), the
+(`crates/core/src/session/`, `mod.rs` 1,494 to 522 lines), the settings code by job (`crates/core/src/config/`), the
 shell's main file by job (`app/src-tauri/src/lib.rs` 1,841 to 437 lines); one path classifier serves folder open and
 the watcher; workspace bookkeeping goes through one `Changes` record; link filters in search are no longer paired by
 position (backlog #31). Out-of-range values in a hand-edited `config.toml` still load silently (Q1, backlog #80). It
