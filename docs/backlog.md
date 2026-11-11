@@ -200,8 +200,9 @@ first `]`.
 
 ## 36. Git history after a failed folder open (Git sync)
 
-The shell keeps the previous folder's path when an open fails (`app/src-tauri/src/lib.rs`), so the history could show
-the old folder's commits until the next good open. Clear it on a failed open and check what the session and the Git
+The shell keeps the previous folder's path when an open fails (`notes_root`, set in `app/src-tauri/src/watching.rs`
+and cleared only by a recovery in `app/src-tauri/src/recovery.rs`), so the history could show the old folder's commits
+until the next good open. Clear it on a failed open and check what the session and the Git
 item show then.
 
 ## 37. Git history dates in the user's language (Git sync)
@@ -518,3 +519,14 @@ application. To settle in the plan: where the text comes from (the `CHANGELOG.md
 into the app, so it works offline and needs no network request), how it is shown (a view or an overlay, rendered as
 Markdown), whether it opens at the running version, how it is closed (`Esc`), and what it shows in a dev build before
 the first release.
+
+## 80. Out-of-range values in a hand-edited `config.toml` (Settings)
+
+Owner, 2026-11-11 (plan 9, Q1): Settings refuses a Git interval over 1,440 minutes and "archive after" outside 1 to
+3,650 days, but a `breccia/config.toml` edited by hand with, say, `pull_interval_minutes = 100000` or
+`archive_after_days = 0` loads without a word and is used as written. Plan 9 kept that behaviour; the rule now lives in
+one place (`GitSettings::check` and `BoardSettings::check` in `crates/core/src/config/`), so it could apply to the file
+too. To settle in the plan, with the wording: (a) the file loads, each out-of-range value is replaced by its default
+for this run, and one notice names the key (the file is not rewritten); or (b) the file is refused like a file with a
+bad state keyword: Breccia keeps the settings it had and shows "cannot be read". Cost: one call in `Config::validate`
+and a notice text.

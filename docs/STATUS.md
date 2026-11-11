@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-10. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-11. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -31,6 +31,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 6 | Safety net (from the audit) | done 2026-11-10 | `docs/plans/2026-11-10-06-safety-net.md` | `docs/plans/2026-11-10-06-safety-net-followups.md` |
 | 7 | Wash seams, Today and Yesterday, delete a block | done 2026-11-10 | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block.md` | `docs/plans/2026-11-10-07-wash-seams-slash-dates-delete-block-followups.md` |
 | 8 | Theme wheel and four more themes | done 2026-11-11 | `docs/plans/2026-11-11-08-wheel-and-more-themes.md` | `docs/plans/2026-11-11-08-wheel-and-more-themes-followups.md` |
+| 9 | Core housekeeping (from the audit) | done 2026-11-11 | `docs/plans/2026-11-11-09-core-housekeeping.md` | `docs/plans/2026-11-11-09-core-housekeeping-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -84,22 +85,34 @@ Plan 8 is done (2026-11-11, backlog #76): the mouse wheel over the theme button 
 (Vampire, Fjord, Ember, Parchment), ten plus System in all, with the light ones first; Teal's text, selection and
 highlights read better. The owner checks review items 80 to 86.
 
+Plan 9, the audit's core housekeeping, is done (2026-11-11; owner decisions Q1 and Q2 in the plan's "Product
+questions", rulings in the ledger `.superpowers/sdd/2026-11-11-09-core-housekeeping/progress.md`). It is a refactor of
+the core and the shell with one visible fix: a page file saved as `.MD` while Breccia runs now gives the "only `.md`
+is loaded" notice at once (Q2, review item 87). The session's command dispatch is split by area
+(`crates/core/src/session/`, `mod.rs` 1,494 to 519 lines), the settings code by job (`crates/core/src/config/`), the
+shell's main file by job (`app/src-tauri/src/lib.rs` 1,841 to 437 lines); one path classifier serves folder open and
+the watcher; workspace bookkeeping goes through one `Changes` record; link filters in search are no longer paired by
+position (backlog #31). Out-of-range values in a hand-edited `config.toml` still load silently (Q1, backlog #80). It
+closed audit moves M1 to M8, M10 to M14, M16, M18, M22 to M31 and M33. The owner checks review item 87.
+
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
-55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's next plans (2 to 5 in its "Priorities") wait for the owner.
+55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
 
 Candidates for the next plan, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md`, 78 items; #71 to #75, #77, #78 done, #64 done by plan 5);
+- backlog items the owner picks (`docs/backlog.md`, 80 items; #71 to #75, #77, #78 done, #64 done by plan 5, #31 by
+  plan 9);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 
 ## Test baseline
 
-- `just test`: Vitest (1068 tests) and cargo tests (core 737) pass (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
+- `just test`: Vitest (1068 tests) and cargo tests (core: lib 50, integration 761 with 2 ignored; shell 76) pass
+  (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 202 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
