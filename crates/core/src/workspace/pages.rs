@@ -9,7 +9,7 @@ use std::path::Path;
 use super::files::{is_within, names_in_dir, path_taken};
 use super::{JOURNALS, PAGES, Page, PageError, PageKind, RenameReport, Workspace};
 use crate::aliases::realias;
-use crate::color::{PageColor, own_color, parse_color, recolor};
+use crate::color::{PageColor, parse_color, recolor};
 use crate::inline::{LinkKind, heading_base, links, title_line};
 use crate::naming::{
     file_stem_for, is_linkable_name, is_valid_folder_path, is_valid_page_name, page_key,
@@ -422,7 +422,7 @@ impl Workspace {
     /// The color of the page's `color::` line; none for a journal or an
     /// unknown key.
     pub fn page_color(&self, key: &str) -> Option<PageColor> {
-        own_color(self.pages.get(key)?)
+        self.pages.get(key)?.own_color()
     }
 
     /// The preamble the page gets with `color` (`None` removes the color),

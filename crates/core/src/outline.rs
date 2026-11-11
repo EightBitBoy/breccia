@@ -559,6 +559,98 @@ impl Document {
     }
 }
 
+/// What [`carry_ids`] found out about the blocks of a re-read document.
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct Carried {
+    /// Blocks that kept their ID although their text differs, with the new text.
+    pub changed: Vec<(BlockId, String)>,
+    /// Old blocks with no counterpart, each with the nearest earlier old
+    /// block that survived (`None` if there is none).
+    pub removed: Vec<(BlockId, Option<BlockId>)>,
+}
+
+/// Gives the blocks of `new`, a re-read of `old`, the IDs of the blocks they
+/// correspond to. Blocks equal in depth and text are matched (common prefix
+/// and suffix, then a longest common subsequence); in each gap between
+/// matches, old and new blocks pair up in order and the new ones keep the
+/// old IDs. Unpaired new blocks keep their fresh IDs.
+pub fn carry_ids(old: &Document, new: &mut Document) -> Carried {
+    let key = |b: &Block| (b.depth, b.text.clone());
+    let o: Vec<_> = old.blocks.iter().map(key).collect();
+    let n: Vec<_> = new.blocks.iter().map(key).collect();
+
+    let prefix = o.iter().zip(&n).take_while(|(a, b)| a == b).count();
+    let suffix = o[prefix..]
+        .iter()
+        .rev()
+        .zip(n[prefix..].iter().rev())
+        .take_while(|(a, b)| a == b)
+        .count();
+    let (o_end, n_end) = (o.len() - suffix, n.len() - suffix);
+
+    // `pairs`: (old index, new index, equal), in order.
+    let mut pairs: Vec<(usize, usize, bool)> = (0..prefix).map(|i| (i, i, true)).collect();
+
+    // LCS table of the middle, suffix-based so the walk goes forwards.
+    let (om, nm) = (&o[prefix..o_end], &n[prefix..n_end]);
+    let mut lcs = vec![vec![0usize; nm.len() + 1]; om.len() + 1];
+    for i in (0..om.len()).rev() {
+        for j in (0..nm.len()).rev() {
+            lcs[i][j] = if om[i] == nm[j] {
+                lcs[i + 1][j + 1] + 1
+            } else {
+                lcs[i + 1][j].max(lcs[i][j + 1])
+            };
+        }
+    }
+    let mut matches = Vec::new();
+    let (mut i, mut j) = (0, 0);
+    while i < om.len() && j < nm.len() {
+        if om[i] == nm[j] {
+            matches.push((i, j));
+            i += 1;
+            j += 1;
+        } else if lcs[i + 1][j] >= lcs[i][j + 1] {
+            i += 1;
+        } else {
+            j += 1;
+        }
+    }
+    matches.push((om.len(), nm.len())); // sentinel closing the last gap
+    let (mut gi, mut gj) = (0, 0);
+    for (mi, mj) in matches {
+        for k in 0..(mi - gi).min(mj - gj) {
+            pairs.push((prefix + gi + k, prefix + gj + k, false));
+        }
+        if mi < om.len() {
+            pairs.push((prefix + mi, prefix + mj, true));
+        }
+        gi = mi + 1;
+        gj = mj + 1;
+    }
+    pairs.extend((0..suffix).map(|k| (o_end + k, n_end + k, true)));
+
+    let mut out = Carried::default();
+    let mut paired = vec![false; old.blocks.len()];
+    for (oi, ni, equal) in pairs {
+        paired[oi] = true;
+        let id = old.blocks[oi].id;
+        new.blocks[ni].id = id;
+        if !equal && old.blocks[oi].text != new.blocks[ni].text {
+            out.changed.push((id, new.blocks[ni].text.clone()));
+        }
+    }
+    let mut last = None;
+    for (b, kept) in old.blocks.iter().zip(paired) {
+        if kept {
+            last = Some(b.id);
+        } else {
+            out.removed.push((b.id, last));
+        }
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -750,96 +842,4 @@ mod tests {
         assert!(!parse("x\n", &mut ids).is_blank());
         assert!(!parse("- y\n", &mut ids).is_blank());
     }
-}
-
-/// What [`carry_ids`] found out about the blocks of a re-read document.
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
-pub struct Carried {
-    /// Blocks that kept their ID although their text differs, with the new text.
-    pub changed: Vec<(BlockId, String)>,
-    /// Old blocks with no counterpart, each with the nearest earlier old
-    /// block that survived (`None` if there is none).
-    pub removed: Vec<(BlockId, Option<BlockId>)>,
-}
-
-/// Gives the blocks of `new`, a re-read of `old`, the IDs of the blocks they
-/// correspond to. Blocks equal in depth and text are matched (common prefix
-/// and suffix, then a longest common subsequence); in each gap between
-/// matches, old and new blocks pair up in order and the new ones keep the
-/// old IDs. Unpaired new blocks keep their fresh IDs.
-pub fn carry_ids(old: &Document, new: &mut Document) -> Carried {
-    let key = |b: &Block| (b.depth, b.text.clone());
-    let o: Vec<_> = old.blocks.iter().map(key).collect();
-    let n: Vec<_> = new.blocks.iter().map(key).collect();
-
-    let prefix = o.iter().zip(&n).take_while(|(a, b)| a == b).count();
-    let suffix = o[prefix..]
-        .iter()
-        .rev()
-        .zip(n[prefix..].iter().rev())
-        .take_while(|(a, b)| a == b)
-        .count();
-    let (o_end, n_end) = (o.len() - suffix, n.len() - suffix);
-
-    // `pairs`: (old index, new index, equal), in order.
-    let mut pairs: Vec<(usize, usize, bool)> = (0..prefix).map(|i| (i, i, true)).collect();
-
-    // LCS table of the middle, suffix-based so the walk goes forwards.
-    let (om, nm) = (&o[prefix..o_end], &n[prefix..n_end]);
-    let mut lcs = vec![vec![0usize; nm.len() + 1]; om.len() + 1];
-    for i in (0..om.len()).rev() {
-        for j in (0..nm.len()).rev() {
-            lcs[i][j] = if om[i] == nm[j] {
-                lcs[i + 1][j + 1] + 1
-            } else {
-                lcs[i + 1][j].max(lcs[i][j + 1])
-            };
-        }
-    }
-    let mut matches = Vec::new();
-    let (mut i, mut j) = (0, 0);
-    while i < om.len() && j < nm.len() {
-        if om[i] == nm[j] {
-            matches.push((i, j));
-            i += 1;
-            j += 1;
-        } else if lcs[i + 1][j] >= lcs[i][j + 1] {
-            i += 1;
-        } else {
-            j += 1;
-        }
-    }
-    matches.push((om.len(), nm.len())); // sentinel closing the last gap
-    let (mut gi, mut gj) = (0, 0);
-    for (mi, mj) in matches {
-        for k in 0..(mi - gi).min(mj - gj) {
-            pairs.push((prefix + gi + k, prefix + gj + k, false));
-        }
-        if mi < om.len() {
-            pairs.push((prefix + mi, prefix + mj, true));
-        }
-        gi = mi + 1;
-        gj = mj + 1;
-    }
-    pairs.extend((0..suffix).map(|k| (o_end + k, n_end + k, true)));
-
-    let mut out = Carried::default();
-    let mut paired = vec![false; old.blocks.len()];
-    for (oi, ni, equal) in pairs {
-        paired[oi] = true;
-        let id = old.blocks[oi].id;
-        new.blocks[ni].id = id;
-        if !equal && old.blocks[oi].text != new.blocks[ni].text {
-            out.changed.push((id, new.blocks[ni].text.clone()));
-        }
-    }
-    let mut last = None;
-    for (b, kept) in old.blocks.iter().zip(paired) {
-        if kept {
-            last = Some(b.id);
-        } else {
-            out.removed.push((b.id, last));
-        }
-    }
-    out
 }

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 
 use serde::Serialize;
 
+use crate::color::PageColor;
 use crate::config::Config;
 use crate::error::EditError;
 use crate::git::{GitLogView, GitView};
@@ -140,7 +141,7 @@ pub struct PageView {
     pub has_file: bool,
     /// The page's own color; none for a journal.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub color: Option<crate::color::PageColor>,
+    pub color: Option<PageColor>,
     /// Journals only: the links and tags of its blocks that can be given a color.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     pub targets: Vec<TargetView>,
@@ -158,7 +159,7 @@ pub struct TargetView {
     pub key: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub color: Option<crate::color::PageColor>,
+    pub color: Option<PageColor>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
@@ -185,7 +186,7 @@ pub struct BlockView {
     pub topic: Option<String>,
     /// Journal blocks only: that page's color, when it has one.
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub color: Option<crate::color::PageColor>,
+    pub color: Option<PageColor>,
 }
 
 /// Where the caret goes: a block and a UTF-8 byte offset in its text.
@@ -360,7 +361,7 @@ impl PageView {
         if kind == PageViewKind::Journal {
             targets = TargetView::list(blocks, ws);
             // A top-level block takes its topic's color; deeper blocks keep their ancestor's.
-            let mut current: Option<(String, crate::color::PageColor)> = None;
+            let mut current: Option<(String, PageColor)> = None;
             for (v, b) in views.iter_mut().zip(blocks) {
                 if b.depth() == 0 {
                     current = ws
@@ -381,7 +382,7 @@ impl PageView {
             preamble_html: preamble_html(page.doc.preamble()),
             blocks: views,
             has_file: page.has_file(),
-            color: crate::color::own_color(page),
+            color: page.own_color(),
             targets,
         }
     }

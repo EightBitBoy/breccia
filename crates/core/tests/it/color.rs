@@ -196,3 +196,13 @@ fn recolor_writes_a_vividness() {
         "color:: teal\nx\n"
     );
 }
+
+#[test]
+fn title_and_color_lines_skip_front_matter_alike() {
+    let preamble = "---\ntitle:: A\ncolor:: blue\n---\r\ntitle:: B\r\ncolor:: red\r\n";
+    assert_eq!(
+        breccia_core::inline::title_line(preamble),
+        Some((4, "B".to_string()))
+    );
+    assert_eq!(color_line(preamble), Some((5, PageColor::Named("red"))));
+}

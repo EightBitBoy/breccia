@@ -255,21 +255,23 @@ pub(crate) fn with_property(text: &str, key: &str, value: Option<&str>) -> Strin
     out.join("\n")
 }
 
+/// The lines of `preamble.split('\n')` with their index, without the lines of
+/// the front matter.
+pub(crate) fn preamble_lines(preamble: &str) -> impl Iterator<Item = (usize, &str)> {
+    let skip = crate::outline::front_matter_len(preamble)
+        .map_or(0, |n| preamble[..n].matches('\n').count());
+    preamble.split('\n').enumerate().skip(skip)
+}
+
 /// The first property line of `preamble` whose key is `title` (ASCII
 /// case-insensitive) and whose value is a valid page name: its index among
 /// `preamble.split('\n')` and the value.
 /// Lines inside the front matter are skipped.
 pub fn title_line(preamble: &str) -> Option<(usize, String)> {
-    let skip = crate::outline::front_matter_len(preamble)
-        .map_or(0, |n| preamble[..n].matches('\n').count());
-    preamble
-        .split('\n')
-        .enumerate()
-        .skip(skip)
-        .find_map(|(i, l)| {
-            let (k, v) = property(l)?;
-            (k.eq_ignore_ascii_case("title") && is_valid_page_name(&v)).then_some((i, v))
-        })
+    preamble_lines(preamble).find_map(|(i, l)| {
+        let (k, v) = property(l)?;
+        (k.eq_ignore_ascii_case("title") && is_valid_page_name(&v)).then_some((i, v))
+    })
 }
 
 #[cfg(test)]

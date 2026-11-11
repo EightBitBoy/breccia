@@ -11,6 +11,7 @@ use std::time::SystemTime;
 
 use chrono::NaiveDate;
 
+use crate::color::{PageColor, page_color};
 use crate::config::{Config, ConfigError};
 use crate::fsio::write_atomic;
 use crate::index::LinkIndex;
@@ -61,6 +62,15 @@ pub struct Page {
 }
 
 impl Page {
+    /// The color the page has of its own: none for a journal, else what its
+    /// preamble gives it.
+    pub fn own_color(&self) -> Option<PageColor> {
+        match self.kind {
+            PageKind::Journal(_) => None,
+            PageKind::Page => page_color(self.doc.preamble()),
+        }
+    }
+
     /// When the page's file was created; `None` for a page without a file
     /// or where the file system has no creation time.
     pub fn created(&self) -> Option<SystemTime> {

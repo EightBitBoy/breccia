@@ -1,9 +1,8 @@
 //! The `color::` line of a page's preamble: reading it, writing it, and the
 //! 25 colors a page can have.
 
-use crate::inline::{property, title_line};
+use crate::inline::{preamble_lines, property, title_line};
 use crate::outline::{LineEnding, front_matter_len};
-use crate::workspace::{Page, PageKind};
 use serde::{Serialize, Serializer};
 use std::fmt;
 
@@ -93,7 +92,7 @@ pub fn parse_color(value: &str) -> Option<PageColor> {
     if !word.eq_ignore_ascii_case("hue") {
         return None;
     }
-    let hue = bounded_number(num, 359)? as u16;
+    let hue = u16::try_from(bounded_number(num, 359)?).ok()?;
     let vivid = match (words.next(), words.next(), words.next()) {
         (None, ..) => DEFAULT_VIVID,
         (Some(w), Some(v), None) if w.eq_ignore_ascii_case("vivid") => {
@@ -101,20 +100,11 @@ pub fn parse_color(value: &str) -> Option<PageColor> {
             if v < u32::from(MIN_VIVID) {
                 return None;
             }
-            v as u8
+            u8::try_from(v).ok()?
         }
         _ => return None,
     };
     Some(PageColor::Hue { hue, vivid })
-}
-
-/// The color a page has of its own: none for a journal, else what its
-/// preamble gives it.
-pub fn own_color(page: &Page) -> Option<PageColor> {
-    match page.kind {
-        PageKind::Journal(_) => None,
-        PageKind::Page => page_color(page.doc.preamble()),
-    }
 }
 
 /// The value of `line` (no terminator needed) when it is a property line with
@@ -128,15 +118,10 @@ fn is_color_property(line: &str) -> Option<String> {
 /// `color` (ASCII case-insensitive) and whose value is a page color: its index
 /// among `preamble.split('\n')` and the color.
 pub fn color_line(preamble: &str) -> Option<(usize, PageColor)> {
-    let skip = front_matter_len(preamble).map_or(0, |n| preamble[..n].matches('\n').count());
-    preamble
-        .split('\n')
-        .enumerate()
-        .skip(skip)
-        .find_map(|(i, l)| {
-            let v = is_color_property(l)?;
-            parse_color(&v).map(|c| (i, c))
-        })
+    preamble_lines(preamble).find_map(|(i, l)| {
+        let v = is_color_property(l)?;
+        parse_color(&v).map(|c| (i, c))
+    })
 }
 
 /// The color the page's preamble gives it.
