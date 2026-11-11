@@ -690,3 +690,96 @@ fn cycle_with_no_state_in_it_is_none() {
     assert!(c.cycle_next(None).is_none());
     assert!(c.cycle_next(Some("TODO")).is_none());
 }
+
+/// A hand-written file with CRLF endings, comments above and beside tables, unknown keys in a
+/// state table and in `[git]`, and inline-table boards.
+const CRLF_HAND: &str = "# my settings
+boards = [
+  { name = \"Tasks\", columns = [\"TODO\", \"WAITING\", \"DONE\"] }, # main
+  { name = \"Other\", columns = [\"DONE\"] },
+]
+
+# the first state
+[[states]]
+keyword = \"TODO\" # open
+color = \"grey\"
+in_cycle = true
+mine = 1
+
+# waiting is going away
+[[states]]
+keyword = \"WAITING\"
+color = \"violet\"
+
+# the last state
+[[states]]
+keyword = \"DONE\"
+color = \"green\"
+finished = true
+in_cycle = true
+
+[board]
+archive_after_days = 14 # days
+
+# sync
+[git]
+enabled = true
+secret = \"x\"
+";
+
+#[test]
+fn writers_keep_the_users_file_bytes() {
+    let dir = root_with(Some(CRLF_HAND));
+    let root = dir.path();
+
+    // A state renamed (the board columns follow it), one removed.
+    let states = [
+        st("NEXT", "grey", false, true),
+        st("DONE", "green", true, true),
+    ];
+    let renames = [("TODO".to_string(), "NEXT".to_string())];
+    Config::write_states(root, Expect::Any, &states, &renames).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "# my settings\nboards = [\n  { name = \"Tasks\", columns = [\"NEXT\", \"WAITING\", \"DONE\"] }, # main\n  { name = \"Other\", columns = [\"DONE\"] },\n]\n\n# the first state\n[[states]]\nkeyword = \"NEXT\" # open\ncolor = \"grey\"\nin_cycle = true\nmine = 1\n# waiting is going away\n\n# the last state\n[[states]]\nkeyword = \"DONE\"\ncolor = \"green\"\nfinished = true\nin_cycle = true\n\n[board]\narchive_after_days = 14 # days\n\n# sync\n[git]\nenabled = true\nsecret = \"x\"\n"
+    );
+
+    // A board renamed and its columns changed.
+    let boards = [
+        Board {
+            name: "Work".into(),
+            columns: vec!["DONE".into(), "NEXT".into()],
+        },
+        Board {
+            name: "Other".into(),
+            columns: vec!["DONE".into()],
+        },
+    ];
+    Config::write_boards(root, Expect::Any, &boards).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "# my settings\nboards = [\n  { name = \"Work\", columns = [\"DONE\", \"NEXT\"] }, # main\n  { name = \"Other\", columns = [\"DONE\"] },\n]\n\n# the first state\n[[states]]\nkeyword = \"NEXT\" # open\ncolor = \"grey\"\nin_cycle = true\nmine = 1\n# waiting is going away\n\n# the last state\n[[states]]\nkeyword = \"DONE\"\ncolor = \"green\"\nfinished = true\nin_cycle = true\n\n[board]\narchive_after_days = 14 # days\n\n# sync\n[git]\nenabled = true\nsecret = \"x\"\n"
+    );
+
+    // `[git]` changed.
+    let git = GitSettings {
+        enabled: false,
+        ..GitSettings::default()
+    };
+    Config::write_git(root, Expect::Any, &git).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "# my settings\nboards = [\n  { name = \"Work\", columns = [\"DONE\", \"NEXT\"] }, # main\n  { name = \"Other\", columns = [\"DONE\"] },\n]\n\n# the first state\n[[states]]\nkeyword = \"NEXT\" # open\ncolor = \"grey\"\nin_cycle = true\nmine = 1\n# waiting is going away\n\n# the last state\n[[states]]\nkeyword = \"DONE\"\ncolor = \"green\"\nfinished = true\nin_cycle = true\n\n[board]\narchive_after_days = 14 # days\n\n# sync\n[git]\nenabled = false\nsecret = \"x\"\n"
+    );
+
+    // `[board]` changed.
+    let board = BoardSettings {
+        archive_after_days: 30,
+        ..BoardSettings::default()
+    };
+    Config::write_board_settings(root, Expect::Any, &board).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "# my settings\nboards = [\n  { name = \"Work\", columns = [\"DONE\", \"NEXT\"] }, # main\n  { name = \"Other\", columns = [\"DONE\"] },\n]\n\n# the first state\n[[states]]\nkeyword = \"NEXT\" # open\ncolor = \"grey\"\nin_cycle = true\nmine = 1\n# waiting is going away\n\n# the last state\n[[states]]\nkeyword = \"DONE\"\ncolor = \"green\"\nfinished = true\nin_cycle = true\n\n[board]\narchive_after_days = 30 # days\n\n# sync\n[git]\nenabled = false\nsecret = \"x\"\n"
+    );
+}
