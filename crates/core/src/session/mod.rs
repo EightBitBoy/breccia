@@ -229,6 +229,11 @@ impl Session {
         if let Some(ws) = self.ws.as_mut() {
             out.notices
                 .extend(ws.take_alias_warnings().iter().map(Notice::load_warning));
+            out.notices.extend(
+                ws.take_config_replaced()
+                    .iter()
+                    .map(Notice::config_replaced),
+            );
         }
         // The tree travels with any command that changed it: a page file or
         // folder, or the linked-only pages.

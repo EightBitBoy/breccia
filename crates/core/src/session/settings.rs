@@ -22,11 +22,12 @@ impl Session {
         if text == ws.config_text {
             return Ok(None);
         }
-        let config = match &text {
-            Some(t) => Config::parse(t).map_err(|e| e.to_string())?,
-            None => Config::default(),
+        let (config, replaced) = match &text {
+            Some(t) => Config::parse_reporting(t).map_err(|e| e.to_string())?,
+            None => (Config::default(), Vec::new()),
         };
         ws.config = config;
+        ws.config_replaced = replaced;
         ws.config_text = text;
         self.config_version += 1;
         Ok(Some(ConfigView::of(&ws.config, self.config_version)))

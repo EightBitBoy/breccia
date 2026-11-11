@@ -2452,3 +2452,116 @@ fn reset_keeps_the_search_cache_and_moves_the_generation_on() {
     ok(&mut s, json!({"type":"folder.open","path":notes.path()}), 0);
     assert!(fs::read_dir(cache.path()).unwrap().next().is_some());
 }
+
+fn config_notices(out: &Output) -> Vec<String> {
+    out.notices
+        .iter()
+        .filter_map(|n| match n {
+            Notice::LoadWarning { message } if message.contains("config.toml") => {
+                Some(message.clone())
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+fn pull_notice(value: i64) -> String {
+    format!(
+        "breccia/config.toml: [git] pull_interval_minutes = {value} is outside 0 to 1440, so Breccia uses 5 instead. Change it in Settings or in the file."
+    )
+}
+
+#[test]
+fn an_out_of_range_value_gives_a_notice_on_open() {
+    let text = "[board]\narchive_after_days = 0 # hand\n";
+    let (t, mut s) = folder(&[(CONFIG, text), ("pages/P.md", "- a\n")]);
+    let out = ok(&mut s, json!({"type": "folder.open", "path": t.path()}), 0);
+    assert_eq!(
+        config_notices(&out),
+        [
+            "breccia/config.toml: [board] archive_after_days = 0 is outside 1 to 3650, so Breccia uses 14 instead. Change it in Settings or in the file."
+        ]
+    );
+    let out = ok(&mut s, json!({"type": "config.get"}), 0);
+    assert!(config_notices(&out).is_empty());
+    assert_eq!(out.config.unwrap().archive_after_days, 14);
+    assert_eq!(read(&t, CONFIG), text);
+}
+
+#[test]
+fn an_out_of_range_hand_edit_gives_a_notice_once() {
+    let (t, mut s) = folder(&[(CONFIG, breccia_core::Config::default_toml())]);
+    let default = breccia_core::Config::default_toml();
+    let changed = || json!({"type": "files.changed", "paths": [CONFIG]});
+    let bad = default
+        .replace(
+            "pull_interval_minutes = 5",
+            "pull_interval_minutes = 100000",
+        )
+        .replace("commit_delay_minutes = 5", "commit_delay_minutes = 1441");
+    assert_ne!(bad, default);
+    support::put(t.path(), CONFIG, &bad);
+    let out = ok(&mut s, changed(), 0);
+    let c = out.config.as_ref().expect("config follows the file");
+    assert_eq!(
+        (c.git.commit_delay_minutes, c.git.pull_interval_minutes),
+        (5, 5)
+    );
+    assert_eq!(
+        config_notices(&out),
+        [
+            "breccia/config.toml: [git] commit_delay_minutes = 1441 is outside 0 to 1440, so Breccia uses 5 instead. Change it in Settings or in the file.".to_string(),
+            pull_notice(100000),
+        ]
+    );
+    let out = ok(&mut s, changed(), 0);
+    assert!(config_notices(&out).is_empty() && out.config.is_none());
+    // Only a comment changes: the file is read again, so the notices come again.
+    let commented = format!("# note\n{bad}");
+    support::put(t.path(), CONFIG, &commented);
+    let out = ok(&mut s, changed(), 0);
+    assert_eq!(config_notices(&out).len(), 2);
+    let fixed = default
+        .replace("pull_interval_minutes = 5", "pull_interval_minutes = 30")
+        .replace("commit_delay_minutes = 5", "commit_delay_minutes = 7");
+    support::put(t.path(), CONFIG, &fixed);
+    let out = ok(&mut s, changed(), 0);
+    assert!(config_notices(&out).is_empty());
+    let c = ok(&mut s, json!({"type": "config.get"}), 0).config.unwrap();
+    assert_eq!(
+        (c.git.commit_delay_minutes, c.git.pull_interval_minutes),
+        (7, 30)
+    );
+    assert_eq!(read(&t, CONFIG), fixed);
+}
+
+#[test]
+fn a_settings_write_elsewhere_keeps_the_bad_value() {
+    let bad = breccia_core::Config::default_toml().replace(
+        "pull_interval_minutes = 5",
+        "pull_interval_minutes = 100000",
+    );
+    let (t, mut s) = folder(&[(CONFIG, &bad)]);
+    let out = ok(&mut s, json!({"type": "folder.open", "path": t.path()}), 0);
+    assert_eq!(config_notices(&out), [pull_notice(100000)]);
+    let v = version(&mut s);
+    let out = ok(
+        &mut s,
+        json!({"type": "config.setBoard", "archiveAfterDays": 30, "version": v}),
+        0,
+    );
+    assert!(config_notices(&out).is_empty());
+    let text = read(&t, CONFIG);
+    assert!(text.contains("pull_interval_minutes = 100000"), "{text}");
+    let c = out.config.clone().unwrap();
+    assert_eq!(c.git.pull_interval_minutes, 5);
+    let out = ok(
+        &mut s,
+        json!({"type": "config.setGit", "enabled": false, "commitDelayMinutes": 5, "pullIntervalMinutes": 5, "version": c.version}),
+        0,
+    );
+    assert!(config_notices(&out).is_empty());
+    let text = read(&t, CONFIG);
+    assert!(text.contains("pull_interval_minutes = 5"), "{text}");
+    assert!(!text.contains("100000"), "{text}");
+}

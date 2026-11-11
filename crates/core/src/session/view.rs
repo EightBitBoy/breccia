@@ -7,7 +7,7 @@ use std::path::PathBuf;
 use serde::Serialize;
 
 use crate::color::PageColor;
-use crate::config::Config;
+use crate::config::{Config, Replaced};
 use crate::error::EditError;
 use crate::git::{GitLogView, GitView};
 use crate::inline::{LinkKind, links};
@@ -577,6 +577,20 @@ impl ConfigView {
 }
 
 impl Notice {
+    /// A number in `config.toml` outside its range, read as its default.
+    pub(crate) fn config_replaced(r: &Replaced) -> Notice {
+        Notice::LoadWarning {
+            message: format!(
+                "breccia/config.toml: {} = {} is outside {} to {}, so Breccia uses {} instead. Change it in Settings or in the file.",
+                r.key,
+                r.value,
+                r.range.start(),
+                r.range.end(),
+                r.default
+            ),
+        }
+    }
+
     pub(crate) fn load_warning(w: &LoadWarning) -> Notice {
         let message = match w {
             LoadWarning::NotUtf8(p) => format!("not valid UTF-8, not loaded: {}", p.display()),

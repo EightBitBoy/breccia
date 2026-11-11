@@ -1020,3 +1020,16 @@ fn open_table() {
         assert_eq!(got_warn, want_warn, "warnings {rel}");
     }
 }
+
+#[test]
+fn out_of_range_config_opens_with_defaults() {
+    let text = "[git]\npull_interval_minutes = 100000\n";
+    let (t, mut ws) = open(&[("breccia/config.toml", text)]);
+    assert_eq!(ws.config.git.pull_interval_minutes, 5);
+    assert_eq!(ws.take_config_replaced().len(), 1);
+    assert!(ws.take_config_replaced().is_empty());
+    assert_eq!(
+        fs::read_to_string(t.path().join("breccia/config.toml")).unwrap(),
+        text
+    );
+}

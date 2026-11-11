@@ -13,7 +13,7 @@ use chrono::NaiveDate;
 use serde::Serialize;
 
 use crate::color::{PageColor, page_color};
-use crate::config::{Config, ConfigError};
+use crate::config::{Config, ConfigError, Replaced};
 use crate::fsio::write_atomic;
 use crate::index::LinkIndex;
 use crate::layout::{self, JOURNALS, PAGES};
@@ -330,6 +330,8 @@ pub struct Workspace {
     /// The text of `breccia/config.toml` that `config` was read from or
     /// last written as (`None`: the file was missing).
     pub(crate) config_text: Option<String>,
+    /// Numbers in `config.toml` read as their defaults, not yet reported.
+    pub(crate) config_replaced: Vec<Replaced>,
     pages: HashMap<String, Page>,
     ids: IdGen,
     block_index: HashMap<BlockId, String>,
@@ -366,14 +368,17 @@ impl Workspace {
         fs::create_dir_all(root.join(JOURNALS))?;
         fs::create_dir_all(root.join(PAGES))?;
         write_atomic(&layout::config_path(root), Config::default_toml())?;
-        let (config, text, _) = Config::load_with_text(root)?;
-        Ok(Workspace::empty(root, config, text))
+        let (config, text, replaced) = Config::load_with_text(root)?;
+        let mut ws = Workspace::empty(root, config, text);
+        ws.config_replaced = replaced;
+        Ok(ws)
     }
 
     /// Opens a notes folder and loads every page into memory.
     pub fn open(root: &Path) -> Result<(Workspace, Vec<LoadWarning>), OpenError> {
-        let (config, text, _) = Config::load_with_text(root)?;
+        let (config, text, replaced) = Config::load_with_text(root)?;
         let mut ws = Workspace::empty(root, config, text);
+        ws.config_replaced = replaced;
         let mut warnings = Vec::new();
 
         let mut found = scan_journals(root, &mut warnings)?;
@@ -403,11 +408,18 @@ impl Workspace {
         Ok((ws, warnings))
     }
 
+    /// The out-of-range numbers of `config.toml` not yet reported; a second
+    /// call gives none.
+    pub fn take_config_replaced(&mut self) -> Vec<Replaced> {
+        std::mem::take(&mut self.config_replaced)
+    }
+
     fn empty(root: &Path, config: Config, config_text: Option<String>) -> Workspace {
         Workspace {
             root: root.to_path_buf(),
             config,
             config_text,
+            config_replaced: Vec::new(),
             pages: HashMap::new(),
             ids: IdGen::new(),
             block_index: HashMap::new(),
