@@ -58,22 +58,13 @@ fn connect(file: &Path) -> Result<Connection, rusqlite::Error> {
 
 impl SearchIndex {
     /// Opens the index at `file`, creating it and its folder if missing. A
-    /// file that is not a database, or has another schema version, is
-    /// deleted and created again.
+    /// file with another schema version is deleted and created again. A file
+    /// that is not a database is not touched: the error says so
+    /// ([`SearchError::is_damage`]) and the caller decides what to delete.
     pub fn open(file: &Path) -> Result<SearchIndex, SearchError> {
         if let Some(dir) = file.parent() {
             fs::create_dir_all(dir)?;
         }
-        match Self::try_open(file) {
-            Err(SearchError::Sql(e)) if is_damage(&e) => {
-                remove_index_files(file)?;
-                Self::try_open(file)
-            }
-            other => other,
-        }
-    }
-
-    fn try_open(file: &Path) -> Result<SearchIndex, SearchError> {
         let existed = file.exists();
         let mut conn = connect(file)?;
         let version: i32 = conn.query_row("PRAGMA user_version", [], |r| r.get(0))?;

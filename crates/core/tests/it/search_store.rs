@@ -329,14 +329,16 @@ fn the_index_survives_a_reopen() {
 }
 
 #[test]
-fn a_corrupt_index_file_is_rebuilt() {
+fn opening_a_corrupt_index_file_reports_the_damage() {
     let t = tempfile::tempdir().unwrap();
     let file = t.path().join("index.sqlite3");
     fs::write(&file, b"not a database, not even close, just some bytes").unwrap();
-    let (_n, ws) = open(&[("pages/P.md", "- hello\n")]);
-    let mut ix = SearchIndex::open(&file).unwrap();
-    assert_eq!(ix.update(&ws, &["p".into()]).unwrap(), 1);
-    assert_eq!(ix.query(&words(&["hello"]), 10).unwrap().len(), 1);
+    let Err(e) = SearchIndex::open(&file) else {
+        panic!("a garbage file must not open");
+    };
+    assert!(e.is_damage(), "{e}");
+    // `open` only opens: the file is the caller's to delete.
+    assert!(file.exists());
 }
 
 #[test]

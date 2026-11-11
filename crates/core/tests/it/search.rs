@@ -590,3 +590,85 @@ fn journal_day_answers_like_a_typed_date_and_writes_nothing() {
     let e = cmd(&mut s, json!({"type": "journal.day", "key": "12 Mar"})).unwrap_err();
     assert_eq!(e.code, "badDate");
 }
+
+#[test]
+fn damage_at_open_keeps_the_one_rebuild() {
+    let t = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    put(t.path(), "pages/P.md", "- a zebra\n");
+    let (s, _) = open_cached(&t, cache.path());
+    drop(s);
+    fs::write(
+        index_file(cache.path()),
+        b"not a database, not even close, just some bytes",
+    )
+    .unwrap();
+
+    let (mut s, out) = open_cached(&t, cache.path());
+    assert!(out.notices.is_empty(), "{:?}", out.notices);
+    assert_eq!(hits(&search(&mut s, "zebra")).len(), 1);
+    break_schema(&index_file(cache.path()));
+    let out = query_out(&mut s, "zebra");
+    assert!(out.notices.is_empty(), "{:?}", out.notices);
+    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+}
+
+#[test]
+fn damage_twice_moves_the_index_to_memory() {
+    let t = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    put(t.path(), "pages/P.md", "- a zebra\n");
+    let (mut s, _) = open_cached(&t, cache.path());
+    assert_eq!(hits(&search(&mut s, "zebra")).len(), 1);
+    drop(s);
+    let file = index_file(cache.path());
+    let mut bytes = fs::read(&file).unwrap();
+    assert!(bytes.len() > 4096);
+    bytes[4096..].fill(0x5A);
+    fs::write(&file, bytes).unwrap();
+
+    let (mut s, out) = open_cached(&t, cache.path());
+    assert!(load_warnings(&out).is_empty(), "{:?}", out.notices);
+    break_schema(&index_file(cache.path()));
+    let out = query_out(&mut s, "zebra");
+    let warnings = load_warnings(&out);
+    assert_eq!(warnings.len(), 1, "{:?}", out.notices);
+    assert!(warnings[0].contains("cannot be stored"), "{}", warnings[0]);
+    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert!(query_out(&mut s, "zebra").notices.is_empty());
+}
+
+#[test]
+fn query_with_mixed_links_widens_each_link() {
+    let (_t, mut s) = folder(&[
+        ("pages/A.md", "---\naliases: [alpha]\n---\n- the page\n"),
+        (
+            "pages/Ops.md",
+            "- [[alpha]] #b one\n- [[A]] two\n- [[alpha]] #b [[A]] three\n- #b four\n",
+        ),
+    ]);
+    let want = |v: &SearchView| hits(v).into_iter().map(|(_, t)| t).collect::<Vec<_>>();
+    let both = want(&search(&mut s, "[[A]] #b [[A]] text"));
+    assert!(both.is_empty(), "{both:?}");
+    let both = want(&search(&mut s, "[[A]] #b [[A]]"));
+    assert_eq!(both, ["[[alpha]] #b one", "[[alpha]] #b [[A]] three"]);
+    // Each filter finds the alias spelling of its own page.
+    assert_eq!(want(&search(&mut s, "#b [[A]]")).len(), 2);
+    assert_eq!(want(&search(&mut s, "[[A]] #b")).len(), 2);
+}
+
+#[test]
+fn query_link_to_an_unknown_page_keeps_its_key() {
+    let (_t, mut s) = folder(&[
+        ("pages/A.md", "---\naliases: [alpha]\n---\n- the page\n"),
+        (
+            "pages/Ops.md",
+            "- [[Nowhere]] one\n- [[alpha]] two\n- [[alpha]] [[Nowhere]] three\n",
+        ),
+    ]);
+    let want = |v: &SearchView| hits(v).into_iter().map(|(_, t)| t).collect::<Vec<_>>();
+    assert_eq!(want(&search(&mut s, "[[Nowhere]]")).len(), 2);
+    let both = want(&search(&mut s, "[[A]] [[Nowhere]]"));
+    assert_eq!(both.len(), 1, "{both:?}");
+    assert!(both[0].contains("three"), "{both:?}");
+}

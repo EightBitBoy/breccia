@@ -219,7 +219,15 @@ impl IndexState {
         let mut warning = None;
         if let Some(dir) = &self.cache {
             let file = dir.join(index_file_name(&ws.root));
-            let try_open = || SearchIndex::open(&file).and_then(|i| prepare(i, ws, &touched));
+            // A file that is not a database is deleted without counting as
+            // the rebuild; damage found while reading it counts.
+            let open_fresh = || match SearchIndex::open(&file) {
+                Err(e) if e.is_damage() => {
+                    remove_index_files(&file).and_then(|()| SearchIndex::open(&file))
+                }
+                other => other,
+            };
+            let try_open = || open_fresh().and_then(|i| prepare(i, ws, &touched));
             let mut result = try_open();
             if result.as_ref().is_err_and(SearchError::is_damage) {
                 self.rebuilt = true;
