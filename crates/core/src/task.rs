@@ -5,7 +5,7 @@ use chrono::{NaiveDate, NaiveDateTime, NaiveTime};
 
 use crate::config::{Config, State};
 use crate::error::EditError;
-use crate::inline::{self, LinkKind, property};
+use crate::inline::{self, LinkKind};
 use crate::naming::parse_journal_name;
 use crate::outline::{BlockId, Document};
 
@@ -167,113 +167,40 @@ pub fn priority(text: &str) -> Option<u32> {
     v.parse::<u32>().ok().filter(|&n| n >= 1)
 }
 
-fn is_priority_line(line: &str) -> bool {
-    property(line).is_some_and(|(k, _)| k == "priority")
-}
-
 /// `text` with its `priority::` property lines replaced by one `priority:: n`
 /// at the first one's place (or after the last property line), or removed.
 fn with_priority(text: &str, value: Option<u32>) -> String {
-    let lines: Vec<&str> = text.split('\n').collect();
-    let end = props_end(&lines);
-    let new = value.map(|n| format!("priority:: {n}"));
-    let mut out: Vec<&str> = Vec::with_capacity(lines.len() + 1);
-    let mut placed = false;
-    for (i, l) in lines.iter().enumerate() {
-        if i >= 1 && i < end && is_priority_line(l) {
-            if let (Some(n), false) = (&new, placed) {
-                out.push(n);
-                placed = true;
-            }
-            continue;
-        }
-        if i == end
-            && let (Some(n), false) = (&new, placed)
-        {
-            out.push(n);
-            placed = true;
-        }
-        out.push(l);
-    }
-    if let (Some(n), false) = (&new, placed) {
-        out.push(n);
-    }
-    out.join("\n")
-}
-
-fn is_done_line(line: &str) -> bool {
-    property(line).is_some_and(|(k, _)| k == "done")
-}
-
-fn is_archived_line(line: &str) -> bool {
-    property(line).is_some_and(|(k, _)| k == "archived")
+    inline::with_property(text, "priority", value.map(|n| n.to_string()).as_deref())
 }
 
 /// Whether the block is archived: an `archived::` property, with any value,
 /// among the properties directly after its first line. Boards leave it out.
 pub fn is_archived(text: &str) -> bool {
-    inline::properties(text)
-        .iter()
-        .any(|(k, _)| k == "archived")
-}
-
-/// The index of the first line after the first line's properties.
-fn props_end(lines: &[&str]) -> usize {
-    1 + lines[1..]
-        .iter()
-        .take_while(|l| property(l).is_some())
-        .count()
+    inline::has_property(text, "archived")
 }
 
 /// Adds `archived:: <date> <time>` after the properties (`Some`, when there is no
 /// `archived::` line yet), or removes every `archived::` line (`None`).
 fn with_archived(text: &str, on: Option<NaiveDateTime>) -> String {
-    let mut lines: Vec<&str> = text.split('\n').collect();
-    let end = props_end(&lines);
-    match on {
-        Some(now) => {
-            if lines[1..end].iter().any(|l| is_archived_line(l)) {
-                return text.to_string();
-            }
-            let line = format!("archived:: {}", now.format("%Y-%m-%d %H:%M:%S"));
-            lines.insert(end, &line);
-            lines.join("\n")
-        }
-        None => lines
-            .iter()
-            .enumerate()
-            .filter(|&(i, l)| !(i >= 1 && i < end && is_archived_line(l)))
-            .map(|(_, l)| *l)
-            .collect::<Vec<_>>()
-            .join("\n"),
-    }
-}
-
-fn is_created_line(line: &str) -> bool {
-    property(line).is_some_and(|(k, _)| k == "created")
+    with_stamp(text, "archived", on)
 }
 
 /// Adds `created:: <date> <time>` after the properties (`Some`, when there is no
 /// `created::` line yet), or removes every `created::` property line (`None`).
 fn with_created(text: &str, on: Option<NaiveDateTime>) -> String {
-    let mut lines: Vec<&str> = text.split('\n').collect();
-    let end = props_end(&lines);
+    with_stamp(text, "created", on)
+}
+
+/// `with_archived` and `with_created`: a `key:: <date> <time>` line.
+fn with_stamp(text: &str, key: &str, on: Option<NaiveDateTime>) -> String {
     match on {
-        Some(now) => {
-            if lines[1..end].iter().any(|l| is_created_line(l)) {
-                return text.to_string();
-            }
-            let line = format!("created:: {}", now.format("%Y-%m-%d %H:%M:%S"));
-            lines.insert(end, &line);
-            lines.join("\n")
-        }
-        None => lines
-            .iter()
-            .enumerate()
-            .filter(|&(i, l)| !(i >= 1 && i < end && is_created_line(l)))
-            .map(|(_, l)| *l)
-            .collect::<Vec<_>>()
-            .join("\n"),
+        Some(_) if inline::has_property(text, key) => text.to_string(),
+        Some(now) => inline::with_property(
+            text,
+            key,
+            Some(&now.format("%Y-%m-%d %H:%M:%S").to_string()),
+        ),
+        None => inline::with_property(text, key, None),
     }
 }
 
@@ -306,28 +233,14 @@ fn with_state_lines(
 
 /// Adds or removes the `done::` line in `text` for a finished/unfinished state.
 fn with_done(text: &str, finished: bool, now: NaiveDateTime) -> String {
-    let mut lines: Vec<&str> = text.split('\n').collect();
-    let props_end = props_end(&lines);
-    if finished {
-        if !lines[1..props_end].iter().any(|l| is_done_line(l)) {
-            let line = format!(
-                "done:: [[{}]] {}",
-                now.format("%Y-%m-%d"),
-                now.format("%H:%M:%S")
-            );
-            lines.insert(props_end, &line);
-            return lines.join("\n");
-        }
-    } else {
-        let kept: Vec<&str> = lines
-            .iter()
-            .enumerate()
-            .filter(|&(i, l)| !(i >= 1 && i < props_end && is_done_line(l)))
-            .map(|(_, l)| *l)
-            .collect();
-        return kept.join("\n");
+    if !finished {
+        return inline::with_property(text, "done", None);
     }
-    text.to_string()
+    if inline::has_property(text, "done") {
+        return text.to_string();
+    }
+    let value = format!("[[{}]] {}", now.format("%Y-%m-%d"), now.format("%H:%M:%S"));
+    inline::with_property(text, "done", Some(&value))
 }
 
 impl Document {

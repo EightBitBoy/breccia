@@ -214,6 +214,47 @@ pub fn properties(text: &str) -> Vec<(String, String)> {
     text.split('\n').skip(1).map_while(property).collect()
 }
 
+/// Whether a `key:: …` line is among the property lines directly after the
+/// first line.
+pub(crate) fn has_property(text: &str, key: &str) -> bool {
+    properties(text).iter().any(|(k, _)| k == key)
+}
+
+/// `text` with its `key::` property lines (directly after the first line)
+/// replaced by one `key:: value` at the first one's place, or the line added
+/// after the last property line (`Some`); or every such line removed (`None`).
+/// Every other byte stays.
+pub(crate) fn with_property(text: &str, key: &str, value: Option<&str>) -> String {
+    let lines: Vec<&str> = text.split('\n').collect();
+    let end = 1 + lines[1..]
+        .iter()
+        .take_while(|l| property(l).is_some())
+        .count();
+    let new = value.map(|v| format!("{key}:: {v}"));
+    let mut out: Vec<&str> = Vec::with_capacity(lines.len() + 1);
+    let mut placed = false;
+    for (i, l) in lines.iter().enumerate() {
+        if i == end
+            && let (Some(n), false) = (&new, placed)
+        {
+            out.push(n);
+            placed = true;
+        }
+        if i >= 1 && i < end && property(l).is_some_and(|(k, _)| k == key) {
+            if let (Some(n), false) = (&new, placed) {
+                out.push(n);
+                placed = true;
+            }
+            continue;
+        }
+        out.push(l);
+    }
+    if let (Some(n), false) = (&new, placed) {
+        out.push(n);
+    }
+    out.join("\n")
+}
+
 /// The first property line of `preamble` whose key is `title` (ASCII
 /// case-insensitive) and whose value is a valid page name: its index among
 /// `preamble.split('\n')` and the value.
@@ -229,4 +270,40 @@ pub fn title_line(preamble: &str) -> Option<(usize, String)> {
             let (k, v) = property(l)?;
             (k.eq_ignore_ascii_case("title") && is_valid_page_name(&v)).then_some((i, v))
         })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn with_property_sets_replaces_and_removes() {
+        // Added after the last property line.
+        assert_eq!(
+            with_property("a\nowner:: x\nnote", "k", Some("1")),
+            "a\nowner:: x\nk:: 1\nnote"
+        );
+        assert_eq!(with_property("a", "k", Some("1")), "a\nk:: 1");
+        // The first line of the key is replaced in place, further ones go.
+        assert_eq!(
+            with_property("a\nk:: 1\nowner:: x\nk:: 2\nplain\nk:: 3", "k", Some("9")),
+            "a\nk:: 9\nowner:: x\nplain\nk:: 3"
+        );
+        // Removed: every one among the property lines; a text line ends them.
+        assert_eq!(
+            with_property("a\nk:: 1\nowner:: x\nk:: 2\nplain\nk:: 3", "k", None),
+            "a\nowner:: x\nplain\nk:: 3"
+        );
+        assert_eq!(with_property("a", "k", None), "a");
+        // A key on the first line is text, not a property.
+        assert_eq!(with_property("k:: 1", "k", None), "k:: 1");
+    }
+
+    #[test]
+    fn has_property_only_counts_the_property_lines() {
+        assert!(has_property("a\nowner:: x\nk:: 1", "k"));
+        assert!(!has_property("a\nowner:: x\nplain\nk:: 1", "k"));
+        assert!(!has_property("k:: 1", "k"));
+        assert!(!has_property("a\nkk:: 1", "k"));
+    }
 }

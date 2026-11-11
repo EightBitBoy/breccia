@@ -620,3 +620,55 @@ fn removing_the_state_of_a_plain_block_changes_nothing() {
     let src = "- notes\n  created:: 2026-10-01 08:00:00\n  done:: [[2026-10-02]]\n  priority:: 3\n  archived:: 2026-10-03\n";
     assert_eq!(apply(src, 0, None), src);
 }
+
+#[test]
+fn property_lines_edits_keep_every_other_byte() {
+    // A block of one line: the new line follows it.
+    assert_eq!(
+        prioritize("- TODO x\n", Some(3)),
+        "- TODO x\n  priority:: 3\n"
+    );
+    assert_eq!(
+        apply("- TODO x\n", 0, Some("DONE")),
+        "- DONE x\n  created:: 2026-10-29 14:05:09\n  done:: [[2026-10-29]] 14:05:09\n"
+            .replace("  created:: 2026-10-29 14:05:09\n", "")
+    );
+    // Two priority lines: set replaces the first and drops the second; remove drops both.
+    let two = "- TODO x\n  priority:: 1\n  owner:: Ben\n  priority:: 2\n";
+    assert_eq!(
+        prioritize(two, Some(9)),
+        "- TODO x\n  priority:: 9\n  owner:: Ben\n"
+    );
+    assert_eq!(prioritize(two, None), "- TODO x\n  owner:: Ben\n");
+    // A property line after a non-property line is text and is not touched.
+    let late = "- TODO x\n  plain\n  priority:: 1\n";
+    assert_eq!(prioritize(late, None), late);
+    assert_eq!(
+        prioritize(late, Some(2)),
+        "- TODO x\n  priority:: 2\n  plain\n  priority:: 1\n"
+    );
+    // created:: already there: a state change keeps it, bytes unchanged.
+    let created = "- TODO x\n  created:: 2026-10-01 08:00:00\n";
+    assert_eq!(
+        apply(created, 0, Some("DOING")),
+        "- DOING x\n  created:: 2026-10-01 08:00:00\n"
+    );
+    // done:: present and the state stays finished: unchanged.
+    let done = "- DONE x\n  done:: [[2026-10-01]] 08:00:00\n";
+    assert_eq!(apply(done, 0, Some("DONE")), done);
+    // A foreign property first: the new line goes after it.
+    assert_eq!(
+        archive("- TODO x\n  owner:: Ben\n", 0, true),
+        "- TODO x\n  owner:: Ben\n  archived:: 2026-10-29 14:05:09\n"
+    );
+    assert_eq!(
+        archive(
+            "- TODO x\n  owner:: Ben\n  archived:: 2026-10-01\n  archived:: 2026-10-02\n",
+            0,
+            false
+        ),
+        "- TODO x\n  owner:: Ben\n"
+    );
+    let arch = "- TODO x\n  archived:: 2026-10-01\n";
+    assert_eq!(archive(arch, 0, true), arch);
+}
