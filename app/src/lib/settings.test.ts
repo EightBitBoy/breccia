@@ -29,3 +29,23 @@ describe('SettingsScreen usage', () => {
     expect(s.skipped).toBe(0)
   })
 })
+
+describe('SettingsScreen changelog', () => {
+  it('only shows while the screen is open', () => {
+    const s = new SettingsScreen()
+    s.showChangelog()
+    expect(s.changelog).toBe(false)
+    s.open()
+    s.showChangelog()
+    expect(s.changelog).toBe(true)
+    s.hideChangelog()
+    expect(s.changelog).toBe(false)
+  })
+  it('close hides it', () => {
+    const s = new SettingsScreen()
+    s.open()
+    s.showChangelog()
+    s.close()
+    expect(s.changelog).toBe(false)
+  })
+})

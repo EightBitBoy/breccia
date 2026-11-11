@@ -7,6 +7,8 @@ export class SettingsScreen {
   shown = $state(false)
   /** The section to scroll to when opened; null for the top. */
   section = $state<SettingsSection | null>(null)
+  /** Whether the changelog overlay is shown over the Settings screen. */
+  changelog = $state(false)
   usage = $state.raw<StateUsage[]>([])
   /** Pages that did not load, so are neither counted nor renamed (`Output.usageSkipped`). */
   skipped = $state(0)
@@ -18,6 +20,15 @@ export class SettingsScreen {
 
   close(): void {
     this.shown = false
+    this.changelog = false
+  }
+
+  showChangelog(): void {
+    if (this.shown) this.changelog = true
+  }
+
+  hideChangelog(): void {
+    this.changelog = false
   }
 
   applyUsage(u: StateUsage[], skipped = 0): void {
