@@ -510,3 +510,11 @@ settle in the plan: the key (for example `Ctrl Shift K`, as in VS Code, or `Ctrl
 collide with an existing shortcut), what happens to the block's children (deleted with it, or moved up one level),
 where the caret goes afterwards, that `Ctrl Z` brings the block back, and a line in the F1 overlay and in Settings >
 Keyboard. Planned with plan 7 (with #75 and #77).
+
+## 79. The changelog inside the app (Settings)
+
+Owner, 2026-11-11: the About section of Settings should have a button that shows the changelog directly inside the
+application. To settle in the plan: where the text comes from (the `CHANGELOG.md` that `just release` writes, built
+into the app, so it works offline and needs no network request), how it is shown (a view or an overlay, rendered as
+Markdown), whether it opens at the running version, how it is closed (`Esc`), and what it shows in a dev build before
+the first release.
