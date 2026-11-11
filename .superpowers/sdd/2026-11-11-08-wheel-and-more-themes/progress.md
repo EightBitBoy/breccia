@@ -14,3 +14,7 @@ Task 4: complete — 7ea414f; review (opus) ✅/approved. Minor 1 carried to fin
 
 Task 5: complete — ba87f36; review ✅/approved. Minor to final review: spec 7.13 "at its right end" placement unchecked against other right-side items.
 All tasks complete. Final review package review-b36f15f..ba87f36.diff.
+
+Final review (opus): final-review.md, 0 critical, 1 important (I1 Teal --select vs --edit 1.04). Ruling: apply I1 fix (--edit #063845 -> #02303c, PAIRS test 1.14) — owner asked Teal selection readable; selection invisible while editing defeats that — cost if wrong: Teal edited block slightly fainter tint, one hex to revert; noted in review item 86 and follow-ups. Fix wave also: step 132 menu-open assert, plan text 198->201, review items 80-86, STATUS six themes, follow-ups doc.
+
+Fix wave: e038276, dddaa86, 7ae4fd4. Controller checks 2026-11-11: just test exit 0 (core 737), just lint clean, just e2e 201 PASS. Plan 8 done.
