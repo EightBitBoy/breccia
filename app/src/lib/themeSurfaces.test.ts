@@ -39,6 +39,7 @@ const PAIRS: [string, string, number][] = [
   ['--on-accent', '--accent', 4.5],
   ['--hover', '--bg', 1.1],
   ['--select', '--bg', 1.2],
+  ['--select', '--edit', 1.14], // a text selection in the edited block shows
 ]
 
 test.each(SELECTORS)('plain surfaces are readable in %s', (s) => {
