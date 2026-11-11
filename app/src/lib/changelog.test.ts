@@ -23,7 +23,7 @@ describe('parseChangelog', () => {
     expect(parseChangelog(md.replace(/\n/g, '\r\n'))).toEqual(expected)
   })
   it('strips a leading BOM before the first-line check', () => {
-    expect(parseChangelog('﻿# Changelog\n\nIntro.')).toEqual([p('Intro.')])
+    expect(parseChangelog('\uFEFF# Changelog\n\nIntro.')).toEqual([p('Intro.')])
   })
   it('heading levels and versions', () => {
     expect(parseChangelog('## Unreleased')).toEqual([h(2, 'Unreleased')])

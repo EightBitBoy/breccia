@@ -61,7 +61,7 @@ export function parseInline(s: string): Inline[] {
 }
 
 export function parseChangelog(md: string): Block[] {
-  const lines = md.replace(/^﻿/, '').split(/\r?\n/)
+  const lines = md.replace(/^\uFEFF/, '').split(/\r?\n/)
   const blocks: Block[] = []
   let para: string[] = []
   let items: string[] = []
