@@ -3,6 +3,8 @@
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
+use crate::layout::{CONFIG_DIR, CONFIG_FILE, JOURNALS, PAGES};
+
 /// One staged change in the notes folder, folder-relative.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum Change {
@@ -47,11 +49,11 @@ impl Name {
                 .unwrap_or_else(|| file.clone())
         };
         let is_md = path.extension().is_some_and(|e| e == "md");
-        let (rank, text) = if p.len() >= 2 && p[0] == "pages" && is_md {
+        let (rank, text) = if p.len() >= 2 && p[0] == PAGES && is_md {
             (0, stem())
-        } else if p.len() == 2 && p[0] == "journals" && is_md {
+        } else if p.len() == 2 && p[0] == JOURNALS && is_md {
             (1, stem())
-        } else if p.len() == 2 && p[0] == "breccia" && p[1] == "config.toml" {
+        } else if p.len() == 2 && p[0] == CONFIG_DIR && p[1] == CONFIG_FILE {
             (2, "settings".to_string())
         } else {
             (3, file.clone())
@@ -252,5 +254,31 @@ mod tests {
     fn control_characters_in_names_become_spaces() {
         let s = commit_message(&[m("pages/a\nb.md")]);
         assert_eq!(s, "update a b");
+    }
+
+    /// How each path Git may report is named: its rank (page, journal day,
+    /// settings, other) and text. A hidden page and a journal with a bad name
+    /// are named too, though Breccia does not load them.
+    #[test]
+    fn message_names_table() {
+        for (path, rank, text) in [
+            ("journals/2026-10-29.md", 1, "2026-10-29"),
+            ("journals/x.md", 1, "x"),
+            ("journals/sub/2026-10-29.md", 3, "2026-10-29.md"),
+            ("journals/2026-10-29.MD", 3, "2026-10-29.MD"),
+            ("pages/a.md", 0, "a"),
+            ("pages/f/g/a.md", 0, "a"),
+            ("pages/a.MD", 3, "a.MD"),
+            ("pages/.h/a.md", 0, "a"),
+            ("pages/v1.2", 3, "v1.2"),
+            ("pages/f", 3, "f"),
+            ("breccia/config.toml", 2, "settings"),
+            ("breccia/other.toml", 3, "other.toml"),
+            ("other/a.md", 3, "a.md"),
+            ("a.md", 3, "a.md"),
+        ] {
+            let name = Name::of(&p(path));
+            assert_eq!((name.rank, name.text.as_str()), (rank, text), "{path}");
+        }
     }
 }

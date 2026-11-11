@@ -14,6 +14,7 @@ use super::sync::{Problem, Pushed, Target};
 use super::view::{GitState, GitView, ProblemView};
 use super::{GitError, commit_message, init};
 use crate::config::GitSettings;
+use crate::layout;
 use crate::session::{Clock, Command, Notice, Output, Request, Session};
 use chrono::NaiveDateTime;
 use std::path::{Path, PathBuf};
@@ -813,7 +814,7 @@ impl GitEngine {
                         Ok(None) => {}
                         Err(message) => {
                             let warned = out.notices.iter().any(|n| {
-                                matches!(n, Notice::LoadWarning { message } if message.contains("breccia/config.toml"))
+                                matches!(n, Notice::LoadWarning { message } if message.contains(layout::CONFIG_REL))
                             });
                             if !warned {
                                 out.notices.push(Notice::LoadWarning {

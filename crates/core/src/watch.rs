@@ -8,6 +8,8 @@ use notify::{RecommendedWatcher, RecursiveMode};
 use notify_debouncer_full::file_id::{FileId, get_file_id};
 use notify_debouncer_full::{Debouncer, FileIdCache, new_debouncer_opt};
 
+use crate::layout::{self, CONFIG_DIR, CONFIG_FILE, JOURNALS, PAGES};
+
 /// How long events are collected before a batch is passed on.
 pub const DEBOUNCE_MS: u64 = 200;
 
@@ -30,9 +32,9 @@ pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
     }
     let is_md = rel.extension().is_some_and(|e| e == "md");
     let ok = match parts.as_slice() {
-        [first, _] if *first == "journals" => is_md,
-        [first, .., _] if *first == "pages" => is_md || rel.extension().is_none(),
-        [first, file] if *first == "breccia" => *file == "config.toml",
+        [first, _] if *first == JOURNALS => is_md,
+        [first, .., _] if *first == PAGES => is_md || rel.extension().is_none(),
+        [first, file] if *first == CONFIG_DIR => *file == CONFIG_FILE,
         _ => false,
     };
     ok.then(|| rel.to_path_buf())
@@ -46,7 +48,7 @@ pub fn relevant_now(root: &Path, path: &Path) -> Option<PathBuf> {
     relevant(root, path).or_else(|| {
         let rel = path.strip_prefix(root).ok()?;
         let mut comps = rel.components();
-        let under_pages = matches!(comps.next(), Some(Component::Normal(s)) if s == "pages");
+        let under_pages = matches!(comps.next(), Some(Component::Normal(s)) if s == PAGES);
         let clean = rel
             .components()
             .all(|c| matches!(c, Component::Normal(s) if !s.to_str().is_some_and(|s| s.starts_with('.'))));
@@ -112,10 +114,10 @@ pub fn rescan(root: &Path) -> Vec<PathBuf> {
     }
     let mut out = Vec::new();
     // The settings file too, so a lost-events rescan follows a hand edit of it.
-    if root.join("breccia").join("config.toml").is_file() {
-        out.push(PathBuf::from("breccia").join("config.toml"));
+    if layout::config_path(root).is_file() {
+        out.push(PathBuf::from(CONFIG_DIR).join(CONFIG_FILE));
     }
-    for top in ["pages", "journals"] {
+    for top in [PAGES, JOURNALS] {
         out.push(PathBuf::from(top));
         walk(root, &root.join(top), &mut out);
     }
@@ -129,9 +131,9 @@ pub fn rescan(root: &Path) -> Vec<PathBuf> {
 pub fn watch_roots(root: &Path) -> Vec<(PathBuf, RecursiveMode)> {
     vec![
         (root.to_path_buf(), RecursiveMode::NonRecursive),
-        (root.join("pages"), RecursiveMode::Recursive),
-        (root.join("journals"), RecursiveMode::Recursive),
-        (root.join("breccia"), RecursiveMode::NonRecursive),
+        (root.join(PAGES), RecursiveMode::Recursive),
+        (root.join(JOURNALS), RecursiveMode::Recursive),
+        (root.join(CONFIG_DIR), RecursiveMode::NonRecursive),
     ]
 }
 

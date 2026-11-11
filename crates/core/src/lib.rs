@@ -8,6 +8,7 @@ pub mod fsio;
 pub mod git;
 pub mod index;
 pub mod inline;
+pub mod layout;
 pub mod naming;
 pub mod outline;
 pub mod relink;

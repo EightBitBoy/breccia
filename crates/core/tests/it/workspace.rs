@@ -947,3 +947,76 @@ fn locate_follows_every_page_change() {
             .all(|&id| key_of(&ws, id).as_deref() == Some("keep"))
     );
 }
+
+/// The paths the classifier decides on, each alone in a folder that is then
+/// opened: `(path, a folder?, pages loaded, folders, warnings)`. A warning is
+/// its kind and its `/`-separated path. A non-Unicode name is
+/// `non_unicode_name_is_reported`'s.
+#[allow(clippy::type_complexity)]
+const OPEN_ROWS: &[(&str, bool, &[&str], &[&str], &[(&str, &str)])] = &[
+    ("journals/2026-10-29.md", false, &["2026-10-29"], &[], &[]),
+    (
+        "journals/x.md",
+        false,
+        &[],
+        &[],
+        &[("BadJournalName", "journals/x.md")],
+    ),
+    ("journals/sub/2026-10-29.md", false, &[], &[], &[]),
+    (
+        "journals/2026-10-29.MD",
+        false,
+        &[],
+        &[],
+        &[("ExtensionCase", "journals/2026-10-29.MD")],
+    ),
+    ("pages/a.md", false, &["a"], &[], &[]),
+    ("pages/f/g/a.md", false, &["a"], &["f", "f/g"], &[]),
+    (
+        "pages/a.MD",
+        false,
+        &[],
+        &[],
+        &[("ExtensionCase", "pages/a.MD")],
+    ),
+    ("pages/.h/a.md", false, &[], &[], &[]),
+    ("pages/v1.2", true, &[], &["v1.2"], &[]),
+    ("pages/f", true, &[], &["f"], &[]),
+    ("breccia/config.toml", false, &[], &[], &[]),
+    ("breccia/other.toml", false, &[], &[], &[]),
+    ("other/a.md", false, &[], &[], &[]),
+    ("a.md", false, &[], &[], &[]),
+];
+
+#[test]
+fn open_table() {
+    for &(rel, is_dir, keys, folders, warnings) in OPEN_ROWS {
+        let t = tempfile::tempdir().unwrap();
+        if is_dir {
+            fs::create_dir_all(t.path().join(rel)).unwrap();
+        } else if rel == "breccia/config.toml" {
+            put(t.path(), rel, b"");
+        } else {
+            put(t.path(), rel, b"- x\n");
+        }
+        let (ws, warn) = Workspace::open(t.path()).unwrap();
+        let mut got_keys: Vec<&str> = ws.pages().map(|p| p.key.as_str()).collect();
+        got_keys.sort();
+        let got_folders: Vec<&str> = ws.folders().collect();
+        let got_warn: Vec<(String, String)> = warn
+            .iter()
+            .map(|w| {
+                let kind = format!("{w:?}");
+                let kind = kind.split(['(', ' ']).next().unwrap().to_string();
+                (kind, w.path().to_string_lossy().replace('\\', "/"))
+            })
+            .collect();
+        let want_warn: Vec<(String, String)> = warnings
+            .iter()
+            .map(|(k, p)| (k.to_string(), p.to_string()))
+            .collect();
+        assert_eq!(got_keys, keys, "pages {rel}");
+        assert_eq!(got_folders, folders, "folders {rel}");
+        assert_eq!(got_warn, want_warn, "warnings {rel}");
+    }
+}

@@ -7,10 +7,11 @@ use std::io;
 use std::path::Path;
 
 use super::files::{is_within, names_in_dir, path_taken};
-use super::{JOURNALS, PAGES, Page, PageError, PageKind, RenameReport, Workspace};
+use super::{Page, PageError, PageKind, RenameReport, Workspace};
 use crate::aliases::realias;
 use crate::color::{PageColor, parse_color, recolor};
 use crate::inline::{LinkKind, heading_base, links, title_line};
+use crate::layout::{JOURNALS, PAGES};
 use crate::naming::{
     file_stem_for, is_linkable_name, is_valid_folder_path, is_valid_page_name, page_key,
     parse_journal_name,

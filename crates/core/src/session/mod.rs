@@ -35,6 +35,7 @@ pub use view::{
 
 use crate::config::{BoardSettings, Config, ConfigError, Expect, GitSettings, State};
 use crate::error::EditError;
+use crate::layout;
 use crate::naming::journal_name;
 use crate::outline::{BlockId, Document, IdGen};
 use crate::workspace::{ReloadError, SaveError, Workspace};
@@ -73,9 +74,6 @@ pub struct Session {
     /// only when they changed.
     link_lists: LinkLists,
 }
-
-/// `breccia/config.toml` as the watcher and the Git engine name it.
-const CONFIG_REL: &str = "breccia/config.toml";
 
 fn config_changed() -> CommandError {
     CommandError::new(
@@ -1143,7 +1141,7 @@ impl Session {
     /// edits are left alone and get a `saveFailed` notice; reloaded pages
     /// lose their history and mark the blocks that changed or went.
     fn files_changed(&mut self, paths: &[PathBuf]) -> Result<Output, CommandError> {
-        let config_path = Path::new(CONFIG_REL);
+        let config_path = Path::new(layout::CONFIG_REL);
         let config_touched = paths.iter().any(|p| p == config_path);
         let paths: Vec<PathBuf> = paths
             .iter()

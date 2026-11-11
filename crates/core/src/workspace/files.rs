@@ -8,8 +8,9 @@ use std::path::{Path, PathBuf};
 
 use chrono::NaiveDate;
 
-use super::{LoadWarning, PAGES};
+use super::LoadWarning;
 use crate::inline::title_line;
+use crate::layout::PAGES;
 use crate::outline::Document;
 
 /// A file found by the scan, before duplicates are resolved.

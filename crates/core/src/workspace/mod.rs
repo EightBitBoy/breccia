@@ -15,6 +15,7 @@ use crate::color::{PageColor, page_color};
 use crate::config::{Config, ConfigError};
 use crate::fsio::write_atomic;
 use crate::index::LinkIndex;
+use crate::layout::{self, JOURNALS, PAGES};
 use crate::naming::{is_valid_page_name, journal_name, page_key, parse_journal_name};
 use crate::outline::{BlockId, Carried, Document, IdGen, parse};
 
@@ -31,9 +32,6 @@ use files::{
 };
 pub use names::Target;
 pub use states::{StateRenameReport, StateUsage};
-
-const JOURNALS: &str = "journals";
-const PAGES: &str = "pages";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum PageKind {
@@ -364,10 +362,7 @@ impl Workspace {
         }
         fs::create_dir_all(root.join(JOURNALS))?;
         fs::create_dir_all(root.join(PAGES))?;
-        write_atomic(
-            &root.join("breccia").join("config.toml"),
-            Config::default_toml(),
-        )?;
+        write_atomic(&layout::config_path(root), Config::default_toml())?;
         let (config, text) = Config::load_with_text(root)?;
         Ok(Workspace::empty(root, config, text))
     }

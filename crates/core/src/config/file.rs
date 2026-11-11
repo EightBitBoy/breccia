@@ -14,6 +14,7 @@ use super::toml_keep::{
     write_section,
 };
 use super::{Board, BoardSettings, Config, ConfigError, GitSettings, State};
+use crate::layout;
 
 /// What a config writer expects `config.toml` to hold before it writes.
 #[derive(Debug, Clone, Copy)]
@@ -152,7 +153,7 @@ fn edit_file(
     expect: Expect<'_>,
     change: impl FnOnce(&mut DocumentMut) -> Result<(), ConfigError>,
 ) -> Result<String, ConfigError> {
-    let path = root.join("breccia").join("config.toml");
+    let path = layout::config_path(root);
     let found = match std::fs::read_to_string(&path) {
         Ok(text) => Some(text),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => None,
@@ -340,7 +341,7 @@ impl Config {
 
     /// The text of `<root>/breccia/config.toml`; `None` when it is missing.
     pub fn read_text(root: &Path) -> Result<Option<String>, ConfigError> {
-        match std::fs::read_to_string(root.join("breccia").join("config.toml")) {
+        match std::fs::read_to_string(layout::config_path(root)) {
             Ok(text) => Ok(Some(text)),
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
             Err(e) => Err(e.into()),

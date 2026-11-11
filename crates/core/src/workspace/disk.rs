@@ -10,9 +10,8 @@ use super::files::{
     Found, has_md_extension, is_blank, is_exact_file, is_hidden, is_within, list_md,
     preamble_title, read_dir_sorted, walk_pages, within_or_all,
 };
-use super::{
-    DiskReport, JOURNALS, LoadWarning, PAGES, Page, PageKind, ReloadError, Reloaded, Workspace,
-};
+use super::{DiskReport, LoadWarning, Page, PageKind, ReloadError, Reloaded, Workspace};
+use crate::layout::{JOURNALS, PAGES};
 use crate::naming::{is_valid_page_name, page_key, parse_journal_name};
 use crate::outline::{Carried, carry_ids, parse};
 

@@ -238,3 +238,55 @@ fn rescan_does_not_follow_folder_links() {
         "{found:?}"
     );
 }
+
+/// What a path in the notes folder is when the watcher sees it.
+#[derive(Clone, Copy)]
+enum Made {
+    File,
+    Dir,
+    Missing,
+}
+
+/// The paths the classifier decides on, one temp folder each (on a
+/// case-insensitive file system `a.md` and `a.MD` are one file):
+/// `(path, what is there, relevant, relevant_now)`.
+const RELEVANT_ROWS: &[(&str, Made, bool, bool)] = &[
+    ("journals/2026-10-29.md", Made::File, true, true),
+    ("journals/x.md", Made::File, true, true),
+    ("journals/sub/2026-10-29.md", Made::File, false, false),
+    ("journals/2026-10-29.MD", Made::File, false, false),
+    ("pages/a.md", Made::File, true, true),
+    ("pages/f/g/a.md", Made::File, true, true),
+    ("pages/a.MD", Made::File, false, false),
+    ("pages/.h/a.md", Made::File, false, false),
+    ("pages/v1.2", Made::Dir, false, true),
+    ("pages/v1.2", Made::Missing, false, true),
+    ("pages/f", Made::Dir, true, true),
+    ("breccia/config.toml", Made::File, true, true),
+    ("breccia/other.toml", Made::File, false, false),
+    ("other/a.md", Made::File, false, false),
+    ("a.md", Made::File, false, false),
+];
+
+#[test]
+fn relevant_table() {
+    for &(rel, made, rel_ok, now_ok) in RELEVANT_ROWS {
+        let t = tempfile::tempdir().unwrap();
+        let path = t.path().join(rel);
+        match made {
+            Made::File => {
+                std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+                std::fs::write(&path, "- x\n").unwrap();
+            }
+            Made::Dir => std::fs::create_dir_all(&path).unwrap(),
+            Made::Missing => std::fs::create_dir_all(path.parent().unwrap()).unwrap(),
+        }
+        let want = |ok: bool| ok.then(|| PathBuf::from(rel));
+        assert_eq!(relevant(t.path(), &path), want(rel_ok), "relevant {rel}");
+        assert_eq!(
+            relevant_now(t.path(), &path),
+            want(now_ok),
+            "relevant_now {rel}"
+        );
+    }
+}

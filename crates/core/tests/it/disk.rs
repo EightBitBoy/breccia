@@ -763,3 +763,83 @@ fn reload_of_a_fileless_page_indexes_its_aliases() {
     let out = ok(&mut s, json!({"type": "page.open", "name": "Other"}));
     assert_eq!(out.page.unwrap().key, "q");
 }
+
+/// The paths the classifier decides on, each made in its own open folder and
+/// passed to `files.changed`: `(path, a folder?, pages loaded, folders in
+/// the tree, notices)`. Notices use `/` on every system.
+#[allow(clippy::type_complexity)]
+const DISK_ROWS: &[(&str, bool, &[&str], &[&str], &[&str])] = &[
+    ("journals/2026-10-29.md", false, &["2026-10-29"], &[], &[]),
+    (
+        "journals/x.md",
+        false,
+        &[],
+        &[],
+        &["journal file name is not a YYYY-MM-DD date, not loaded: journals/x.md"],
+    ),
+    ("journals/sub/2026-10-29.md", false, &[], &[], &[]),
+    (
+        "journals/2026-10-29.MD",
+        false,
+        &[],
+        &[],
+        &["extension must be lower-case .md, not loaded: journals/2026-10-29.MD"],
+    ),
+    ("pages/a.md", false, &["a"], &[], &[]),
+    ("pages/f/g/a.md", false, &["a"], &["f/", "f/g/"], &[]),
+    (
+        "pages/a.MD",
+        false,
+        &[],
+        &[],
+        &["extension must be lower-case .md, not loaded: pages/a.MD"],
+    ),
+    ("pages/.h/a.md", false, &[], &[], &[]),
+    ("pages/v1.2", true, &[], &["v1.2/"], &[]),
+    ("pages/v1.2", false, &[], &[], &[]),
+    ("pages/f", true, &[], &["f/"], &[]),
+    ("breccia/config.toml", false, &[], &[], &[]),
+    ("breccia/other.toml", false, &[], &[], &[]),
+    ("other/a.md", false, &[], &[], &[]),
+    ("a.md", false, &[], &[], &[]),
+];
+
+#[test]
+fn disk_change_table() {
+    for &(rel, is_dir, keys, folders, notices) in DISK_ROWS {
+        let (t, mut s) = folder(&[]);
+        let path = t.path().join(rel);
+        if is_dir {
+            fs::create_dir_all(&path).unwrap();
+        } else if rel == "pages/v1.2" {
+            // Reported, but nothing is there.
+        } else if rel == "breccia/config.toml" {
+            put(t.path(), rel, "");
+        } else {
+            put(t.path(), rel, "- x\n");
+        }
+        let out = changed(&mut s, &[rel]);
+        let got: Vec<String> = out
+            .notices
+            .iter()
+            .map(|n| match n {
+                Notice::LoadWarning { message } => message.replace('\\', "/"),
+                other => format!("{other:?}"),
+            })
+            .collect();
+        let tree: Vec<String> = out
+            .tree
+            .as_ref()
+            .map(|_| tree_names(&out))
+            .unwrap_or_default()
+            .into_iter()
+            .filter(|n| n.ends_with('/'))
+            .collect();
+        assert_eq!(changed_keys(&out), keys, "pages {rel}");
+        assert_eq!(tree, folders, "folders {rel}");
+        assert_eq!(got, notices, "notices {rel}");
+        // A warning is given once per file: the same file reported again is quiet.
+        let again = changed(&mut s, &[rel]);
+        assert!(again.notices.is_empty(), "again {rel}: {:?}", again.notices);
+    }
+}
