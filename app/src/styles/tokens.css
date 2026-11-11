@@ -422,6 +422,66 @@
   --pc-ds: 0.8;
 }
 
+[data-theme="vampire"] {
+  color-scheme: dark;
+  --bg: #26232f;
+  --side: #1f1c27;
+  --line: #38334a;
+  --faded: #5b5470;
+  --text: #f1edf4;
+  --muted: #8f86a6;
+  --hover: #332e40;
+  --accent: #ff6e9c;
+  --link: #ff8fb8;
+  --tag: #c8a6ff;
+  --card: #2d2939;
+  --card-btn: #453e58;
+  --card-btn-hover: #574e6e;
+  --edit: #2f2a3b;
+  --select: #4b3452;
+  --on-accent: #1f1c27;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #a59fb8;
+  --c-amber: #f5b36b;
+  --c-violet: #c9a6ff;
+  --c-green: #6ee39b;
+  --c-dim: #8f86a6;
+  --c-blue: #8ab6ff;
+  --c-red: #ff6b72;
+  --c-teal: #7fdde6;
+  --pc-crimson: #d65e72;
+  --pc-red: #e46458;
+  --pc-coral: #dd7b54;
+  --pc-orange: #d57c2c;
+  --pc-amber: #cc9029;
+  --pc-yellow: #b9a53e;
+  --pc-olive: #8d9149;
+  --pc-lime: #83ae44;
+  --pc-green: #55a459;
+  --pc-emerald: #49ab80;
+  --pc-teal: #3fa59a;
+  --pc-cyan: #33abbb;
+  --pc-sky: #4da5cf;
+  --pc-blue: #518ae0;
+  --pc-indigo: #707ddc;
+  --pc-violet: #917cde;
+  --pc-purple: #a371cd;
+  --pc-magenta: #c869c1;
+  --pc-pink: #d377a2;
+  --pc-rose: #cf8499;
+  --pc-brown: #a0755a;
+  --pc-tan: #ad9070;
+  --pc-sand: #ad9f83;
+  --pc-slate: #7d8d9f;
+  --pc-grey: #929292;
+  --pc-wash: 34%;
+  --pc-l: 0.66;
+  --pc-cs: 0.95;
+  --pc-ds: 0.6;
+}
+
 /* Links and tags inside a finished task: dimmed toward the muted text colour, in every theme. */
 :root {
   --link-done: color-mix(in srgb, var(--link) 55%, var(--muted));

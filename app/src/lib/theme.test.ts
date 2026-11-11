@@ -239,6 +239,7 @@ test('neighbouring page colors differ', () => {
 const PARAMS: Record<string, [number, number, number]> = {
   ':root, [data-theme="light"]': [0.66, 1, 1],
   '[data-theme="taupe"]': [0.71, 0.8, 0.8],
+  '[data-theme="vampire"]': [0.66, 0.95, 0.6],
   '[data-theme="dark"]': [0.66, 0.9, 0.6],
   '[data-theme="violet"]': [0.68, 0.9, 0.6],
   '[data-theme="graphite"]': [0.62, 0.75, 0.6],
@@ -388,6 +389,7 @@ const TODAYS_SHADES: Record<string, string> = {
   '[data-theme="violet"]': 'c5f5959a',
   '[data-theme="graphite"]': 'ebb31daa',
   '[data-theme="taupe"]': '83a5b0a9',
+  '[data-theme="vampire"]': 'dfd317f',
   '[data-theme="teal"]': 'd7f75c44',
   ':root:not([data-theme])': 'd47bf017',
 }
