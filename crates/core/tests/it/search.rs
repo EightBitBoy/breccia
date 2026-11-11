@@ -663,8 +663,9 @@ fn query_with_mixed_links_widens_each_link() {
         ),
     ]);
     let want = |v: &SearchView| hits(v).into_iter().map(|(_, t)| t).collect::<Vec<_>>();
-    let both = want(&search(&mut s, "[[A]] #b [[A]] text"));
-    assert!(both.is_empty(), "{both:?}");
+    // A word combines with the widened links.
+    let word = want(&search(&mut s, "[[A]] #b [[A]] one"));
+    assert_eq!(word, ["[[alpha]] #b one"]);
     let both = want(&search(&mut s, "[[A]] #b [[A]]"));
     assert_eq!(both, ["[[alpha]] #b one", "[[alpha]] #b [[A]] three"]);
     // Each filter finds the alias spelling of its own page.

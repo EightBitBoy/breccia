@@ -232,8 +232,15 @@ fn every_command_lists_each_name_once() {
         .iter()
         .map(|(j, _, _)| j["type"].as_str().unwrap().to_string())
         .collect();
-    assert_eq!(names.len(), 64);
-    assert_eq!(every_command().len(), 64);
+    // One row per command variant in `command.rs`: a new command fails here
+    // until the table has a row for it. `keepOne` is a field rename, written
+    // `default, rename`, so it is not counted.
+    let variants = include_str!("../../src/session/command.rs")
+        .lines()
+        .filter(|l| l.trim_start().starts_with("#[serde(rename = \""))
+        .count();
+    assert_eq!(names.len(), variants);
+    assert_eq!(every_command().len(), variants);
 }
 
 #[test]
@@ -1542,6 +1549,18 @@ fn a_config_write_from_another_folders_version_is_refused() {
     .unwrap_err();
     assert_eq!(err.code, "configChanged");
     assert!(!b.path().join(CONFIG).exists());
+}
+
+#[test]
+fn config_limits_are_checked_before_the_folder() {
+    let mut s = Session::new();
+    for bad in [
+        json!({"type": "config.setGit", "enabled": true, "commitDelayMinutes": 1441, "pullIntervalMinutes": 5, "version": 0}),
+        json!({"type": "config.setBoard", "archiveAfterDays": 0, "version": 0}),
+    ] {
+        let err = cmd(&mut s, bad.clone(), 0).unwrap_err();
+        assert_eq!(err.code, "invalidSetting", "{bad}");
+    }
 }
 
 #[test]
