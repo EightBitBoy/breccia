@@ -17,7 +17,7 @@ use crate::config::Config;
 use crate::workspace::{Page, PageKind};
 
 pub use fold::{Segment, fold, highlight};
-pub use query::{Query, parse_query};
+pub use query::{Query, QueryLink, parse_query};
 pub use store::Hit;
 
 /// Bumped whenever the tables or what they hold change; a file with another

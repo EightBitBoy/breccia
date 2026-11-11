@@ -1,4 +1,5 @@
 use crate::support::{self, clock_on, folder_at, put, run};
+use breccia_core::inline::LinkKind;
 use breccia_core::search::parse_query;
 use breccia_core::session::{IndexProgress, Notice, SearchView};
 use breccia_core::{Clock, Command, CommandError, Config, Output, Session};
@@ -66,7 +67,21 @@ fn the_query_is_parsed_by_the_core() {
     let cfg = Config::default();
     let q = parse_query("TODO #budget licence #[[multi word]] [[Anna]] todo", &cfg);
     assert_eq!(q.states, ["TODO"]);
-    assert_eq!(q.links, [vec!["budget"], vec!["multi word"], vec!["anna"]]);
+    let typed: Vec<_> = q
+        .links
+        .iter()
+        .map(|l| (l.target.as_str(), l.kind))
+        .collect();
+    assert_eq!(
+        typed,
+        [
+            ("budget", LinkKind::Tag),
+            ("multi word", LinkKind::Tag),
+            ("Anna", LinkKind::Page)
+        ]
+    );
+    let keys: Vec<_> = q.links.iter().map(|l| l.keys.clone()).collect();
+    assert_eq!(keys, [vec!["budget"], vec!["multi word"], vec!["anna"]]);
     assert_eq!(q.words, ["licence", "todo"]);
 }
 

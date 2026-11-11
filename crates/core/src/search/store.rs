@@ -234,7 +234,8 @@ impl SearchIndex {
             sql.push_str(&format!(" AND b.state IN ({marks})"));
             args.extend(q.states.iter().cloned().map(Value::Text));
         }
-        for keys in &q.links {
+        for link in &q.links {
+            let keys = &link.keys;
             let marks = vec!["?"; keys.len()].join(", ");
             sql.push_str(&format!(
                 " AND EXISTS (SELECT 1 FROM links l WHERE l.block = b.id AND l.target IN ({marks}))"

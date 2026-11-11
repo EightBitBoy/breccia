@@ -1,6 +1,7 @@
 use crate::support::put;
+use breccia_core::inline::LinkKind;
 use breccia_core::search::{
-    Hit, Query, SCHEMA_VERSION, SearchIndex, fold, highlight, index_file_name, page_hash,
+    Hit, Query, QueryLink, SCHEMA_VERSION, SearchIndex, fold, highlight, index_file_name, page_hash,
 };
 use breccia_core::{Config, Workspace};
 use std::collections::BTreeMap;
@@ -14,6 +15,15 @@ fn open(files: &[(&str, &str)]) -> (tempfile::TempDir, Workspace) {
     }
     let (ws, _) = Workspace::open(t.path()).unwrap();
     (t, ws)
+}
+
+/// A link filter that matches any of `ks`.
+fn link(ks: &[&str]) -> QueryLink {
+    QueryLink {
+        target: ks[0].to_string(),
+        kind: LinkKind::Page,
+        keys: keys(ks),
+    }
 }
 
 fn words(w: &[&str]) -> Query {
@@ -249,7 +259,7 @@ fn filters_by_state_and_link() {
     let q = |states: &[&str], links: &[&str]| Query {
         words: vec![],
         states: keys(states),
-        links: links.iter().map(|k| keys(&[k])).collect(),
+        links: links.iter().map(|k| link(&[k])).collect(),
     };
     let poses = |q: Query| {
         ix.query(&q, 10)
@@ -438,7 +448,7 @@ fn alias_links_are_indexed_under_their_target() {
     let q = |links: &[&str]| Query {
         words: vec![],
         states: vec![],
-        links: links.iter().map(|k| keys(&[k])).collect(),
+        links: links.iter().map(|k| link(&[k])).collect(),
     };
     let hits = ix.query(&q(&["target"]), 10).unwrap();
     assert_eq!(hits.len(), 1);
@@ -461,7 +471,7 @@ fn escaped_pipe_links_are_indexed_under_their_target() {
     let q = Query {
         words: vec![],
         states: vec![],
-        links: vec![keys(&["target"])],
+        links: vec![link(&["target"])],
     };
     let hits = ix.query(&q, 10).unwrap();
     assert_eq!(hits.len(), 1);
@@ -479,7 +489,7 @@ fn a_link_filter_matches_any_of_its_keys() {
     let q = Query {
         words: vec![],
         states: vec![],
-        links: vec![keys(&["kubernetes", "k8s"])],
+        links: vec![link(&["kubernetes", "k8s"])],
     };
     let hits = ix.query(&q, 10).unwrap();
     assert_eq!(hits.iter().map(|h| h.pos).collect::<Vec<_>>(), [0, 1]);

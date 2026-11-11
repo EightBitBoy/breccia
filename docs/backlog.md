@@ -175,7 +175,7 @@ request arrives) the status bar does not show indexing progress until the next s
 When a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 31. Link filters in search are paired by position (Search)
+## 31. Link filters in search are paired by position (Search) (done 2026-11-11, plan 9)
 
 Typed links and the query's link filters are matched by order. Add a `debug_assert` and tests for a mixed query and for
 the fallback of an unknown page.

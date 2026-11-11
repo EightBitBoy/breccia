@@ -10,7 +10,6 @@ use serde::Serialize;
 use crate::dates::parse_typed_date;
 use crate::naming::{journal_display, journal_name, parse_journal_name};
 
-use crate::inline::links;
 use crate::outline::BlockId;
 use crate::search::{
     Hit, Query, SearchError, SearchIndex, Segment, index_file_name, parse_query, remove_index_files,
@@ -429,17 +428,10 @@ impl Session {
         let mut q = parse_query(text, &ws.config);
         // Each typed link also finds links written as an alias of its page
         // or to one of its headings.
-        let mut seen: Vec<String> = Vec::new();
-        for l in links(text) {
-            if seen.contains(&l.key) {
-                continue;
-            }
-            seen.push(l.key.clone());
-            let keys = ws.link_keys(&ws.link_target(&l.target, l.kind).key);
-            if let Some(entry) = q.links.get_mut(seen.len() - 1)
-                && !keys.is_empty()
-            {
-                *entry = keys;
+        for entry in &mut q.links {
+            let keys = ws.link_keys(&ws.link_target(&entry.target, entry.kind).key);
+            if !keys.is_empty() {
+                entry.keys = keys;
             }
         }
         let hits = search
