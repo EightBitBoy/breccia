@@ -691,9 +691,9 @@ fn cycle_with_no_state_in_it_is_none() {
     assert!(c.cycle_next(Some("TODO")).is_none());
 }
 
-/// A hand-written file with CRLF endings, comments above and beside tables, unknown keys in a
+/// A hand-written file (LF here; the test turns it into CRLF), comments above and beside tables, unknown keys in a
 /// state table and in `[git]`, and inline-table boards.
-const CRLF_HAND: &str = "# my settings
+const HAND_LF: &str = "# my settings
 boards = [
   { name = \"Tasks\", columns = [\"TODO\", \"WAITING\", \"DONE\"] }, # main
   { name = \"Other\", columns = [\"DONE\"] },
@@ -729,7 +729,9 @@ secret = \"x\"
 
 #[test]
 fn writers_keep_the_users_file_bytes() {
-    let dir = root_with(Some(CRLF_HAND));
+    let crlf = HAND_LF.replace('\n', "\r\n");
+    assert!(crlf.contains("\r\n"), "the fixture must use CRLF");
+    let dir = root_with(Some(&crlf));
     let root = dir.path();
 
     // A state renamed (the board columns follow it), one removed.

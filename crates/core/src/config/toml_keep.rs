@@ -37,15 +37,11 @@ pub(super) fn set_columns(array: &mut Array, columns: &[String]) {
 }
 
 /// Sets `key`, keeping the comments and spacing around its old value.
-pub(super) fn set_keeping_decor(
-    t: &mut dyn toml_edit::TableLike,
-    key: &str,
-    mut value: toml_edit::Value,
-) {
-    if let Some(old) = t.get(key).and_then(toml_edit::Item::as_value) {
+pub(super) fn set_keeping_decor(t: &mut dyn TableLike, key: &str, mut value: Value) {
+    if let Some(old) = t.get(key).and_then(Item::as_value) {
         *value.decor_mut() = old.decor().clone();
     }
-    t.insert(key, toml_edit::Item::Value(value));
+    t.insert(key, Item::Value(value));
 }
 
 /// Rebuilds `tables` from `matched`: entry `i` is the old table that new item `i`
