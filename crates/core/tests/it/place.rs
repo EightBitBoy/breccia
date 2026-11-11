@@ -1,9 +1,9 @@
 //! `board.place`: a drop on a board sets the state and `priority::` for the
 //! card's new place.
 
+use crate::support::{self, clock_on, open_at, put, read, run};
 use breccia_core::outline::BlockId;
 use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::{NaiveDate, NaiveTime};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
@@ -11,38 +11,19 @@ use std::path::Path;
 const DAY: &str = "journals/2026-10-29.md";
 
 fn clock() -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+    clock_on((2026, 10, 29), 0)
 }
 
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock())
+    run(s, json, clock())
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    let j = json.clone();
-    cmd(s, json).unwrap_or_else(|e| panic!("{j}: {e:?}"))
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
-
-fn read(root: &Path, rel: &str) -> String {
-    fs::read_to_string(root.join(rel)).unwrap()
+    support::ok(s, json, clock())
 }
 
 fn open(root: &Path) -> Session {
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": root}));
-    s
+    open_at(root, clock())
 }
 
 /// The id of the card whose first line (keyword included) is `line`.

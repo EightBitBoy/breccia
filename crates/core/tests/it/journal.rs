@@ -1,50 +1,30 @@
 //! `journal.feed` and `pages.get`.
 
+use crate::support::{self, DAY, clock_on, folder_at, put, run};
 use breccia_core::session::FeedView;
 use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 
-fn clock((y, m, d): (i32, u32, u32)) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(y, m, d).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+fn clock(day: (i32, u32, u32)) -> Clock {
+    clock_on(day, 0)
 }
 
 fn cmd_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(date))
+    run(s, json, clock(date))
 }
 
 fn ok_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Output {
-    let j = json.clone();
-    cmd_on(s, json, date).unwrap_or_else(|e| panic!("{j}: {e:?}"))
+    support::ok(s, json, clock(date))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
     ok_on(s, json, (2026, 10, 29))
 }
 
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
-
 fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
-    let t = tempfile::tempdir().unwrap();
-    for (rel, text) in files {
-        put(t.path(), rel, text);
-    }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}));
-    (t, s)
+    folder_at(files, clock(DAY))
 }
 
 fn feed_on(s: &mut Session, date: (i32, u32, u32)) -> FeedView {

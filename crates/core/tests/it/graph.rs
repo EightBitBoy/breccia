@@ -1,42 +1,27 @@
 //! `graph.get`: pages, link targets and the links between them.
 
+use crate::support::{self, DAY, clock_on, open_at, put, run};
 use breccia_core::session::{GraphNode, GraphView, PageViewKind, layout_file_name};
 use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 use std::time::SystemTime;
 
 fn clock() -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+    clock_on(DAY, 0)
 }
 
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock())
+    run(s, json, clock())
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    let j = json.clone();
-    cmd(s, json).unwrap_or_else(|e| panic!("{j}: {e:?}"))
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
+    support::ok(s, json, clock())
 }
 
 fn open(root: &Path) -> Session {
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": root}));
-    s
+    open_at(root, clock())
 }
 
 fn graph(s: &mut Session) -> GraphView {

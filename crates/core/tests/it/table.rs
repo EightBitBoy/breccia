@@ -1,45 +1,27 @@
 //! `pages.table`: one row per page, with link counts and file times.
 
+use crate::support::{self, DAY, clock_on, open_at, put};
 use breccia_core::session::PageRowView;
-use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::{NaiveDate, TimeZone};
+use breccia_core::{Clock, Output, Session};
+use chrono::TimeZone;
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 
-fn clock((y, m, d): (i32, u32, u32)) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(y, m, d).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
-}
-
-fn cmd_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(date))
+fn clock(day: (i32, u32, u32)) -> Clock {
+    clock_on(day, 0)
 }
 
 fn ok_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Output {
-    let j = json.clone();
-    cmd_on(s, json, date).unwrap_or_else(|e| panic!("{j}: {e:?}"))
+    support::ok(s, json, clock(date))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
     ok_on(s, json, (2026, 10, 29))
 }
 
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
-
 fn open(root: &Path) -> Session {
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": root}));
-    s
+    open_at(root, clock(DAY))
 }
 fn touch(root: &Path, rel: &str, (y, m, d, h): (i32, u32, u32, u32)) {
     let t = chrono::Local.with_ymd_and_hms(y, m, d, h, 0, 0).unwrap();

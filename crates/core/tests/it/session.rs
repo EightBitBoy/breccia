@@ -1,54 +1,28 @@
+use crate::support::{self, DAY, clock_on, folder_at, ids, put, run};
 use breccia_core::session::Notice;
 use breccia_core::{BlockId, Clock, Command, CommandError, Output, Recovery, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 
 fn clock(ms: u64) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms,
-    }
+    clock_on(DAY, ms)
 }
 
 fn cmd(s: &mut Session, json: Value, ms: u64) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(ms))
+    run(s, json, clock(ms))
 }
 
 fn ok(s: &mut Session, json: Value, ms: u64) -> Output {
-    let j = json.clone();
-    cmd(s, json, ms).unwrap_or_else(|e| panic!("{j}: {e:?}"))
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
+    support::ok(s, json, clock(ms))
 }
 
 fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
-    let t = tempfile::tempdir().unwrap();
-    for (rel, text) in files {
-        put(t.path(), rel, text);
-    }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}), 0);
-    (t, s)
+    folder_at(files, clock(0))
 }
 
 fn read(t: &TempDir, rel: &str) -> String {
-    fs::read_to_string(t.path().join(rel)).unwrap()
-}
-
-/// Block ids of a page, in document order.
-fn ids(s: &mut Session, key: &str) -> Vec<BlockId> {
-    let out = ok(s, json!({"type": "page.get", "key": key}), 0);
-    out.page.unwrap().blocks.iter().map(|b| b.id).collect()
+    support::read(t.path(), rel)
 }
 
 #[test]

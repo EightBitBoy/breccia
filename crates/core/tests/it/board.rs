@@ -1,34 +1,25 @@
 //! `board.get` and the boards in `config.get`.
 
+use crate::support::{DAY, clock_on, open_at, put, request, run};
 use breccia_core::session::{BoardView, CardView, Notice, SaveFailReason};
 use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 
-fn clock((y, m, d): (i32, u32, u32)) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(y, m, d).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+fn clock(day: (i32, u32, u32)) -> Clock {
+    clock_on(day, 0)
 }
 
 fn cmd_on(s: &mut Session, mut json: Value, date: (i32, u32, u32)) -> Result<Output, CommandError> {
     // `boards.set` carries the config version it was made from: these tests
     // make it from the settings the session shows now.
     if json["type"] == "boards.set" && json.get("version").is_none() {
-        let get = serde_json::from_value(
-            json!({"generation": s.generation(), "command": {"type": "config.get"}}),
-        )
-        .unwrap();
+        let get = request(s, json!({"type": "config.get"}));
         let v = s.run(get, clock(date)).unwrap().config.unwrap().version;
         json["version"] = json!(v);
     }
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(date))
+    run(s, json, clock(date))
 }
 
 fn ok_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Output {
@@ -40,16 +31,8 @@ fn ok(s: &mut Session, json: Value) -> Output {
     ok_on(s, json, (2026, 10, 29))
 }
 
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
-
 fn open(root: &Path) -> Session {
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": root}));
-    s
+    open_at(root, clock(DAY))
 }
 fn board(s: &mut Session, index: usize) -> BoardView {
     ok(s, json!({"type": "board.get", "index": index}))

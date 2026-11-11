@@ -1,38 +1,24 @@
+use crate::support::{self, DAY, clock_on, put, run};
 use breccia_core::session::{JournalDay, TagView, TreeNode};
 use breccia_core::{Clock, Command, CommandError, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
 
 fn clock(ms: u64) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms,
-    }
+    clock_on(DAY, ms)
 }
 
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(0))
+    run(s, json, clock(0))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    let j = json.clone();
-    cmd(s, json).unwrap_or_else(|e| panic!("{j}: {e:?}"))
+    support::ok(s, json, clock(0))
 }
 
 fn code(s: &mut Session, json: Value) -> String {
     cmd(s, json).unwrap_err().code
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
 }
 
 fn folder(files: &[(&str, &str)], dirs: &[&str]) -> (TempDir, Session) {

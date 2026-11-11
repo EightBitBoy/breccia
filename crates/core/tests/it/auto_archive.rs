@@ -1,49 +1,26 @@
 //! `archive.auto`: Breccia archives finished tasks by itself.
 
+use crate::support::{self, DAY, clock_on, open_at, put, read};
 use breccia_core::session::Notice;
-use breccia_core::{Clock, CommandError, Output, Session};
-use chrono::NaiveDate;
+use breccia_core::{Clock, Output, Session};
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 
 fn clock(ms: u64) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms,
-    }
-}
-
-fn cmd_at(s: &mut Session, json: Value, ms: u64) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(ms))
+    clock_on(DAY, ms)
 }
 
 fn ok_at(s: &mut Session, json: Value, ms: u64) -> Output {
-    let j = json.clone();
-    cmd_at(s, json, ms).unwrap_or_else(|e| panic!("{j}: {e:?}"))
+    support::ok(s, json, clock(ms))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
     ok_at(s, json, 0)
 }
 
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
-
-fn read(root: &Path, rel: &str) -> String {
-    fs::read_to_string(root.join(rel)).unwrap()
-}
-
 fn open(root: &Path) -> Session {
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": root}));
-    s
+    open_at(root, clock(0))
 }
 
 fn auto(s: &mut Session) -> Output {

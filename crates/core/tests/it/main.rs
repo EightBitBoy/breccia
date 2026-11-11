@@ -35,6 +35,7 @@ mod search;
 mod search_store;
 mod session;
 mod states;
+mod support;
 mod table;
 mod task;
 mod tree;

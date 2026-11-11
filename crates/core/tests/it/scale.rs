@@ -6,6 +6,7 @@
 //! It prints one line per operation, `name median_ms bar_ms ok|OVER`, and asserts nothing
 //! about time (machines differ). It asserts only that the folder is not empty.
 
+use crate::support::{self, DAY, clock_on, put};
 use breccia_core::git::{Discovered, GitEngine, Now, discover};
 use breccia_core::index::LinkIndex;
 use breccia_core::search::INDEX_CHUNK_PAGES;
@@ -28,17 +29,11 @@ fn today() -> NaiveDate {
 }
 
 fn clock() -> Clock {
-    Clock {
-        today: today(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+    clock_on(DAY, 0)
 }
 
 fn run(s: &mut Session, command: Value) -> Output {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": command}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock()).unwrap_or_else(|e| panic!("{e:?}"))
+    support::ok(s, command, clock())
 }
 
 /// The text of file number `i`: 20 blocks, each linking one page, every fourth with a
@@ -67,12 +62,6 @@ fn content(i: usize, edit: usize) -> String {
 
 fn page_rel(i: usize) -> String {
     format!("pages/F{}/Page {i}.md", i % 50)
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
 }
 
 fn generate(root: &Path) {

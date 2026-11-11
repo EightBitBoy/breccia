@@ -1,4 +1,5 @@
 use crate::gitenv::*;
+use crate::support::read;
 use breccia_core::git::{Git, GitEngine, GitState, GitView, Now, Step};
 use breccia_core::{Clock, Output, Request, Session};
 use chrono::NaiveDate;
@@ -66,10 +67,6 @@ fn commit_file(e: &Env, dir: &Path, rel: &str, text: &str) {
     std::fs::write(dir.join(rel), text).unwrap();
     git(e, dir, &["add", "-A"]);
     git(e, dir, &["commit", "-q", "-m", "change"]);
-}
-
-fn read(dir: &Path, rel: &str) -> String {
-    std::fs::read_to_string(dir.join(rel)).unwrap()
 }
 
 fn count(e: &Env, dir: &Path) -> usize {

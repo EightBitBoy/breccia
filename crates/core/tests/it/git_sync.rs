@@ -1,4 +1,5 @@
 use crate::gitenv::*;
+use crate::support::read;
 use breccia_core::git::{
     Discovered, Git, LOCAL_LIMIT, Problem, Pushed, Repo, Target, discover, is_ssh_url,
 };
@@ -48,10 +49,6 @@ fn commit_file(e: &Env, dir: &Path, rel: &str, text: &str) {
     std::fs::write(dir.join(rel), text).unwrap();
     git(e, dir, &["add", "-A"]);
     git(e, dir, &["commit", "-q", "-m", "change"]);
-}
-
-fn read(dir: &Path, rel: &str) -> String {
-    std::fs::read_to_string(dir.join(rel)).unwrap()
 }
 
 fn target(r: &Repo) -> Target {

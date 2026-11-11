@@ -1,3 +1,4 @@
+use crate::support::put;
 use breccia_core::search::{
     Hit, Query, SCHEMA_VERSION, SearchIndex, fold, highlight, index_file_name, page_hash,
 };
@@ -5,12 +6,6 @@ use breccia_core::{Config, Workspace};
 use std::collections::BTreeMap;
 use std::fs;
 use std::path::Path;
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text.as_bytes()).unwrap();
-}
 
 fn open(files: &[(&str, &str)]) -> (tempfile::TempDir, Workspace) {
     let t = tempfile::tempdir().unwrap();

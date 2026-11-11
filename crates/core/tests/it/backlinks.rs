@@ -1,17 +1,9 @@
+use crate::support::{DAY, clock_on, ok, put};
 use breccia_core::inline::LinkKind;
 use breccia_core::render::crumb;
-use breccia_core::{Clock, Output, Session, Workspace};
-use chrono::NaiveDate;
+use breccia_core::{Output, Session, Workspace};
 use serde_json::{Value, json};
-use std::fs;
-use std::path::Path;
 use tempfile::TempDir;
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
-}
 
 fn dir(files: &[(&str, &str)]) -> TempDir {
     let t = tempfile::tempdir().unwrap();
@@ -26,14 +18,7 @@ fn cmd(s: &mut Session, command: Value) -> Output {
 }
 
 fn cmd_at(s: &mut Session, command: Value, ms: u64) -> Output {
-    let req =
-        serde_json::from_value(json!({"generation": s.generation(), "command": command})).unwrap();
-    let clock = Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms,
-    };
-    s.run(req, clock).unwrap()
+    ok(s, command, clock_on(DAY, ms))
 }
 
 fn session(t: &TempDir) -> Session {

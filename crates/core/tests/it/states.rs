@@ -1,15 +1,10 @@
+use crate::support::put;
 use breccia_core::{SaveError, StateUsage, Workspace};
 use std::fs;
 use std::time::SystemTime;
 
 const A: &str = "title:: A\n- WAITING one\n    odd indent continuation\n  done:: [[2026-10-01]]\n- text with WAITING inside\n";
 const J: &str = "- TODO x\n\t- WAITING y\n";
-
-fn put(root: &std::path::Path, rel: &str, s: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, s).unwrap();
-}
 
 fn open(files: &[(&str, &str)]) -> (tempfile::TempDir, Workspace) {
     let t = tempfile::tempdir().unwrap();

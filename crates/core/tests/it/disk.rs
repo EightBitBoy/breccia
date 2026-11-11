@@ -1,12 +1,11 @@
 //! Changes made on disk by other programs: `files.changed`, conflict marks
 //! and `session.dirty`.
 
+use crate::support::{self, DAY, clock_on, folder_at, put, run};
 use breccia_core::session::{Notice, TreeNode};
 use breccia_core::{BlockId, Clock, CommandError, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
-use std::path::Path;
 use std::sync::atomic::{AtomicU64, Ordering};
 use tempfile::TempDir;
 
@@ -18,44 +17,25 @@ const DELETED: &str =
     "This block was deleted on disk while you were editing it; your text was kept as a new block.";
 
 fn clock(ms: u64) -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms,
-    }
+    clock_on(DAY, ms)
 }
 
 /// Runs a command. Each call is far enough from the last in time that
 /// typing never coalesces into one undo step.
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock(NOW.fetch_add(10_000, Ordering::Relaxed)))
+    run(s, json, clock(NOW.fetch_add(10_000, Ordering::Relaxed)))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    let j = json.clone();
-    cmd(s, json).unwrap_or_else(|e| panic!("{j}: {e:?}"))
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
+    support::ok(s, json, clock(NOW.fetch_add(10_000, Ordering::Relaxed)))
 }
 
 fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
-    let t = tempfile::tempdir().unwrap();
-    for (rel, text) in files {
-        put(t.path(), rel, text);
-    }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}));
-    (t, s)
+    folder_at(files, clock(NOW.fetch_add(10_000, Ordering::Relaxed)))
 }
 
 fn read(t: &TempDir, rel: &str) -> String {
-    fs::read_to_string(t.path().join(rel)).unwrap_or_else(|e| panic!("{rel}: {e}"))
+    support::read(t.path(), rel)
 }
 
 /// Runs `files.changed` for paths relative to the root.

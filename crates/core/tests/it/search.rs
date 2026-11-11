@@ -1,45 +1,26 @@
+use crate::support::{self, clock_on, folder_at, put, run};
 use breccia_core::search::parse_query;
 use breccia_core::session::{IndexProgress, Notice, SearchView};
 use breccia_core::{Clock, Command, CommandError, Config, Output, Session};
-use chrono::NaiveDate;
 use serde_json::{Value, json};
 use std::fs;
 use std::path::Path;
 use tempfile::TempDir;
 
 fn clock() -> Clock {
-    Clock {
-        today: NaiveDate::from_ymd_opt(2026, 10, 30).unwrap(),
-        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-        ms: 0,
-    }
+    clock_on((2026, 10, 30), 0)
 }
 
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {
-    let req = serde_json::from_value(json!({"generation": s.generation(), "command": json}))
-        .unwrap_or_else(|e| panic!("bad request: {e}"));
-    s.run(req, clock())
+    run(s, json, clock())
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    let j = json.clone();
-    cmd(s, json).unwrap_or_else(|e| panic!("{j}: {e:?}"))
-}
-
-fn put(root: &Path, rel: &str, text: &str) {
-    let p = root.join(rel);
-    fs::create_dir_all(p.parent().unwrap()).unwrap();
-    fs::write(p, text).unwrap();
+    support::ok(s, json, clock())
 }
 
 fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
-    let t = tempfile::tempdir().unwrap();
-    for (rel, text) in files {
-        put(t.path(), rel, text);
-    }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}));
-    (t, s)
+    folder_at(files, clock())
 }
 
 fn search(s: &mut Session, text: &str) -> SearchView {
