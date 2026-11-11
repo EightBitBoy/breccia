@@ -7,3 +7,6 @@ Pre-flight (opus): preflight.md, 1 critical, 9 important, 18 minor. Ruling: appl
 Task 1: complete (commits d6fae9d..cf5ec4d, review clean). 781 = 42 lib + 737 it passed + 2 ignored. Minors (deferred): board.rs ok_on keeps own panic body (cmd_on version logic; no comment); rename/tree `folder(files, dirs)` could use open_at; scale/page_color/place use literal 2026-10-29 instead of DAY; support::run lacks doc comment; support::ids fixes DAY/ms 0 undocumented.
 
 Task 2: complete (commits dd400dd..64c3ae9, review clean). Minors (deferred): page_color.rs:343 DAY is one ~380-column literal (could use concat!); comment at page_color.rs:318 overstates what color==None guards (the unwrap is the real guard).
+
+Task 3: fix round 1/5 (2 addressed, 0 open — CRLF fixture really CRLF; toml_keep imports; commits f3116c2..98655dd).
+Task 3: complete (commits 84407fd..98655dd, review clean). Ruling: accept that the CRLF test cannot be made RED by removing `.replace("\r\n","\n")` in config/file.rs edit_file — toml_edit already writes LF, so the replace is a redundant safeguard; the test still pins CRLF-in → LF-out with comments kept — cost if wrong: a future toml_edit that keeps CRLF would be caught by this test anyway. Minors (deferred): comment on the redundant replace at file.rs:171; long doc line on HAND_LF; core it 738 + 2 ignored.
