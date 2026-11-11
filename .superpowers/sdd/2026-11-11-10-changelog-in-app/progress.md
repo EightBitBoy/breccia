@@ -39,3 +39,4 @@ Task 3: minor (deferred): changelog reparsed on each overlay open
 Task 3: minor (deferred): e2e backdrop click relies on a free top-left corner
 Task 3: minor (deferred): dev note not checked by hand (review item 88)
 Task 3: complete (commits 25b9077..cd905ed, review clean)
+Task 4: complete (commits 40ab29d..bc7ff80; docs only, covered by the final review)
