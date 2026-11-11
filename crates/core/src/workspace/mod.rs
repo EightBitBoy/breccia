@@ -18,6 +18,7 @@ use crate::index::LinkIndex;
 use crate::naming::{is_valid_page_name, journal_name, page_key, parse_journal_name};
 use crate::outline::{BlockId, Carried, Document, IdGen, parse};
 
+mod changes;
 mod disk;
 mod files;
 mod names;
@@ -336,19 +337,10 @@ pub struct Workspace {
     names: names::Names,
     /// Folders under `pages/` as `/`-joined paths, empty ones included.
     folders: BTreeSet<String>,
-    tree_version: u64,
-    /// Goes up whenever the linked-only pages may have changed: a page's
-    /// link targets, its content or the aliases changed.
-    link_version: u64,
     /// Page key → color, for the non-journal pages with a valid `color::`.
     colors: HashMap<String, crate::color::PageColor>,
-    /// Keys whose color, existence or alias winner changed since the last
-    /// [`take_topic_changes`](Workspace::take_topic_changes): the journal
-    /// blocks linking to them may need another wash.
-    topic_changes: BTreeSet<String>,
-    /// Keys of pages whose blocks, name, existence or file changed since
-    /// the last [`take_touched`](Workspace::take_touched).
-    touched: BTreeSet<String>,
+    /// Versions and key sets that say what changed; see `changes`.
+    changes: changes::Changes,
     /// Relative paths a load warning was reported for since `open`: a file
     /// that stays broken is not reported again by every change event.
     warned: HashSet<PathBuf>,
@@ -436,11 +428,8 @@ impl Workspace {
             links: LinkIndex::new(),
             names: names::Names::default(),
             folders: BTreeSet::new(),
-            tree_version: 0,
-            link_version: 0,
             colors: HashMap::new(),
-            topic_changes: BTreeSet::new(),
-            touched: BTreeSet::new(),
+            changes: changes::Changes::default(),
             warned: HashSet::new(),
         }
     }
@@ -506,7 +495,7 @@ impl Workspace {
             self.block_index.insert(b.id, page.key.clone());
         }
         let key = page.key.clone();
-        self.touched.insert(key.clone());
+        self.changes.touch(&key);
         self.pages.insert(key.clone(), page);
         self.index_page(&key);
     }
@@ -515,7 +504,7 @@ impl Workspace {
     /// whose file was written, since the last call; sorted, without repeats.
     /// `open` leaves every loaded page touched.
     pub fn take_touched(&mut self) -> Vec<String> {
-        std::mem::take(&mut self.touched).into_iter().collect()
+        self.changes.take_touched()
     }
 
     /// Whether page `key`'s file still holds what Breccia last read or wrote
@@ -569,13 +558,13 @@ impl Workspace {
     /// Goes up whenever the page tree may have changed: a page file is first
     /// written, a folder is created, and so on.
     pub fn tree_version(&self) -> u64 {
-        self.tree_version
+        self.changes.tree_version()
     }
 
-    /// See the field; the session resends the tree when the linked-only
-    /// pages changed.
+    /// Goes up whenever the linked-only pages may have changed; the session
+    /// resends the tree then.
     pub fn link_version(&self) -> u64 {
-        self.link_version
+        self.changes.link_version()
     }
 
     /// The known folder equal to `path` ignoring case.
@@ -731,7 +720,7 @@ impl Workspace {
             self.block_index.remove(&b.id);
         }
         self.unindex_page(key);
-        self.touched.insert(key.to_string());
+        self.changes.touch(key);
         Some(page)
     }
 
@@ -750,7 +739,7 @@ impl Workspace {
         for b in &page.doc.blocks {
             self.block_index.insert(b.id, page.key.clone());
         }
-        self.touched.insert(page.key.clone());
+        self.changes.touch(&page.key);
         self.index_page(key);
         Some(result)
     }
@@ -825,7 +814,7 @@ impl Workspace {
         page.doc.to_lf();
         let text = page.doc.render();
         write_atomic(&path, &text)?;
-        self.touched.insert(key.to_string());
+        self.changes.touch(key);
         let first_write = page.on_disk.is_none();
         page.on_disk = Some(text);
         let meta = fs::metadata(&path).ok();
@@ -838,7 +827,7 @@ impl Workspace {
             .and_then(|m| m.created().ok())
             .or(page.created);
         if first_write {
-            self.tree_version += 1;
+            self.changes.bump_tree();
         }
         Ok(SaveOutcome::Written(path))
     }

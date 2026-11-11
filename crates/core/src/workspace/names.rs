@@ -307,7 +307,7 @@ impl Workspace {
     /// The keys whose color, existence or alias winner changed since the
     /// last call.
     pub fn take_topic_changes(&mut self) -> BTreeSet<String> {
-        std::mem::take(&mut self.topic_changes)
+        self.changes.take_topics()
     }
 
     /// The journal pages with a block linking to any of `keys`, or to a
@@ -346,7 +346,7 @@ impl Workspace {
             return;
         };
         if self.links.set_page(key, &page.doc) {
-            self.link_version += 1;
+            self.changes.bump_links();
         }
         let mut list: Vec<String> = Vec::new();
         if page.has_content() {
@@ -365,7 +365,7 @@ impl Workspace {
         };
         if content_changed {
             self.names.clashes_dirty = true;
-            self.link_version += 1;
+            self.changes.bump_links();
         }
         if page.kind == PageKind::Page {
             let color = crate::color::page_color(page.doc.preamble());
@@ -374,7 +374,7 @@ impl Workspace {
                 None => self.colors.remove(key).is_some(),
             };
             if color_changed || content_changed {
-                self.topic_changes.insert(key.to_string());
+                self.changes.topic(key);
             }
         }
         let changed = if list.is_empty() {
@@ -393,13 +393,13 @@ impl Workspace {
     /// Takes a page out of the link index and the alias table.
     pub(super) fn unindex_page(&mut self, key: &str) {
         self.links.remove_page(key);
-        self.link_version += 1;
+        self.changes.bump_links();
         let had_content = self.names.contented.remove(key);
         if had_content {
             self.names.clashes_dirty = true;
         }
         if self.colors.remove(key).is_some() || had_content {
-            self.topic_changes.insert(key.to_string());
+            self.changes.topic(key);
         }
         if self.names.lists.remove(key).is_some() {
             self.aliases_changed();
@@ -432,7 +432,7 @@ impl Workspace {
 
     fn aliases_changed(&mut self) {
         self.names.clashes_dirty = true;
-        self.link_version += 1;
+        self.changes.bump_links();
         if self.names.batches > 0 {
             self.names.dirty = true;
         } else {
@@ -553,7 +553,7 @@ impl Workspace {
         for k in winners.keys().chain(self.names.winners.keys()) {
             let before = self.names.winners.get(k).map(|w| &w.0);
             if before != winners.get(k).map(|w| &w.0) {
-                self.topic_changes.insert(k.clone());
+                self.changes.topic(k);
             }
         }
         self.names.winners = winners;

@@ -40,7 +40,7 @@ impl Workspace {
         let text =
             String::from_utf8(bytes).map_err(|_| ReloadError::NotUtf8(page.rel_path.clone()))?;
         if fileless {
-            self.tree_version += 1;
+            self.changes.bump_tree();
         }
         let meta = fs::metadata(&path).ok();
         let carried = self
@@ -90,7 +90,7 @@ impl Workspace {
         if let Some(page) = self.pages.get_mut(key) {
             page.name = name;
         }
-        self.tree_version += 1;
+        self.changes.bump_tree();
         if new_key != key {
             self.rekey(key, &new_key);
             reloaded.key = new_key;
@@ -232,7 +232,7 @@ impl Workspace {
                 || needed.iter().any(|n| is_within(n, f))
         });
         if self.folders.len() != before {
-            self.tree_version += 1;
+            self.changes.bump_tree();
         }
     }
 
@@ -242,8 +242,8 @@ impl Workspace {
         let Some(page) = self.pages.get_mut(key) else {
             return;
         };
-        self.tree_version += 1;
-        self.touched.insert(key.to_string());
+        self.changes.bump_tree();
+        self.changes.touch(key);
         if page.is_unsaved() {
             page.on_disk = None;
             page.edited = None;
@@ -327,7 +327,7 @@ impl Workspace {
         let folder = page.folder.clone();
         if let Some(key) = self.add_page(page, &mut report.warnings) {
             self.add_folder(&folder);
-            self.tree_version += 1;
+            self.changes.bump_tree();
             match carried {
                 Some(carried) => report.reloaded.push(Reloaded {
                     key,
@@ -350,7 +350,7 @@ impl Workspace {
         let folder = page.folder.clone();
         self.insert(page);
         self.add_folder(&folder);
-        self.tree_version += 1;
+        self.changes.bump_tree();
         Reloaded {
             key,
             carried,
@@ -414,7 +414,7 @@ impl Workspace {
             prefix.push_str(c);
             if self.find_folder(&prefix).is_none() {
                 self.folders.insert(prefix.clone());
-                self.tree_version += 1;
+                self.changes.bump_tree();
             }
         }
     }

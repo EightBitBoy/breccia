@@ -85,7 +85,7 @@ impl Workspace {
         }
         fs::create_dir_all(self.root.join(PAGES).join(&canonical))?;
         self.folders.extend(prefixes);
-        self.tree_version += 1;
+        self.changes.bump_tree();
         Ok(())
     }
 
@@ -262,7 +262,7 @@ impl Workspace {
         // does nothing when only the case changes.
         self.index_page(key);
         self.rekey(key, &new_key);
-        self.tree_version += 1;
+        self.changes.bump_tree();
 
         for k in &scope.pages {
             // The page itself has its new key now.
@@ -408,7 +408,7 @@ impl Workspace {
             }
         }
         self.reorder_aliases();
-        self.tree_version += 1;
+        self.changes.bump_tree();
         Ok(create)
     }
 
@@ -451,7 +451,7 @@ impl Workspace {
         self.check_on_disk(page)?;
         if page.has_file() {
             fs::remove_file(self.root.join(&page.rel_path))?;
-            self.tree_version += 1;
+            self.changes.bump_tree();
         }
         self.take_page(key);
         Ok(())
@@ -514,7 +514,7 @@ impl Workspace {
             }
         }
         self.reorder_aliases();
-        self.tree_version += 1;
+        self.changes.bump_tree();
         Ok(())
     }
 
@@ -559,7 +559,7 @@ impl Workspace {
         }
         self.end_alias_batch();
         self.folders.retain(|f| !is_within(f, &folder));
-        self.tree_version += 1;
+        self.changes.bump_tree();
         Ok(gone)
     }
 }
