@@ -422,6 +422,66 @@
   --pc-ds: 0.8;
 }
 
+[data-theme="fjord"] {
+  color-scheme: dark;
+  --bg: #2b313c;
+  --side: #252a34;
+  --line: #3a4252;
+  --faded: #596377;
+  --text: #dde3ec;
+  --muted: #8a95a8;
+  --hover: #353c4a;
+  --accent: #86bccc;
+  --link: #93c7d8;
+  --tag: #b0c99a;
+  --card: #313845;
+  --card-btn: #465063;
+  --card-btn-hover: #566279;
+  --edit: #333a47;
+  --select: #3f4d63;
+  --on-accent: #22272f;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #a3acbc;
+  --c-amber: #e6c488;
+  --c-violet: #bf98b8;
+  --c-green: #a7c28f;
+  --c-dim: #8a95a8;
+  --c-blue: #88a9cc;
+  --c-red: #d4808a;
+  --c-teal: #8fc4c1;
+  --pc-crimson: #b8616d;
+  --pc-red: #c4685d;
+  --pc-coral: #c0795d;
+  --pc-orange: #b97945;
+  --pc-amber: #b38947;
+  --pc-yellow: #a79954;
+  --pc-olive: #808352;
+  --pc-lime: #7e9d55;
+  --pc-green: #5b925d;
+  --pc-emerald: #589a7a;
+  --pc-teal: #51948b;
+  --pc-cyan: #4e9ba6;
+  --pc-sky: #5a96b4;
+  --pc-blue: #5680bd;
+  --pc-indigo: #6a75b9;
+  --pc-violet: #8476bd;
+  --pc-purple: #906daf;
+  --pc-magenta: #ae6aa8;
+  --pc-pink: #b87693;
+  --pc-rose: #b67f8e;
+  --pc-brown: #8c6d59;
+  --pc-tan: #9b866f;
+  --pc-sand: #9e937f;
+  --pc-slate: #75808e;
+  --pc-grey: #868686;
+  --pc-wash: 34%;
+  --pc-l: 0.62;
+  --pc-cs: 0.7;
+  --pc-ds: 0.6;
+}
+
 [data-theme="vampire"] {
   color-scheme: dark;
   --bg: #26232f;
