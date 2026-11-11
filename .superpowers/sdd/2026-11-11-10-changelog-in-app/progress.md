@@ -35,3 +35,7 @@ Task 1: complete (commits 411805d..8da2132, review clean)
 Task 2: minor (deferred): literal U+FEFF in source/test, use \uFEFF
 Task 2: minor (deferred): empty-text link, weak toContain word tests, comment before h1, untested +/* bullets and empty markers
 Task 2: complete (commits c9e38e8..6976d2f, review clean)
+Task 3: minor (deferred): changelog reparsed on each overlay open
+Task 3: minor (deferred): e2e backdrop click relies on a free top-left corner
+Task 3: minor (deferred): dev note not checked by hand (review item 88)
+Task 3: complete (commits 25b9077..cd905ed, review clean)
