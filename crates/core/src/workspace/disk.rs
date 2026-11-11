@@ -7,12 +7,12 @@ use std::io;
 use std::path::{Path, PathBuf};
 
 use super::files::{
-    Found, has_md_extension, is_blank, is_exact_file, is_hidden, is_within, list_md,
-    preamble_title, read_dir_sorted, walk_pages, within_or_all,
+    Found, NotePath, classify, is_blank, is_exact_file, is_hidden, is_within, preamble_title,
+    scan_journals, walk_pages, within_or_all,
 };
 use super::{DiskReport, LoadWarning, Page, PageKind, ReloadError, Reloaded, Workspace};
 use crate::layout::{JOURNALS, PAGES};
-use crate::naming::{is_valid_page_name, page_key, parse_journal_name};
+use crate::naming::{is_valid_page_name, page_key};
 use crate::outline::{Carried, carry_ids, parse};
 
 impl Workspace {
@@ -362,21 +362,10 @@ impl Workspace {
     fn dir_appeared(&mut self, rel: &Path, report: &mut DiskReport) {
         let mut found = Vec::new();
         if rel == Path::new(JOURNALS) {
-            let entries = match read_dir_sorted(&self.root, rel, &mut report.warnings) {
-                Ok(e) => e,
+            found = match scan_journals(&self.root, &mut report.warnings) {
+                Ok(f) => f,
                 Err(e) => return report_unreadable(rel, &e, report),
             };
-            for (rel_path, stem) in list_md(rel, &entries, &mut report.warnings) {
-                match parse_journal_name(&stem) {
-                    Some(date) => found.push(Found {
-                        rel_path,
-                        folder: String::new(),
-                        stem,
-                        journal: Some(date),
-                    }),
-                    None => report.warnings.push(LoadWarning::BadJournalName(rel_path)),
-                }
-            }
         } else if folder_of(rel).is_some() {
             if rel.iter().any(|c| is_hidden(&c.to_string_lossy())) {
                 return;
@@ -459,44 +448,21 @@ fn push_once(v: &mut Vec<String>, key: &str) {
 /// The page file a new path names, if it is one: `journals/<date>.md` or
 /// `pages/…/<name>.md`, with no hidden part. Wrong names are reported.
 fn found_at(rel: &Path, warnings: &mut Vec<LoadWarning>) -> Option<Found> {
-    let name = rel.file_name()?.to_string_lossy().into_owned();
-    if rel.iter().any(|c| is_hidden(&c.to_string_lossy())) {
-        return None;
-    }
-    let Some(parts) = rel.iter().map(OsStr::to_str).collect::<Option<Vec<&str>>>() else {
-        if has_md_extension(&name) {
-            warnings.push(LoadWarning::NonUnicodeName(rel.to_path_buf()));
+    let (folder, stem, journal) = match classify(rel) {
+        Ok(Some(NotePath::Journal(date))) => {
+            let stem = rel.file_stem()?.to_string_lossy().into_owned();
+            (String::new(), stem, Some(date))
         }
-        return None;
-    };
-    let in_journals = parts.len() == 2 && parts[0] == JOURNALS;
-    let in_pages = parts.len() >= 2 && parts[0] == PAGES;
-    if !in_journals && !in_pages {
-        return None;
-    }
-    let Some(stem) = name.strip_suffix(".md") else {
-        if has_md_extension(&name) {
-            warnings.push(LoadWarning::ExtensionCase(rel.to_path_buf()));
-        }
-        return None;
-    };
-    let stem = stem.to_string();
-    let journal = if in_journals {
-        let Some(date) = parse_journal_name(&stem) else {
-            warnings.push(LoadWarning::BadJournalName(rel.to_path_buf()));
+        Ok(Some(NotePath::Page { folder, stem })) => (folder, stem, None),
+        Ok(Some(NotePath::Config) | None) => return None,
+        Err(w) => {
+            warnings.push(w);
             return None;
-        };
-        Some(date)
-    } else {
-        None
+        }
     };
     Some(Found {
         rel_path: rel.to_path_buf(),
-        folder: if in_pages {
-            parts[1..parts.len() - 1].join("/")
-        } else {
-            String::new()
-        },
+        folder,
         stem,
         journal,
     })

@@ -27,9 +27,9 @@ mod pages;
 mod states;
 
 use files::{
-    Found, decode, is_blank, is_exact_file, list_md, path_taken, preamble_title, read_dir_sorted,
-    walk_pages,
+    Found, decode, is_blank, is_exact_file, path_taken, preamble_title, scan_journals, walk_pages,
 };
+pub(crate) use files::{NotePath, classify};
 pub use names::Target;
 pub use states::{StateRenameReport, StateUsage};
 
@@ -373,19 +373,7 @@ impl Workspace {
         let mut ws = Workspace::empty(root, config, text);
         let mut warnings = Vec::new();
 
-        let mut found = Vec::new();
-        let journals = read_dir_sorted(root, Path::new(JOURNALS), &mut warnings)?;
-        for (rel_path, stem) in list_md(Path::new(JOURNALS), &journals, &mut warnings) {
-            match parse_journal_name(&stem) {
-                Some(date) => found.push(Found {
-                    rel_path,
-                    folder: String::new(),
-                    stem,
-                    journal: Some(date),
-                }),
-                None => warnings.push(LoadWarning::BadJournalName(rel_path)),
-            }
-        }
+        let mut found = scan_journals(root, &mut warnings)?;
         let mut pages = Vec::new();
         let mut folders = Vec::new();
         walk_pages(

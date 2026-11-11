@@ -10,7 +10,8 @@ use chrono::NaiveDate;
 
 use super::LoadWarning;
 use crate::inline::title_line;
-use crate::layout::PAGES;
+use crate::layout::{CONFIG_DIR, CONFIG_FILE, JOURNALS, PAGES};
+use crate::naming::parse_journal_name;
 use crate::outline::Document;
 
 /// A file found by the scan, before duplicates are resolved.
@@ -19,6 +20,84 @@ pub(super) struct Found {
     pub(super) folder: String,
     pub(super) stem: String,
     pub(super) journal: Option<NaiveDate>,
+}
+
+/// What a path relative to the notes folder names, when it is one of the
+/// folder's own files.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum NotePath {
+    /// `journals/<date>.md`.
+    Journal(NaiveDate),
+    /// `pages/<folder>/<stem>.md`; `folder` is `/`-joined, `""` at the top.
+    Page { folder: String, stem: String },
+    /// `breccia/config.toml`.
+    Config,
+}
+
+/// What `rel` is: `Ok(None)` for a path that is not a note file (outside
+/// `pages/` and `journals/`, hidden, or not `.md`), `Err` for a note file
+/// Breccia cannot load (a name that is not Unicode, an extension spelled
+/// `.MD`, a journal name that is not a date), with its warning.
+pub(crate) fn classify(rel: &Path) -> Result<Option<NotePath>, LoadWarning> {
+    let Some(name) = rel.file_name().map(OsStr::to_string_lossy) else {
+        return Ok(None);
+    };
+    if rel.iter().any(|c| is_hidden(&c.to_string_lossy())) {
+        return Ok(None);
+    }
+    let Some(parts) = rel.iter().map(OsStr::to_str).collect::<Option<Vec<&str>>>() else {
+        if has_md_extension(&name) {
+            return Err(LoadWarning::NonUnicodeName(rel.to_path_buf()));
+        }
+        return Ok(None);
+    };
+    if parts == [CONFIG_DIR, CONFIG_FILE] {
+        return Ok(Some(NotePath::Config));
+    }
+    let in_journals = parts.len() == 2 && parts[0] == JOURNALS;
+    let in_pages = parts.len() >= 2 && parts[0] == PAGES;
+    if !in_journals && !in_pages {
+        return Ok(None);
+    }
+    let Some(stem) = name.strip_suffix(".md") else {
+        if has_md_extension(&name) {
+            return Err(LoadWarning::ExtensionCase(rel.to_path_buf()));
+        }
+        return Ok(None);
+    };
+    if in_journals {
+        return match parse_journal_name(stem) {
+            Some(date) => Ok(Some(NotePath::Journal(date))),
+            None => Err(LoadWarning::BadJournalName(rel.to_path_buf())),
+        };
+    }
+    Ok(Some(NotePath::Page {
+        folder: parts[1..parts.len() - 1].join("/"),
+        stem: stem.to_string(),
+    }))
+}
+
+/// The journal days in `root/journals/`, in name order. Other `.md` files
+/// there are reported: an extension spelled `.MD`, a name that is not a date.
+pub(super) fn scan_journals(
+    root: &Path,
+    warnings: &mut Vec<LoadWarning>,
+) -> io::Result<Vec<Found>> {
+    let rel_dir = Path::new(JOURNALS);
+    let entries = read_dir_sorted(root, rel_dir, warnings)?;
+    let mut found = Vec::new();
+    for (rel_path, stem) in list_md(rel_dir, &entries, warnings) {
+        match parse_journal_name(&stem) {
+            Some(date) => found.push(Found {
+                rel_path,
+                folder: String::new(),
+                stem,
+                journal: Some(date),
+            }),
+            None => warnings.push(LoadWarning::BadJournalName(rel_path)),
+        }
+    }
+    Ok(found)
 }
 
 /// Visible entries of `root/rel_dir` as `(name, is_dir)`, sorted by name.

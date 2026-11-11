@@ -49,6 +49,9 @@ impl Name {
                 .unwrap_or_else(|| file.clone())
         };
         let is_md = path.extension().is_some_and(|e| e == "md");
+        // Its own rule, not the workspace's classifier: it names what Git
+        // reports, including files Breccia does not load (a hidden page, a
+        // journal whose name is not a date).
         let (rank, text) = if p.len() >= 2 && p[0] == PAGES && is_md {
             (0, stem())
         } else if p.len() == 2 && p[0] == JOURNALS && is_md {
