@@ -105,6 +105,7 @@ test('no colour literals outside tokens', () => {
 
 test('parseTheme', () => {
   expect(parseTheme('violet')).toBe('violet')
+  expect(parseTheme('ember')).toBe('ember')
   expect(parseTheme('pink')).toBe('system')
   expect(parseTheme(null)).toBe('system')
   expect(parseTheme(3)).toBe('system')

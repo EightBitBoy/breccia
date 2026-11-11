@@ -3193,7 +3193,7 @@ try {
   const card124 = cardTitled('Write release notes')
   await card124.waitFor()
   const bg124 = (loc) => loc.evaluate((el) => getComputedStyle(el).backgroundColor)
-  for (const theme of ['light', 'violet', 'teal', 'graphite', 'parchment', 'ember', 'fjord', 'vampire']) {
+  for (const theme of ['light', 'violet', 'teal', 'graphite', 'parchment', 'vampire', 'fjord', 'ember']) {
     await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
     await page.mouse.move(1, 1)
     await card124.hover()
@@ -3222,7 +3222,7 @@ try {
   await page.evaluate(() => delete document.documentElement.dataset.theme)
   console.log('PASS 124 the buttons on a hovered card have their own background in every theme, and hover and open still show')
 
-  // 125: the theme button in the status bar, just left of the ? button, lists System and the six themes with the
+  // 125: the theme button in the status bar, just left of the ? button, lists System and the ten themes with the
   // current one checked; a choice applies at once, is stored like the Settings one, and matches Settings both ways.
   // A block being edited stays edited (focus and text) through a pick, Esc and the arrow keys.
   const theme125 = page.locator('[data-testid="status-item"][data-id="theme"]')
@@ -3240,10 +3240,10 @@ try {
   await page.locator('.block .content', { hasText: 'from outside' }).last().click()
   await waitFor('125 editing', focused125, 'editor')
   const text125 = await page.locator('.cm-content').innerText()
-  // Open by a click: seven choices in order, System checked
+  // Open by a click: eleven choices in order, System checked
   await theme125.click()
   await menu125.waitFor()
-  await waitFor('125 seven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Parchment', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember'])
+  await waitFor('125 eleven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Parchment', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember'])
   await waitFor('125 System is checked', checked125, ['system'])
   // Esc closes the menu, changes nothing, and the focus goes back to the edited block
   await kb.press('Escape')
