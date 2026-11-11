@@ -41,7 +41,8 @@ It is made for one person who keeps daily notes and tasks in one place and wants
 - **Git sync**: if the folder is a Git repository, Breccia commits your changes a few minutes after you stop typing,
   and pulls and pushes when it has a remote. The history button next to the Git item in the status bar lists the
   folder's commits, newest first.
-- **Six themes** (Light, Dark, Violet, Graphite, Taupe, Teal), plus System, which follows Windows.
+- **Ten themes** (Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember), plus System, which
+  follows Windows. The mouse wheel over the theme button in the status bar switches between them.
 - **Graph** of the pages and the links between them.
 - **Tray icon** (Windows): the close button hides Breccia to the tray, so it is always at hand. Click the icon to open it again; the icon's menu has Open and Exit. Exit closes the app for real.
 

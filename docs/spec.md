@@ -444,13 +444,18 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 
 ### 7.10 Themes
 
-- Six built-in themes: **Light, Dark, Violet, Graphite, Taupe, Teal**. The default follows the
-  operating system's light/dark setting.
+- Ten built-in themes: **Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember** (light ones
+  first; the order of the menu, Settings and the wheel). The default follows the operating system's light/dark setting.
 - The choice (or "System") is a setting of this computer (§4). Each theme is a token set on `[data-theme="…"]`; the
   window's title bar follows its light or dark.
+- The theme button in the status bar (§7.13) opens a menu with System and the themes, in this order. The mouse wheel
+  over it steps through the same list: down goes to the next, up to the previous, and it wraps around at both ends.
+  About one wheel notch is one step (a trackpad's small movements add up, the same rule as `Ctrl` and the wheel for
+  zoom); `Ctrl` and the wheel there still zoom; while the menu is open the wheel does nothing there. The choice is
+  applied and kept exactly like a pick in the menu.
 - Every colour in the UI comes from a token (CSS variable): backgrounds, sidebar, lines, text, muted text, accent, link,
   tag, card, one colour per task state, the 25 page colors (§7.3) and the strength of the page-color wash (§7.4): 28 %
-  in Light and Taupe, 30 % in Teal, 34 % in the others. They also include each theme's shade parameters (base
+  in Light, Taupe and Parchment, 30 % in Teal, 34 % in the others. They also include each theme's shade parameters (base
   lightness, chroma and offset factors). A custom hue's shade (§7.3) is computed from them at runtime with the same rule
   as the 25 colors. A page's vividness `v` (§7.3; the named colors have none) scales the custom shade's chroma and the
   wash strength by `v/100` (rounded to a whole percent). At 100 nothing changes. In a theme where text (4.5:1), links
@@ -488,7 +493,8 @@ Settings ends with a section "Troubleshooting" whose "Open log folder" opens the
 ### 7.13 Status bar
 
 A thin strip along the bottom of the window, as in VS Code, for short state the user may want to glance at: the search
-index while it is built ("Indexing for search · 1,200 of 5,000 pages", with a progress line) and the Git status (§7.9).
+index while it is built ("Indexing for search · 1,200 of 5,000 pages", with a progress line), the Git status (§7.9),
+and, at its right end, the theme button (§7.10) just left of the help button (?).
 Any part of Breccia can show and remove an item there; items sit on the left or the right. With nothing to show, the
 strip stays empty and quiet.
 

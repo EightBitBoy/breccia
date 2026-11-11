@@ -384,7 +384,7 @@ describe('the real site', () => {
       'Page colors',
       'Tasks and Kanban boards',
       'Git sync',
-      'Six themes',
+      'Ten themes',
       'Graph',
       'Local-first, plain Markdown',
       'Keyboard-driven',
