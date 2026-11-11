@@ -18,10 +18,11 @@ is wrong even if the tests pass.
   back as intended. Keep that for any future bulk rewrite (block references, tag renames).
 - **Rendering escapes everything.** `render.rs` turns raw HTML events into text, allows only `http`, `https` and
   `mailto` targets, and builds every attribute through `esc`. User text can never become markup. Private-use
-  placeholders (`U+E000`, `U+E001`) are stripped from input by `clean` first.
-- **Config writes keep the user's file.** `config.rs` edits the parsed TOML document in place and writes only what
-  differs; `Expect::Text` refuses a write when the file changed since it was read. `DEFAULT_TOML` and
-  `Config::default()` are held equal by `crates/core/tests/it/config.rs` (`default_toml_matches_default`).
+  placeholders (`U+E000`, `U+E001`) are stripped from input by `clean` (`render.rs`) first.
+- **Config writes keep the user's file.** `config/file.rs` edits the parsed TOML document in place (helpers in
+  `config/toml_keep.rs`) and writes only what differs; `Expect::Text` refuses a write when the file changed since it
+  was read. `DEFAULT_TOML` (`config/model.rs`) and `Config::default()` are held equal by
+  `crates/core/tests/it/config.rs` (`default_toml_matches_default`).
 - **Atomic writes** (`fsio::write_atomic`): temp file in the same folder, sync, rename with retries on Windows,
   creation time and permissions kept.
 - Style the code follows: module docs (`//!`) say what the module owns; doc comments state the rule, not the
@@ -29,21 +30,21 @@ is wrong even if the tests pass.
 
 ## Core: workspace and watcher (area 2)
 
-- **Never write over bytes Breccia did not read.** `Workspace::save_with` (`workspace/mod.rs:748`) re-reads the
+- **Never write over bytes Breccia did not read.** `Workspace::save_with` (`workspace/mod.rs`) re-reads the
   file and compares it with `on_disk` before every write; a page without a file is written only when nothing is at
-  its path (`path_taken`, case-insensitive). `rename_no_clobber` does the same for renames and moves. Every new
-  file operation must go through these.
+  its path (`path_taken` in `workspace/files.rs`, case-insensitive). `rename_no_clobber` (`workspace/pages.rs`) does
+  the same for renames and moves. Every new file operation must go through these.
 - **Unsaved edits win over the disk.** `apply_disk_changes` never reloads or removes a page for which `is_unsaved`
   is true; it reports it in `kept_unsaved` and the user decides.
 - **Own writes are recognised by content, not by time.** `file_changed` ignores a file whose bytes equal `on_disk`
-  (`disk.rs:274`). There is no "ignore events for N ms" window; keep it that way.
+  (`file_changed` in `workspace/disk.rs`). There is no "ignore events for N ms" window; keep it that way.
 - **Block ids survive a reload** through `carry_ids`, also for a file moved on disk within one batch
   (`DiskReport::gone`).
 - **A rename stands once the file is renamed** (`rename_page`): later failures are collected in the report
   (`skipped`, `save_errors`) and never undo it. The state rename (`rename_state`) follows the same shape.
 - **Aliases are resolved at lookup**, not stored in the link index (`workspace/names.rs`); batches
   (`begin_alias_batch`, `end_alias_batch`) keep opening a folder at one recompute, and a test counts it.
-- Open question for the owner, kept in `README.md`: `delete_page` (`pages.rs:453`) removes the file for good with
+- Open question for the owner, kept in `README.md`: `delete_page` (`workspace/pages.rs`) removes the file for good with
   `fs::remove_file`; without Git there is no way back.
 
 ## Core: session (area 3)
@@ -63,12 +64,12 @@ is wrong even if the tests pass.
   lost.
 - **Typing over an outside change keeps both.** `marks` remembers blocks a reload changed or removed;
   `set_text_on_marked` keeps the user's text and reports a `Notice::Conflict`.
-- **Undo has one memory budget** for all pages (`history.rs`, 64 MB, 200 steps a page), and changes Breccia makes
-  by itself (`archive.auto`) are rebased into the snapshots instead of becoming steps.
-- **The search index repairs itself** (`IndexState::guarded`, `recover`): a damaged file is rebuilt once, then the
-  index moves to memory with a notice.
+- **Undo has one memory budget** for all pages (`session/history.rs`, 64 MB, 200 steps a page), and changes
+  Breccia makes by itself (`archive.auto`) are rebased into the snapshots instead of becoming steps.
+- **The search index repairs itself** (`IndexState::guarded` and `recover` in `session/search.rs`): a damaged
+  file is rebuilt once, then the index moves to memory with a notice.
 - Carried to the synthesis (area 15): every edit answers with a complete `PageView`, in which every block of the
-  page is rendered to HTML again (`PageView::of`, `view.rs:355`). That is simple and correct, and it is the first
+  page is rendered to HTML again (`PageView::of` in `session/view.rs`). That is simple and correct, and it is the first
   thing to measure when a long page feels slow.
 
 ## Core: search and Git (area 4)
@@ -109,15 +110,18 @@ is wrong even if the tests pass.
 - **Everything runs off the main thread** (`spawn_blocking` for commands, the watcher callback and the index
   loop; one plain thread for Git), and **nothing is emitted while the session lock is held**.
 - **The event payload keeps the answer's field order** (`serde_json` with `preserve_order`, tested by
-  `page_changed_payload_keeps_the_answer_field_order`), because the frontend recognises the echo of its own
-  command by comparing JSON strings. Any change to how pages are sent must keep or replace that test.
+  `page_changed_payload_keeps_the_answer_field_order` in `app/src-tauri/src/events.rs`), because the frontend
+  recognises the echo of its own command by comparing JSON strings. Any change to how pages are sent must keep or
+  replace that test.
 - **The close is bounded**: the window goes at once, the last commit and push get `CLOSE_LIMIT` (15 s), a rebase
-  under the lock is waited for, and nothing starts after the shell gave up (`begin_close`, `finish_close`).
+  under the lock is waited for, and nothing starts after the shell gave up (`begin_close` and `finish_close`
+  in `app/src-tauri/src/git.rs`).
 - **Test hooks are environment variables** read in one place each (`BRECCIA_CONFIG_DIR`, `BRECCIA_FOLDER`,
   `BRECCIA_TODAY`, `BRECCIA_TRACE`, `BRECCIA_OFFSCREEN`, `BRECCIA_NO_TRAY`), each with a small pure function and a
   test. Keep new hooks in that shape.
 - **`settings.json` survives damage and newer versions**: each field is decoded alone, unknown keys are kept
-  (`Settings::other`), a file that is not JSON is copied to `settings.json.broken` before it is replaced.
+  (`Settings::other` in `app/src-tauri/src/settings.rs`), a file that is not JSON is copied to
+  `settings.json.broken` before it is replaced.
 - **The content security policy is narrow**: scripts only from the app, connections only to the IPC. Images may
   come from any `http` or `https` address (`img-src`), which a note needs for `![](https://…)`; it also means a
   note pulled from a shared repository can make Breccia fetch a remote address when the page is shown. Open
