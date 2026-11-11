@@ -1,4 +1,6 @@
-//! `board.get`: the cards of one configured board, grouped into columns.
+//! The board commands: `board.get` (the cards of one configured board,
+//! grouped into columns), `board.place`, `board.archive` and `archive.auto`,
+//! and the rows `archive.list` answers with ([`archived_tasks`]).
 
 use std::cmp::Ordering;
 use std::time::SystemTime;

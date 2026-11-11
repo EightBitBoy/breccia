@@ -1,5 +1,7 @@
-//! `graph.get`: the pages, the link targets without a page, and the links
-//! between them, for the network view.
+//! The graph commands: `graph.get` (the pages, the link targets without a
+//! page, and the links between them, for the network view) and
+//! `graph.saveLayout`, and the layout file in the cache directory that keeps
+//! the dot positions.
 
 use std::collections::{BTreeMap, HashMap};
 use std::path::Path;
