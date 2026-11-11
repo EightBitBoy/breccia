@@ -40,3 +40,4 @@ Task 3: minor (deferred): e2e backdrop click relies on a free top-left corner
 Task 3: minor (deferred): dev note not checked by hand (review item 88)
 Task 3: complete (commits 25b9077..cd905ed, review clean)
 Task 4: complete (commits 40ab29d..bc7ff80; docs only, covered by the final review)
+Plan 10 done 2026-11-11: fix wave 824e851..4049e45; just test, lint, e2e (203 PASS) all green.
