@@ -5,7 +5,7 @@ import { expect, test } from 'vitest'
 import { changelogPlugin } from './changelog-plugin.ts'
 
 const ID = '\0virtual:changelog'
-const content = '## [9.9.9] - 2030-01-01\n- "quoted" \ line\n'
+const content = '## [9.9.9] - 2030-01-01\n- "quoted" \\ line\n'
 
 function hooks(file: string) {
   const p = changelogPlugin(file)
@@ -28,6 +28,7 @@ test('resolves and loads the virtual module', () => {
   const ctx = { addWatchFile: (f: string) => watched.push(f) }
   const mod = load.call(ctx, ID) as string
   expect(JSON.parse(mod.slice('export default '.length))).toBe(content)
+  expect(mod).toContain('\\\\ line')
   expect(watched).toEqual([file])
   expect(load.call(ctx, 'other') ?? null).toBeNull()
 })
