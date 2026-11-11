@@ -464,13 +464,21 @@ impl Document {
         out
     }
 
+    /// The block with this id, or [`EditError::UnknownBlock`].
+    pub(crate) fn block(&self, id: BlockId) -> Result<&Block, EditError> {
+        let i = self.find(id)?;
+        Ok(&self.blocks[i])
+    }
+
+    /// The index of the block with this id, or [`EditError::UnknownBlock`].
+    pub(crate) fn find(&self, id: BlockId) -> Result<usize, EditError> {
+        self.index_of(id).ok_or(EditError::UnknownBlock)
+    }
+
     /// Replaces a block's text and marks it edited. No re-parsing.
     pub(crate) fn replace_text(&mut self, id: BlockId, text: &str) -> Result<(), EditError> {
-        let block = self
-            .blocks
-            .iter_mut()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let i = self.find(id)?;
+        let block = &mut self.blocks[i];
         block.text = text.to_string();
         block.raw = None;
         Ok(())
@@ -517,11 +525,8 @@ impl Document {
         old: &str,
         new: &str,
     ) -> Result<bool, EditError> {
-        let block = self
-            .blocks
-            .iter_mut()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let i = self.find(id)?;
+        let block = &mut self.blocks[i];
         if !crate::task::starts_with_keyword(&block.text, old) {
             return Ok(false);
         }

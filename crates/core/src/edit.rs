@@ -411,10 +411,6 @@ impl Document {
         Ok(())
     }
 
-    fn find(&self, id: BlockId) -> Result<usize, EditError> {
-        self.index_of(id).ok_or(EditError::UnknownBlock)
-    }
-
     fn prev_sibling(&self, i: usize) -> Option<usize> {
         let depth = self.blocks[i].depth;
         (0..i)

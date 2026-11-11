@@ -258,11 +258,7 @@ impl Document {
         cfg: &Config,
         now: NaiveDateTime,
     ) -> Result<(), EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         let to = match keyword {
             Some(k) => Some(
                 cfg.state(k)
@@ -290,11 +286,7 @@ impl Document {
         on: bool,
         now: NaiveDateTime,
     ) -> Result<(), EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         let mut text = with_archived(&block.text, on.then_some(now));
         // An archived task leaves the board, and its place with it.
         if on {
@@ -311,11 +303,7 @@ impl Document {
     /// after the last property line) or removes every `priority::` property
     /// line (`None`). Fails like [`Self::set_state`].
     pub fn set_priority(&mut self, id: BlockId, value: Option<u32>) -> Result<(), EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         let text = with_priority(&block.text, value);
         if text == block.text {
             return Ok(());
@@ -335,11 +323,7 @@ impl Document {
         cfg: &Config,
         now: NaiveDateTime,
     ) -> Result<Option<String>, EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         if before.is_some_and(|k| cfg.state(k).is_none()) {
             return Ok(None);
         }
@@ -368,11 +352,7 @@ impl Document {
     /// Adds `created:: <date> <time>` to the block when it has none (a new
     /// task). Fails like [`Self::set_state`].
     pub fn add_created(&mut self, id: BlockId, now: NaiveDateTime) -> Result<(), EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         let text = with_created(&block.text, Some(now));
         if text == block.text {
             return Ok(());
@@ -390,11 +370,7 @@ impl Document {
         cfg: &Config,
         now: NaiveDateTime,
     ) -> Result<Option<String>, EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         let current = task_state(&block.text, cfg).map(|s| s.keyword.as_str());
         let next = cfg
             .cycle_next(current)
@@ -413,11 +389,7 @@ impl Document {
         cfg: &Config,
         now: NaiveDateTime,
     ) -> Result<Option<String>, EditError> {
-        let block = self
-            .blocks
-            .iter()
-            .find(|b| b.id == id)
-            .ok_or(EditError::UnknownBlock)?;
+        let block = self.block(id)?;
         if cfg.cycle_next(None).is_none() {
             return Err(EditError::NoCycle);
         }
