@@ -1283,7 +1283,7 @@ try {
   await kb.press('Control+Shift+Enter')
   // Nothing changes on disk for a block without a state: the typing after it shows that the key wrote nothing. The
   // editor is locked while the command runs, so the typing waits for it to be editable again.
-  await page.locator('.cm-content[contenteditable="true"]').waitFor()
+  await page.locator('.cm-content:not([aria-readonly="true"])').waitFor()
   await kb.press('Control+End')
   await kb.type('!')
   await expectFile('101 Ctrl Shift Enter on a block without a state writes nothing', '- wrap!\n', wrapFile)
@@ -1335,7 +1335,7 @@ try {
   await kb.press('Control+Enter')
   await note103.waitFor()
   // The editor is locked while the command runs; Esc waits for it.
-  await page.locator('.cm-content[contenteditable="true"]').waitFor()
+  await page.locator('.cm-content:not([aria-readonly="true"])').waitFor()
   await kb.press('Escape')
   await page.locator('.cm-content').waitFor({ state: 'detached' })
   await note103.locator('.close').click()
@@ -3684,7 +3684,7 @@ try {
     }, true)
     return all.nth((await all.allTextContents()).findIndex((x) => x.trim() === t))
   }
-  const unlocked130 = page.locator('.cm-content[contenteditable="true"]')
+  const unlocked130 = page.locator('.cm-content:not([aria-readonly="true"])')
   // The edited line and whether the caret (the DOM selection's focus) is at its end.
   const caret130 = () =>
     page.evaluate(() => {
@@ -3857,6 +3857,30 @@ try {
   await notice133.waitFor({ state: 'detached' })
   unlinkSync(upper133)
   console.log('PASS 133 a page file saved as .MD while Breccia runs is reported at once')
+
+  // 135: keys typed right after Ctrl Enter, while the core still answers, are not lost (#2): they land after the
+  // state, in order. Whether they arrive during the lock or after it, the file must hold them all.
+  const file135 = join(pagesDir, 'Typed 135.md')
+  writeFileSync(file135, '- note\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:typed 135"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:typed 135"]').click()
+  await title.filter({ hasText: 'Typed 135' }).waitFor()
+  await page.locator('.block[data-block-id] .content').filter({ hasText: 'note' }).first().click()
+  await page.locator('.cm-content:not([aria-readonly="true"])').waitFor()
+  await kb.press('End')
+  await kb.press('Control+Enter')
+  await kb.type('xyz')
+  await expectFileLike(
+    '135 the state and all three keys reach the file, before the created line',
+    `- TODO notexyz
+  created:: ${today} ${TIME}
+`,
+    file135,
+  )
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  console.log('PASS 135 keys typed right after Ctrl Enter are kept, after the state, in order')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')

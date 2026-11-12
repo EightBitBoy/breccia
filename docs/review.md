@@ -284,3 +284,9 @@ are its questions for you; each answer decides what a later plan does.
 94. [ ] **Test window title and demo dates:** while `just e2e` (or `just screenshots`) runs, its window and tray entry
    read "Breccia (test)", not "Breccia". In `just dev`, open the Journal at 27 Oct 2026: the finished task shows
    "✓ 27 Oct 16:40 after 7 days"; the Project X and Release 2 tasks show their durations too.
+
+95. [ ] **Typing right after Ctrl Enter (backlog #2):** in a block, press `Ctrl Enter` and keep typing without a pause
+   (also `Ctrl Shift Enter`, and a state picked from the `/` menu): every key you typed is in the block, after the
+   state keyword and the text you had, and before the `created::` line. Before, keys typed in the few milliseconds the
+   command ran were lost, and typed text landed on the `created::` line. Also check a block with several lines: the
+   caret stays at the end of the last line.

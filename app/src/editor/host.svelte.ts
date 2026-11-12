@@ -60,6 +60,10 @@ export class EditorHost {
   private splitting: Splitting | null = null
   /** Text-changing commands in flight that were issued while editing; the editor is locked meanwhile. */
   private locks = 0
+  /** Text typed while the editor was locked; it goes in when the lock ends. */
+  private lockedText = ''
+  /** The editor update the last answer started: a lock ends only after it, or typed text would meet old text. */
+  private stepping: Promise<void> = Promise.resolve()
   /** The block being edited when a command was issued. */
   private issuedFrom = new WeakMap<Command, BlockId | null>()
   /** Where the caret goes after a `block.delete` whose answer names no block (`deleteFocus`). */
@@ -128,15 +132,20 @@ export class EditorHost {
         },
       )
       .finally(() => {
-        if (lock) this.setLocks(-1)
+        if (lock) return this.stepping.then(() => this.setLocks(-1))
       })
   }
 
   private setLocks(delta: number) {
     this.locks += delta
+    const typed = this.locks === 0 ? this.lockedText : ''
+    if (this.locks === 0) this.lockedText = ''
     if (!this.mounted) return
     this.mounted.ed.setEditable(this.locks === 0)
-    if (this.locks === 0) this.mounted.ed.focus()
+    if (this.locks !== 0) return
+    this.mounted.ed.focus()
+    // The answer is applied by now: what was typed meanwhile follows it, at the caret.
+    if (typed && this.editingId !== null) this.mounted.ed.insert(typed)
   }
 
   private refuse(e: unknown) {
@@ -208,7 +217,7 @@ export class EditorHost {
     if (!cmd) return
     // A split ends with its answer, whichever page that shows.
     if (cmd.type === 'block.split' && this.splitting?.id === cmd.id) {
-      background(finishSplit(this.splitHost, this.splitting, out))
+      this.stepping = background(finishSplit(this.splitHost, this.splitting, out))
       return
     }
     if (!shown) return
@@ -221,7 +230,10 @@ export class EditorHost {
     }
     // While a split runs, the old editor's text is the user's, not the core's.
     if (cmd.type === 'block.setText' && this.splitting) return
-    if (cmd.type === 'page.get') return background(this.refreshed(cmd.key, before))
+    if (cmd.type === 'page.get') {
+      this.stepping = background(this.refreshed(cmd.key, before))
+      return
+    }
     const fb = out.focus ? this.blockOf(out.focus.id) : undefined
     const step = afterOutput({
       kind: kindOf(cmd.type),
@@ -232,7 +244,7 @@ export class EditorHost {
       sent: cmd.type === 'block.setText' ? { id: cmd.id, text: cmd.text } : undefined,
       current: this.mounted?.ed.text(),
     })
-    background(this.runStep(step, cmd.type === 'block.setText' ? cmd.id : null))
+    this.stepping = background(this.runStep(step, cmd.type === 'block.setText' ? cmd.id : null))
   }
 
   /** The caret after a `block.delete` the core placed no caret for: the block chosen when the key was pressed. */
@@ -327,6 +339,7 @@ export class EditorHost {
   /** Ends editing; sends nothing but the settle of a state typed or removed by hand. */
   close() {
     const text = this.editedText()
+    this.lockedText = ''
     this.dropEditor()
     this.editingId = null
     this.settle(text)
@@ -479,6 +492,7 @@ export class EditorHost {
         // During a split the typed text is carried over when its output arrives.
         if (this.splitting?.id !== id) this.setTextDebounced(id, text)
       },
+      onLockedText: (text) => void (this.lockedText += text),
       onAction: (a, ctx) => {
         // Any outline key moves things: the menu would sit at stale coordinates.
         this.closeMenu()
@@ -603,6 +617,9 @@ function setsStateOf(cmd: Command, id: BlockId): boolean {
 }
 
 /** Editor updates run after `apply` returns; their failures are logged, never unhandled. */
-function background(p: Promise<unknown>) {
-  p.catch((e) => console.error('editor update failed', e))
+function background(p: Promise<unknown>): Promise<void> {
+  return p.then(
+    () => {},
+    (e) => console.error('editor update failed', e),
+  )
 }

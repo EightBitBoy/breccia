@@ -17,6 +17,10 @@ let sent: Command[]
 let notices: Notice[]
 /** The texts sent with `setTextDebounced`. */
 let typed: { id: number; text: string }[]
+/** The editor mounted last. */
+let lastEd: ReturnType<typeof mountEditor>
+/** Answers the commands sent, in order; a test settles them. */
+let answers: ((o: Output) => void)[]
 /** The hooks of the last mounted editor. */
 let hooks: EditorHooks
 let host: EditorHost
@@ -32,7 +36,7 @@ const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
   hooks = h
   let t = text
   let c = Math.min(cursor16, text.length)
-  return {
+  return (lastEd = {
     destroy() {},
     text: () => t,
     setText(next, at) {
@@ -54,7 +58,7 @@ const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
       const state = EditorState.create({ doc: t, selection: EditorSelection.cursor(c), extensions: opts.extensions ?? [] })
       f({ state, requestMeasure() {} } as unknown as EditorView)
     },
-  }
+  })
 }
 
 /** Commands are recorded and never answered: the test applies outputs itself. */
@@ -63,7 +67,7 @@ const client: Client = {
     sent.push(cmd)
     // Link completion asks for the page names; everything else is answered by the test.
     if (cmd.type === 'pages.list') return Promise.resolve({ ...out(pageOf('p', [])), names: linkNames })
-    return new Promise<Output>(() => {})
+    return new Promise<Output>((res) => answers.push(res))
   },
   setTextDebounced(id, text) {
     typed.push({ id, text })
@@ -73,11 +77,20 @@ const client: Client = {
   setGeneration() {},
 }
 
+/** An answer that changes nothing. */
+function emptyOut(): Output {
+  return {
+    page: null, focus: null, notices: [], folder: null, config: null,
+    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
+  }
+}
+
 function pageOf(key: string, bs: BlockView[]): PageView {
   return { key, name: key, kind: 'page', title: key, preambleHtml: '', hasFile: true, blocks: bs }
 }
 
 beforeEach(() => {
+  answers = []
   linkNames = []
   blocks = [block(1, 'alpha'), block(2, 'beta')]
   sent = []
@@ -137,6 +150,28 @@ test('an outline paste for an editor that is no longer mounted tells the user', 
   old.onOutlinePaste!('- a')
   expect(notices).toEqual([{ kind: 'refused', message: 'Paste skipped; the text is still on the clipboard.' }])
   expect(sent).toEqual([])
+})
+
+test('keys typed while a command runs are inserted at the caret once it is answered', async () => {
+  await host.edit(1, 5)
+  const done = host.exec({ type: 'blocks.setState', ids: [1], keyword: 'TODO' })
+  hooks.onLockedText!('x')
+  hooks.onLockedText!('y')
+  expect(lastEd.text()).toBe('alpha')
+  answers[0](emptyOut())
+  await done
+  expect(lastEd.text()).toBe('alphaxy')
+  expect(typed.at(-1)).toEqual({ id: 1, text: 'alphaxy' })
+})
+
+test('keys typed during a lock are dropped when the editor is gone', async () => {
+  await host.edit(1, 5)
+  const done = host.exec({ type: 'blocks.setState', ids: [1], keyword: 'TODO' })
+  hooks.onLockedText!('x')
+  host.leave()
+  answers[0](emptyOut())
+  await done
+  expect(typed).toEqual([])
 })
 
 test('while a split runs, the caret floor is the split caret', async () => {

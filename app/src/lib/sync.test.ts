@@ -192,6 +192,16 @@ describe('mapCaret', () => {
     expect(mapCaret('task', 4, 'DONE task')).toBe(9)
   })
 
+  test('a caret at the end of the text stays before the property lines a state adds', () => {
+    const props = '\n  created:: 2026-11-12 10:00:00'
+    expect(mapCaret('task', 4, 'TODO task' + props)).toBe(9)
+    expect(mapCaret('one\ntwo', 7, 'TODO one\ntwo' + props)).toBe(12)
+    // An empty block: after the keyword.
+    expect(mapCaret('', 0, 'TODO' + props)).toBe(4)
+    // Text that had its lines already: a caret at the very end stays at the very end.
+    expect(mapCaret('TODO task' + props, 9 + props.length, 'DOING task' + props)).toBe(10 + props.length)
+  })
+
   test('clamps when the text after the caret changed', () => {
     expect(mapCaret('abcdef', 5, 'xyz')).toBe(3)
     expect(mapCaret('abc', 1, 'abX')).toBe(1)

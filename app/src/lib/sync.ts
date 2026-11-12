@@ -200,12 +200,30 @@ export function carryOver(t0: string, c: number, t1: string): Carry {
 }
 
 /**
+ * Where the end of `old` is in `next` when `next` keeps it whole after a keyword and adds lines after it (a state
+ * brings its `created::` line), so a caret at the end of the text stays before those lines. An empty `old` ends its
+ * first line. Null when `next` does not keep `old` that way.
+ */
+function endOfKept(old: string, next: string): number | null {
+  if (old === '') return next.includes('\n') ? next.indexOf('\n') : null
+  for (let i = next.indexOf(old); i >= 0; i = next.indexOf(old, i + 1)) {
+    const end = i + old.length
+    if ((i === 0 || next[i - 1] === ' ') && next[end] === '\n') return end
+  }
+  return null
+}
+
+/**
  * Where the caret goes when the text under it changes from `old` to `next`: it
  * keeps its distance from the end if the text after it is unchanged (a state
  * keyword added or removed in front), else it is clamped.
  */
 export function mapCaret(old: string, caret: number, next: string): number {
   const after = old.slice(caret)
+  if (after === '') {
+    const end = endOfKept(old, next)
+    if (end !== null) return end
+  }
   if (next.endsWith(after)) return next.length - after.length
   return Math.max(0, Math.min(caret, next.length))
 }

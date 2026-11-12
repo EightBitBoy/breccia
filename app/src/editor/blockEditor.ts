@@ -7,6 +7,7 @@ import { decide, type Action, type Ctx } from '../lib/keys'
 import { isOutline } from '../lib/paste'
 import { isMac as mac } from '../lib/platform'
 import { highlighting } from './highlight'
+import { lockedKeyText } from './lockedKeys'
 
 export interface EditorHooks {
   onChange(text: string): void
@@ -18,6 +19,8 @@ export interface EditorHooks {
    * anything; returning true takes the key away from the editor.
    */
   onDelete?(forward: boolean, ctx: { cursor16: number }): boolean
+  /** A key that types text, pressed while the editor is locked; the host inserts it once the lock ends. */
+  onLockedText?(text: string): void
   /** The lowest offset (UTF-16) the keyboard may move the caret to, or null for none. */
   caretFloor?(): number | null
 }
@@ -34,7 +37,10 @@ export interface BlockEditor {
   selection(): { from: number; to: number }
   /** Deletes one character before (or after) the caret, as if typed (it reaches `onChange`). */
   deleteChar(forward: boolean): void
-  /** Whether the user can type; off while a command that changes the text runs. */
+  /**
+   * Whether the user can type; off while a command that changes the text runs. The editor keeps the focus: keys that
+   * type text go to `onLockedText`, the rest do nothing.
+   */
   setEditable(on: boolean): void
   focus(): void
   /** Runs `f` with the CodeMirror view (the caret menus read it). */
@@ -116,6 +122,21 @@ export function mountEditor(
     EditorView.domEventHandlers({
       keydown(e, view) {
         if (e.isComposing) return false
+        if (view.state.readOnly) {
+          // Locked: a typed character waits for the lock to end; every other key is ignored, as the editor is read-only.
+          const text = lockedKeyText({
+            key: e.key,
+            shift: e.shiftKey,
+            ctrl: e.ctrlKey,
+            alt: e.altKey,
+            meta: e.metaKey,
+            altGraph: e.getModifierState('AltGraph'),
+          })
+          if (text === null) return false
+          e.preventDefault()
+          hooks.onLockedText?.(text)
+          return true
+        }
         const ctx = ctxOf(view)
         const action = decide({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, ctx)
         if (!action) {
@@ -151,7 +172,7 @@ export function mountEditor(
         drawSelection(),
         EditorView.lineWrapping,
         theme,
-        editable.of(EditorView.editable.of(opts.editable ?? true)),
+        editable.of(EditorState.readOnly.of(!(opts.editable ?? true))),
         highlighting(opts.keywords ?? []),
         EditorView.updateListener.of((u) => {
           if (u.docChanged && !u.transactions.some((tr) => tr.annotation(external))) {
@@ -183,7 +204,7 @@ export function mountEditor(
     cursor16: () => view.state.selection.main.head,
     selection: () => ({ from: view.state.selection.main.from, to: view.state.selection.main.to }),
     setEditable(on) {
-      view.dispatch({ effects: editable.reconfigure(EditorView.editable.of(on)) })
+      view.dispatch({ effects: editable.reconfigure(EditorState.readOnly.of(!on)) })
     },
     focus: () => view.focus(),
     run: (f) => f(view),
