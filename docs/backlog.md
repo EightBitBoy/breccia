@@ -129,9 +129,9 @@ comments and keys in `config.toml`. Cannot happen with today's dialog (one chang
 `Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
 open on one of the changed pages; the undo request is sent only from the editor.
 
-## 22. Move a card with the keyboard (Boards)
+## 22. Move a card with the keyboard (Boards) (won't fix, 2026-11-12)
 
-Moving a card up or down in its column (its priority) is mouse-only. Also, a focused card opens on `Ctrl Enter` and
+Owner, 2026-11-12: closed. Boards stay mouse-first for ordering; moving between columns already works from the card menu. Original note: moving a card up or down in its column (its priority) is mouse-only. Also, a focused card opens on `Ctrl Enter` and
 `Ctrl Shift Enter` as on plain Enter (`BoardCard.svelte` ignores modifiers); harmless, but those keys could do nothing
 there.
 
