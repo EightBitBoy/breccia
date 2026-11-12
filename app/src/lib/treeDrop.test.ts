@@ -26,6 +26,7 @@ const tree: TreeView = {
   ],
   journals: [],
   tags: [],
+  version: 0,
 }
 
 const page = (key: string, linkedOnly = false): Row => ({ id: `p:${key}`, depth: 0, kind: 'page', label: key, key, linkedOnly })

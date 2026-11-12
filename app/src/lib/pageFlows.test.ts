@@ -105,6 +105,7 @@ test('moving a page only linked to offers only the folders and sends page.move',
     ],
     journals: [],
     tags: [],
+    version: 0,
   }
   const flows = new PageFlows({
     run: async (cmd: Command) => {
@@ -137,6 +138,7 @@ function dropSetup(fail: string | null = null) {
     ],
     journals: [],
     tags: [],
+    version: 0,
   }
   const flows = new PageFlows({
     run: async (cmd: Command) => {
@@ -168,6 +170,7 @@ test('a drop where the row already is sends nothing', async () => {
 test('a refused drop becomes a notice', async () => {
   const { flows, ran, notices } = dropSetup('dir.rename')
   await flows.moveTo({ id: 'f:Other', depth: 0, kind: 'folder', label: 'Other', path: 'Other' }, 'Projects')
-  expect(ran).toEqual([{ type: 'dir.rename', path: 'Other', to: 'Projects/Other' }])
+  // A refused drop fetches the tree again, so a stale one does not stay.
+  expect(ran).toEqual([{ type: 'dir.rename', path: 'Other', to: 'Projects/Other' }, { type: 'folder.tree' }])
   expect(notices.map((n) => n.kind)).toEqual(['refused'])
 })

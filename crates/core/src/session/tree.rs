@@ -2,6 +2,7 @@
 
 use chrono::Datelike;
 use serde::Serialize;
+use std::sync::atomic::{AtomicU64, Ordering};
 
 use crate::naming::{journal_display, month_name};
 use crate::workspace::{PageKind, TagEntry, Workspace};
@@ -13,7 +14,13 @@ pub struct TreeView {
     pub journals: Vec<JournalYear>,
     /// The sidebar's Tags section ([`Workspace::tags`]).
     pub tags: Vec<TagEntry>,
+    /// Grows with every tree built, across folders. The frontend ignores a tree older than the one it shows: an
+    /// update and an answer can arrive out of order.
+    pub version: u64,
 }
+
+/// The version of the last tree built.
+static TREE_VERSION: AtomicU64 = AtomicU64::new(0);
 
 /// The parts of the tree that follow the links: the linked-only pages and
 /// the tags. The session resends the tree when they change.
@@ -118,6 +125,7 @@ impl TreeView {
             pages: children(ws, "", &lists.pages),
             journals: years,
             tags: lists.tags.clone(),
+            version: TREE_VERSION.fetch_add(1, Ordering::Relaxed) + 1,
         }
     }
 }

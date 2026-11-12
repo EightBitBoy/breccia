@@ -133,11 +133,11 @@ export class PageFlows {
       if (shown !== null && out.removed.includes(shown)) {
         await this.env.home()
       }
-      // Not every command carries the tree, and the watcher may be late.
-      await this.env.run({ type: 'folder.tree' })
     } catch (e) {
       this.refuse(e)
     }
+    // Not every command carries the tree, and the watcher may be late. After a refusal too: the tree shown may be stale.
+    await this.env.run({ type: 'folder.tree' }).catch(() => {})
   }
 
   private refuse(e: unknown) {

@@ -464,3 +464,11 @@ fn a_tag_without_a_page_can_be_renamed() {
     assert!(!t.path().join("pages/Important.md").exists());
     assert!(!t.path().join("pages/Subject.md").exists());
 }
+
+#[test]
+fn every_tree_carries_a_newer_version_than_the_one_before() {
+    let (_t, mut s) = folder(&[("pages/A.md", "- a\n")], &[]);
+    let first = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
+    let second = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
+    assert!(second.version > first.version);
+}

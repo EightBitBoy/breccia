@@ -29,6 +29,7 @@ const tree: TreeView = {
     },
   ],
   tags: [],
+  version: 0,
 }
 
 test('closed folders hide their children; journals come last', () => {
@@ -80,7 +81,7 @@ test('ancestors open the way to a page or a day', () => {
 
 const folderNode = (path: string, children: TreeNode[]): TreeNode => ({ kind: 'folder', name: path.split('/').pop()!, path, children })
 const pageNode = (key: string): TreeNode => ({ kind: 'page', key, name: key })
-const t = (pages: TreeNode[]): TreeView => ({ pages, journals: [], tags: [] })
+const t = (pages: TreeNode[]): TreeView => ({ pages, journals: [], tags: [], version: 0 })
 
 test('locate finds top-level pages too, and null when absent', () => {
   expect(locate(t([pageNode('a')]), 'a')).toEqual([])
@@ -110,6 +111,7 @@ test('a page that is only linked to is marked', () => {
     ],
     journals: [],
     tags: [],
+    version: 0,
   }
   expect(rows(t, new Set()).map((r) => [r.id, r.linkedOnly])).toEqual([
     ['p:anna', true],
@@ -126,6 +128,7 @@ test('tag rows carry the name, the count and whether the tag has a page', () => 
       { key: 'infra', name: 'infra', count: 2, linkedOnly: true },
       { key: 'ops', name: 'Ops', count: 1, linkedOnly: false },
     ],
+    version: 0,
   }
   expect(tagRows(t)).toEqual([
     { id: 't:infra', depth: 0, kind: 'tag', label: 'infra', key: 'infra', count: 2, linkedOnly: true },

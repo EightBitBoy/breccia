@@ -182,6 +182,8 @@ export interface TreeView {
   journals: JournalYear[]
   /** The sidebar's Tags section: every name used as `#tag`, sorted by name. */
   tags: TagView[]
+  /** Grows with every tree the core builds; an older tree than the shown one is ignored. */
+  version: number
 }
 
 /** A name used as `#tag`. */

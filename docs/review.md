@@ -274,3 +274,9 @@ are its questions for you; each answer decides what a later plan does.
 92. [ ] **Dropped paste notice:** backlog #5. The new notice "Paste skipped; the text is still on the clipboard." shows
    when an outline paste meets an editor that is no longer the one it was meant for. It is only unit-tested, because
    it is hard to trigger by hand: no need to look for it.
+
+93. [ ] **Sidebar tree (backlog #10):** an older page list can no longer replace a newer one, and a refused drag in the
+   sidebar (for example a folder onto a name that exists) refreshes the list afterwards. Drag a folder onto a place
+   where a folder of that name exists: the notice appears and the sidebar stays right. Hard to see by eye; look for
+   anything odd in the sidebar after quick renames and moves. Left open: two quick folder opens starting their file
+   watchers in the wrong order (backlog #10).

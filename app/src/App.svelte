@@ -41,6 +41,7 @@
   import { everyMidnight } from './lib/feed'
   import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
   import { ancestorsOf, visible } from './lib/tree'
+  import { isNewer } from './lib/treeVersion'
   import {
     addedText,
     boardDialogAfterConfig,
@@ -627,7 +628,7 @@
     if (out.usage) settings.applyUsage(out.usage, out.usageSkipped ?? 0)
     if (out.graph) network.applyGraph(out.graph)
     if (out.board) boards.applyBoard(out.board, cmd)
-    if (out.tree) tree = out.tree
+    if (out.tree && isNewer(tree, out.tree)) tree = out.tree
     // Before the new notices, so a page that failed again keeps its fresh one.
     if (out.saved.length) notices.saved(out.saved)
     out.notices.forEach(notify)
@@ -1543,7 +1544,7 @@
           )
         }),
       treeChanged: (t) => {
-        tree = t
+        if (isNewer(tree, t)) tree = t
         search.refresh()
         search.refreshNames()
         allPages.refresh() // a page added, moved or removed on disk

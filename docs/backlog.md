@@ -59,7 +59,7 @@ invisible byte-order mark at its start (to check: the last one).
 Choosing "Keep mine" writes a second copy at the old place. Nothing is lost, but the user has to delete one copy.
 Accepted so far.
 
-## 10. The sidebar can briefly show an older page tree (Pages and links)
+## 10. The sidebar can briefly show an older page tree (Pages and links) (done 2026-11-12, no plan; the watcher-order part is left)
 
 Updates can arrive out of order, so an older tree can replace a newer one until the next change
 (`app/src/App.svelte`, where the tree is assigned without a version check). Two quick folder opens can also start their

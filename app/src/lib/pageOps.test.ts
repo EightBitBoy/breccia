@@ -18,6 +18,7 @@ const tree: TreeView = {
   ],
   journals: [],
   tags: [],
+  version: 0,
 }
 
 test('menus per row kind', () => {
