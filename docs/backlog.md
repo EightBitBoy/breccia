@@ -343,7 +343,7 @@ It changes many files in one command and is one slow answer, once.
 Enter (split) trims spaces at the join, and "Keep mine" overwriting onto a non-UTF-8 file or a folder is not described
 (`crates/core/src/edit.rs`, `crates/core/src/workspace/`). Code comments, not the format document.
 
-## 61. Show the created time in the demo and screenshots (Docs)
+## 61. Show the created time in the demo and screenshots (Docs) (demo done 2026-11-12; screenshots left)
 
 `docs/demo/` has no `created::` lines, so the README screenshots never show "after N days" on a done chip. Add some and
 retake the screenshots (`just screenshots`).
@@ -537,3 +537,11 @@ Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain t
 `#tags`, task keywords, `key:: value` properties, `**bold**`, `<https://…>` and `<name@example.com>` links, and so on.
 Add a short section. To settle: which syntax belongs in it (Breccia's own, or Markdown basics too), whether it is a second
 tab or a block below the shortcuts, and whether a test keeps it in line with `docs/format.md`.
+
+Update 2026-11-12 (#61): the three finished tasks in `docs/demo/` now have `created::` lines and done times, so the
+chip reads "after 7 days" and so on in the app. The README screenshots still do not show it: the journal image ends
+above the one finished task (27 Oct), and board cards show only the done date. Retaking them would change nothing;
+to show the chip, change what `app/e2e/screenshots.mjs` frames (scroll the journal to 27 Oct).
+
+Update 2026-11-12 (#71): the "Breccia (test)" title is done. `BRECCIA_WINDOW_TITLE` renames the windows
+(`app/src-tauri/src/window.rs`); e2e, screenshots and graph-scale set it.

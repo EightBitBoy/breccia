@@ -145,6 +145,7 @@ async function launch(folder, configDir, gitEnv, logPath) {
       ...process.env,
       BRECCIA_FOLDER: folder,
       BRECCIA_CONFIG_DIR: configDir,
+      BRECCIA_WINDOW_TITLE: 'Breccia (test)', // a stray window is easy to tell from a real one
       ...gitEnv,
       BRECCIA_TODAY: today,
       ...(onscreen ? {} : { BRECCIA_OFFSCREEN: '1' }),

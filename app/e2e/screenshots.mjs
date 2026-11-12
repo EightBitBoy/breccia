@@ -63,6 +63,7 @@ try {
       ...process.env,
       BRECCIA_FOLDER: folder,
       BRECCIA_CONFIG_DIR: configDir,
+      BRECCIA_WINDOW_TITLE: 'Breccia (test)', // a stray window is easy to tell from a real one
       BRECCIA_TODAY: '2026-10-29',
       BRECCIA_OFFSCREEN: '1',
       GIT_CEILING_DIRECTORIES: tmp,

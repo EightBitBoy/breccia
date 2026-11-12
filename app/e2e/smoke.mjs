@@ -241,6 +241,7 @@ try {
       ...process.env,
       BRECCIA_FOLDER: folder,
       BRECCIA_CONFIG_DIR: configDir,
+      BRECCIA_WINDOW_TITLE: 'Breccia (test)', // a stray window is easy to tell from a real one
       ...gitEnv,
       BRECCIA_TODAY: today, // a midnight during the run must not shift the app's day against dayKey
       // The window starts unfocused and off screen: the run never takes the keyboard.

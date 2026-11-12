@@ -32,7 +32,7 @@ use recovery::test_panic;
 use tauri::{Manager, RunEvent};
 use tray::{build_tray, show_main, tray_wanted};
 use watching::start_watcher;
-use window::{offscreen_enabled, place_offscreen, show_offscreen, window_state};
+use window::{offscreen_enabled, place_offscreen, set_title, show_offscreen, window_state};
 
 struct App {
     session: Mutex<Session>,
@@ -123,6 +123,10 @@ pub fn run() {
     let config_override = config_override(std::env::var_os("BRECCIA_CONFIG_DIR"));
     let mut context = tauri::generate_context!();
     let offscreen = offscreen_enabled(std::env::var_os("BRECCIA_OFFSCREEN"));
+    set_title(
+        &mut context.config_mut().app.windows,
+        std::env::var_os("BRECCIA_WINDOW_TITLE"),
+    );
     if offscreen {
         place_offscreen(&mut context.config_mut().app.windows);
     }

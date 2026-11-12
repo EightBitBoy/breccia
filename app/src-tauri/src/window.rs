@@ -12,6 +12,17 @@ pub(crate) fn offscreen_enabled(var: Option<OsString>) -> bool {
     var.is_some_and(|v| !v.is_empty())
 }
 
+/// `BRECCIA_WINDOW_TITLE` (the test hook): the title of every window instead of the configured one, so a window of
+/// an e2e, screenshot or graph-scale run is easy to tell from a real Breccia. Unset or empty means no change.
+pub(crate) fn set_title(windows: &mut [tauri::utils::config::WindowConfig], var: Option<OsString>) {
+    let Some(title) = var.filter(|v| !v.is_empty()) else {
+        return;
+    };
+    for w in windows {
+        w.title = title.to_string_lossy().into_owned();
+    }
+}
+
 /// Where an off-screen window's top left corner goes, in physical pixels on
 /// both axes: far beyond any monitor layout.
 const OFFSCREEN: i32 = -20_000;
@@ -101,6 +112,19 @@ mod tests {
         assert!(!w.focus, "window still takes the focus");
         assert!(!w.visible, "window shows before it is off screen");
         assert!(!w.maximized && !w.fullscreen, "window covers a screen");
+    }
+
+    /// `BRECCIA_WINDOW_TITLE` renames the windows, so a window of a test run is easy to tell from a real one.
+    #[test]
+    fn a_title_override_renames_every_window() {
+        let ctx: tauri::Context<tauri::Wry> = tauri::generate_context!();
+        let mut windows = ctx.config().app.windows.clone();
+        let before = windows[0].title.clone();
+        set_title(&mut windows, None);
+        set_title(&mut windows, Some("".into()));
+        assert_eq!(windows[0].title, before, "no value, no change");
+        set_title(&mut windows, Some("Breccia (test)".into()));
+        assert!(windows.iter().all(|w| w.title == "Breccia (test)"));
     }
 
     /// An off-screen run neither restores nor saves the window state, so it

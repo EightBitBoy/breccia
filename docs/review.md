@@ -280,3 +280,7 @@ are its questions for you; each answer decides what a later plan does.
    where a folder of that name exists: the notice appears and the sidebar stays right. Hard to see by eye; look for
    anything odd in the sidebar after quick renames and moves. Left open: two quick folder opens starting their file
    watchers in the wrong order (backlog #10).
+
+94. [ ] **Test window title and demo dates:** while `just e2e` (or `just screenshots`) runs, its window and tray entry
+   read "Breccia (test)", not "Breccia". In `just dev`, open the Journal at 27 Oct 2026: the finished task shows
+   "✓ 27 Oct 16:40 after 7 days"; the Project X and Release 2 tasks show their durations too.

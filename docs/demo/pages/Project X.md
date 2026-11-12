@@ -6,7 +6,8 @@ Move the nightly import and export jobs off the old server.
 	- No downtime for the customer portal
 - Tasks
 	- DONE Move the import job
-	  done:: [[2026-10-26]]
+	  created:: 2026-10-22 10:00:00
+	  done:: [[2026-10-26]] 15:20:30
 	- DOING Move the export job
 	  owner:: [[Anna]]
 	- TODO Turn off the old server #infra
