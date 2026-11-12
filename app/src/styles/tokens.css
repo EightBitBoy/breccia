@@ -664,22 +664,22 @@
 
 [data-theme="oxblood"] {
   color-scheme: dark;
-  --bg: #1c0a0e;
-  --side: #140609;
-  --line: #35121b;
-  --faded: #5a2d39;
+  --bg: #170508;
+  --side: #0f0305;
+  --line: #2f0f17;
+  --faded: #642f3e;
   --text: #efd8dc;
   --muted: #a37a83;
-  --hover: #33141b;
+  --hover: #2e1018;
   --accent: #e8364f;
   --link: #f2677d;
   --tag: #e6a07a;
-  --card: #240e14;
-  --card-btn: #41202a;
-  --card-btn-hover: #56303b;
-  --edit: #270f16;
-  --select: #4d1226;
-  --on-accent: #140609;
+  --card: #1f0a0f;
+  --card-btn: #46202b;
+  --card-btn-hover: #5a3340;
+  --edit: #220b11;
+  --select: #46101f;
+  --on-accent: #0f0305;
   --shadow: rgba(0, 0, 0, .4);
   --shadow-strong: rgba(0, 0, 0, .5);
   --overlay: rgba(0, 0, 0, .45);
