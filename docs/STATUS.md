@@ -84,7 +84,7 @@ calendar in the slash menu (#77); `Ctrl Shift K` deletes the whole block with it
 https://github.com/EightBitBoy/breccia/releases/tag/v1.4.0). The owner checks review items 70 to 78.
 
 Plan 8 is done (2026-11-11, backlog #76): the mouse wheel over the theme button switches the theme; four new themes
-(Vampire, Fjord, Ember, Parchment), ten plus System in all, with the light ones first; Teal's text, selection and
+(Vampire, Fjord, Ember, Parchment), ten plus System in all (Claret, an eleventh, came after), with the light ones first; Teal's text, selection and
 highlights read better. The owner checks review items 80 to 86.
 
 Plan 9, the audit's core housekeeping, is done (2026-11-11; owner decisions Q1 and Q2 in the plan's "Product

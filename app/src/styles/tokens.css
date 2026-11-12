@@ -662,6 +662,66 @@
   --pc-ds: 0.6;
 }
 
+[data-theme="claret"] {
+  color-scheme: dark;
+  --bg: #2b1b20;
+  --side: #22151a;
+  --line: #43292f;
+  --faded: #6a4a52;
+  --text: #efdfe1;
+  --muted: #aa8d94;
+  --hover: #37232a;
+  --accent: #e8566d;
+  --link: #f27b90;
+  --tag: #e0b27a;
+  --card: #322026;
+  --card-btn: #4f3139;
+  --card-btn-hover: #63404a;
+  --edit: #35232a;
+  --select: #5c2a39;
+  --on-accent: #22151a;
+  --shadow: rgba(0, 0, 0, .4);
+  --shadow-strong: rgba(0, 0, 0, .5);
+  --overlay: rgba(0, 0, 0, .45);
+  --c-grey: #ad9a9f;
+  --c-amber: #eeb04a;
+  --c-violet: #cf9ad0;
+  --c-green: #a9c26a;
+  --c-dim: #aa8d94;
+  --c-blue: #8fb0cc;
+  --c-red: #f5646f;
+  --c-teal: #8cc7ae;
+  --pc-crimson: #c95e6f;
+  --pc-red: #d66559;
+  --pc-coral: #d07956;
+  --pc-orange: #c97a37;
+  --pc-amber: #c18c36;
+  --pc-yellow: #b19f47;
+  --pc-olive: #868a4c;
+  --pc-lime: #80a64a;
+  --pc-green: #579b59;
+  --pc-emerald: #4ea37c;
+  --pc-teal: #469d93;
+  --pc-cyan: #3fa3b1;
+  --pc-sky: #529dc3;
+  --pc-blue: #5285d1;
+  --pc-indigo: #6c79cd;
+  --pc-violet: #8b79cf;
+  --pc-purple: #9a6ec0;
+  --pc-magenta: #bc68b6;
+  --pc-pink: #c7769b;
+  --pc-rose: #c38193;
+  --pc-brown: #977158;
+  --pc-tan: #a58b6e;
+  --pc-sand: #a69980;
+  --pc-slate: #788797;
+  --pc-grey: #8c8c8c;
+  --pc-wash: 34%;
+  --pc-l: 0.64;
+  --pc-cs: 0.85;
+  --pc-ds: 0.6;
+}
+
 /* Links and tags inside a finished task: dimmed toward the muted text colour, in every theme. */
 :root {
   --link-done: color-mix(in srgb, var(--link) 55%, var(--muted));

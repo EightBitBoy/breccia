@@ -3254,7 +3254,7 @@ try {
   const card124 = cardTitled('Write release notes')
   await card124.waitFor()
   const bg124 = (loc) => loc.evaluate((el) => getComputedStyle(el).backgroundColor)
-  for (const theme of ['light', 'violet', 'teal', 'graphite', 'parchment', 'vampire', 'fjord', 'ember']) {
+  for (const theme of ['light', 'violet', 'teal', 'graphite', 'parchment', 'vampire', 'fjord', 'ember', 'claret']) {
     await page.evaluate((t) => (document.documentElement.dataset.theme = t), theme)
     await page.mouse.move(1, 1)
     await card124.hover()
@@ -3301,10 +3301,10 @@ try {
   await page.locator('.block .content', { hasText: 'from outside' }).last().click()
   await waitFor('125 editing', focused125, 'editor')
   const text125 = await page.locator('.cm-content').innerText()
-  // Open by a click: eleven choices in order, System checked
+  // Open by a click: twelve choices in order, System checked
   await theme125.click()
   await menu125.waitFor()
-  await waitFor('125 eleven choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Parchment', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember'])
+  await waitFor('125 twelve choices', () => choices125.allInnerTexts().then((t) => t.map((s) => s.trim())), ['System', 'Light', 'Taupe', 'Parchment', 'Dark', 'Graphite', 'Violet', 'Teal', 'Vampire', 'Fjord', 'Ember', 'Claret'])
   await waitFor('125 System is checked', checked125, ['system'])
   // Esc closes the menu, changes nothing, and the focus goes back to the edited block
   await kb.press('Escape')
@@ -3454,7 +3454,7 @@ try {
   // are measured and printed.
   const SEAM_ZOOMS = [100, 110, 125]
   const SEAM_TOLERANCE = 2
-  const THEMES128 = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember']
+  const THEMES128 = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember', 'claret']
   writeFileSync(join(pagesDir, 'Seam blue 128.md'), 'color:: blue\n- b\n')
   writeFileSync(join(pagesDir, 'Seam hue 128.md'), 'color:: hue 212\n- h\n')
   const key128 = dayKey(12) // set-up wrote it; no other step reads it
@@ -3784,7 +3784,7 @@ try {
   assert((await page.locator('.cm-content').innerText()) === text132, '132 the edited text changed')
   await waitFor('132 tooltip', () => theme125.getAttribute('title'), 'Theme: Light. Scroll to switch.')
   // 2. Down through the rest, then wrap to System
-  for (const t of ['taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember']) {
+  for (const t of ['taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember', 'claret']) {
     await wheel132(100)
     await waitFor(`132 ${t} applied`, attr125, t)
   }
@@ -3793,15 +3793,15 @@ try {
   await waitFor('132 System stored', stored132, null)
   // 3. Up from System wraps to Ember
   await wheel132(-100)
-  await waitFor('132 ember applied', attr125, 'ember')
-  await waitFor('132 ember stored', stored132, 'ember')
+  await waitFor('132 claret applied', attr125, 'claret')
+  await waitFor('132 claret stored', stored132, 'claret')
   // 4. A trackpad: four small deltas make one step
   await theme125.hover()
   for (let i = 0; i < 3; i++) await page.mouse.wheel(0, -25)
   await frames()
-  assert((await attr125()) === 'ember', `132 a part notch switched the theme: ${await attr125()}`)
+  assert((await attr125()) === 'claret', `132 a part notch switched the theme: ${await attr125()}`)
   await page.mouse.wheel(0, -25)
-  await waitFor('132 fjord after four small deltas', attr125, 'fjord')
+  await waitFor('132 ember after four small deltas', attr125, 'ember')
   // 5. A fast spin: the stored theme ends as the one shown
   for (let i = 0; i < 5; i++) await page.mouse.wheel(0, 100)
   await waitFor('132 spin applied', attr125, 'parchment')

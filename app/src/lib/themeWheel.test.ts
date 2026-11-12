@@ -8,8 +8,8 @@ describe('stepTheme', () => {
     expect(stepTheme('system', 1)).toBe('light')
     expect(stepTheme('light', 1)).toBe('taupe')
     expect(stepTheme('parchment', 1)).toBe('dark')
-    expect(stepTheme('system', -1)).toBe('ember')
-    expect(stepTheme('ember', 1)).toBe('system')
+    expect(stepTheme('system', -1)).toBe('claret')
+    expect(stepTheme('claret', 1)).toBe('system')
     expect(stepTheme('teal', 1)).toBe('vampire')
   })
   it('visits every choice in order and comes back; up undoes down', () => {
@@ -27,7 +27,7 @@ describe('stepTheme', () => {
 describe('wheelTheme', () => {
   it('wheel down picks the next theme, wheel up the previous', () => {
     expect(wheelTheme('system', new WheelSteps(), 100, 100)).toBe('light')
-    expect(wheelTheme('system', new WheelSteps(), -100, 100)).toBe('ember')
+    expect(wheelTheme('system', new WheelSteps(), -100, 100)).toBe('claret')
   })
   it('at zoom 125 a notch of 80 CSS px is one step', () => {
     expect(wheelTheme('dark', new WheelSteps(), 80, 125)).toBe('graphite')
