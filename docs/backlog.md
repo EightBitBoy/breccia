@@ -193,9 +193,9 @@ Accepted so far.
 
 Breccia remembers each page it renamed for the Git step and never forgets them (a few bytes per rename, until restart).
 
-## 35. Stricter SSH address check (Git sync)
+## 35. Stricter SSH address check (Git sync) (won't fix, 2026-11-12)
 
-`is_ssh_url` (`crates/core/src/git/sync.rs`) treats `]:` anywhere as the bracketed `[host]:path` form; anchor it on the
+Owner, 2026-11-12: bracketed addresses are never used, so this stays as it is. `is_ssh_url` (`crates/core/src/git/sync.rs`) treats `]:` anywhere as the bracketed `[host]:path` form; anchor it on the
 first `]`.
 
 ## 36. Git history after a failed folder open (Git sync)
