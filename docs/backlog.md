@@ -198,9 +198,9 @@ Breccia remembers each page it renamed for the Git step and never forgets them (
 Owner, 2026-11-12: bracketed addresses are never used, so this stays as it is. `is_ssh_url` (`crates/core/src/git/sync.rs`) treats `]:` anywhere as the bracketed `[host]:path` form; anchor it on the
 first `]`.
 
-## 36. Git history after a failed folder open (Git sync)
+## 36. Git history after a failed folder open (Git sync) (not a bug, verified 2026-11-12)
 
-The shell keeps the previous folder's path when an open fails (`notes_root`, set in `app/src-tauri/src/watching.rs`
+Verified 2026-11-12: a failed open returns its error before the session replaces anything, so the old folder stays open and the shell's remembered path still matches it; the history showing its commits is right (pinned by `folder_open_refuses_a_folder_that_does_not_exist_or_is_a_file` in `crates/core/tests/it/session.rs`). Only a session left with no folder clears it, in the recovery. Original note: the shell keeps the previous folder's path when an open fails (`notes_root`, set in `app/src-tauri/src/watching.rs`
 and cleared only by a recovery in `app/src-tauri/src/recovery.rs`), so the history could show the old folder's commits
 until the next good open. Clear it on a failed open and check what the session and the Git
 item show then.
