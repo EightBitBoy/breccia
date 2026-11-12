@@ -664,22 +664,22 @@
 
 [data-theme="oxblood"] {
   color-scheme: dark;
-  --bg: #1f1013;
-  --side: #170a0d;
-  --line: #37191f;
-  --faded: #5c3a42;
-  --text: #ecd8db;
-  --muted: #a08288;
-  --hover: #381b21;
-  --accent: #e04d64;
-  --link: #f27b90;
-  --tag: #e0b27a;
-  --card: #27131a;
-  --card-btn: #43252c;
-  --card-btn-hover: #58323b;
-  --edit: #2a151b;
-  --select: #4e1f2c;
-  --on-accent: #170a0d;
+  --bg: #1c0a0e;
+  --side: #140609;
+  --line: #35121b;
+  --faded: #5a2d39;
+  --text: #efd8dc;
+  --muted: #a37a83;
+  --hover: #33141b;
+  --accent: #e8364f;
+  --link: #f2677d;
+  --tag: #e6a07a;
+  --card: #240e14;
+  --card-btn: #41202a;
+  --card-btn-hover: #56303b;
+  --edit: #270f16;
+  --select: #4d1226;
+  --on-accent: #140609;
   --shadow: rgba(0, 0, 0, .4);
   --shadow-strong: rgba(0, 0, 0, .5);
   --overlay: rgba(0, 0, 0, .45);
