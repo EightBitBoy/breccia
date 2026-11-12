@@ -187,7 +187,7 @@ impl NotesCache {
 }
 
 impl FileIdCache for NotesCache {
-    fn cached_file_id(&self, path: &Path) -> Option<&FileId> {
+    fn cached_file_id(&self, path: &Path) -> Option<impl AsRef<FileId>> {
         self.ids.get(path)
     }
 
