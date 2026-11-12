@@ -221,9 +221,9 @@ Another program adding tasks of a state at the moment it is renamed misses the r
 saved in place (not atomically) can give one false "cannot be read" notice. Accepted. Also (to check) a poisoned
 startup lock in the shell is silent (`app/src-tauri/src/git.rs` handles a poisoned lock only at close).
 
-## 40. Task-state boxes can show typed text in the wrong row (Settings and themes)
+## 40. Task-state boxes can show typed text in the wrong row (Settings and themes) (won't fix, 2026-11-12)
 
-If a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to
+Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to
 rows by position (never lost). Match them by keyword instead (`app/src/lib/settingsForm.ts`).
 
 ## 41. New dots can land on a cluster (Graph)
