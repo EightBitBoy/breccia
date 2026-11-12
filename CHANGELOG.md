@@ -2,6 +2,17 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.5.1] - 2026-11-12
+
+### Features
+
+- Settings: read the changelog inside the app, also offline
+- Themes: Oxblood, a dark red theme
+
+### Fixes
+
+- Settings: a hand-edited number out of range gives a notice and uses the default
+
 ## [1.5.0] - 2026-11-11
 
 ### Features
