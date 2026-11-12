@@ -519,7 +519,8 @@ boards, search, graph), and that includes links in property values (`owner:: [[A
 shown as links but do not count. Links inside front matter are neither shown nor counted.
 
 **Web addresses.** Breccia shows `[text](https://…)`, `<https://…>` and a bare `http://` or `https://` address in
-the text as a link that opens in the browser (`mailto:` links in the Markdown form only). A bare address ends at
+the text as a link that opens in the browser (`mailto:` links in the Markdown form only, and an email address in angle brackets, `<name@example.com>`; a bare
+email address stays plain text). A bare address ends at
 whitespace, a quote or an angle bracket, and leaves out the sentence punctuation after it (`.` `,` `;` `:` `!` `?`) and
 a closing bracket that has no opening one in the address. It starts at a word's beginning; inside code, inside a
 Markdown link's text and in front matter it is plain text. Showing it as a link changes no byte of the file.

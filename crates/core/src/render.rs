@@ -1,6 +1,6 @@
 //! Renders block text to HTML. The frontend shows the result as-is.
 
-use pulldown_cmark::{CowStr, Event, Options, Parser, Tag, TagEnd, html};
+use pulldown_cmark::{CowStr, Event, LinkType, Options, Parser, Tag, TagEnd, html};
 
 use crate::config::Config;
 use crate::inline::{self, Link, LinkKind};
@@ -218,9 +218,16 @@ fn markdown(src: &str, slots: &Slots) -> String {
     while let Some(e) = parser.next() {
         match e {
             Event::Start(Tag::Link {
-                dest_url, title, ..
+                link_type,
+                dest_url,
+                title,
+                ..
             }) => {
-                let dest = slots.plain(&dest_url);
+                let mut dest = slots.plain(&dest_url);
+                // `<name@example.com>` arrives without a scheme.
+                if link_type == LinkType::Email {
+                    dest.insert_str(0, "mailto:");
+                }
                 in_link = true;
                 close_link = scheme_ok(&dest, &["http:", "https:", "mailto:"]);
                 if close_link {

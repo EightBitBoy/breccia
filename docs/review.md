@@ -265,3 +265,8 @@ are its questions for you; each answer decides what a later plan does.
    usual tour: journal, a page, the board (hover a card), search, the graph, Settings; a few page colors and a custom
    hue at vividness 50 and 200. Wine-dark background, rose-red accent and links, gold tags. Red enough, or too brown or
    too pink? Too close to Vampire? Say what to change (background, accent, link or tag colour).
+
+## Email links
+
+91. [ ] **Email in angle brackets:** in a block, type `<name@example.com>` and leave the block: it shows as a link, and
+   clicking it opens your mail program. A bare `name@example.com` stays plain text (as decided; backlog #7).

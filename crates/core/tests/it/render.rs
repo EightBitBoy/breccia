@@ -167,6 +167,15 @@ fn allowed_links_are_ext() {
     assert!(h("[m](mailto:a@b.c)").contains("class=\"ext\" href=\"mailto:a@b.c\""));
 }
 #[test]
+fn email_in_angle_brackets_is_a_mail_link() {
+    assert_eq!(
+        h("write <name@example.com> now"),
+        "<p>write <a class=\"ext\" href=\"mailto:name@example.com\">name@example.com</a> now</p>\n"
+    );
+    // A bare address stays plain text.
+    assert!(!h("name@example.com").contains("<a "));
+}
+#[test]
 fn disallowed_image_is_alt_text() {
     assert_eq!(h("![alt <b>](javascript:x)"), "<p>alt &lt;b&gt;</p>\n");
     assert_eq!(h("![a](data:image/png;base64,xx)"), "<p>a</p>\n");
