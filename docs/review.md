@@ -259,9 +259,9 @@ are its questions for you; each answer decides what a later plan does.
    the file now says `pull_interval_minutes = 5` (R7). Is the wording right (Q1), the place (Q2), one notice per key
    (Q3), only that key replaced (Q4), and the Settings save writing the default (Q5)?
 
-## Claret theme
+## Oxblood theme
 
-90. [ ] **Claret:** a new dark red theme, last in the list (after Ember; up from System now goes to Claret). Take the
+90. [ ] **Oxblood:** a new dark red theme, last in the list (after Ember; up from System now goes to Oxblood). Take the
    usual tour: journal, a page, the board (hover a card), search, the graph, Settings; a few page colors and a custom
    hue at vividness 50 and 200. Wine-dark background, rose-red accent and links, gold tags. Red enough, or too brown or
    too pink? Too close to Vampire? Say what to change (background, accent, link or tag colour).

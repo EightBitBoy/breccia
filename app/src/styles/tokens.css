@@ -662,24 +662,24 @@
   --pc-ds: 0.6;
 }
 
-[data-theme="claret"] {
+[data-theme="oxblood"] {
   color-scheme: dark;
-  --bg: #2b1b20;
-  --side: #22151a;
-  --line: #43292f;
-  --faded: #6a4a52;
-  --text: #efdfe1;
-  --muted: #aa8d94;
-  --hover: #37232a;
-  --accent: #e8566d;
+  --bg: #1f1013;
+  --side: #170a0d;
+  --line: #37191f;
+  --faded: #5c3a42;
+  --text: #ecd8db;
+  --muted: #a08288;
+  --hover: #381b21;
+  --accent: #e04d64;
   --link: #f27b90;
   --tag: #e0b27a;
-  --card: #322026;
-  --card-btn: #4f3139;
-  --card-btn-hover: #63404a;
-  --edit: #35232a;
-  --select: #5c2a39;
-  --on-accent: #22151a;
+  --card: #27131a;
+  --card-btn: #43252c;
+  --card-btn-hover: #58323b;
+  --edit: #2a151b;
+  --select: #4e1f2c;
+  --on-accent: #170a0d;
   --shadow: rgba(0, 0, 0, .4);
   --shadow-strong: rgba(0, 0, 0, .5);
   --overlay: rgba(0, 0, 0, .45);

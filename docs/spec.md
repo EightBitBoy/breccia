@@ -446,7 +446,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 
 ### 7.10 Themes
 
-- Eleven built-in themes: **Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember, Claret** (light ones
+- Eleven built-in themes: **Light, Taupe, Parchment, Dark, Graphite, Violet, Teal, Vampire, Fjord, Ember, Oxblood** (light ones
   first; the order of the menu, Settings and the wheel). The default follows the operating system's light/dark setting.
 - The choice (or "System") is a setting of this computer (§4). Each theme is a token set on `[data-theme="…"]`; the
   window's title bar follows its light or dark.

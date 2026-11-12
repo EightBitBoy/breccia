@@ -1,5 +1,5 @@
 // The built-in themes: ids, names, and applying one to the document.
-export const THEMES = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember', 'claret'] as const
+export const THEMES = ['light', 'taupe', 'parchment', 'dark', 'graphite', 'violet', 'teal', 'vampire', 'fjord', 'ember', 'oxblood'] as const
 export type ThemeId = (typeof THEMES)[number]
 export type ThemeChoice = 'system' | ThemeId
 
@@ -25,7 +25,7 @@ export const THEME_NAMES: Record<ThemeChoice, string> = {
   ember: 'Ember',
   fjord: 'Fjord',
   vampire: 'Vampire',
-  claret: 'Claret',
+  oxblood: 'Oxblood',
 }
 
 /** A known theme id, else `system`. */
