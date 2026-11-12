@@ -163,7 +163,7 @@ describe('release workflow', () => {
     expect(notes).toContain('runs-on: ubuntu-latest')
     expect(notes).not.toMatch(/^\s+permissions:/m)
     expect(notes).toMatch(
-      /uses: taiki-e\/install-action@3a3daafd3b7f23b8f65d9f5ba2db203fb59b79e2 # v2\.90\.2\n\s+with:\n\s+tool: git-cliff@2\.14\.2\n/,
+      /uses: taiki-e\/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2\.90\.3\n\s+with:\n\s+tool: git-cliff@2\.14\.2\n/,
     )
     expect(notes).toMatch(
       /uses: actions\/checkout@[^\n]*\n\s+with:\n\s+fetch-depth: 0\n\s+persist-credentials: false\n/,
