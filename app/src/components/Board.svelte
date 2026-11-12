@@ -2,7 +2,7 @@
   import { DropdownMenu } from 'bits-ui'
   import { BOARD_COL_DEFAULT, BOARD_COL_MAX, BOARD_COL_MIN, BOARD_COL_SLIDER_STEP, stepColumn } from '../lib/boardWidth'
   import { cardMenu, cardRoot, placeCommand } from '../lib/board'
-  import { columnDrop, hiddenDrop, watchDrops, watchPeek } from '../lib/dnd'
+  import { columnDrop, hiddenDrop, watchDrops, watchEdgeScroll, watchPeek } from '../lib/dnd'
   import { canHide, hideDuration, markerTitle, PEEK_MS } from '../lib/hiddenColumns'
   import { refBlocks } from '../lib/refs'
   import type { BlockId, BoardView, CardView, Command, RefsView } from '../lib/types'
@@ -137,6 +137,13 @@
     e.preventDefault()
     onsettings()
   }
+  /** A dragged card near the main view's left or right edge scrolls it sideways. */
+  function edgeScroll(el: HTMLElement) {
+    const main = el.closest<HTMLElement>('.main')
+    if (!main) return
+    return { destroy: watchEdgeScroll(main) }
+  }
+
   /** Sets `--view-w` to the main view's visible content width, so the title row stays in sight while
    *  wide columns scroll sideways with the main view. */
   function viewWidth(el: HTMLElement) {
@@ -172,7 +179,7 @@
   </div>
 {/snippet}
 
-<section class="board" use:viewWidth>
+<section class="board" use:viewWidth use:edgeScroll>
   <div class="ptitle">
     <!-- svelte-ignore a11y_no_noninteractive_element_to_interactive_role -->
     <h1

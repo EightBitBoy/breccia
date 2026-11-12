@@ -10,6 +10,7 @@ import {
   monitorForElements,
 } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { dropBefore, type CardBox } from './board'
+import { edgeSpeed } from './edgeScroll'
 import { canDrag, canDrop, hoverOpen, PAGES, receiver, TREE, treeData, type Over } from './treeDrop'
 import type { Row } from './treeRows'
 import type { BlockId, TreeView } from './types'
@@ -143,6 +144,48 @@ export function watchPeek(open: (state: string) => void, end: () => void, delay:
       end()
     },
   })
+}
+
+/** How near the view's edge (px) a dragged card starts the sideways scroll, and its top speed (px per frame). */
+const EDGE_ZONE = 64
+const EDGE_MAX = 22
+
+/**
+ * While a card is dragged, scrolls `view` sideways when the pointer is near its left or right edge, so a column off
+ * screen can be reached. The pointer is last seen on a drag event; the scroll runs per frame, so it goes on while the
+ * pointer rests at the edge. Returns the stopper.
+ */
+export function watchEdgeScroll(view: HTMLElement): () => void {
+  let x: number | null = null
+  let frame = 0
+  const step = () => {
+    if (x !== null) {
+      const r = view.getBoundingClientRect()
+      const dx = edgeSpeed(x, r.left, r.right, EDGE_ZONE, EDGE_MAX)
+      if (dx) view.scrollLeft += dx
+    }
+    frame = requestAnimationFrame(step)
+  }
+  const end = () => {
+    x = null
+    cancelAnimationFrame(frame)
+    frame = 0
+  }
+  const stop = monitorForElements({
+    canMonitor: ({ source }) => cardData(source.data) !== null,
+    onDragStart: ({ location }) => {
+      x = location.current.input.clientX
+      if (!frame) frame = requestAnimationFrame(step)
+    },
+    onDrag: ({ location }) => {
+      x = location.current.input.clientX
+    },
+    onDrop: end,
+  })
+  return () => {
+    stop()
+    end()
+  }
 }
 
 /** Calls `onDrop` for every card dropped on a column, with the card it landed above (null: at the end); returns the stopper. */

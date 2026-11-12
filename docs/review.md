@@ -290,3 +290,8 @@ are its questions for you; each answer decides what a later plan does.
    state keyword and the text you had, and before the `created::` line. Before, keys typed in the few milliseconds the
    command ran were lost, and typed text landed on the `created::` line. Also check a block with several lines: the
    caret stays at the end of the last line.
+
+96. [ ] **Drag a card to the edge (backlog #23):** on a board with columns wider than the window (make them wide with the
+   slider by the board title), drag a card and hold it near the right edge of the window: the board scrolls sideways,
+   faster the nearer the edge; the same at the left edge. Move away from the edge: it stops. Drop the card in a column
+   that was off screen: it lands there. Is the speed right (not too fast, not too slow) and the edge zone (about 64 px)?

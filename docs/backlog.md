@@ -135,7 +135,7 @@ Owner, 2026-11-12: closed. Boards stay mouse-first for ordering; moving between 
 `Ctrl Shift Enter` as on plain Enter (`BoardCard.svelte` ignores modifiers); harmless, but those keys could do nothing
 there.
 
-## 23. Dragging a card does not scroll the board sideways (Boards)
+## 23. Dragging a card does not scroll the board sideways (Boards) (done 2026-11-12, no plan; own scroller, no new dependency)
 
 With wide columns, a column off screen cannot be reached while dragging. The drag-and-drop library's auto-scroll
 add-on would fix it.

@@ -864,6 +864,37 @@ try {
   await waitFor('107 width back', () => jsonAt(join(configDir, 'settings.json')).board_column_width, 270)
   console.log('PASS 107 wide board columns scroll with the main view, whose scrollbar stays in sight')
 
+  // 136: dragging a card near the main view's right edge scrolls the board sideways, so a column off screen can be
+  // reached (#23); the drag ends over the board title, where nothing takes a drop, so no file changes.
+  await page.locator('[data-testid="col-slider"]').fill('520')
+  await waitFor('136 wide columns', colWidth, 520)
+  await page.evaluate(() => { document.querySelector('.main').scrollLeft = 0 })
+  const mainBox136 = await page.locator('.main').boundingBox()
+  const card136 = page.locator('[data-testid="card"]').first()
+  const cardsIn136 = () => page.locator('[data-testid="card"]').count()
+  const count136 = await cardsIn136()
+  const from136 = await card136.boundingBox()
+  await page.mouse.move(from136.x + 20, from136.y + 10)
+  await page.mouse.down()
+  await page.mouse.move(from136.x + 40, from136.y + 30, { steps: 4 })
+  await page.mouse.move(mainBox136.x + mainBox136.width - 8, from136.y + 30, { steps: 8 })
+  await waitFor('136 the board scrolls right while the card rests at the edge', () => page.evaluate(() => document.querySelector('.main').scrollLeft > 150), true)
+  // Away from the edge it stops.
+  await page.mouse.move(mainBox136.x + mainBox136.width / 2, mainBox136.y + 20, { steps: 6 })
+  // The scroll stops once the pointer is away from the edge: two reads 400 ms apart agree.
+  const left136 = () => page.evaluate(() => document.querySelector('.main').scrollLeft)
+  await waitFor('136 the board stops scrolling away from the edge', async () => {
+    const a = await left136()
+    await sleep(400)
+    return a === (await left136())
+  }, true)
+  await page.mouse.up()
+  assert((await cardsIn136()) === count136, '136 the drop changed the board')
+  await page.evaluate(() => { document.querySelector('.main').scrollLeft = 0 })
+  await page.locator('[data-testid="col-slider"]').fill('270')
+  await waitFor('136 width back', () => jsonAt(join(configDir, 'settings.json')).board_column_width, 270)
+  console.log('PASS 136 a card dragged to the right edge scrolls the board sideways, and it stops away from the edge')
+
   // 111: the scrollbars of the main view and the sidebar's page list show only while the pointer moves over them
   // or they scroll, and hide about 1 s after it rests; their space stays
   const scrollbarOf = (sel) => page.evaluate((s) => {
