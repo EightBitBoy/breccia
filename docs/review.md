@@ -270,3 +270,7 @@ are its questions for you; each answer decides what a later plan does.
 
 91. [ ] **Email in angle brackets:** in a block, type `<name@example.com>` and leave the block: it shows as a link, and
    clicking it opens your mail program. A bare `name@example.com` stays plain text (as decided; backlog #7).
+
+92. [ ] **Dropped paste notice:** backlog #5. The new notice "Paste skipped; the text is still on the clipboard." shows
+   when an outline paste meets an editor that is no longer the one it was meant for. It is only unit-tested, because
+   it is hard to trigger by hand: no need to look for it.

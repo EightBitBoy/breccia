@@ -32,7 +32,7 @@ Enter does nothing while the slash menu is open and the editor is busy; the slas
 placed after `/x`; other keys do not clear an old selection; in two cases the link menu leaves the slash menu closed.
 Small polish; accepted so far (to check: which of these still happen).
 
-## 5. A paste can be dropped without a message (Editor)
+## 5. A paste can be dropped without a message (Editor) (done 2026-11-12, no plan)
 
 An outline paste that arrives at a bad moment (stale editor state) is ignored silently; the text stays on the
 clipboard. Show a notice, as the other dropped-paste case does.

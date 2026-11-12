@@ -44,7 +44,8 @@ export interface EditorEnv {
 
 export type CaretMenuKind = 'slash' | 'link'
 
-const PASTE_SKIPPED = 'Paste skipped while a change is being saved; the text is still on the clipboard.'
+const PASTE_STALE = 'Paste skipped; the text is still on the clipboard.'
+const PASTE_SKIPPED ='Paste skipped while a change is being saved; the text is still on the clipboard.'
 /** The core's message for a block changed on disk while being edited. */
 const CHANGED_ON_DISK = 'This block changed on disk while you were editing it.'
 /** Error codes of a `block.setText` whose text the core never took: the block is gone, or the session was recovered. */
@@ -498,7 +499,8 @@ export class EditorHost {
       // During a split, the text before the split caret is the old block's.
       caretFloor: () => (this.splitting?.id === id ? this.splitting.c : null),
       onOutlinePaste: (text) => {
-        if (this.mounted?.id !== id) return
+        // The editor changed under the paste: the text stays in the clipboard.
+        if (this.mounted?.id !== id) return this.env.notify({ kind: 'refused', message: PASTE_STALE })
         // The editor is locked or a split runs: the text stays in the clipboard.
         if (this.locks > 0 || this.splitting) return this.env.notify({ kind: 'refused', message: PASTE_SKIPPED })
         const ed = this.mounted.ed

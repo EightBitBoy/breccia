@@ -130,6 +130,15 @@ test('an outline paste while locked tells the user', async () => {
   expect(sent.map((c) => c.type)).toEqual(['block.merge'])
 })
 
+test('an outline paste for an editor that is no longer mounted tells the user', async () => {
+  await host.edit(1, 0)
+  const old = hooks
+  await host.edit(2, 0)
+  old.onOutlinePaste!('- a')
+  expect(notices).toEqual([{ kind: 'refused', message: 'Paste skipped; the text is still on the clipboard.' }])
+  expect(sent).toEqual([])
+})
+
 test('while a split runs, the caret floor is the split caret', async () => {
   await host.edit(1, 3)
   expect(hooks.caretFloor?.()).toBeNull()
