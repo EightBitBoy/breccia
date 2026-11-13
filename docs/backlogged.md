@@ -57,6 +57,15 @@ Owner, 2026-11-13: fixed. The editor host (`forgetTyped` in `app/src/editor/host
 `<name@example.com>` shows as plain text instead of a mail link. The renderer accepts only http, https and mailto
 targets and adds no `mailto:` prefix (`crates/core/src/render.rs`).
 
+## 8. Small rendering flaws (Editor) (closed 2026-11-13: the BOM fixed, two accepted)
+
+A finished task whose link spans two lines is crossed out unevenly; the done chip and properties are placed by
+searching for the first paragraph end, which is fragile (`crates/core/src/render.rs`); a plain-text paste keeps an
+invisible byte-order mark at its start (to check: the last one).
+
+Owner, 2026-11-13: (3) fixed: a byte-order mark (U+FEFF) at the start of pasted text is dropped, in the core for an outline paste (`Document::paste` in `crates/core/src/edit.rs`, only there: a U+FEFF in a block's own text may be the file's) and in the editor for a plain paste (`noBomOnPaste`, CodeMirror's `clipboardInputFilter`, `app/src/lib/paste.ts`); tests red first; one e2e run, 206 PASS lines. Accepted, no change: (1) a finished task whose link spans two lines is crossed out unevenly (cosmetic, text readable), (2) the done chip and the properties are placed after the first paragraph (`insert_after_first_paragraph`, `crates/core/src/render.rs`), which works for every shape the editor produces and has no reported case.
+
+
 ## 22. Move a card with the keyboard (Boards) (won't fix, 2026-11-12)
 
 Owner, 2026-11-12: closed. Boards stay mouse-first for ordering; moving between columns already works from the card menu. Original note: moving a card up or down in its column (its priority) is mouse-only. Also, a focused card opens on `Ctrl Enter` and

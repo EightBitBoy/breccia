@@ -284,7 +284,9 @@ impl Document {
             return Err(EditError::InvalidOffset);
         }
         let (before, after) = old.split_at(at);
-        let text = user_text(text);
+        // A leading byte-order mark (U+FEFF, from text copied out of a file saved "with BOM") is no text of the user's.
+        // Only here: in a block's own text a U+FEFF may be the file's.
+        let text = user_text(text.strip_prefix('\u{feff}').unwrap_or(text));
         let pasted = parse(&text, &mut IdGen::new());
 
         let mut pieces: Fragment = if pasted.blocks.is_empty() {

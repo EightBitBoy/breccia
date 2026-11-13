@@ -11,12 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 8. Small rendering flaws (Editor)
-
-A finished task whose link spans two lines is crossed out unevenly; the done chip and properties are placed by
-searching for the first paragraph end, which is fragile (`crates/core/src/render.rs`); a plain-text paste keeps an
-invisible byte-order mark at its start (to check: the last one).
-
 ## 9. A folder renamed outside Breccia while a page in it is unsaved gives a duplicate file (Pages and links)
 
 Choosing "Keep mine" writes a second copy at the old place. Nothing is lost, but the user has to delete one copy.

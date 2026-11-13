@@ -1,3 +1,11 @@
+/**
+ * Pasted text without a leading byte-order mark (U+FEFF, which text copied out of a file saved "with BOM" starts with):
+ * it is invisible, but it would sit in front of the first word and keep `TODO` from being a state. Only the first one.
+ */
+export function dropLeadingBom(text: string): string {
+  return text.startsWith('﻿') ? text.slice(1) : text
+}
+
 /** Whether pasted text holds a bullet line (`- ` after optional indentation, or a lone `-`): the core then splits it into blocks. */
 export function isOutline(text: string): boolean {
   return text.split(/\r?\n/).some((l) => /^\s*- /.test(l) || l === '-')

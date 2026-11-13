@@ -4,7 +4,7 @@ import { Annotation, Compartment, EditorSelection, EditorState, Prec, type Exten
 import { EditorView, drawSelection, keymap } from '@codemirror/view'
 import { defaultKeymap, deleteCharBackward, deleteCharForward, insertNewline } from '@codemirror/commands'
 import { decide, type Action, type Ctx } from '../lib/keys'
-import { isOutline } from '../lib/paste'
+import { dropLeadingBom, isOutline } from '../lib/paste'
 import { isMac as mac } from '../lib/platform'
 import { highlighting } from './highlight'
 import { lockedKeyText } from './lockedKeys'
@@ -109,6 +109,9 @@ function ctxOf(view: EditorView): Ctx {
   }
 }
 
+/** Pasted text loses a leading byte-order mark: it is invisible and would sit in front of the first word. */
+export const noBomOnPaste: Extension = EditorView.clipboardInputFilter.of((text) => dropLeadingBom(text))
+
 export function mountEditor(
   parent: HTMLElement,
   text: string,
@@ -168,6 +171,7 @@ export function mountEditor(
         ...(opts.extensions ?? []),
         keys,
         caretFloor(() => hooks.caretFloor?.() ?? null),
+        noBomOnPaste,
         keymap.of([{ key: 'Shift-Enter', run: insertNewline }, ...defaultKeymap]),
         drawSelection(),
         EditorView.lineWrapping,

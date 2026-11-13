@@ -322,3 +322,7 @@ are its questions for you; each answer decides what a later plan does.
    "changed on disk" notice appears; type something into the block, press `Ctrl Z` to undo it, then press "Keep mine" on the
    notice. The undone text must not come back. The same with `Ctrl Enter` (a state change) instead of the undo. Rare to
    reproduce by hand; it is covered by unit tests.
+
+102. [ ] **Pasted text with a hidden mark (backlog #8):** copy text out of a file saved "UTF-8 with BOM" (Notepad's "UTF-8
+   with BOM" option) that starts with `TODO buy milk`, and paste it into an empty block: it is a task, not plain text.
+   Before, a hidden character in front kept it from being one. Hard to try by hand; covered by unit tests.

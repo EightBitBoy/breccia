@@ -1,5 +1,13 @@
 import { expect, test } from 'vitest'
-import { isOutline, restoreRemoved } from './paste'
+import { dropLeadingBom, isOutline, restoreRemoved } from './paste'
+
+test('a byte-order mark at the start of pasted text is dropped, one inside the text stays', () => {
+  expect(dropLeadingBom('﻿hello')).toBe('hello')
+  expect(dropLeadingBom('a﻿b')).toBe('a﻿b')
+  expect(dropLeadingBom('')).toBe('')
+  // Only one, the leading one.
+  expect(dropLeadingBom('﻿﻿x')).toBe('﻿x')
+})
 
 test('text with a bullet line is an outline', () => {
   expect(isOutline('- a\n- b')).toBe(true)

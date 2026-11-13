@@ -840,3 +840,21 @@ fn a_reload_that_moves_a_block_keeps_the_ids_of_the_ones_that_stayed() {
     println!("IDS old a,b,c = {a:?} {b:?} {c:?}; new = {got:?}; carried = {carried:?}");
     assert_eq!((got[1], got[2]), (a, b), "a and b stayed in order");
 }
+
+#[test]
+fn a_byte_order_mark_at_the_start_of_pasted_text_is_dropped() {
+    // Text copied from a file saved "with BOM" starts with the invisible U+FEFF: it is no text of the user's.
+    let out = with("- ab\n", |d, b, ids| {
+        d.paste(b[0], 1, "\u{feff}x", ids).unwrap();
+    });
+    assert_eq!(out, "- axb\n");
+    let out = with("- ab\n", |d, b, ids| {
+        d.paste(b[0], 1, "\u{feff}- x\n- y\n", ids).unwrap();
+    });
+    assert_eq!(out, "- ax\n- yb\n");
+    // Only a leading one: a U+FEFF inside the text is kept.
+    let out = with("- ab\n", |d, b, ids| {
+        d.paste(b[0], 1, "x\u{feff}y", ids).unwrap();
+    });
+    assert_eq!(out, "- ax\u{feff}yb\n");
+}

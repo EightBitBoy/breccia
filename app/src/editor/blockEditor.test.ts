@@ -1,6 +1,14 @@
 import { EditorSelection, EditorState } from '@codemirror/state'
 import { expect, test } from 'vitest'
-import { caretFloor } from './blockEditor'
+import { EditorView } from '@codemirror/view'
+import { caretFloor, noBomOnPaste } from './blockEditor'
+
+test('the editor drops a leading byte-order mark from pasted text', () => {
+  const state = EditorState.create({ extensions: [noBomOnPaste] })
+  const filters = state.facet(EditorView.clipboardInputFilter)
+  const filtered = filters.reduce((text, f) => f(text, state), '﻿pasted')
+  expect(filtered).toBe('pasted')
+})
 
 // "a😀 b" split at 1 while "xy" was typed: the new block's part starts at 1.
 function stateWith(floor: number | null) {
