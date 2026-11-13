@@ -140,9 +140,9 @@ there.
 With wide columns, a column off screen cannot be reached while dragging. The drag-and-drop library's auto-scroll
 add-on would fix it.
 
-## 24. Explain the order of finished columns (Boards)
+## 24. Explain the order of finished columns (Boards) (won't fix, 2026-11-13)
 
-A finished column shows no drop line because cards sort by done time. A short hint could say so.
+Owner, 2026-11-13: closed. The cards show their done date and the spec states the order. Original note: a finished column shows no drop line because cards sort by done time. A short hint could say so.
 
 ## 25. Created time on board cards (Boards)
 
