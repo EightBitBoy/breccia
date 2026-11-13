@@ -137,12 +137,17 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 67. Git and release test gaps (Tests)
+## 67. Git and release test gaps (Tests) (partly done 2026-11-13; two cases left)
 
-No test for the message when Git's own rebase abort fails (needs a fake `git`); no test for a push that hangs (to check:
-only the separate push URL has one); the "close gave up" tests never had a recorded failing run (to check); the release
-undo's per-file restore failure and unreadable-changelog branches are untested (to check); the changelog's "Breaking
-changes" group has never been produced.
+Done 2026-11-13: the release undo's two error branches are tested ("Could not put back" and "could not be read",
+`app/scripts/release.test.mjs`); the changelog's "Breaking changes" group is produced once with a temp repository and the
+real git-cliff (`app/scripts/changelog.test.mjs`; it sits first, above Features); the "close gave up" tests were checked
+by breaking the code (the `finish_close` tests go red; the first `gave_up` check in `begin_close` is redundant with the
+second, so removing it changes nothing observable). All three were mutation-checked.
+
+Left: no test for the message when Git's own rebase abort fails (needs a fake `git`: `Git::with_program` takes one, so a
+`.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
+the separate push URL has one; the same fake `git`).
 
 ## 68. End-to-end test limits (Tests)
 

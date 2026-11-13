@@ -1,7 +1,9 @@
-import { readFileSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { gitSandbox } from './fixtures.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const root = join(here, '..', '..')
@@ -37,6 +39,45 @@ describe('cliff.toml', () => {
     const re = new RegExp('^' + m[1].replaceAll('\\\\', '\\') + '$')
     for (const ok of ['v0.1.0', 'v0.2.0', 'v1.2.3-rc.1']) expect(re.test(ok), ok).toBe(true)
     for (const no of ['0.1.0', 'v0.1', 'release-1']) expect(re.test(no), no).toBe(false)
+  })
+
+  it('cliff_puts_a_breaking_commit_first_under_its_own_group', () => {
+    // The group exists in cliff.toml but no release has produced it yet: make a repository with one and run git-cliff.
+    const sandbox = gitSandbox()
+    try {
+      const repo = join(sandbox.root, 'repo')
+      mkdirSync(repo)
+      sandbox.git(repo, 'init', '-q')
+      writeFileSync(join(repo, 'cliff.toml'), cliff)
+      sandbox.git(repo, 'add', '.')
+      sandbox.git(repo, 'commit', '-q', '-m', 'chore: start')
+      sandbox.git(repo, 'tag', 'v0.1.0')
+      for (const [file, subject] of [
+        ['a', 'feat: A new thing'],
+        ['b', 'feat!: Old notes folders no longer open'],
+        ['c', 'fix: A fix'],
+      ]) {
+        writeFileSync(join(repo, file), file)
+        sandbox.git(repo, 'add', '.')
+        sandbox.git(repo, 'commit', '-q', '-m', subject)
+      }
+      const r = spawnSync('git-cliff', ['--config', 'cliff.toml', '--unreleased', '--tag', 'v0.2.0'], {
+        cwd: repo,
+        env: sandbox.env,
+        encoding: 'utf8',
+      })
+      expect(r.status, r.stderr).toBe(0)
+      const out = r.stdout
+      const at = (s) => out.indexOf(s)
+      expect(at('### Breaking changes'), out).toBeGreaterThan(-1)
+      // Breaking first, then Features, then Fixes; the breaking commit is listed once, under its own group.
+      expect(at('### Breaking changes')).toBeLessThan(at('### Features'))
+      expect(at('### Features')).toBeLessThan(at('### Fixes'))
+      expect(out.split('Old notes folders no longer open')).toHaveLength(2)
+      expect(out.slice(at('### Breaking changes'), at('### Features'))).toContain('Old notes folders no longer open')
+    } finally {
+      sandbox.remove()
+    }
   })
 
   it('cliff_lines_hide_the_scope', () => {

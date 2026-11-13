@@ -227,6 +227,40 @@ describe('undo file part', () => {
     }
   })
 
+it('undo_says_which_file_it_could_not_put_back_and_restores_the_others', () => {
+    const { d, a, changelog } = setup()
+    // A path whose folder does not exist: writing it fails.
+    const stuck = join(d, 'no-such-folder', 'b.txt')
+    try {
+      const out = restoreFiles([[stuck, Buffer.from('b')], [a, Buffer.from('old')]], changelog, null)
+      expect(readFileSync(a, 'utf8')).toBe('old')
+      expect(out.join('\n')).toContain(`Could not put back ${stuck}`)
+    } finally {
+      rmSync(d, { recursive: true, force: true })
+    }
+  })
+
+  it('undo_leaves_a_changelog_it_cannot_read_as_it_is', () => {
+    const d = mkdtempSync(join(tmpdir(), 'breccia-undo-'))
+    const a = join(d, 'a.txt')
+    writeFileSync(a, 'changed')
+    // The changelog path is a folder: reading it fails, so the undo must not touch it.
+    const changelog = join(d, 'CHANGELOG.md')
+    mkdirSync(changelog)
+    try {
+      const out = restoreFiles([[a, Buffer.from('old')], [changelog, Buffer.from('C0')]], changelog, 'W')
+      expect(readFileSync(a, 'utf8')).toBe('old')
+      expect(existsSync(changelog)).toBe(true)
+      const text = out.join('\n')
+      expect(text).toContain('CHANGELOG.md could not be read')
+      expect(text).toContain('left as it is')
+      expect(out).toHaveLength(1)
+    } finally {
+      rmSync(d, { recursive: true, force: true })
+    }
+  })
+
+
   it('undo_saves_a_copy_then_restores', () => {
     const { d, a, changelog, kept } = setup()
     const copy = join(d, 'copy.md')
