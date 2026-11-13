@@ -155,9 +155,9 @@ Owner, 2026-11-13: closed. A rename by hand or by a pull is rare and only costs 
 dialog. A rename by hand or by a pull loses them, and a deleted board's hidden columns apply to a new board of the same
 name. Also prune the entries in `settings.json` of folders that no longer exist.
 
-## 27. Old finished tasks from outside wait up to an hour (Boards)
+## 27. Old finished tasks from outside wait up to an hour (Boards) (won't fix, 2026-11-13)
 
-A finished task older than the archive limit that arrives by a hand edit or a pull is archived on the next hourly run,
+Owner, 2026-11-13: closed. They archive by themselves within the hour, and archiving right after a pull would touch the "file changed on disk" safeguard and cause extra Git commits. Original note: a finished task older than the archive limit that arrives by a hand edit or a pull is archived on the next hourly run,
 not at once.
 
 ## 28. Decide: should Enter in search create the page? (Search)
