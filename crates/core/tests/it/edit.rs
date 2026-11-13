@@ -691,3 +691,152 @@ proptest::proptest! {
         proptest::prop_assert_eq!(kept + c.removed.len(), o.len());
     }
 }
+
+#[test]
+fn trailing_blank_lines_are_part_of_their_blocks_text() {
+    // A blank line before the next bullet belongs to the block above it (docs/format.md, section 3): its text ends in
+    // line breaks, and the editor sends them back with every change.
+    let src = "- a
+
+
+- b
+";
+    let d = parse(src, &mut IdGen::new());
+    assert_eq!(
+        shape(&d),
+        [
+            (
+                0,
+                "a
+
+"
+                .to_string()
+            ),
+            (0, "b".to_string())
+        ]
+    );
+    let out = with(src, |d, b, ids| {
+        d.set_text(
+            b[0], "A
+
+", ids,
+        )
+        .unwrap();
+    });
+    assert_eq!(
+        out,
+        "- A
+
+
+- b
+",
+        "the blank lines stay when the text keeps them"
+    );
+    // The other half of the rule: a text without them writes none.
+    let out = with(src, |d, b, ids| {
+        d.set_text(b[0], "A", ids).unwrap();
+    });
+    assert_eq!(
+        out,
+        "- A
+- b
+"
+    );
+}
+
+#[test]
+fn a_paste_keeps_the_text_around_the_caret_at_every_character_boundary() {
+    let text = "a😀é b";
+    for at in 0..=text.len() {
+        let mut ids = IdGen::new();
+        let mut d = parse(&format!("- {text}\n"), &mut ids);
+        let id = d.blocks()[0].id();
+        let r = d.paste(id, at, "X", &mut ids);
+        if text.is_char_boundary(at) {
+            r.unwrap_or_else(|e| panic!("at {at}: {e:?}"));
+            assert_eq!(
+                d.render(),
+                format!("- {}X{}\n", &text[..at], &text[at..]),
+                "at {at}"
+            );
+        } else {
+            assert!(matches!(r, Err(EditError::InvalidOffset)), "at {at}");
+            assert_eq!(
+                d.render(),
+                format!("- {text}\n"),
+                "a refused paste changes nothing"
+            );
+        }
+    }
+}
+
+#[test]
+fn a_pasted_outline_whose_last_block_is_deeper_puts_the_rest_after_it() {
+    let out = with("- ab\n", |d, b, ids| {
+        d.paste(b[0], 1, "- x\n\t- y\n", ids).unwrap();
+    });
+    assert_eq!(out, "- ax\n\t- yb\n");
+}
+
+#[test]
+fn a_paste_with_a_crlf_document_and_crlf_text_keeps_crlf() {
+    let out = with("- a\r\n", |d, b, ids| {
+        d.paste(b[0], 1, "b\r\nc", ids).unwrap();
+    });
+    assert_eq!(out, "- ab\r\n  c\r\n");
+}
+
+#[test]
+fn a_paste_that_starts_with_a_preamble_and_a_blank_line_loses_no_text() {
+    // "intro" is no bullet, so it joins the block at the caret; the blank line after it stays with that block.
+    let out = with(
+        "- ab
+",
+        |d, b, ids| {
+            d.paste(
+                b[0],
+                1,
+                "intro
+
+- x
+",
+                ids,
+            )
+            .unwrap();
+        },
+    );
+    assert_eq!(
+        out,
+        "- aintro
+
+- xb
+"
+    );
+}
+
+#[test]
+fn a_re_read_of_the_rendered_text_keeps_every_id() {
+    let mut ids = IdGen::new();
+    let old = parse("- a\n\t- b\n- c\n\t- d\n", &mut ids);
+    let mut new = parse(&old.render(), &mut ids);
+    let carried = carry_ids(&old, &mut new);
+    let ids_of = |d: &Document| d.blocks().iter().map(|b| b.id()).collect::<Vec<_>>();
+    assert_eq!(ids_of(&new), ids_of(&old));
+    assert!(carried.changed.is_empty() && carried.removed.is_empty());
+}
+
+#[test]
+fn a_reload_that_moves_a_block_keeps_the_ids_of_the_ones_that_stayed() {
+    let mut ids = IdGen::new();
+    let old = parse("- a\n- b\n- c\n", &mut ids);
+    let (a, b, c) = (
+        old.blocks()[0].id(),
+        old.blocks()[1].id(),
+        old.blocks()[2].id(),
+    );
+    let mut new = parse("- c\n- a\n- b\n", &mut ids);
+    let carried = carry_ids(&old, &mut new);
+    let got: Vec<BlockId> = new.blocks().iter().map(|b| b.id()).collect();
+    println!("IDS old a,b,c = {a:?} {b:?} {c:?}; new = {got:?}; carried = {carried:?}");
+    assert_eq!((got[1], got[2]), (a, b), "a and b stayed in order");
+}

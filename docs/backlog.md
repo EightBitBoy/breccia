@@ -137,15 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 65. Core test gaps (Tests)
-
-Missing tests: an unknown keyword in the state cycle; setting the same state keeps the bytes; trailing blank lines in a
-block; a whitespace-only new page name; reload errors (no file, not UTF-8, I/O); "Keep mine" onto a taken path or a
-deleted file; a block id round-trip; paste edge cases (deeper last block, `\r` caret, a preamble then a blank line, a
-wider random offset range); undo coalescing after a failed request; creating `a` while `A.MD` exists; `..` in folder
-paths; reloads that reorder blocks; aliases (a real backslash in `[[x\|y]]`, the alias winner after a move, a case-only
-rename re-indexing, a keystroke leaving the clash check idle, a CRLF hand-written list).
-
 ## 66. App test gaps (Tests)
 
 Split followed by leaving the page sends the text at the cursor; page create, rename and delete flows beyond delete;
@@ -279,3 +270,13 @@ not-pushed hash on each load for a remote never pushed to.
 
 **The first automatic archive run on a large old folder** (was #59):
 It changes many files in one command and is one slow answer, once.
+
+## 86. A refused command splits the typing undo step (Editor)
+
+Found 2026-11-13 while writing the tests of #65 (`a_refused_command_between_two_edits_ends_the_typing_run` in
+`crates/core/tests/it/session.rs`, which pins today's behaviour). Typing in a block is one undo step while the edits come
+within a short time. If a command is refused in between (for example `Ctrl Enter` with no state in the cycle, or a state
+that does not exist) the next edit starts a new step: edits before and after it need two Undos, not one. Nothing is lost
+or wrong; the question is whether a refused command, which changed nothing, should leave the typing run alone. Plan 6
+already made read-only commands leave it alone. To settle: refused commands too (the fix would be where the session ends
+the run, `crates/core/src/session/history.rs`), or leave it as it is.

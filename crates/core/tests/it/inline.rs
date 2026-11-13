@@ -220,3 +220,12 @@ fn heading_base_cuts_at_the_first_hash() {
     assert_eq!(heading_base("#H"), None);
     assert_eq!(heading_base("C# "), None);
 }
+
+#[test]
+fn a_backslash_that_is_not_before_a_pipe_stays_in_the_name() {
+    // Rust strings: `a\b` and `c\\d`, each backslash written twice.
+    let l = links("see [[a\\b]] and [[c\\\\d]]");
+    let targets: Vec<&str> = l.iter().map(|l| l.target.as_str()).collect();
+    assert_eq!(targets, ["a\\b", "c\\\\d"]);
+    assert!(l.iter().all(|l| l.label.is_none()));
+}

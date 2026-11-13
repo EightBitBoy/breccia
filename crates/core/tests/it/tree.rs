@@ -472,3 +472,71 @@ fn every_tree_carries_a_newer_version_than_the_one_before() {
     let second = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     assert!(second.version > first.version);
 }
+
+#[test]
+fn a_blank_page_name_makes_no_page_and_no_file() {
+    let (t, mut s) = folder(&[], &[]);
+    for name in ["", " ", "   \t "] {
+        let c = code(
+            &mut s,
+            json!({"type": "page.create", "name": name, "folder": ""}),
+        );
+        assert_eq!(c, "invalidName", "{name:?}");
+    }
+    // Nothing was made: no pages folder entry at all.
+    assert_eq!(
+        fs::read_dir(t.path().join("pages")).map_or(0, |r| r.count()),
+        0
+    );
+}
+
+#[test]
+fn a_dot_dot_in_a_folder_path_never_leaves_the_pages_folder() {
+    let (t, mut s) = folder(&[("pages/A/B.md", "- b\n")], &[]);
+    let outside = t.path().parent().unwrap().to_path_buf();
+    for path in [
+        "..",
+        "../Outside",
+        "A/../../Outside",
+        "A/..",
+        "./A",
+        "A/./C",
+    ] {
+        let c = cmd(&mut s, json!({"type": "dir.create", "path": path}));
+        assert!(
+            c.is_err(),
+            "dir.create {path:?} should be refused, got {c:?}"
+        );
+    }
+    let c = cmd(
+        &mut s,
+        json!({"type": "page.create", "name": "X", "folder": ".."}),
+    );
+    assert!(c.is_err(), "{c:?}");
+    // Nothing was made beside the notes folder or inside it.
+    assert!(!outside.join("Outside").exists());
+    assert!(!t.path().join("Outside").exists());
+    assert!(!t.path().join("pages/Outside").exists());
+    assert!(!t.path().join("pages/X.md").exists());
+}
+
+#[test]
+fn creating_a_page_next_to_a_file_with_a_capital_extension_never_overwrites_it() {
+    // `A.MD` is reported and not loaded; its bytes are not Breccia's to touch.
+    let (t, mut s) = folder(&[("pages/A.MD", "- theirs\n")], &[]);
+    ok(
+        &mut s,
+        json!({"type": "page.create", "name": "a", "folder": ""}),
+    );
+    write_first_text(&mut s, "a", "mine");
+    assert_eq!(
+        fs::read(t.path().join("pages/A.MD")).unwrap(),
+        b"- theirs\n"
+    );
+    // The new page got a file of its own.
+    let names: Vec<String> = fs::read_dir(t.path().join("pages"))
+        .unwrap()
+        .map(|e| e.unwrap().file_name().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(names.len(), 2, "{names:?}");
+}

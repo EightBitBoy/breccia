@@ -1033,3 +1033,78 @@ fn out_of_range_config_opens_with_defaults() {
         text
     );
 }
+
+#[test]
+fn a_reload_that_cannot_read_the_file_says_why_and_keeps_the_page() {
+    let (t, mut ws) = open(&[("pages/P.md", "- a\n")]);
+    // The file is not valid UTF-8 now.
+    fs::write(t.path().join("pages/P.md"), b"- \xff\xfe\n").unwrap();
+    assert!(matches!(ws.reload("p"), Err(ReloadError::NotUtf8(_))));
+    // The file is gone.
+    fs::remove_file(t.path().join("pages/P.md")).unwrap();
+    assert!(matches!(ws.reload("p"), Err(ReloadError::Io(_))));
+    // The path is a folder now: reading it is an I/O error, never a panic.
+    fs::create_dir(t.path().join("pages/P.md")).unwrap();
+    assert!(matches!(ws.reload("p"), Err(ReloadError::Io(_))));
+    // Through all three, the page in memory is the one that was read.
+    assert_eq!(ws.page("p").unwrap().doc.blocks()[0].text(), "a");
+    // A page with no file cannot be reloaded.
+    let key = ws.ensure_page("Nofile").unwrap();
+    assert!(matches!(ws.reload(&key), Err(ReloadError::NoFile(_))));
+}
+
+#[test]
+fn keep_mine_recreates_a_file_that_was_deleted() {
+    let (t, mut ws) = open(&[("pages/P.md", "- a\n")]);
+    let id = ws.page("p").unwrap().doc.blocks()[0].id();
+    ws.edit("p", |d, ids| d.set_text(id, "mine", ids).unwrap());
+    fs::remove_file(t.path().join("pages/P.md")).unwrap();
+    // A plain save refuses: the file Breccia read is gone.
+    assert!(matches!(ws.save("p"), Err(SaveError::ChangedOnDisk(_))));
+    assert!(!t.path().join("pages/P.md").exists());
+    assert!(matches!(
+        ws.save_overwrite("p"),
+        Ok(SaveOutcome::Written(_))
+    ));
+    assert_eq!(
+        fs::read_to_string(t.path().join("pages/P.md")).unwrap(),
+        "- mine\n"
+    );
+}
+
+#[test]
+fn keep_mine_takes_a_path_only_when_it_is_exactly_this_pages_file() {
+    // A new page whose file name another program took meanwhile.
+    let t = tempfile::tempdir().unwrap();
+    let root = t.path().join("n");
+    Workspace::create(&root).unwrap();
+    let (mut ws, _) = Workspace::open(&root).unwrap();
+    let key = ws.ensure_page("Late").unwrap();
+    ws.edit(&key, |d, ids| {
+        d.insert_after(None, "mine", ids).unwrap();
+    });
+    put(&root, "pages/Late.md", b"- theirs\n");
+    assert!(matches!(ws.save(&key), Err(SaveError::PathTaken(_))));
+    // Keep mine replaces the file at exactly the page's path.
+    assert!(matches!(
+        ws.save_overwrite(&key),
+        Ok(SaveOutcome::Written(_))
+    ));
+    assert!(
+        fs::read_to_string(root.join("pages/Late.md"))
+            .unwrap()
+            .contains("mine")
+    );
+
+    // The same for a name taken by a folder: never replaced, even by Keep mine.
+    let key = ws.ensure_page("Dir").unwrap();
+    ws.edit(&key, |d, ids| {
+        d.insert_after(None, "mine", ids).unwrap();
+    });
+    fs::create_dir(root.join("pages/Dir.md")).unwrap();
+    assert!(matches!(
+        ws.save_overwrite(&key),
+        Err(SaveError::PathTaken(_))
+    ));
+    assert!(root.join("pages/Dir.md").is_dir());
+}

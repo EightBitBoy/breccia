@@ -335,6 +335,18 @@ folder. Answered in plan 5 (`docs/plans/2026-11-09-05-github-pages-site.md`, rul
 newest release and shows no version number, and the screenshots are copied into `site/` when the site is built.
 Open: a custom domain.
 
+## 65. Core test gaps (Tests) (done 2026-11-13: 20 tests added)
+
+Missing tests: an unknown keyword in the state cycle; setting the same state keeps the bytes; trailing blank lines in a
+block; a whitespace-only new page name; reload errors (no file, not UTF-8, I/O); "Keep mine" onto a taken path or a
+deleted file; a block id round-trip; paste edge cases (deeper last block, `\r` caret, a preamble then a blank line, a
+wider random offset range); undo coalescing after a failed request; creating `a` while `A.MD` exists; `..` in folder
+paths; reloads that reorder blocks; aliases (a real backslash in `[[x\|y]]`, the alias winner after a move, a case-only
+rename re-indexing, a keystroke leaving the clash check idle, a CRLF hand-written list).
+
+Owner, 2026-11-13: 20 tests added to the core's integration tests, each passing; they pin current behaviour, no code changed. Added: an unknown keyword and a foreign first word in the state cycle, setting the state a task already has keeps every byte, trailing blank lines are part of the block's text (the editor sends them back), a paste at every character boundary of text with multi-byte characters, a pasted outline with a deeper last block, a CRLF paste, a paste that starts with a preamble and a blank line, a block-id round trip, a reload that moves a block, reload errors (not UTF-8, gone, a folder, no file), Keep mine onto a deleted file and onto a taken path (a file at exactly the path is replaced, a folder never), blank page names, `..` in folder paths, creating `a` next to `A.MD` (the capital-extension file is untouched), a refused command between two edits, a CRLF alias list, a lone backslash in a link, the alias winner after a move, and a case-only rename in the search index. Already covered, so no new test: a keystroke leaving the clash check idle (`a_clash_is_warned_once`). Two findings: (1) a refused command between two typed edits ends the typing run, so Undo takes two steps instead of one, now #86; (2) the alias winner follows the path order, so moving a page into a folder can change which page `[[alias]]` resolves to, as docs/format.md section 4 says.
+
+
 ## 71. Dev runs share the installed app's settings and notes folder (Tests) (done 2026-11-06, no plan: `just dev` part)
 
 Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:

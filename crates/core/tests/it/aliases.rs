@@ -150,3 +150,13 @@ fn realias_only_touches_its_own_block() {
     // The LF block in a CRLF page is not the block Breccia would write there.
     assert_eq!(realias(&block, "A: b", None, crlf), block);
 }
+
+#[test]
+fn a_hand_written_list_with_crlf_line_endings_is_read() {
+    let block = "---\r\naliases:\r\n  - k8s\r\n  - \"Kube: prod\"\r\ntags: x\r\n---\r\n";
+    assert_eq!(aliases(block), ["k8s", "Kube: prod"]);
+    let flow = "---\r\naliases: [a, \"b, c\"]\r\n---\r\n";
+    assert_eq!(aliases(flow), ["a", "b, c"]);
+    let single = "---\r\naliases: one name\r\n---\r\n";
+    assert_eq!(aliases(single), ["one name"]);
+}

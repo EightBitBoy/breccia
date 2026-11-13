@@ -716,3 +716,22 @@ fn a_repair_that_cannot_delete_the_file_names_that_failure() {
     );
     assert_eq!(hits(&out.search.unwrap()).len(), 1);
 }
+
+#[test]
+fn a_case_only_rename_updates_the_search_index() {
+    let t = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    put(t.path(), "pages/Zebra notes.md", "- a quiet zebra\n");
+    let (mut s, _) = open_cached(&t, cache.path());
+    drain(&mut s);
+    let name_in = |v: &SearchView| v.groups.iter().map(|g| g.title.clone()).collect::<Vec<_>>();
+    assert_eq!(name_in(&search(&mut s, "quiet")), ["Zebra notes"]);
+    ok(
+        &mut s,
+        json!({"type": "page.rename", "key": "zebra notes", "name": "ZEBRA NOTES"}),
+    );
+    drain(&mut s);
+    let after = search(&mut s, "quiet");
+    assert_eq!(name_in(&after), ["ZEBRA NOTES"], "{:?}", hits(&after));
+    assert_eq!(hits(&after).len(), 1);
+}

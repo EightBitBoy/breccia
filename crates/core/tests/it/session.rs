@@ -2588,3 +2588,66 @@ fn a_settings_write_elsewhere_keeps_the_bad_value() {
     assert!(text.contains("pull_interval_minutes = 5"), "{text}");
     assert!(!text.contains("100000"), "{text}");
 }
+
+#[test]
+fn a_refused_command_between_two_edits_ends_the_typing_run() {
+    // Pinned behaviour: the edits before and after a refused command are two undo steps, not one.
+    for refused in ["unknownState", "unknownBlock"] {
+        let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
+        let [a, _]: [BlockId; 2] = ids(&mut s, "p").try_into().unwrap();
+        ok(
+            &mut s,
+            json!({"type":"block.setText","id":a,"text":"a1"}),
+            0,
+        );
+        let bad = match refused {
+            "unknownState" => json!({"type":"blocks.setState","ids":[a],"keyword":"NOPE"}),
+            _ => json!({"type":"block.setText","id":99999,"text":"zzz"}),
+        };
+        assert_eq!(cmd(&mut s, bad, 300).unwrap_err().code, refused);
+        ok(
+            &mut s,
+            json!({"type":"block.setText","id":a,"text":"a12"}),
+            600,
+        );
+        let undo = json!({"type":"history.undo","page":"p"});
+        ok(&mut s, undo.clone(), 700);
+        assert_eq!(read(&t, "pages/P.md"), "- a1\n- b\n", "{refused}");
+        ok(&mut s, undo, 800);
+        assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n", "{refused}");
+    }
+}
+
+#[test]
+fn the_alias_winner_follows_the_path_order_so_a_move_can_change_it() {
+    // docs/format.md, section 4: of several pages with the same alias, the first by path wins.
+    let (_t, mut s) = folder(&[
+        ("pages/A.md", "---\naliases: [shared]\n---\n- a\n"),
+        ("pages/B.md", "---\naliases: [shared]\n---\n- b\n"),
+        ("pages/Projects/Other.md", "- x\n"),
+    ]);
+    let winner = |s: &mut Session| {
+        ok(
+            s,
+            json!({"type": "page.open", "name": "shared", "link": true}),
+            0,
+        )
+        .page
+        .unwrap()
+        .key
+    };
+    assert_eq!(winner(&mut s), "a");
+    // `pages/Projects/A.md` sorts after `pages/B.md`.
+    ok(
+        &mut s,
+        json!({"type": "page.move", "key": "a", "folder": "Projects"}),
+        0,
+    );
+    assert_eq!(winner(&mut s), "b");
+    ok(
+        &mut s,
+        json!({"type": "page.move", "key": "a", "folder": ""}),
+        0,
+    );
+    assert_eq!(winner(&mut s), "a");
+}

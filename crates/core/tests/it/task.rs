@@ -672,3 +672,47 @@ fn property_lines_edits_keep_every_other_byte() {
     let arch = "- TODO x\n  archived:: 2026-10-01\n";
     assert_eq!(archive(arch, 0, true), arch);
 }
+
+#[test]
+fn an_unknown_keyword_is_refused_and_a_foreign_first_word_gets_the_first_state() {
+    let c = Config::default();
+    let mut d = parse("- BLOCKED x\n", &mut IdGen::new());
+    let id = d.blocks()[0].id();
+    assert!(matches!(
+        d.set_state(id, Some("NOPE"), &c, today()),
+        Err(EditError::UnknownState(k)) if k == "NOPE"
+    ));
+    assert_eq!(
+        d.render(),
+        "- BLOCKED x\n",
+        "a refused change leaves the bytes"
+    );
+    // `BLOCKED` is no state of this config, so the cycle puts the first state in front of it.
+    let next = d.cycle_state(id, &c, today()).unwrap();
+    assert_eq!(next.as_deref(), Some("TODO"));
+    assert!(
+        d.render().starts_with("- TODO BLOCKED x\n"),
+        "{}",
+        d.render()
+    );
+}
+
+#[test]
+fn setting_the_state_a_task_already_has_keeps_every_byte() {
+    let c = Config::default();
+    for src in [
+        "- TODO a\n",
+        "- TODO a  \n  owner:: Ben\n",
+        "- DONE a\n  done:: [[2026-10-28]] 10:00:00\n",
+        "\t- TODO a\r\n",
+    ] {
+        let mut d = parse(src, &mut IdGen::new());
+        let id = d.blocks()[0].id();
+        let kw = task_state(d.blocks()[0].text(), &c)
+            .unwrap()
+            .keyword
+            .clone();
+        d.set_state(id, Some(&kw), &c, today()).unwrap();
+        assert_eq!(d.render(), src, "{src:?}");
+    }
+}
