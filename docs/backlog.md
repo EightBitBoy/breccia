@@ -184,9 +184,9 @@ the fallback of an unknown page.
 
 Owner, 2026-11-13: kept as it is. Original note: other actions stay usable while the "set up Git?" question is open. Decide whether that is fine.
 
-## 33. A stale "could not be saved" notice can flash after a Git step (Git sync)
+## 33. A stale "could not be saved" notice can flash after a Git step (Git sync) (won't fix, 2026-11-13)
 
-A window of a few milliseconds remains between the saved-key filter and the frontend; the next save removes the notice.
+Owner, 2026-11-13: closed. A few milliseconds, cosmetic, cleared by the next save; a fix would number messages across core, shell and frontend. Original note: a window of a few milliseconds remains between the saved-key filter and the frontend; the next save removes the notice.
 Accepted so far.
 
 ## 34. A small list of renames is never cleared (Git sync)
