@@ -16,7 +16,7 @@
     right: StatusItem[]
     /** A click on an item with an action (Enter and Space press it too). */
     onitem: (id: string) => void
-    /** The theme item's current choice and its pick (the same as Settings > Appearance). */
+    /** The theme item's current choice and its pick (the same as Settings > Themes). */
     theme: ThemeChoice
     ontheme: (c: ThemeChoice) => void
     /** The wheel over the theme item (`deltaY`): next or previous theme. */

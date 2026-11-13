@@ -373,6 +373,10 @@ export interface UiState {
   zoomPercent?: number | null
   /** Where the sidebar lists Journals: top, bottom or inline; null or missing is bottom. `setUiState` leaves it alone. */
   journalsAt?: string | null
+  /** Show a web address without `https://`; null or missing is off. `setUiState` leaves it alone. */
+  hideLinkScheme?: boolean | null
+  /** Show a long web address cut short; null or missing is off. `setUiState` leaves it alone. */
+  shortenLinks?: boolean | null
 }
 
 /** One entry of the recent-folders list. */

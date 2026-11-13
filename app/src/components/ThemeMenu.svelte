@@ -1,5 +1,5 @@
 <script lang="ts">
-  // The status bar's theme button and its menu: the same choices as Settings > Appearance, applied at once.
+  // The status bar's theme button and its menu: the same choices as Settings > Themes, applied at once.
   import { DropdownMenu } from 'bits-ui'
   import type { StatusItem } from '../lib/status'
   import { THEME_CHOICES, THEME_NAMES, parseTheme, type ThemeChoice } from '../lib/theme'

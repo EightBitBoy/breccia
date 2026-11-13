@@ -154,6 +154,7 @@ pub fn run() {
             commands::set_hidden_columns,
             commands::set_theme,
             commands::set_journals_at,
+            commands::set_link_display,
             commands::set_zoom,
             commands::recent_folders,
             commands::forget_folder,

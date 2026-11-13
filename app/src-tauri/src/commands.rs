@@ -37,6 +37,12 @@ pub(crate) struct UiState {
     /// Where the sidebar lists Journals; `set_ui_state` never changes it (see `set_journals_at`).
     #[serde(default)]
     journals_at: Option<String>,
+    /// Whether a web address is shown without `https://`; `set_ui_state` never changes it (see `set_link_display`).
+    #[serde(default)]
+    hide_link_scheme: Option<bool>,
+    /// Whether a long web address is shown cut short; `set_ui_state` never changes it (see `set_link_display`).
+    #[serde(default)]
+    shorten_links: Option<bool>,
 }
 
 /// One entry of the recent-folders list, for the folder picker.
@@ -244,6 +250,8 @@ pub fn ui_state(app: State<'_, App>) -> UiState {
         theme: s.theme,
         zoom_percent: s.zoom_percent,
         journals_at: s.journals_at,
+        hide_link_scheme: s.hide_link_scheme,
+        shorten_links: s.shorten_links,
     }
 }
 
@@ -259,6 +267,18 @@ pub fn set_zoom(app: State<'_, App>, percent: Option<u32>) {
 #[tauri::command]
 pub fn set_journals_at(app: State<'_, App>, at: Option<String>) {
     if let Err(e) = settings::update(&app.config_dir, |s| s.journals_at = at) {
+        log::warn!("could not save settings: {e}");
+    }
+}
+
+/// Saves how web addresses are shown in rendered text (both default to off).
+#[tauri::command]
+pub fn set_link_display(app: State<'_, App>, hide_scheme: bool, shorten: bool) {
+    let result = settings::update(&app.config_dir, |s| {
+        s.hide_link_scheme = Some(hide_scheme);
+        s.shorten_links = Some(shorten);
+    });
+    if let Err(e) = result {
         log::warn!("could not save settings: {e}");
     }
 }

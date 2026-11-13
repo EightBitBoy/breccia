@@ -14,6 +14,7 @@
     setUiState,
     setTheme,
     setJournalsAt,
+    setLinkDisplay,
     setZoom,
     recentFolders,
     forgetFolder,
@@ -38,6 +39,7 @@
   import { linkClick } from './lib/links'
   import { extendsTo, route, selectionPageOf } from './lib/route'
   import { Journal } from './lib/journal.svelte'
+  import { linkDisplay } from './lib/linkDisplay.svelte'
   import { everyMidnight } from './lib/feed'
   import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
   import { ancestorsOf, visible } from './lib/tree'
@@ -364,7 +366,7 @@
     const item = folder ? helpItem(helpShown) : null
     untrack(() => (item ? status.set(item) : status.clear('help')))
   })
-  /** The theme button left of "?": its menu offers the Settings > Appearance choices (`chooseTheme`). */
+  /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
   $effect(() => {
     const item = folder ? themeItem(theme) : null
     untrack(() => (item ? status.set(item) : status.clear('theme')))
@@ -1202,6 +1204,13 @@
     setJournalsAt(at).catch(refuse)
   }
 
+  /** Applies at once; the choices are kept on this computer. */
+  function chooseLinkDisplay(hideScheme: boolean, shorten: boolean) {
+    linkDisplay.hideScheme = hideScheme
+    linkDisplay.shorten = shorten
+    setLinkDisplay(hideScheme, shorten).catch(refuse)
+  }
+
   /** The wheel over the status bar's theme button: one notch, one theme (as the Ctrl+wheel zoom counts notches). */
   const themeSteps = new WheelSteps()
 
@@ -1620,6 +1629,7 @@
         zoom.restore(layout.zoom)
         theme = layout.theme
         journalsAt = layout.journalsAt
+        uiState().then((ui) => linkDisplay.restore(ui), () => {})
         applyTheme(layout.theme, document.documentElement, (t) => getCurrentWindow().setTheme(t))
         gitInstalled().then((ok) => void (hasGit = ok), () => {})
         inTray = await trayEnabled().catch(() => false)
@@ -1784,6 +1794,7 @@
                 ontheme={chooseTheme}
                 {journalsAt}
                 onjournalsat={chooseJournalsAt}
+                onlinkdisplay={chooseLinkDisplay}
                 onpickfolder={(type) => void pickAndSwitch(type)}
                 onopenfolder={(path) => void switchFolder('folder.open', path)}
                 onforgetfolder={(path) => void forgetRecent(path)}

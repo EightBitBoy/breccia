@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { linkDisplay } from '../lib/linkDisplay.svelte'
   import { DropdownMenu } from 'bits-ui'
   import { clip, descriptionOf, sourceLine, subtaskHint } from '../lib/board'
   import { cardDrag } from '../lib/dnd'
@@ -94,7 +95,7 @@
       </DropdownMenu.Portal>
     </DropdownMenu.Root>
   </div>
-  <div class="card-title" data-testid="card-title">{@html card.html}</div>
+  <div class="card-title" data-testid="card-title">{@html linkDisplay.apply(card.html)}</div>
   {#if card.parent}
     <div class="parent">↳ {card.parent}</div>
   {/if}

@@ -1,39 +1,29 @@
 <script lang="ts">
-  import { THEME_CHOICES, THEME_NAMES, type ThemeChoice, type ThemeId } from '../../lib/theme'
+  import { linkDisplay } from '../../lib/linkDisplay.svelte'
+  import { SHORT_LENGTH } from '../../lib/linkDisplay'
 
-  let { theme, ontheme }: { theme: ThemeChoice; ontheme: (c: ThemeChoice) => void } = $props()
+  let { onchange }: { onchange: (hideScheme: boolean, shorten: boolean) => void } = $props()
 </script>
 
-{#snippet preview(id: ThemeId)}
-  <!-- data-theme on the preview itself: it shows that theme's tokens whatever the app's theme is -->
-  <span class="theme-preview" data-theme={id}>
-    <span class="tp-side"></span>
-    <span class="tp-body">
-      <span class="tp-line"></span>
-      <span class="tp-line short"></span>
-      <span class="tp-dot"></span>
-    </span>
-  </span>
-{/snippet}
-
-<p class="settings-hint">This computer only: the theme is not stored in the notes folder.</p>
-<div class="theme-options" role="radiogroup" aria-label="Theme">
-  {#each THEME_CHOICES as c (c)}
-    <button
-      type="button"
-      class="theme-option"
-      role="radio"
-      aria-checked={theme === c}
-      data-testid="theme-option"
-      data-theme-choice={c}
-      onclick={() => ontheme(c)}
-    >
-      {#if c === 'system'}
-        <span class="theme-split">{@render preview('light')}{@render preview('dark')}</span>
-      {:else}
-        {@render preview(c)}
-      {/if}
-      <span class="theme-name">{THEME_NAMES[c]}</span>
-    </button>
-  {/each}
-</div>
+<p class="settings-hint">
+  This computer only: how a web address in the text is shown. The text in the file and the link's target do not
+  change, and the block you are editing shows the whole address.
+</p>
+<label class="tog">
+  <input
+    type="checkbox"
+    data-testid="hide-link-scheme"
+    checked={linkDisplay.hideScheme}
+    onchange={(e) => onchange(e.currentTarget.checked, linkDisplay.shorten)}
+  />
+  Hide https:// in web addresses
+</label>
+<label class="tog">
+  <input
+    type="checkbox"
+    data-testid="shorten-links"
+    checked={linkDisplay.shorten}
+    onchange={(e) => onchange(linkDisplay.hideScheme, e.currentTarget.checked)}
+  />
+  Shorten long web addresses to {SHORT_LENGTH} characters after the domain
+</label>

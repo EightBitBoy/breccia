@@ -326,3 +326,12 @@ are its questions for you; each answer decides what a later plan does.
 102. [ ] **Pasted text with a hidden mark (backlog #8):** copy text out of a file saved "UTF-8 with BOM" (Notepad's "UTF-8
    with BOM" option) that starts with `TODO buy milk`, and paste it into an empty block: it is a task, not plain text.
    Before, a hidden character in front kept it from being one. Hard to try by hand; covered by unit tests.
+
+## Shorter web addresses
+
+103. [ ] **Hide `https://` and shorten long web addresses:** Settings now has a "Themes" section (the theme picker, as before) and an
+   "Appearance" section with two checkboxes, both off at first. Type `https://x.com/some/very/long/link` in a block and leave it:
+   with "Hide https://" it reads `x.com/some/very/long/link`; with "Shorten" it reads `https://x.com/some/ver…`; with both, `x.com/some/ver…`.
+   Clicking still opens the whole address, the block you edit shows the whole text, and the file is unchanged. Only a bare address is
+   changed, not `[text](url)` or a mail link. The length (8 characters after the domain) is fixed. Question: should the number be a setting, and should it also apply
+   inside the block being edited?

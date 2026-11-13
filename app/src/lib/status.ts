@@ -65,7 +65,7 @@ export function helpItem(shown: boolean): StatusItem {
   }
 }
 
-/** The button just left of "?" that opens the theme menu (the same choices as Settings > Appearance). */
+/** The button just left of "?" that opens the theme menu (the same choices as Settings > Themes). */
 export function themeItem(c: ThemeChoice): StatusItem {
   return {
     id: 'theme',

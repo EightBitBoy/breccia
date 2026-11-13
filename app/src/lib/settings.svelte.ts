@@ -1,7 +1,7 @@
 // The Settings screen's state: whether it is shown, which section was asked for, and how much the notes use each state.
 import type { StateUsage } from './types'
 
-export type SettingsSection = 'folder' | 'states' | 'boards' | 'git' | 'journal' | 'appearance' | 'keyboard'
+export type SettingsSection = 'folder' | 'states' | 'boards' | 'git' | 'journal' | 'themes' | 'appearance' | 'keyboard'
 
 export class SettingsScreen {
   shown = $state(false)

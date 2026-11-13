@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { linkDisplay } from '../lib/linkDisplay.svelte'
   import type { Action } from 'svelte/action'
   import type { JournalDay, PageView } from '../lib/types'
   import Outline from './Outline.svelte'
@@ -46,7 +47,7 @@
   </div>
   {#if page}
     {#if page.preambleHtml}
-      <div class="preamble">{@html page.preambleHtml}</div>
+      <div class="preamble">{@html linkDisplay.apply(page.preambleHtml)}</div>
     {/if}
     <LinkColorMenu targets={page.targets ?? []} {onsetcolor}>
       <Outline

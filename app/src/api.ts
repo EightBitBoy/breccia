@@ -69,6 +69,11 @@ export function setJournalsAt(at: string): Promise<void> {
   return invoke<void>('set_journals_at', { at })
 }
 
+/** Saves how web addresses are shown in rendered text (machine-local). */
+export function setLinkDisplay(hideScheme: boolean, shorten: boolean): Promise<void> {
+  return invoke<void>('set_link_display', { hideScheme, shorten })
+}
+
 /** Saves the chosen theme; null follows the operating system. */
 export function setTheme(theme: string | null): Promise<void> {
   return invoke<void>('set_theme', { theme })

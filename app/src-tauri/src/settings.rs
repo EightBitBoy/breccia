@@ -29,6 +29,12 @@ pub struct Settings {
     /// Where the sidebar lists Journals: "top", "bottom" or "inline"; `None` is bottom.
     #[serde(default)]
     pub journals_at: Option<String>,
+    /// Show a web address without its `https://`; `None` is off.
+    #[serde(default)]
+    pub hide_link_scheme: Option<bool>,
+    /// Show a long web address cut short; `None` is off.
+    #[serde(default)]
+    pub shorten_links: Option<bool>,
     /// Folders opened before, the most recent first, at most `RECENT_MAX`.
     #[serde(default)]
     pub recent_folders: Vec<PathBuf>,
@@ -152,6 +158,8 @@ fn from_bytes(bytes: &[u8]) -> Option<Settings> {
         theme: field(&mut map, "theme"),
         zoom_percent: field(&mut map, "zoom_percent"),
         journals_at: field(&mut map, "journals_at"),
+        hide_link_scheme: field(&mut map, "hide_link_scheme"),
+        shorten_links: field(&mut map, "shorten_links"),
         recent_folders,
         hidden_columns: hidden_from(map.remove("hidden_columns")),
         other: map,
@@ -346,6 +354,28 @@ mod tests {
         assert_eq!(load(dir.path()).journals_at.as_deref(), Some("inline"));
         std::fs::write(dir.path().join(FILE), r#"{"journals_at":3}"#).unwrap();
         assert_eq!(load(dir.path()).journals_at, None);
+    }
+
+    #[test]
+    fn the_link_display_choices_are_kept_and_a_wrong_type_is_none() {
+        let dir = tempfile::tempdir().unwrap();
+        update(dir.path(), |s| {
+            s.hide_link_scheme = Some(true);
+            s.shorten_links = Some(false);
+        })
+        .unwrap();
+        let s = load(dir.path());
+        assert_eq!(
+            (s.hide_link_scheme, s.shorten_links),
+            (Some(true), Some(false))
+        );
+        std::fs::write(
+            dir.path().join(FILE),
+            r#"{"hide_link_scheme":"yes","shorten_links":1}"#,
+        )
+        .unwrap();
+        let s = load(dir.path());
+        assert_eq!((s.hide_link_scheme, s.shorten_links), (None, None));
     }
 
     #[test]

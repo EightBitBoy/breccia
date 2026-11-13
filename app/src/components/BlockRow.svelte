@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { linkDisplay } from '../lib/linkDisplay.svelte'
   import type { BlockView } from '../lib/types'
   import type { RowWash } from '../lib/pageColors'
   import { washValue } from '../lib/customColor'
@@ -58,6 +59,6 @@
   {:else}
     <!-- Links inside are handled by the app's anchor handler before this click. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="content" onclick={(e) => onedit(block.id, e.shiftKey)}>{@html block.html}</div>
+    <div class="content" onclick={(e) => onedit(block.id, e.shiftKey)}>{@html linkDisplay.apply(block.html)}</div>
   {/if}
 </div>

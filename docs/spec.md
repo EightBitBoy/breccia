@@ -484,7 +484,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 ### 7.12 Settings
 
 One screen with sections: Notes folder (open/switch), States, Boards, Git, Journal (nothing yet beyond defaults),
-Appearance (theme), Keyboard (read-only list of shortcuts in the first version).
+Themes, Appearance (how web addresses are shown), Keyboard (read-only list of shortcuts in the first version).
 
 Settings opens in the main area from the sidebar footer, with `Ctrl ,`, or by clicking the folder name; changes apply
 at once.

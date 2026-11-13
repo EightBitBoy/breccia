@@ -10,6 +10,7 @@
   import BoardsSection from './settings/BoardsSection.svelte'
   import GitSection from './settings/GitSection.svelte'
   import AppearanceSection from './settings/AppearanceSection.svelte'
+  import ThemesSection from './settings/ThemesSection.svelte'
   import KeyboardSection from './settings/KeyboardSection.svelte'
 
   let {
@@ -43,6 +44,7 @@
     onhelp,
     ontheme,
     onjournalsat,
+    onlinkdisplay,
     onpickfolder,
     onopenfolder,
     onforgetfolder,
@@ -90,6 +92,7 @@
     ongit: (patch: Partial<GitSettings>) => Promise<void>
     ontheme: (c: ThemeChoice) => void
     onjournalsat: (at: JournalsAt) => void
+    onlinkdisplay: (hideScheme: boolean, shorten: boolean) => void
     /** "Open folder…" or "New folder…": the parent asks for the folder and switches. */
     onpickfolder: (type: 'folder.open' | 'folder.create') => void
     onopenfolder: (path: string) => void
@@ -165,9 +168,13 @@
       {/each}
     </div>
   </section>
+  <section data-section="themes">
+    <h2>Themes</h2>
+    <ThemesSection {theme} {ontheme} />
+  </section>
   <section data-section="appearance">
     <h2>Appearance</h2>
-    <AppearanceSection {theme} {ontheme} />
+    <AppearanceSection onchange={onlinkdisplay} />
   </section>
   <section data-section="keyboard">
     <h2>Keyboard</h2>

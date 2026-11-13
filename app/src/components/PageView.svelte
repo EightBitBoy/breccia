@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { linkDisplay } from '../lib/linkDisplay.svelte'
   import type { PageView, RefsView } from '../lib/types'
   import Outline from './Outline.svelte'
   import LinkedRefs from './LinkedRefs.svelte'
@@ -90,7 +91,7 @@
     {/if}
   </div>
   {#if page.preambleHtml}
-    <div class="preamble">{@html page.preambleHtml}</div>
+    <div class="preamble">{@html linkDisplay.apply(page.preambleHtml)}</div>
   {/if}
   {#if page.kind === 'journal'}
     <LinkColorMenu targets={page.targets ?? []} onsetcolor={onlinkcolor}>
