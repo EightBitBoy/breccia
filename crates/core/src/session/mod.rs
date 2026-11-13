@@ -78,6 +78,9 @@ pub struct Session {
     /// The linked-only pages and tags in the tree last sent, to resend it
     /// only when they changed.
     link_lists: LinkLists,
+    /// A test seam: runs in place of the pause before `config.toml` is read once more.
+    #[cfg(feature = "test-seams")]
+    before_config_retry: Option<Box<dyn FnMut() + Send>>,
 }
 
 fn config_changed() -> CommandError {
@@ -119,6 +122,13 @@ impl Session {
 
     pub fn generation(&self) -> u64 {
         self.generation
+    }
+
+    /// A test seam: `f` runs in place of the short pause before a `config.toml` that cannot be read is read once
+    /// more, which is where an editor that saves in place finishes writing.
+    #[cfg(feature = "test-seams")]
+    pub fn before_config_retry(&mut self, f: Box<dyn FnMut() + Send>) {
+        self.before_config_retry = Some(f);
     }
 
     /// The open folder, its generation and its `[git]` settings; `None`

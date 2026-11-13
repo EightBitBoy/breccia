@@ -237,7 +237,7 @@ impl Session {
         // leaves the old settings in use and refuses writes.
         let mut config = None;
         if config_touched {
-            match self.reload_config() {
+            match self.reload_config().or_else(|_| self.reload_config_after_a_pause()) {
                 Ok(view) => config = view,
                 Err(message) => notices.push(Notice::LoadWarning {
                     message: format!(

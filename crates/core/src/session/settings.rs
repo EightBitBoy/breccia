@@ -33,6 +33,19 @@ impl Session {
         Ok(Some(ConfigView::of(&ws.config, self.config_version)))
     }
 
+    /// Reads `config.toml` once more after a short pause. An editor that saves in place empties the file and then
+    /// writes it, so a first read can catch it half written; the second sees it whole. Called only after a read
+    /// failed, so a really broken file costs one pause per change.
+    pub(super) fn reload_config_after_a_pause(&mut self) -> Result<Option<ConfigView>, String> {
+        #[cfg(feature = "test-seams")]
+        if let Some(hook) = self.before_config_retry.as_mut() {
+            hook();
+            return self.reload_config();
+        }
+        std::thread::sleep(std::time::Duration::from_millis(150));
+        self.reload_config()
+    }
+
     pub(super) fn config_output(&self) -> Result<Output, CommandError> {
         Ok(Output {
             config: Some(ConfigView::of(&self.ws()?.config, self.config_version)),

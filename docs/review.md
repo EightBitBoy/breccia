@@ -304,3 +304,8 @@ are its questions for you; each answer decides what a later plan does.
 98. [ ] **Index repair warning (backlog #30):** when Breccia finds the search index damaged and cannot delete or reopen
    the file, the warning "the search index cannot be stored (...)" now names that failure (for example a file that is
    in use), not the damage that started the repair. It is only unit-tested: no need to try to provoke it.
+
+99. [ ] **Half-written config (backlog #39):** edit `breccia/config.toml` in an editor that saves in place (it empties the
+   file and then writes it) while Breccia runs. The change is picked up with no "cannot be read" notice. A really
+   broken file (a typo) still gives the notice, now after about a fifth of a second. Only unit-tested: no need to
+   provoke the half-written case by hand.

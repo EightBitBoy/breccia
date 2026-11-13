@@ -1467,6 +1467,29 @@ fn a_hand_edit_of_config_is_followed() {
 }
 
 #[test]
+fn a_config_caught_half_written_is_read_again_before_it_is_called_broken() {
+    let (t, mut s) = folder(&[("breccia/config.toml", breccia_core::Config::default_toml())]);
+    let good = format!(
+        "{}\n[[states]]\nkeyword = \"LATER\"\ncolor = \"blue\"\n",
+        breccia_core::Config::default_toml()
+    );
+    // The editor truncated the file and has not written the rest yet: the watcher sees this.
+    put(t.path(), CONFIG, "[[states]\nkeyword = \"TO");
+    // The pause before the second read is where the editor finishes.
+    let root = t.path().to_path_buf();
+    let finished = good.clone();
+    s.before_config_retry(Box::new(move || put(&root, CONFIG, &finished)));
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [CONFIG]}),
+        0,
+    );
+    assert!(out.notices.is_empty(), "{:?}", out.notices);
+    let last = out.config.unwrap().states.last().unwrap().keyword.clone();
+    assert_eq!(last, "LATER");
+}
+
+#[test]
 fn a_broken_config_keeps_the_old_one_and_refuses_writes() {
     let (t, mut s) = folder(&[("breccia/config.toml", breccia_core::Config::default_toml())]);
     let v = version(&mut s);

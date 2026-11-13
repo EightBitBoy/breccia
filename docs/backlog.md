@@ -122,12 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 39. Rare config and startup races (Settings and themes)
-
-Another program adding tasks of a state at the moment it is renamed misses the rename; a hand edit of `config.toml`
-saved in place (not atomically) can give one false "cannot be read" notice. Accepted. Also (to check) a poisoned
-startup lock in the shell is silent (`app/src-tauri/src/git.rs` handles a poisoned lock only at close).
-
 ## 41. New dots can land on a cluster (Graph)
 
 A page with no saved neighbour can be placed on top of an existing group after reopening or a live change; "Re-arrange"

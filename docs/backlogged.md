@@ -113,6 +113,20 @@ top comments and leaves "# the first state" above the next state; reordering the
 between them and starts the file with a blank line. Reopen only if someone reports a comment in a wrong place.
 
 
+## 39. Rare config and startup races (Settings and themes) (closed 2026-11-13: one fixed, two accepted)
+
+Another program adding tasks of a state at the moment it is renamed misses the rename; a hand edit of `config.toml`
+saved in place (not atomically) can give one false "cannot be read" notice. Accepted. Also (to check) a poisoned
+startup lock in the shell is silent (`app/src-tauri/src/git.rs` handles a poisoned lock only at close).
+
+Owner, 2026-11-13, decided one by one: (1) a task another program adds at the moment a state is renamed misses the
+rename: accepted, it needs a write in a window of milliseconds. (2) A hand edit saved in place can give one false
+"cannot be read" notice: fixed, a config file that cannot be read is read once more after a 150 ms pause
+(`reload_config_after_a_pause` in `crates/core/src/session/settings.rs`; the test seam `before_config_retry` lets a test
+finish the write during the pause). A really broken file costs one pause per change. (3) A poisoned startup lock is
+silent: not true, the start-up open runs inside `with_session`, which recovers and tells the user (plan 6).
+
+
 ## 40. Task-state boxes can show typed text in the wrong row (Settings and themes) (won't fix, 2026-11-12)
 
 Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to
