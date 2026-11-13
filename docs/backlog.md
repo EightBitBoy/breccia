@@ -137,36 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 54. Large folders (Performance)
-
-At 5,000 pages typing takes about 13 ms of a 16 ms frame in the core; building the page tree, comparing a reloaded file
-and merging watcher events grow faster than the folder size; the journal feed keeps every loaded day and searches them
-one by one. Fine at today's sizes; measure with thousands of pages and days.
-
-## 55. Faster first start and first indexing on large folders (Performance)
-
-At 5,000 pages: a search during the first index build waits about 3 s (answer from what is indexed so far, marked
-incomplete); the folder opens before the window shows, so a slow first open is a blank window (open after the window
-appears, with an "Opening..." state; Windows Defender adds about 8 ms per fresh file); the first background indexing
-step takes 100 to 120 ms against a 16 ms budget (one typing pause); typing during the first build was never measured
-with both threads running (`BRECCIA_TRACE=1`).
-
-## 57. Git work that can make typing wait (Performance)
-
-At 5,000 pages the notes lock is held about 577 ms (bar 500) when a pull brings changes and a save landed during the
-fetch; the cost is Git's rebase, and a fix would rebase outside the lock (for example in a scratch worktree). Git hooks
-(and Git LFS) also run while the notes are locked, and queued change messages to the Git thread are not merged.
-
-## 58. Long lists are not virtualised (Performance)
-
-The Git history (after many "Show more") and the Archive view (thousands of tasks) may get slow; the All pages
-virtualiser could be reused. The Git history also re-reads every shown row after each commit, and reads every
-not-pushed hash on each load for a remote never pushed to.
-
-## 59. The first automatic archive run on a large old folder (Performance)
-
-It changes many files in one command and is one slow answer, once.
-
 ## 60. Document two small behaviours (Docs)
 
 Enter (split) trims spaces at the join, and "Keep mine" overwriting onto a non-UTF-8 file or a folder is not described
@@ -304,3 +274,34 @@ from the web, the app itself and `data:` (`app/src-tauri/tauri.conf.json`, `img-
 - Breccia's anti-goal §2: it must never delete or rewrite a file the user put there.
 - Other files: PDFs and the like need a way to open them, not just show them.
 - Work: core (paths, copying), security rule, editor (paste and drop), format reference, tests, an e2e step.
+
+## 85. Performance with very large folders (Performance)
+
+Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59), to be taken up when a folder grows past a few
+thousand pages or someone reports slowness. Nothing here is wrong at today's sizes. The measurements are from a test
+folder of 5,000 pages (`just graph-scale`, `crates/core/tests/it/scale.rs`); the graph's own numbers are in #83.
+
+**Large folders** (was #54):
+At 5,000 pages typing takes about 13 ms of a 16 ms frame in the core; building the page tree, comparing a reloaded file
+and merging watcher events grow faster than the folder size; the journal feed keeps every loaded day and searches them
+one by one. Fine at today's sizes; measure with thousands of pages and days.
+
+**Faster first start and first indexing on large folders** (was #55):
+At 5,000 pages: a search during the first index build waits about 3 s (answer from what is indexed so far, marked
+incomplete); the folder opens before the window shows, so a slow first open is a blank window (open after the window
+appears, with an "Opening..." state; Windows Defender adds about 8 ms per fresh file); the first background indexing
+step takes 100 to 120 ms against a 16 ms budget (one typing pause); typing during the first build was never measured
+with both threads running (`BRECCIA_TRACE=1`).
+
+**Git work that can make typing wait** (was #57):
+At 5,000 pages the notes lock is held about 577 ms (bar 500) when a pull brings changes and a save landed during the
+fetch; the cost is Git's rebase, and a fix would rebase outside the lock (for example in a scratch worktree). Git hooks
+(and Git LFS) also run while the notes are locked, and queued change messages to the Git thread are not merged.
+
+**Long lists are not virtualised** (was #58):
+The Git history (after many "Show more") and the Archive view (thousands of tasks) may get slow; the All pages
+virtualiser could be reused. The Git history also re-reads every shown row after each commit, and reads every
+not-pushed hash on each load for a remote never pushed to.
+
+**The first automatic archive run on a large old folder** (was #59):
+It changes many files in one command and is one slow answer, once.

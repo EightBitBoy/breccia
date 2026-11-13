@@ -231,6 +231,26 @@ native Linux before Linux is promised; that is real work, not just a check.
 Owner, 2026-11-13: closed. Linux is neither shipped nor promised (the release builds only the Windows installer). Re-open as a plan if Linux is wanted: a pass on native Linux (build, tests, the webview speed check, Unix permissions, fsync, symlink saving, case-sensitive folder names), then the fixes it finds.
 
 
+## 54. Large folders (Performance) (closed 2026-11-13: moved to #85)
+
+At 5,000 pages typing takes about 13 ms of a 16 ms frame in the core; building the page tree, comparing a reloaded file
+and merging watcher events grow faster than the folder size; the journal feed keeps every loaded day and searches them
+one by one. Fine at today's sizes; measure with thousands of pages and days.
+
+Owner, 2026-11-13: moved to #85 (performance with very large folders).
+
+
+## 55. Faster first start and first indexing on large folders (Performance) (closed 2026-11-13: moved to #85)
+
+At 5,000 pages: a search during the first index build waits about 3 s (answer from what is indexed so far, marked
+incomplete); the folder opens before the window shows, so a slow first open is a blank window (open after the window
+appears, with an "Opening..." state; Windows Defender adds about 8 ms per fresh file); the first background indexing
+step takes 100 to 120 ms against a 16 ms budget (one typing pause); typing during the first build was never measured
+with both threads running (`BRECCIA_TRACE=1`).
+
+Owner, 2026-11-13: moved to #85 (performance with very large folders).
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one
@@ -240,6 +260,31 @@ stops at 10 s; the graph code is larger than estimated and carries an unused hel
 this.
 
 Owner, 2026-11-13: moved to #83 (re-implement the graph feature); the owner does not use the graph at the moment.
+
+
+## 57. Git work that can make typing wait (Performance) (closed 2026-11-13: moved to #85)
+
+At 5,000 pages the notes lock is held about 577 ms (bar 500) when a pull brings changes and a save landed during the
+fetch; the cost is Git's rebase, and a fix would rebase outside the lock (for example in a scratch worktree). Git hooks
+(and Git LFS) also run while the notes are locked, and queued change messages to the Git thread are not merged.
+
+Owner, 2026-11-13: moved to #85 (performance with very large folders).
+
+
+## 58. Long lists are not virtualised (Performance) (closed 2026-11-13: moved to #85)
+
+The Git history (after many "Show more") and the Archive view (thousands of tasks) may get slow; the All pages
+virtualiser could be reused. The Git history also re-reads every shown row after each commit, and reads every
+not-pushed hash on each load for a remote never pushed to.
+
+Owner, 2026-11-13: moved to #85 (performance with very large folders).
+
+
+## 59. The first automatic archive run on a large old folder (Performance) (closed 2026-11-13: moved to #85)
+
+It changes many files in one command and is one slow answer, once.
+
+Owner, 2026-11-13: moved to #85 (performance with very large folders).
 
 
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
