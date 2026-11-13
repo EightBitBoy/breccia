@@ -137,13 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 63. A fixed vocabulary (Docs)
-
-One glossary (for example `docs/vocabulary.md`): each term, a one-line meaning, where it shows up (page, journal day,
-block, task, state, card, board, column, folder, linked-only page, linked references, archive, sidebar, status bar,
-view). Open: which word wins where several are used ("linked-only" vs "virtual"); whether UI text and docs are brought
-in line; whether a test checks UI strings; whether CLAUDE.md points to it.
-
 ## 65. Core test gaps (Tests)
 
 Missing tests: an unknown keyword in the state cycle; setting the same state keeps the bytes; trailing blank lines in a

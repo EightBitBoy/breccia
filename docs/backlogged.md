@@ -315,6 +315,16 @@ Owner, 2026-11-13: the screenshots stay as they are. The demo data has `created:
 Owner, 2026-11-13: only line 522 was rewrapped, the paragraph made long by the `<name@example.com>` sentence of 12 Nov. The other long lines stay: 8 older prose lines (16, 132, 431, 485, 552, 553, 573, 605 at the time) and the table rows, which cannot wrap.
 
 
+## 63. A fixed vocabulary (Docs) (glossary done 2026-11-13; interface not changed)
+
+One glossary (for example `docs/vocabulary.md`): each term, a one-line meaning, where it shows up (page, journal day,
+block, task, state, card, board, column, folder, linked-only page, linked references, archive, sidebar, status bar,
+view). Open: which word wins where several are used ("linked-only" vs "virtual"); whether UI text and docs are brought
+in line; whether a test checks UI strings; whether CLAUDE.md points to it.
+
+Owner, 2026-11-13: `docs/vocabulary.md` is written from how the app and the spec use the words today, with a pointer from `CLAUDE.md`. No interface text, code or test changed. Left out on purpose: bringing interface texts in line (for example the graph filter "Hide journal pages") and a test that checks interface strings; do those only for the words the owner confirms (review item 100).
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain

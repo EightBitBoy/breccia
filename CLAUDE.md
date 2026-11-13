@@ -26,6 +26,8 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - Open work and ideas not yet in a plan: `docs/backlog.md`. Items are numbered, and a number is never reused. A closed
   item (done, decided, not a bug, won't fix) moves with its notes to `docs/backlogged.md`, under the same heading and
   number; `backlog.md` keeps only open and partly closed items.
+- Vocabulary: `docs/vocabulary.md`, one line per term (page, journal day, block, task, state, card, board, column, linked-only
+  page, view, …). Use its words in the app's texts, the docs and commit messages.
 - Owner review list: `docs/review.md`. Add a numbered item for every change a user can see and every open question
   for the owner, in the same commit or right after it lands. Numbers are never reused.
 - Reviewed items: `docs/reviewed.md` (made when the first item is ticked). When the owner ticks items in `review.md`,

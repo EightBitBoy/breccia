@@ -309,3 +309,11 @@ are its questions for you; each answer decides what a later plan does.
    file and then writes it) while Breccia runs. The change is picked up with no "cannot be read" notice. A really
    broken file (a typo) still gives the notice, now after about a fifth of a second. Only unit-tested: no need to
    provoke the half-written case by hand.
+
+100. [ ] **Vocabulary (backlog #63):** read `docs/vocabulary.md`. It lists each term with one line and where it shows
+   up, written from how the app and the spec use the words today. Please check two things: (a) is every meaning right,
+   and does anything missing deserve a line? (b) the proposed words where the app uses several: **journal day** (not
+   "journal page" or "day page"; the graph filter still says "Hide journal pages"), **card** on a board and **task**
+   everywhere else, **linked-only** and **tag-only** as two different things, and **notes folder** (the open folder)
+   versus **folder** (a folder of the page tree). Say which to change. Nothing in the app was changed; bringing texts
+   in line would be a later step, only for the words you confirm.
