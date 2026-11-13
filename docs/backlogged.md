@@ -221,6 +221,16 @@ public. The first version with the updater is installed by hand.
 Owner, 2026-11-13: closed. Updates stay manual: download the installer from the GitHub release page. The old blocker (a private repository) is gone, since the repository has been public since 1.0.0, so this can be re-opened as a plan: a signing key as a repository secret, signed update files and `latest.json` from the release workflow, the Tauri updater plugin, a setting to turn the check off, and no update with unsaved text.
 
 
+## 53. Linux is not verified (Release and build) (won't fix for now, 2026-11-13)
+
+The webview speed test passed only conditionally under WSLg (typing was marginal). Unix file permissions, fsync and
+symlink saving never ran; folder names are matched ignoring case (so `projects` next to `Projects` is impossible on
+Linux) and recent folders are compared ignoring case; the graph and the end-to-end test are Windows-only. Re-run on
+native Linux before Linux is promised; that is real work, not just a check.
+
+Owner, 2026-11-13: closed. Linux is neither shipped nor promised (the release builds only the Windows installer). Re-open as a plan if Linux is wanted: a pass on native Linux (build, tests, the webview speed check, Unix permissions, fsync, symlink saving, case-sensitive folder names), then the fixes it finds.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one

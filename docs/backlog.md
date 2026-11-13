@@ -137,13 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 53. Linux is not verified (Release and build)
-
-The webview speed test passed only conditionally under WSLg (typing was marginal). Unix file permissions, fsync and
-symlink saving never ran; folder names are matched ignoring case (so `projects` next to `Projects` is impossible on
-Linux) and recent folders are compared ignoring case; the graph and the end-to-end test are Windows-only. Re-run on
-native Linux before Linux is promised; that is real work, not just a check.
-
 ## 54. Large folders (Performance)
 
 At 5,000 pages typing takes about 13 ms of a 16 ms frame in the core; building the page tree, comparing a reloaded file
