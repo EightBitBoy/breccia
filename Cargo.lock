@@ -331,7 +331,7 @@ dependencies = [
 
 [[package]]
 name = "breccia"
-version = "1.5.1"
+version = "1.5.2"
 dependencies = [
  "breccia-core",
  "chrono",
@@ -349,7 +349,7 @@ dependencies = [
 
 [[package]]
 name = "breccia-core"
-version = "1.5.1"
+version = "1.5.2"
 dependencies = [
  "breccia-core",
  "chrono",

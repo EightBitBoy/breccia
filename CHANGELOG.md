@@ -2,6 +2,24 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.5.2] - 2026-11-13
+
+### Features
+
+- Boards: dragging a card near the window edge scrolls the board sideways
+- Boards: open cards show the day the task was created
+
+### Fixes
+
+- Editor: an email address in angle brackets now shows as a mail link
+- Editor: a pasted bullet list that cannot be inserted now says so
+- Sidebar: an older page list no longer replaces a newer one, and a refused drop refreshes it
+- Editor: keys typed right after Ctrl Enter are kept and land in the block's text
+- Search: a repair that cannot delete the damaged index names the real problem
+- Settings: a config file caught half written is read again before it is called broken
+- Editor: Keep mine no longer brings back text that an undo or a state change replaced
+- Editor: a hidden byte-order mark at the start of pasted text is dropped
+
 ## [1.5.1] - 2026-11-12
 
 ### Features
