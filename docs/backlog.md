@@ -180,9 +180,9 @@ the file until the next start. Wording, code comments and progress counts only.
 Typed links and the query's link filters are matched by order. Add a `debug_assert` and tests for a mixed query and for
 the fallback of an unknown page.
 
-## 32. During the Git set-up question only the search box is blocked (Git sync)
+## 32. During the Git set-up question only the search box is blocked (Git sync) (decided 2026-11-13: keep as it is)
 
-Other actions stay usable while the "set up Git?" question is open. Decide whether that is fine.
+Owner, 2026-11-13: kept as it is. Original note: other actions stay usable while the "set up Git?" question is open. Decide whether that is fine.
 
 ## 33. A stale "could not be saved" notice can flash after a Git step (Git sync)
 
