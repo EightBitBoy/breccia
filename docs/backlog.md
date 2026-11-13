@@ -137,11 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 60. Document two small behaviours (Docs)
-
-Enter (split) trims spaces at the join, and "Keep mine" overwriting onto a non-UTF-8 file or a folder is not described
-(`crates/core/src/edit.rs`, `crates/core/src/workspace/`). Code comments, not the format document.
-
 ## 61. Show the created time in the demo and screenshots (Docs) (demo done 2026-11-12; screenshots left)
 
 `docs/demo/` has no `created::` lines, so the README screenshots never show "after N days" on a done chip. Add some and

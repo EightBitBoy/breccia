@@ -188,6 +188,11 @@ impl Document {
     /// never closes, or through a fence opener) is refused with
     /// [`EditError::InsideFence`]: it would need fence lines the user did
     /// not type.
+    ///
+    /// The spaces and tabs at the join are dropped on purpose: the old block
+    /// loses its trailing ones and the new block its leading ones, so a split
+    /// leaves no invisible trailing space and no indented first line. They are
+    /// the only characters a split ever removes.
     pub fn split(&mut self, id: BlockId, at: usize, ids: &mut IdGen) -> Result<BlockId, EditError> {
         let i = self.find(id)?;
         let text = &self.blocks[i].text;

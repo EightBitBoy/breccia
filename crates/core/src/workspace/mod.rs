@@ -760,6 +760,11 @@ impl Workspace {
 
     /// Like [`save`](Self::save) but skips the changed-on-disk check, so it
     /// replaces a file Breccia did not read. Only for an explicit user choice.
+    ///
+    /// Whatever is at the path is replaced, even a file that is no longer valid
+    /// UTF-8: its bytes are gone, which is what "Keep mine" means. If the path
+    /// is now a folder the write fails with the system's error
+    /// (`SaveError::Io`) and the folder is left alone.
     pub fn save_overwrite(&mut self, key: &str) -> Result<SaveOutcome, SaveError> {
         self.save_with(key, true, false)
     }

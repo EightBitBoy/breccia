@@ -287,6 +287,14 @@ It changes many files in one command and is one slow answer, once.
 Owner, 2026-11-13: moved to #85 (performance with very large folders).
 
 
+## 60. Document two small behaviours (Docs) (done 2026-11-13)
+
+Enter (split) trims spaces at the join, and "Keep mine" overwriting onto a non-UTF-8 file or a folder is not described
+(`crates/core/src/edit.rs`, `crates/core/src/workspace/`). Code comments, not the format document.
+
+Owner, 2026-11-13: the two behaviours are now written as doc comments, no behaviour change: `Document::split` (`crates/core/src/edit.rs`) drops the spaces and tabs at the join on purpose, and `Workspace::save_overwrite` (`crates/core/src/workspace/mod.rs`) replaces whatever is at the path, even a file that is no longer valid UTF-8, and fails with the system's error on a folder (checked with a scratch test).
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain
