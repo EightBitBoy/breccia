@@ -11,14 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 1. Rare duplicate or misplaced text while typing fast (Editor)
-
-Pressing keys inside the short save round-trip can, rarely, duplicate a block or a pasted piece, or put text in the
-wrong place: a reshape then Enter within 0.3 s, keys queued while a split runs, Ctrl+Backspace or Ctrl+Delete during a
-split, a cancel that cannot reach a queued save, a paste put back after leaving a block. Nothing is lost. One cheap fix:
-reset the editor to the saved text after an "invalid offset" answer (`app/src/editor/`; no such handling exists today).
-Accepted so far; decide whether to harden.
-
 ## 3. Unfinished IME input is lost when clicking away (Editor)
 
 Text being composed with an input method (Japanese, Chinese, some keyboards) and not yet committed disappears when the

@@ -4,6 +4,17 @@ Items from `docs/backlog.md` that are closed: done, decided, not a bug or won't 
 and notes, so the decisions stay findable. Plans, commits and review items may cite "backlog #N". Open and partly closed
 items stay in `docs/backlog.md`.
 
+## 1. Rare duplicate or misplaced text while typing fast (Editor) (closed as accepted, 2026-11-13)
+
+Pressing keys inside the short save round-trip can, rarely, duplicate a block or a pasted piece, or put text in the
+wrong place: a reshape then Enter within 0.3 s, keys queued while a split runs, Ctrl+Backspace or Ctrl+Delete during a
+split, a cancel that cannot reach a queued save, a paste put back after leaving a block. Nothing is lost. One cheap fix:
+reset the editor to the saved text after an "invalid offset" answer (`app/src/editor/`; no such handling exists today).
+Accepted so far; decide whether to harden.
+
+Owner, 2026-11-13: closed as accepted. Rare, no text is lost, nobody has reported it. Checked: the core answers `invalidOffset` (`crates/core/src/session/view.rs`) and the editor host has no special handling, so the user sees the refusal. The suggested fix (reset the editor to the saved text) could throw away unsaved typing; a safe version would show the typed text as a Keep-mine conflict first. Reopen if someone reports a duplicated or misplaced piece.
+
+
 ## 2. Keys typed while a task command runs are lost (Editor) (done 2026-11-12, no plan)
 
 After `Ctrl Enter`, `Ctrl Shift Enter` or a state picked from the slash menu, the block is read-only until the core
