@@ -100,6 +100,19 @@ and its tooltip, journal day headings, All pages, Archive, the date picker, boar
 English. Closed as part of the bigger question, #82.
 
 
+## 38. Comments in `config.toml` can move (Settings and themes) (closed as accepted, 2026-11-13)
+
+After some Settings changes, a comment can move to another place in the file: blank lines between comment lines are
+dropped, a removed item's comments move, a reordered list's first comment moves, a file may start with a blank line. No
+comment is lost. Fixing it risks the writer that keeps the user's text; decide whether it is worth it.
+
+Owner, 2026-11-13: closed as accepted. Editing and commenting the settings file by hand is done extremely rarely, so
+keeping comments in place in every case is overengineered; no comment is ever lost. Shown with a scratch run on a file
+with a title comment and a comment above each state: removing the first state collapses the blank lines between the
+top comments and leaves "# the first state" above the next state; reordering the states moves the title comment down
+between them and starts the file with a blank line. Reopen only if someone reports a comment in a wrong place.
+
+
 ## 40. Task-state boxes can show typed text in the wrong row (Settings and themes) (won't fix, 2026-11-12)
 
 Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to

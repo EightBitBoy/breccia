@@ -122,12 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 38. Comments in `config.toml` can move (Settings and themes)
-
-After some Settings changes, a comment can move to another place in the file: blank lines between comment lines are
-dropped, a removed item's comments move, a reordered list's first comment moves, a file may start with a blank line. No
-comment is lost. Fixing it risks the writer that keeps the user's text; decide whether it is worth it.
-
 ## 39. Rare config and startup races (Settings and themes)
 
 Another program adding tasks of a state at the moment it is renamed misses the rename; a hand edit of `config.toml`
