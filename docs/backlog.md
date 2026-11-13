@@ -122,12 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 46. Attachments and local images (Compatibility)
-
-Only web images show; a local image shows its alt text. Recommended place: `assets/`. Open: which paths resolve
-(relative to the file, to the folder, Obsidian's `![[file.png]]`); whether pasted or dropped files are copied into
-`assets/`; what a rename or delete does to them.
-
 ## 47. Headings and same-page heading links (Compatibility)
 
 `[[Page#Heading]]` links to the page already. Open: showing or jumping to the heading, and `[[#Heading]]` (today a page
@@ -313,3 +307,27 @@ lines (10 pages: 45).
 first (its per-frame picking pass, a full re-process per step). The whole graph (about 2 MB) is resent on every outside
 change; the layout never settles and stops at 10 s; the graph code is larger than estimated and carries an unused
 helper. A few hundred pages are far below this. `just graph-scale` measures it.
+
+## 84. Assets: images and attachments in notes (Compatibility)
+
+Owner, 2026-11-13 (from #46): "something I never thought about yet". Not decided; this item holds the question and what
+is known, to think about before any plan.
+
+**Today:** only web images show (`![alt](https://…)`). A local file shows its description as plain text: the renderer
+accepts only `http` and `https` addresses (`crates/core/src/render.rs`) and the window's security rule allows images only
+from the web, the app itself and `data:` (`app/src-tauri/tauri.conf.json`, `img-src`).
+
+**What the owner has to think about:**
+- Whether notes should hold pictures and other files at all, and for what (screenshots, photos, PDFs).
+- Where the files live: `assets/` in the notes folder is the recommended place.
+- Which paths resolve: relative to the note's file, relative to the notes folder, Obsidian's `![[file.png]]`.
+- Whether pasting or dropping a file copies it into `assets/` and writes the link, and how names are made unique.
+- What a rename, move or delete of a note, an image, or the `assets/` folder does to the links and files.
+
+**Costs to weigh:**
+- Security: the window may then read files from the notes folder, which relaxes today's rule; paths must never leave the
+  folder (no `..`, no links or junctions that escape it).
+- Git: images are binary files that Git sync commits and pushes, so a screenshot habit makes the repository grow.
+- Breccia's anti-goal §2: it must never delete or rewrite a file the user put there.
+- Other files: PDFs and the like need a way to open them, not just show them.
+- Work: core (paths, copying), security rule, editor (paste and drop), format reference, tests, an e2e step.

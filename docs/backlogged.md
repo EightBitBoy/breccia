@@ -183,6 +183,15 @@ elsewhere; whether this is a per-folder setting.
 Owner, 2026-11-13: closed as won't fix. Breccia keeps its own layout (`journals/` and `pages/`): a top-level `.md` file or another folder is ignored, as the format reference says. An Obsidian vault can be copied into `pages/` by hand. Supporting any layout would change where every file operation puts things.
 
 
+## 46. Attachments and local images (Compatibility) (won't fix, 2026-11-13: continued in #84)
+
+Only web images show; a local image shows its alt text. Recommended place: `assets/`. Open: which paths resolve
+(relative to the file, to the folder, Obsidian's `![[file.png]]`); whether pasted or dropped files are copied into
+`assets/`; what a rename or delete does to them.
+
+Owner, 2026-11-13: closed as won't fix for now; the topic continues in #84 (Assets), which the owner has not thought through yet. Checked in the code: the renderer shows an image only for an `http` or `https` address (`crates/core/src/render.rs`), and the window's security rule allows images only from the web, the app or `data:` (`app/src-tauri/tauri.conf.json`, `img-src`); a local image shows its description as plain text.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one
