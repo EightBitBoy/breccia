@@ -189,9 +189,9 @@ Owner, 2026-11-13: kept as it is. Original note: other actions stay usable while
 Owner, 2026-11-13: closed. A few milliseconds, cosmetic, cleared by the next save; a fix would number messages across core, shell and frontend. Original note: a window of a few milliseconds remains between the saved-key filter and the frontend; the next save removes the notice.
 Accepted so far.
 
-## 34. A small list of renames is never cleared (Git sync)
+## 34. A small list of renames is never cleared (Git sync) (closed 2026-11-13: no such list found)
 
-Breccia remembers each page it renamed for the Git step and never forgets them (a few bytes per rename, until restart).
+Checked 2026-11-13: the Git engine keeps no rename list (Git finds renames itself at commit, `git diff -M`); the only rename memory is `JustRenamed` (`app/src/lib/followRename.ts`), which expires entries after 5 seconds and is cleared on a folder switch. Closed; reopen if a growing list is found. Original note: Breccia remembers each page it renamed for the Git step and never forgets them (a few bytes per rename, until restart).
 
 ## 35. Stricter SSH address check (Git sync) (won't fix, 2026-11-12)
 
