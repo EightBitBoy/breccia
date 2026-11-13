@@ -91,6 +91,15 @@ and cleared only by a recovery in `app/src-tauri/src/recovery.rs`), so the histo
 until the next good open. Clear it on a failed open and check what the session and the Git
 item show then.
 
+## 37. Git history dates in the user's language (Git sync) (closed 2026-11-13: part of #82)
+
+The time formats are written out in English, as in All pages; no locale is used.
+
+Owner, 2026-11-13: checked in the code, month and weekday names are written out in English everywhere dates are shown (Git history
+and its tooltip, journal day headings, All pages, Archive, the date picker, board cards), and the whole interface is
+English. Closed as part of the bigger question, #82.
+
+
 ## 40. Task-state boxes can show typed text in the wrong row (Settings and themes) (won't fix, 2026-11-12)
 
 Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to

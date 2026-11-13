@@ -120,7 +120,7 @@ Candidates for the next plan, to settle with the owner:
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md` holds the 52 open ones; the 29 closed ones are in
+- backlog items the owner picks (`docs/backlog.md` holds the 52 open ones; the 30 closed ones are in
   `docs/backlogged.md`);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
