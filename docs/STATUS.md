@@ -119,6 +119,13 @@ text is dropped, a refused paste says so, and the index repair names the real pr
 was cut from 81 to 24 open items (closed ones are in `docs/backlogged.md`), `docs/vocabulary.md` was added, and 29 tests
 were added (review items 91 to 102). The owner ticks those review items.
 
+Released 1.6.0 on 2026-11-13 (https://github.com/EightBitBoy/breccia/releases/tag/v1.6.0): web addresses typed into the text
+can be shown without `https://` and cut to 8 characters after the domain. Both are checkboxes in Settings, off by default,
+kept on this computer. Display only, in rendered blocks, cards and preambles; the block being edited shows the raw text.
+Settings got a "Themes" section (the theme picker) and "Appearance" now holds the link choices. Owner rulings: rendered
+view only, new section layout, both off, length fixed. Review item 103 asks whether the length should be adjustable and
+whether the editor should shorten too.
+
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
