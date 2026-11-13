@@ -149,9 +149,9 @@ Owner, 2026-11-13: closed. The cards show their done date and the spec states th
 Owner, 2026-11-13: open cards show `created 26 Oct` after the source (a finished card keeps its done day; a task without a `created::` line shows nothing extra). Original note: the Archive view shows when a task was created and how long it took; open cards show nothing. Decide whether cards
 should (the text is available to the card renderer).
 
-## 26. Boards need a stable identity (Boards)
+## 26. Boards need a stable identity (Boards) (won't fix, 2026-11-13)
 
-Boards have no id in `config.toml`, so hidden columns and Back steps follow a rename only when it is made in the board
+Owner, 2026-11-13: closed. A rename by hand or by a pull is rare and only costs hidden columns and a skipped Back step; an id would change the config format for a small gain. Original note: boards have no id in `config.toml`, so hidden columns and Back steps follow a rename only when it is made in the board
 dialog. A rename by hand or by a pull loses them, and a deleted board's hidden columns apply to a new board of the same
 name. Also prune the entries in `settings.json` of folders that no longer exist.
 
