@@ -207,7 +207,7 @@ export function checkVersions(found, tag) {
   return problems
 }
 
-export function bumpVersion(root, next) {
+export function bumpVersion(root, next, write = writeFileSync) {
   if (!SEMVER_RE.test(next)) throw new Error(`"${next}" is not a semantic version (X.Y.Z or X.Y.Z-pre)`)
   // Compute every file's new text first; write only when all of them worked.
   const pending = []
@@ -236,17 +236,18 @@ export function bumpVersion(root, next) {
     const top = swapTopVersion(text, next)
     return top === null ? null : swapLockRoot(top, next)
   })
-  // Write them one by one; if one write fails, put the originals of the files already written back.
+  // Write them one by one; if one write fails, put the originals back: of the files already written, and of the one
+  // that failed, which a full disk can leave half written.
   const written = []
   for (const [rel, out, original] of pending) {
     try {
-      writeFileSync(join(root, rel), out)
+      write(join(root, rel), out)
       written.push([rel, original])
     } catch (e) {
       const stuck = []
-      for (const [r, text] of written) {
+      for (const [r, text] of [...written, [rel, original]]) {
         try {
-          writeFileSync(join(root, r), text)
+          write(join(root, r), text)
         } catch {
           stuck.push(r)
         }

@@ -4,7 +4,7 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { createInterface } from 'node:readline'
 import { fileURLToPath } from 'node:url'
 import {
@@ -138,7 +138,8 @@ export function restoreFiles(kept, changelogPath, written, saveCopy = saveChange
           keepChangelog = true
           lines.push(
             `Your edited CHANGELOG.md could not be copied (${e.message}), so it was left as you edited it.`,
-            'git checkout -- CHANGELOG.md restores the committed one.',
+            // Names the repository, so it works from any folder.
+            `git -C "${dirname(changelogPath)}" checkout -- CHANGELOG.md restores the committed one.`,
           )
         }
       }

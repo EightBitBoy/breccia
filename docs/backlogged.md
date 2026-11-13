@@ -192,6 +192,15 @@ Only web images show; a local image shows its alt text. Recommended place: `asse
 Owner, 2026-11-13: closed as won't fix for now; the topic continues in #84 (Assets), which the owner has not thought through yet. Checked in the code: the renderer shows an image only for an `http` or `https` address (`crates/core/src/render.rs`), and the window's security rule allows images only from the web, the app or `data:` (`app/src-tauri/tauri.conf.json`, `img-src`); a local image shows its description as plain text.
 
 
+## 50. Release script rough edges (Release and build) (closed 2026-11-13: two fixed, one harmless)
+
+The hand-restore hint `git checkout -- CHANGELOG.md` depends on the current folder (print `git -C <repo>` or the full
+path); `just version` does not put back the one file whose own write failed (a partial write on a full disk); the
+release workflow can leave `release-notes.tmp` on the runner (harmless).
+
+Owner, 2026-11-13: decided one by one. (1) The undo's hand-restore hint now names the repository (`git -C "<folder>" checkout -- CHANGELOG.md`), so it works from any folder (`restoreFiles` in `app/scripts/release.mjs`). (2) `just version` now puts back the file whose own write failed as well, which a full disk can leave half written (`bumpVersion` in `app/scripts/version.mjs`, with a `write` parameter for the test). (3) A leftover `release-notes.tmp` on the CI runner: harmless, the runner is thrown away.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one

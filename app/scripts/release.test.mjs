@@ -220,7 +220,8 @@ describe('undo file part', () => {
       expect(text).toContain('could not be copied')
       expect(text).toContain('disk full')
       expect(text).toContain('left as you edited it')
-      expect(text).toContain('git checkout -- CHANGELOG.md')
+      // The hint works from any folder: it names the repository.
+      expect(text).toContain(`git -C "${d}" checkout -- CHANGELOG.md`)
     } finally {
       rmSync(d, { recursive: true, force: true })
     }

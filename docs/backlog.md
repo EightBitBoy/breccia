@@ -137,12 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 50. Release script rough edges (Release and build)
-
-The hand-restore hint `git checkout -- CHANGELOG.md` depends on the current folder (print `git -C <repo>` or the full
-path); `just version` does not put back the one file whose own write failed (a partial write on a full disk); the
-release workflow can leave `release-notes.tmp` on the runner (harmless).
-
 ## 51. An MSI installer, only if someone asks (Release and build)
 
 Only the per-user NSIS `.exe` installer ships. An MSI suits managed or company installs, but needs a second bundle

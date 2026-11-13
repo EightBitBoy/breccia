@@ -186,6 +186,23 @@ describe('bumpVersion', () => {
 })
 
 describe('release script hardening', () => {
+  it('a_write_that_fails_halfway_is_put_back_too', () => {
+    const root = makeRepo()
+    // The last file takes half its bytes and then the disk is full, once.
+    let full = false
+    const write = (path, text) => {
+      if (!full && path.endsWith('package-lock.json')) {
+        full = true
+        writeFileSync(path, String(text).slice(0, 10))
+        throw Object.assign(new Error('no space left'), { code: 'ENOSPC' })
+      }
+      writeFileSync(path, text)
+    }
+    expect(() => bumpVersion(root, '0.3.0', write)).toThrow('could not write app/package-lock.json')
+    expect(read(root, 'Cargo.toml')).toBe(CARGO)
+    expect(read(root, 'app/package.json')).toBe(PKG)
+    expect(read(root, 'app/package-lock.json')).toBe(PKG_LOCK)
+  })
   it('bumpVersion writes nothing when a later file fails', () => {
     const root = makeRepo({ 'app/package-lock.json': '{\n  "name": "x"\n}\n' })
     expect(() => bumpVersion(root, '0.2.0')).toThrow()
