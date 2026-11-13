@@ -122,15 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 43. Graph ideas for later (Graph)
-
-A small "neighbours of this page" graph in the page view, dragging and pinning dots, several saved arrangements,
-remembering filters, arrows and line weights, a global shortcut. The owner plans a graph rework later. Also for the
-rework (from #41): where a new page with no saved neighbour starts, so it does not land on a cluster (today a hash of its
-name inside the known area, `placeNodes` in `app/src/lib/graphLayout.ts`; "Re-arrange" fixes it). And from #42: lines
-between pages mentioned on the same journal day while journal pages are hidden (as an off-by-default filter, paler lines;
-a day with n pages adds n(n-1)/2 lines).
-
 ## 44. Checkbox tasks (Compatibility)
 
 Obsidian writes `- [ ]` and `- [x]`; Breccia reads only state keywords, so checkbox tasks stay plain text. Open: which
@@ -203,14 +194,6 @@ incomplete); the folder opens before the window shows, so a slow first open is a
 appears, with an "Opening..." state; Windows Defender adds about 8 ms per fresh file); the first background indexing
 step takes 100 to 120 ms against a 16 ms budget (one typing pause); typing during the first build was never measured
 with both threads running (`BRECCIA_TRACE=1`).
-
-## 56. The graph at 5,000 pages (Performance)
-
-Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one
-performance line not met). Profile the graph library's wheel-zoom animation first (its per-frame picking pass, a full
-re-process per step). The whole graph (about 2 MB) is resent on every outside change; the layout never settles and
-stops at 10 s; the graph code is larger than estimated and carries an unused helper. A few hundred pages are far below
-this.
 
 ## 57. Git work that can make typing wait (Performance)
 
@@ -312,3 +295,32 @@ core), and all texts (menus, buttons, notices, Settings) are English. Open: whet
 (and which, German first?); a translation system for the texts; dates shown through the system locale; typed dates in
 search (`12 Mar`, `yesterday`) understanding the same language as the shown ones; what the notes format keeps unchanged
 (state keywords, `created::` and `done::` lines, `[[YYYY-MM-DD]]` journal names never change with the language).
+
+## 83. Re-implement the graph feature (Graph)
+
+Owner, 2026-11-13: the owner does not use the graph at all at the moment, and plans to re-implement the feature later.
+Everything graph-related is collected here (it was #43 and #56, and the notes of #41 and #42); until a plan exists, the
+graph stays as it is. Spec: §7.11 (network view). To settle in the plan: which of these are wanted, and whether the
+existing view (sigma.js and graphology, ForceAtlas2 in a worker) is kept or replaced.
+
+**Ideas** (from #43, "Graph ideas for later"):
+- a small "neighbours of this page" graph in the page view (spec §7.11 says "later");
+- dragging and pinning dots;
+- several saved arrangements;
+- remembering the filters;
+- arrows and line weights;
+- a global shortcut.
+
+**From #41 (closed, folded in):** where a new page with no saved neighbour starts. Today `placeNodes`
+(`app/src/lib/graphLayout.ts`) puts it at a hash of its name inside the area the known dots occupy, so it can land on a
+cluster; "Re-arrange" fixes it.
+
+**From #42 (closed, folded in):** with "Hide journal pages" on (the default), pages mentioned on the same journal day are
+loose dots. Lines between them would be an off-by-default filter with paler lines; a day with n pages adds n(n-1)/2
+lines (10 pages: 45).
+
+**Performance** (from #56, "The graph at 5,000 pages"): dragging meets the 50-frames-per-second bar, wheel zoom does not
+(about 10 FPS, frames up to 670 ms; the one performance line not met). Profile the graph library's wheel-zoom animation
+first (its per-frame picking pass, a full re-process per step). The whole graph (about 2 MB) is resent on every outside
+change; the layout never settles and stops at 10 s; the graph code is larger than estimated and carries an unused
+helper. A few hundred pages are far below this. `just graph-scale` measures it.

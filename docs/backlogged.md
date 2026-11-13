@@ -132,25 +132,48 @@ silent: not true, the start-up open runs inside `with_session`, which recovers a
 Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to
 rows by position (never lost). Match them by keyword instead (`app/src/lib/settingsForm.ts`).
 
-## 41. New dots can land on a cluster (Graph) (closed 2026-11-13: folded into #43)
+## 41. New dots can land on a cluster (Graph) (closed 2026-11-13: folded into #43, then #83)
 
 A page with no saved neighbour can be placed on top of an existing group after reopening or a live change; "Re-arrange"
 fixes it. Waits for profiling.
 
 Owner, 2026-11-13: checked in `placeNodes` (`app/src/lib/graphLayout.ts`): a new page whose neighbours have no saved
 position is placed from a hash of its key inside the area the known dots occupy, so it can sit on a cluster; "Re-arrange"
-fixes it. Closed and folded into #43: the planned graph rework may replace the placement, so no change now.
+fixes it. Closed and folded into #43, then #83: the planned graph rework may replace the placement, so no change now.
 
 
-## 42. Decide: show links that exist only through journal days? (Graph) (closed 2026-11-13: folded into #43)
+## 42. Decide: show links that exist only through journal days? (Graph) (closed 2026-11-13: folded into #43, then #83)
 
 With journal pages hidden (the default), two pages mentioned on the same day show no line. If the graph looks too
 sparse, "lines between pages mentioned on the same day" is the candidate.
 
-Owner, 2026-11-13: folded into #43 (the graph rework). Explained and checked against spec §7.11: with "Hide journal pages"
+Owner, 2026-11-13: folded into #43, then #83 (the graph rework). Explained and checked against spec §7.11: with "Hide journal pages"
 on (the default), pages mentioned on one journal day are loose dots; unticking the filter shows the days and connects
 them. Lines between pages of the same day would add n(n-1)/2 weak lines per day (10 pages: 45), so it would need its own
 switch and paler lines.
+
+
+## 43. Graph ideas for later (Graph) (closed 2026-11-13: moved to #83)
+
+A small "neighbours of this page" graph in the page view, dragging and pinning dots, several saved arrangements,
+remembering filters, arrows and line weights, a global shortcut. The owner plans a graph rework later. Also for the
+rework (from #41): where a new page with no saved neighbour starts, so it does not land on a cluster (today a hash of its
+name inside the known area, `placeNodes` in `app/src/lib/graphLayout.ts`; "Re-arrange" fixes it). And from #42: lines
+between pages mentioned on the same journal day while journal pages are hidden (as an off-by-default filter, paler lines;
+a day with n pages adds n(n-1)/2 lines).
+
+Owner, 2026-11-13: moved to #83 (re-implement the graph feature); the owner does not use the graph at the moment.
+
+
+## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
+
+Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one
+performance line not met). Profile the graph library's wheel-zoom animation first (its per-frame picking pass, a full
+re-process per step). The whole graph (about 2 MB) is resent on every outside change; the layout never settles and
+stops at 10 s; the graph code is larger than estimated and carries an unused helper. A few hundred pages are far below
+this.
+
+Owner, 2026-11-13: moved to #83 (re-implement the graph feature); the owner does not use the graph at the moment.
 
 
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
