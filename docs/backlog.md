@@ -122,11 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 41. New dots can land on a cluster (Graph)
-
-A page with no saved neighbour can be placed on top of an existing group after reopening or a live change; "Re-arrange"
-fixes it. Waits for profiling.
-
 ## 42. Decide: show links that exist only through journal days? (Graph)
 
 With journal pages hidden (the default), two pages mentioned on the same day show no line. If the graph looks too
@@ -135,7 +130,9 @@ sparse, "lines between pages mentioned on the same day" is the candidate.
 ## 43. Graph ideas for later (Graph)
 
 A small "neighbours of this page" graph in the page view, dragging and pinning dots, several saved arrangements,
-remembering filters, arrows and line weights, a global shortcut. The owner plans a graph rework later.
+remembering filters, arrows and line weights, a global shortcut. The owner plans a graph rework later. Also for the
+rework (from #41): where a new page with no saved neighbour starts, so it does not land on a cluster (today a hash of its
+name inside the known area, `placeNodes` in `app/src/lib/graphLayout.ts`; "Re-arrange" fixes it).
 
 ## 44. Checkbox tasks (Compatibility)
 

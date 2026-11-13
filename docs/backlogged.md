@@ -132,6 +132,16 @@ silent: not true, the start-up open runs inside `with_session`, which recovers a
 Owner, 2026-11-12: closed. A file change already keeps each state's typing by keyword (`keepDrafts`); only `settleRows` (after Cancel or a rename answer) reads typing by row, and that differs only in the one render step before the boxes follow a reorder; nothing is lost or written. Original note: if a hand edit of `config.toml` reorders the states while a rename or Cancel is waiting, typed drafts are matched to
 rows by position (never lost). Match them by keyword instead (`app/src/lib/settingsForm.ts`).
 
+## 41. New dots can land on a cluster (Graph) (closed 2026-11-13: folded into #43)
+
+A page with no saved neighbour can be placed on top of an existing group after reopening or a live change; "Re-arrange"
+fixes it. Waits for profiling.
+
+Owner, 2026-11-13: checked in `placeNodes` (`app/src/lib/graphLayout.ts`): a new page whose neighbours have no saved
+position is placed from a hash of its key inside the area the known dots occupy, so it can sit on a cluster; "Re-arrange"
+fixes it. Closed and folded into #43: the planned graph rework may replace the placement, so no change now.
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain
