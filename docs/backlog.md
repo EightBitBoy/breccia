@@ -165,9 +165,9 @@ not at once.
 Owner, 2026-11-13: kept as it is; "Create page" is picked with the arrow keys. Original note: today Enter opens the first matching page, not "Create page", when the typed name does not exist exactly. The owner was
 to judge this while trying the app.
 
-## 29. The indexing status item can go missing (Search)
+## 29. The indexing status item can go missing (Search) (won't fix, 2026-11-13)
 
-In rare timings (a folder just opened, the first index message of a new folder, or an index loop ending just as a
+Owner, 2026-11-13: closed. Rare, only the progress label is affected, search works, and the timing cannot be reproduced to test a fix. Original note: in rare timings (a folder just opened, the first index message of a new folder, or an index loop ending just as a
 request arrives) the status bar does not show indexing progress until the next step. Search still works.
 
 ## 30. Search index repair messages (Search)
