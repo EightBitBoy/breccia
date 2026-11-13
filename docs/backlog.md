@@ -11,12 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 4. Menu keyboard edge cases (Editor)
-
-Enter does nothing while the slash menu is open and the editor is busy; the slash menu opens when the cursor is merely
-placed after `/x`; other keys do not clear an old selection; in two cases the link menu leaves the slash menu closed.
-Small polish; accepted so far (to check: which of these still happen).
-
 ## 6. "Keep mine" can resend old typed text (Editor)
 
 The record of typed text that "Keep mine" uses grows per block and may be resent after a change that was not typing

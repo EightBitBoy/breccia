@@ -29,6 +29,15 @@ user clicks elsewhere. Matters once non-Latin input is a goal. Accepted so far.
 Owner, 2026-11-13: closed for now. Only IME users are affected (Japanese, Chinese, Korean and similar), Latin keyboards are not. Checked: the editor ignores keys while composing (`blockEditor.ts`, `menu.ts`) but nothing commits a composition when a block is left, so an unconfirmed word is lost. A fix would commit it before the editor closes, and can only be verified with a real IME and a person to try it (the Node tests have none). Re-open once non-Latin input is a goal and someone can test it.
 
 
+## 4. Menu keyboard edge cases (Editor) (closed as accepted, 2026-11-13)
+
+Enter does nothing while the slash menu is open and the editor is busy; the slash menu opens when the cursor is merely
+placed after `/x`; other keys do not clear an old selection; in two cases the link menu leaves the slash menu closed.
+Small polish; accepted so far (to check: which of these still happen).
+
+Owner, 2026-11-13: closed as accepted. Checked in `app/src/editor/menu.ts`: (1) Enter while the editor is busy calls `choose`, which returns silently, so nothing happens until the next Enter; (2) any caret move refreshes the menu, so a caret placed after `/x` opens it (Esc dismisses it for that trigger); (3) an old selection that other keys do not clear and (4) the two cases where the link menu leaves the slash menu closed could not be found in the code. Reopen with a concrete case.
+
+
 ## 5. A paste can be dropped without a message (Editor) (done 2026-11-12, no plan)
 
 An outline paste that arrives at a bad moment (stale editor state) is ignored silently; the text stays on the
