@@ -149,12 +149,6 @@ Left: no test for the message when Git's own rebase abort fails (needs a fake `g
 `.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
 the separate push URL has one; the same fake `git`).
 
-## 68. End-to-end test limits (Tests)
-
-The end-to-end test runs only on Windows; the slash menu's date items use the real clock instead of the test clock, so
-a run across midnight can still fail; the Ctrl + mouse wheel zoom step failed once in five runs (stayed at 110 %): wait
-for the wheel to be handled before reading the status item; one step reuses another step's locator.
-
 ## 69. Missing end-to-end steps (Tests)
 
 A full app restart (hidden columns read back at start); the Git history's "No commits yet", "not pushed" mark and "Show

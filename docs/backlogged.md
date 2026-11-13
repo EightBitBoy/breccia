@@ -357,6 +357,15 @@ refuses its edit (no case could be built).
 Owner, 2026-11-13: 9 Vitest tests added, none changing code: the split followed by leaving the page sends the text typed at the cursor to the new block (`host.test.ts`), and the page flows beyond delete (`pageFlows.test.ts`): a new page in the folder of its row or at the top level, a new folder joined to its row's path, renaming a folder (the same name sends nothing) and a page (reach question first) and a tag, and a refused create and a refused rename as notices. Mutation-checked: breaking the folder of a new page, and the carry-over in `split.ts`, each turned a test red. Not feasible without a component or DOM harness, left as they were: Escape in the caret menus (a CodeMirror key handler in `menu.ts`, needs a DOM; the Node tests cannot press keys), the held page reload while editing (the wiring is in `App.svelte`; `WhenIdle` and `Refreshes` are tested in `external.test.ts`), the sidebar opening ancestors and folding (the logic is tested in `treeRows.test.ts`, the component is not), typing into one Settings box while another's change is refused (`StatesSection.svelte` has no harness), and the rollback when one page of a multi-page board drop refuses its edit (no case could be built). Reopen as part of a component test harness if one is ever added.
 
 
+## 68. End-to-end test limits (Tests) (closed 2026-11-13: one fixed, one stale, two left as facts)
+
+The end-to-end test runs only on Windows; the slash menu's date items use the real clock instead of the test clock, so
+a run across midnight can still fail; the Ctrl + mouse wheel zoom step failed once in five runs (stayed at 110 %): wait
+for the wheel to be handled before reading the status item; one step reuses another step's locator.
+
+Owner, 2026-11-13: (1) The end-to-end test runs only on Windows: a fact, kept in `docs/STATUS.md` and the Linux note (#53 in this file). (2) The slash menu's date items and the real clock: already handled, step 129 accepts each pairing of the two days across a midnight and checks the one on disk; every other step uses the one date fixed at the start (`BRECCIA_TODAY`). (3) The Ctrl and mouse-wheel zoom step (84) failed once in five runs: fixed in steps 84 and 132 by releasing Ctrl only after the zoom has happened, so the page can never handle the wheel without it; one e2e run passes (206 PASS lines), the flake is rare and not proven gone by repeated runs. (4) One step reusing another step's locator: not identified, no action.
+
+
 ## 71. Dev runs share the installed app's settings and notes folder (Tests) (done 2026-11-06, no plan: `just dev` part)
 
 Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:
