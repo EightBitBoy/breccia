@@ -79,9 +79,9 @@ const PKG_LOCK_T = `{
   }
 }
 `
-// A sample changelog: the cliff.toml header (as in CHANGELOG.md) plus a 0.1.0 entry.
 export const PKG = at(PKG_T, '0.1.0')
 export const PKG_LOCK = at(PKG_LOCK_T, '0.1.0')
+// A sample changelog: the cliff.toml header (as in CHANGELOG.md) plus a 0.1.0 entry.
 export const CHANGELOG = [
   '# Changelog',
   '',

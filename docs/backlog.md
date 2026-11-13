@@ -149,14 +149,6 @@ Left: no test for the message when Git's own rebase abort fails (needs a fake `g
 `.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
 the separate push URL has one; the same fake `git`).
 
-## 70. Test and code tidy-ups (Tests)
-
-An unused field in the link test helper (`app/src/lib/links.test.ts`); "go to day" repeats "open page" in
-`app/src/App.svelte`; `format_doc.rs` checks only two-word fence info strings for typos; the case check in
-`app/scripts/docs.test.mjs` walks from the drive root; `PKG` and `PKG_LOCK` in `app/scripts/fixtures.mjs` sit under the
-`CHANGELOG` comment; smaller review notes from the pages build were only kept in an old run log and not carried (to
-check: whether any are wanted).
-
 ## 81. Explain basic syntax in the help dialog (Docs)
 
 Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,

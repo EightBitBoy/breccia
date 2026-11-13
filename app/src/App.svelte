@@ -808,8 +808,7 @@
       await leaveMainView('feed')
       await journal.openAt(d.key)
     } else {
-      await closeCard()
-      await exec({ type: 'page.open', name: d.key })
+      await openPage(d.key)
     }
   }
 

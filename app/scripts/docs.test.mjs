@@ -41,9 +41,12 @@ function linkTargets(md) {
 // The path is normalised first, so `..` and `.` segments resolve before the case check.
 export function existsExactly(base, rel) {
   const full = resolve(base, rel)
-  const root = resolve(base).split(sep)[0] + sep
-  const parts = full.slice(root.length).split(sep).filter(Boolean)
-  let dir = root
+  // Inside the repository only its own part is checked: the folders above it are the machine's, not the docs'.
+  // Anything else is checked from the drive root.
+  const top = resolve(root)
+  const start = full === top || full.startsWith(top + sep) ? top + sep : resolve(base).split(sep)[0] + sep
+  const parts = full.slice(start.length).split(sep).filter(Boolean)
+  let dir = start
   for (const part of parts) {
     let names
     try {
@@ -89,6 +92,9 @@ describe('docs', () => {
     expect(existsExactly(root, 'Docs/format.md')).toBe(false)
     expect(existsExactly(root, 'docs/FORMAT.md')).toBe(false)
     expect(existsExactly(join(root, 'docs'), '../README.md')).toBe(true)
+    // Outside the repository the folders above it are checked too.
+    expect(existsExactly(root, '..')).toBe(true)
+    expect(existsExactly(root, '../../')).toBe(true)
     expect(existsExactly(join(root, 'docs'), '../README.MD')).toBe(false)
     expect(existsExactly(join(root, 'docs'), './format.md')).toBe(true)
     expect(existsExactly(root, 'docs/nope.md')).toBe(false)

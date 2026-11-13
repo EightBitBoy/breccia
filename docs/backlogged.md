@@ -375,6 +375,17 @@ by-hand checks only.
 Owner, 2026-11-13: closed. The four situations (a full app restart reading the hidden columns back, the Git history's "No commits yet", "not pushed" and "Show more", a folder switch clearing Back and Forward, a board renamed in its dialog being followed) keep their unit tests and by-hand checks; the e2e run is already about 5 minutes. If one is added later, a folder switch and a board rename are the cheapest, a restart needs a harness that can close and start the app inside one run.
 
 
+## 70. Test and code tidy-ups (Tests) (closed 2026-11-13: four done, two not actionable)
+
+An unused field in the link test helper (`app/src/lib/links.test.ts`); "go to day" repeats "open page" in
+`app/src/App.svelte`; `format_doc.rs` checks only two-word fence info strings for typos; the case check in
+`app/scripts/docs.test.mjs` walks from the drive root; `PKG` and `PKG_LOCK` in `app/scripts/fixtures.mjs` sit under the
+`CHANGELOG` comment; smaller review notes from the pages build were only kept in an old run log and not carried (to
+check: whether any are wanted).
+
+Owner, 2026-11-13: decided one by one. Done: (1) the unused `text` field and argument of the helper in `app/src/lib/links.test.ts` are gone; (2) `goToDay` in `app/src/App.svelte` reuses `openPage` (one e2e run, 206 PASS lines); (4) `existsExactly` in `app/scripts/docs.test.mjs` starts at the repository root instead of the drive root (a path outside it is still checked from the drive root, with a test); (5) the `CHANGELOG` comment in `app/scripts/fixtures.mjs` is now above `CHANGELOG`, not above `PKG` and `PKG_LOCK`. Not actionable: (3) `format_doc.rs` flags a misspelt two-word fence info string; a misspelling that leaves one word is an ordinary code fence the test cannot tell from an intended one; (6) the review notes of the pages build were in an old run log that is not in the repository, so they cannot be checked.
+
+
 ## 71. Dev runs share the installed app's settings and notes folder (Tests) (done 2026-11-06, no plan: `just dev` part)
 
 Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:
