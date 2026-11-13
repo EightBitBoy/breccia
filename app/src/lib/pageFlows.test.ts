@@ -174,3 +174,104 @@ test('a refused drop becomes a notice', async () => {
   expect(ran).toEqual([{ type: 'dir.rename', path: 'Other', to: 'Projects/Other' }, { type: 'folder.tree' }])
   expect(notices.map((n) => n.kind)).toEqual(['refused'])
 })
+
+function createSetup(fail: string | null = null) {
+  const ran: Command[] = []
+  const notices: Notice[] = []
+  const tree: TreeView = {
+    pages: [
+      { kind: 'folder', name: 'Projects', path: 'Projects', children: [{ kind: 'page', key: 'a', name: 'A' }] },
+    ],
+    journals: [],
+    tags: [],
+    version: 0,
+  }
+  const flows = new PageFlows({
+    run: async (cmd: Command) => {
+      ran.push(cmd)
+      if (cmd.type === fail) throw { code: 'pageExists', message: 'A page “Idea” already exists' }
+      return out()
+    },
+    tree: () => tree,
+    shown: () => null,
+    notify: (n) => notices.push(n),
+    home: async () => {},
+  })
+  return { flows, ran, notices }
+}
+
+const pageRow = { id: 'p:a', depth: 1, kind: 'page' as const, label: 'A', key: 'a' }
+
+test('a new page asks for a name and is made in the folder of the row it started on', async () => {
+  const { flows, ran } = createSetup()
+  flows.start('newPage', pageRow)
+  expect(flows.dialog).toMatchObject({ kind: 'name', title: 'New page', initial: '' })
+  flows.answer('Idea')
+  await settle()
+  expect(ran).toEqual([{ type: 'page.create', name: 'Idea', folder: 'Projects' }, { type: 'folder.tree' }])
+})
+
+test('a new page started in the empty tree area goes to the top level', async () => {
+  const { flows, ran } = createSetup()
+  flows.start('newPage', null)
+  flows.answer('Idea')
+  await settle()
+  expect(ran[0]).toEqual({ type: 'page.create', name: 'Idea', folder: '' })
+})
+
+test('a new folder joins the name to the folder of its row', async () => {
+  const { flows, ran } = createSetup()
+  flows.start('newFolder', { id: 'f:Projects', depth: 0, kind: 'folder', label: 'Projects', path: 'Projects' })
+  expect(flows.dialog).toMatchObject({ kind: 'name', title: 'New folder' })
+  flows.answer('2027')
+  await settle()
+  expect(ran[0]).toEqual({ type: 'dir.create', path: 'Projects/2027' })
+})
+
+test('renaming a folder offers its name, sends its sibling path, and the same name sends nothing', async () => {
+  const { flows, ran } = createSetup()
+  const row = { id: 'f:Projects/Old', depth: 1, kind: 'folder' as const, label: 'Old', path: 'Projects/Old' }
+  flows.start('rename', row)
+  expect(flows.dialog).toMatchObject({ kind: 'name', title: 'Rename folder', initial: 'Old' })
+  flows.answer('Old')
+  await settle()
+  expect(ran).toEqual([])
+  flows.start('rename', row)
+  flows.answer('New')
+  await settle()
+  expect(ran[0]).toEqual({ type: 'dir.rename', path: 'Projects/Old', to: 'Projects/New' })
+})
+
+test('renaming a page from its row asks for the reach first, then renames', async () => {
+  const { flows, ran } = createSetup()
+  flows.start('rename', pageRow)
+  expect(flows.dialog).toMatchObject({ kind: 'name', title: 'Rename page', initial: 'A' })
+  flows.answer('B')
+  await settle()
+  expect(ran.slice(0, 2)).toEqual([
+    { type: 'page.renameReach', key: 'a', name: 'B' },
+    { type: 'page.rename', key: 'a', name: 'B' },
+  ])
+})
+
+test('renaming a tag row says so', () => {
+  const { flows } = createSetup()
+  flows.start('rename', { id: 't:infra', depth: 0, kind: 'tag', label: 'infra', key: 'infra' })
+  expect(flows.dialog).toMatchObject({ kind: 'name', title: 'Rename tag', initial: 'infra' })
+})
+
+test('a refused page create is a notice, and the tree is fetched again', async () => {
+  const { flows, ran, notices } = createSetup('page.create')
+  flows.start('newPage', pageRow)
+  flows.answer('Idea')
+  await settle()
+  expect(notices).toEqual([{ kind: 'refused', message: 'A page “Idea” already exists' }])
+  expect(ran.map((c) => c.type)).toEqual(['page.create', 'folder.tree'])
+})
+
+test('a refused rename question is a notice and renames nothing', async () => {
+  const { flows, ran, notices } = createSetup('page.renameReach')
+  await flows.rename('a', 'A', 'B')
+  expect(notices.map((n) => n.kind)).toEqual(['refused'])
+  expect(ran.map((c) => c.type)).toEqual(['page.renameReach'])
+})

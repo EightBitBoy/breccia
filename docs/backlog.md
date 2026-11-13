@@ -137,13 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 66. App test gaps (Tests)
-
-Split followed by leaving the page sends the text at the cursor; page create, rename and delete flows beyond delete;
-the sidebar opening ancestors and folding; Escape in the menus and the held page reload; typing into one Settings box
-while another's change is refused (no component test harness); the rollback when one page of a multi-page board drop
-refuses its edit (no case could be built).
-
 ## 67. Git and release test gaps (Tests)
 
 No test for the message when Git's own rebase abort fails (needs a fake `git`); no test for a push that hangs (to check:

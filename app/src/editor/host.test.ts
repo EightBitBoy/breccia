@@ -227,6 +227,31 @@ test('a split whose new block is not shown sends the typed text there and trims 
   expect(host.editor!.ed.cursor16()).toBe(2)
 })
 
+test('a split followed by leaving the page sends the text typed at the cursor to the new block', async () => {
+  await host.edit(1, 2)
+  hooks.onAction('split', { cursor16: 2 })
+  const split = sent.find((c) => c.type === 'block.split')!
+  typed = []
+  // Typed while the split runs, then the user leaves before the answer arrives.
+  host.editor!.ed.insert('XY')
+  host.leave()
+  expect(host.editingId).toBeNull()
+  const out: Output = {
+    page: pageOf('p', [block(1, 'al'), block(8, 'pha')]),
+    focus: { id: 8, at: 0 },
+    notices: [],
+    folder: null,
+    config: null,
+    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
+  }
+  blocks = [block(1, 'al'), block(8, 'pha'), block(2, 'beta')]
+  host.apply(split, out, true)
+  await new Promise((r) => setTimeout(r, 0))
+  // What was typed at the split caret belongs to the new block, whose text follows it; the old block keeps its part.
+  expect(typed.filter((t) => t.id === 8)).toEqual([{ id: 8, text: 'XYpha' }])
+  expect(host.editingId).toBeNull()
+})
+
 test('Enter at the end of a reference root moves into the new block shown after it', async () => {
   const refs: RefsView = {
     key: 'a',
