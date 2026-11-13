@@ -209,6 +209,18 @@ target and a second file per release (and numeric pre-release versions).
 Owner, 2026-11-13: closed. Nobody has asked; an MSI would add a second bundle target and a second file to every release, and numeric-only versions. Re-open if an organisation wants managed installs (the per-user NSIS `.exe` stays the only installer).
 
 
+## 52. Automatic updates (Release and build) (won't fix, 2026-11-13)
+
+The installed app checks a small `latest.json` on start and from a "Check for updates" button, asks "Version X.Y.Z is
+available: Install / Later", downloads, checks the signature against a key built into the app, installs and restarts. A
+setting turns the check off (no network call the user did not want), and no update starts with unsaved text. Needs an
+update-signing key (a repository secret), the release workflow attaching signed files and `latest.json`, and public
+downloads: an installed app cannot download from a private repository, so this is blocked until the repository is
+public. The first version with the updater is installed by hand.
+
+Owner, 2026-11-13: closed. Updates stay manual: download the installer from the GitHub release page. The old blocker (a private repository) is gone, since the repository has been public since 1.0.0, so this can be re-opened as a plan: a signing key as a repository secret, signed update files and `latest.json` from the release workflow, the Tauri updater plugin, a setting to turn the check off, and no update with unsaved text.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one

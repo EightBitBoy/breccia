@@ -137,15 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 52. Automatic updates (Release and build)
-
-The installed app checks a small `latest.json` on start and from a "Check for updates" button, asks "Version X.Y.Z is
-available: Install / Later", downloads, checks the signature against a key built into the app, installs and restarts. A
-setting turns the check off (no network call the user did not want), and no update starts with unsaved text. Needs an
-update-signing key (a repository secret), the release workflow attaching signed files and `latest.json`, and public
-downloads: an installed app cannot download from a private repository, so this is blocked until the repository is
-public. The first version with the updater is installed by hand.
-
 ## 53. Linux is not verified (Release and build)
 
 The webview speed test passed only conditionally under WSLg (typing was marginal). Unix file permissions, fsync and
