@@ -2,6 +2,12 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.6.0] - 2026-11-13
+
+### Features
+
+- Links: web addresses can be shown without https:// and cut short, set in Settings
+
 ## [1.5.2] - 2026-11-13
 
 ### Features
