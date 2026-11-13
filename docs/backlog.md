@@ -144,9 +144,9 @@ add-on would fix it.
 
 Owner, 2026-11-13: closed. The cards show their done date and the spec states the order. Original note: a finished column shows no drop line because cards sort by done time. A short hint could say so.
 
-## 25. Created time on board cards (Boards)
+## 25. Created time on board cards (Boards) (done 2026-11-13, no plan)
 
-The Archive view shows when a task was created and how long it took; open cards show nothing. Decide whether cards
+Owner, 2026-11-13: open cards show `created 26 Oct` after the source (a finished card keeps its done day; a task without a `created::` line shows nothing extra). Original note: the Archive view shows when a task was created and how long it took; open cards show nothing. Decide whether cards
 should (the text is available to the card renderer).
 
 ## 26. Boards need a stable identity (Boards)

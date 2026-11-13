@@ -24,9 +24,10 @@ export function clip<T>(items: T[], n: number): { shown: T[]; more: number } {
   return { shown: items.slice(0, n), more: Math.max(0, items.length - n) }
 }
 
-/** `29 Oct 2026` or `29 Oct 2026 · ✓ 28 Oct`. */
+/** `29 Oct 2026`, `29 Oct 2026 · created 26 Oct` (open) or `29 Oct 2026 · ✓ 28 Oct` (finished). */
 export function sourceLine(card: CardView): string {
-  return card.done ? `${card.source} · ✓ ${card.done}` : card.source
+  if (card.done) return `${card.source} · ✓ ${card.done}`
+  return card.created ? `${card.source} · created ${card.created}` : card.source
 }
 
 /** `1/2 subtasks`, or null without subtasks. */

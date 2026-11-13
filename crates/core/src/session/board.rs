@@ -62,6 +62,8 @@ pub struct CardView {
     pub parent: Option<String>,
     /// The done date as `29 Oct`, for a finished state with one.
     pub done: Option<String>,
+    /// The day the task got its state as `26 Oct`, from `created::`, for a card that is not finished.
+    pub created: Option<String>,
 }
 
 /// A row of the Archive view (`archive.list`): an archived task.
@@ -249,6 +251,11 @@ fn collect(ws: &Workspace, page: &Page, columns: &mut [Column]) {
                 subtasks_total: counts[i].1,
                 parent: parent[i].map(|p| crumb(&with_state(blocks[p].text(), None, cfg))),
                 done: done.map(|d| day_short(d.date())),
+                created: if state.finished {
+                    None
+                } else {
+                    created_at(b.text()).map(|c| day_short(c.date()))
+                },
             },
             done,
             priority: if state.finished {

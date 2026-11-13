@@ -295,3 +295,8 @@ are its questions for you; each answer decides what a later plan does.
    slider by the board title), drag a card and hold it near the right edge of the window: the board scrolls sideways,
    faster the nearer the edge; the same at the left edge. Move away from the edge: it stops. Drop the card in a column
    that was off screen: it lands there. Is the speed right (not too fast, not too slow) and the edge zone (about 64 px)?
+
+97. [ ] **Created day on open cards (backlog #25):** on a board, an open card's grey bottom line now reads for example
+   `Release 2 · created 26 Oct` (a journal task: `29 Oct 2026 · created 26 Oct`). A finished card still shows only
+   `· ✓ 28 Oct`; a task without a `created::` line (made before version 5, or by another program) shows nothing extra.
+   Is the wording right ("created 26 Oct" or an age such as "3 days ago"), and is the line too long on narrow columns?

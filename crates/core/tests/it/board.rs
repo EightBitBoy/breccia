@@ -1031,3 +1031,23 @@ fn the_archive_lists_created_done_times_and_how_long_a_task_took() {
     assert_eq!(untimed["done"], "2026-08-01");
     assert_eq!(untimed["took"], serde_json::Value::Null);
 }
+
+#[test]
+fn an_open_card_carries_its_created_day() {
+    let t = tempfile::tempdir().unwrap();
+    put(
+        t.path(),
+        "pages/P.md",
+        "- TODO with\n  created:: 2026-10-26 09:30:00\n- TODO plain day\n  created:: 2026-10-27\n- TODO without\n- DONE finished\n  created:: 2026-10-20 08:00:00\n  done:: [[2026-10-28]] 10:00:00\n",
+    );
+    let mut s = open(t.path());
+    let b = board(&mut s, 0);
+    assert_eq!(card(&b, "TODO with").created.as_deref(), Some("26 Oct"));
+    assert_eq!(
+        card(&b, "TODO plain day").created.as_deref(),
+        Some("27 Oct")
+    );
+    assert_eq!(card(&b, "TODO without").created, None);
+    // A finished card shows its done day; the created day is for open cards.
+    assert_eq!(card(&b, "DONE finished").created, None);
+}

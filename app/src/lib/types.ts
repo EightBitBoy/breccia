@@ -102,6 +102,8 @@ export interface CardView {
   subtasksTotal: number
   parent: string | null
   done: string | null
+  /** The day the task got its state (`26 Oct`), for a card that is not finished; or null. */
+  created: string | null
 }
 
 export interface ColumnView {

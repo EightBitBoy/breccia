@@ -33,7 +33,7 @@ const pg = (key: string, blocks: BlockView[]): PageView => ({
 })
 const card = (blocks: BlockView[]): CardView => ({
   id: blocks[0]?.id ?? 1, page: 'p', pageName: 'P', pageKind: 'page', source: 'P', html: '', blocks,
-  subtasksDone: 0, subtasksTotal: 0, parent: null, done: null,
+  subtasksDone: 0, subtasksTotal: 0, parent: null, done: null, created: null,
 })
 const refsOf = (key: string, blocks: BlockView[]): RefsView => ({
   key, count: 1, groups: [{ page: key, title: key, kind: 'page', refs: [{ crumbs: [], blocks }] }],
@@ -51,6 +51,9 @@ test('clip keeps n items and counts the rest', () => {
 test('source line and subtask hint', () => {
   expect(sourceLine({ ...card([]), source: '29 Oct 2026', done: '28 Oct' })).toBe('29 Oct 2026 · ✓ 28 Oct')
   expect(sourceLine({ ...card([]), source: 'P', done: null })).toBe('P')
+  expect(sourceLine({ ...card([]), source: 'Release 2', created: '26 Oct' })).toBe('Release 2 · created 26 Oct')
+  // A finished card shows its done day, not the created one.
+  expect(sourceLine({ ...card([]), source: 'P', done: '28 Oct', created: '26 Oct' })).toBe('P · ✓ 28 Oct')
   expect(subtaskHint({ ...card([]), subtasksDone: 1, subtasksTotal: 2 })).toBe('1/2 subtasks')
   expect(subtaskHint({ ...card([]), subtasksDone: 0, subtasksTotal: 0 })).toBeNull()
 })
