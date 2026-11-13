@@ -121,6 +121,7 @@ export class EditorHost {
   /** Runs a command. Its output is applied by `apply`; `handled` may claim an error code. */
   exec(cmd: Command, handled?: (code: string | null) => boolean): Promise<void> {
     this.issuedFrom.set(cmd, this.editingId)
+    this.forgetTyped(cmd)
     const lock = kindOf(cmd.type) === 'text' && this.mounted !== null
     if (lock) this.setLocks(1)
     return this.env.client
@@ -134,6 +135,26 @@ export class EditorHost {
       .finally(() => {
         if (lock) return this.stepping.then(() => this.setLocks(-1))
       })
+  }
+
+  /**
+   * A command that changes a block's text without typing (undo, redo, a state change) makes what was typed into it
+   * stale: "Keep mine" must not send it back. An undo or redo names no block, so every block's is forgotten.
+   */
+  private forgetTyped(cmd: Command) {
+    switch (cmd.type) {
+      case 'history.undo':
+      case 'history.redo':
+        this.typed.clear()
+        break
+      case 'blocks.setState':
+        for (const id of cmd.ids) this.typed.delete(id)
+        break
+      case 'block.cycleState':
+      case 'block.stepState':
+        this.typed.delete(cmd.id)
+        break
+    }
   }
 
   private setLocks(delta: number) {

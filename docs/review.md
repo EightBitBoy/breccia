@@ -317,3 +317,8 @@ are its questions for you; each answer decides what a later plan does.
    everywhere else, **linked-only** and **tag-only** as two different things, and **notes folder** (the open folder)
    versus **folder** (a folder of the page tree). Say which to change. Nothing in the app was changed; bringing texts
    in line would be a later step, only for the words you confirm.
+
+101. [ ] **Keep mine after an undo (backlog #6):** edit a block, change the same note in another editor and save, so the
+   "changed on disk" notice appears; type something into the block, press `Ctrl Z` to undo it, then press "Keep mine" on the
+   notice. The undone text must not come back. The same with `Ctrl Enter` (a state change) instead of the undo. Rare to
+   reproduce by hand; it is covered by unit tests.

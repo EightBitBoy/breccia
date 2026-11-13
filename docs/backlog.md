@@ -11,12 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 6. "Keep mine" can resend old typed text (Editor)
-
-The record of typed text that "Keep mine" uses grows per block and may be resent after a change that was not typing
-(undo, cycling a state). It is cleared when the page is switched. (to check: whether growth and the stale resend still
-happen, in `app/src/editor/host.svelte.ts`.)
-
 ## 8. Small rendering flaws (Editor)
 
 A finished task whose link spans two lines is crossed out unevenly; the done chip and properties are placed by

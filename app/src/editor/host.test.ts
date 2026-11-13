@@ -461,6 +461,32 @@ test('Keep mine after leaving the block sends the text typed since the notice, n
   expect(sent).toEqual([{ type: 'block.setText', id: 1, text: 'alpha!?' }])
 })
 
+for (const cmd of [
+  { type: 'history.undo', page: 'p' },
+  { type: 'history.redo', page: 'p' },
+  { type: 'blocks.setState', ids: [1], keyword: 'TODO' },
+  { type: 'block.cycleState', id: 1 },
+  { type: 'block.stepState', id: 1 },
+] as Command[]) {
+  test(`Keep mine does not resend typing that ${cmd.type} has replaced`, async () => {
+    await host.edit(1, 5)
+    const since = host.typingMark()
+    host.editor!.ed.insert('!') // typed after the notice
+    void host.exec(cmd) // changes the block's text without typing
+    host.leave()
+    const run = client.run
+    client.run = (c) => (sent.push(c), Promise.resolve(out(null)))
+    try {
+      await host.resolveConflict(1, 'alpha', false, since)
+    } finally {
+      client.run = run
+    }
+    // The notice's own text goes back, not the typing the command made stale.
+    expect(sent.filter((c) => c.type === 'block.setText')).toEqual([{ type: 'block.setText', id: 1, text: 'alpha' }])
+  })
+}
+
+
 test('Keep mine sends the snapshot when nothing was typed since the notice', async () => {
   await host.edit(1, 5)
   host.editor!.ed.insert('!')

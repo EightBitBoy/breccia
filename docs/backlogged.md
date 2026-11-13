@@ -43,6 +43,15 @@ Owner, 2026-11-13: closed as accepted. Checked in `app/src/editor/menu.ts`: (1) 
 An outline paste that arrives at a bad moment (stale editor state) is ignored silently; the text stays on the
 clipboard. Show a notice, as the other dropped-paste case does.
 
+## 6. "Keep mine" can resend old typed text (Editor) (done 2026-11-13: stale typing forgotten)
+
+The record of typed text that "Keep mine" uses grows per block and may be resent after a change that was not typing
+(undo, cycling a state). It is cleared when the page is switched. (to check: whether growth and the stale resend still
+happen, in `app/src/editor/host.svelte.ts`.)
+
+Owner, 2026-11-13: fixed. The editor host (`forgetTyped` in `app/src/editor/host.svelte.ts`) now forgets a block's remembered typing when undo, redo or a state change replaces it, so "Keep mine" sends the notice's own text and not text the user had undone. Five tests (one per command), each red before the fix; one e2e run, 206 PASS lines. The list holds one entry per block edited and is cleared with a folder switch, so its size was never a problem.
+
+
 ## 7. Email links in angle brackets do not link (Editor) (done 2026-11-12, no plan)
 
 `<name@example.com>` shows as plain text instead of a mail link. The renderer accepts only http, https and mailto
