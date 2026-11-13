@@ -165,6 +165,16 @@ a day with n pages adds n(n-1)/2 lines).
 Owner, 2026-11-13: moved to #83 (re-implement the graph feature); the owner does not use the graph at the moment.
 
 
+## 44. Checkbox tasks (Compatibility) (won't fix, 2026-11-13)
+
+Obsidian writes `- [ ]` and `- [x]`; Breccia reads only state keywords, so checkbox tasks stay plain text. Open: which
+states they map to; whether Breccia ever writes checkboxes (for example when such a task is dragged on a board) or
+rewrites them as keywords (never without the user's consent).
+
+Owner, 2026-11-13: closed as won't fix. Breccia stays keyword-only: Obsidian's `- [ ]` and `- [x]` stay plain text, are not
+read as states and are never written.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one

@@ -122,12 +122,6 @@ open on one of the changed pages; the undo request is sent only from the editor.
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
-## 44. Checkbox tasks (Compatibility)
-
-Obsidian writes `- [ ]` and `- [x]`; Breccia reads only state keywords, so checkbox tasks stay plain text. Open: which
-states they map to; whether Breccia ever writes checkboxes (for example when such a task is dragged on a board) or
-rewrites them as keywords (never without the user's consent).
-
 ## 45. Notes outside `pages/` and `journals/` (Compatibility)
 
 An Obsidian vault keeps notes anywhere. Open: the page tree's root; where new pages go; how journals are found
