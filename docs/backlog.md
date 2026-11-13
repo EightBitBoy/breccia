@@ -160,9 +160,9 @@ name. Also prune the entries in `settings.json` of folders that no longer exist.
 Owner, 2026-11-13: closed. They archive by themselves within the hour, and archiving right after a pull would touch the "file changed on disk" safeguard and cause extra Git commits. Original note: a finished task older than the archive limit that arrives by a hand edit or a pull is archived on the next hourly run,
 not at once.
 
-## 28. Decide: should Enter in search create the page? (Search)
+## 28. Decide: should Enter in search create the page? (Search) (decided 2026-11-13: keep as it is)
 
-Today Enter opens the first matching page, not "Create page", when the typed name does not exist exactly. The owner was
+Owner, 2026-11-13: kept as it is; "Create page" is picked with the arrow keys. Original note: today Enter opens the first matching page, not "Create page", when the typed name does not exist exactly. The owner was
 to judge this while trying the app.
 
 ## 29. The indexing status item can go missing (Search)
