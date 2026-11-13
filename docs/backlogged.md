@@ -201,6 +201,14 @@ release workflow can leave `release-notes.tmp` on the runner (harmless).
 Owner, 2026-11-13: decided one by one. (1) The undo's hand-restore hint now names the repository (`git -C "<folder>" checkout -- CHANGELOG.md`), so it works from any folder (`restoreFiles` in `app/scripts/release.mjs`). (2) `just version` now puts back the file whose own write failed as well, which a full disk can leave half written (`bumpVersion` in `app/scripts/version.mjs`, with a `write` parameter for the test). (3) A leftover `release-notes.tmp` on the CI runner: harmless, the runner is thrown away.
 
 
+## 51. An MSI installer, only if someone asks (Release and build) (won't fix for now, 2026-11-13)
+
+Only the per-user NSIS `.exe` installer ships. An MSI suits managed or company installs, but needs a second bundle
+target and a second file per release (and numeric pre-release versions).
+
+Owner, 2026-11-13: closed. Nobody has asked; an MSI would add a second bundle target and a second file to every release, and numeric-only versions. Re-open if an organisation wants managed installs (the per-user NSIS `.exe` stays the only installer).
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one

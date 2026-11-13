@@ -137,11 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 51. An MSI installer, only if someone asks (Release and build)
-
-Only the per-user NSIS `.exe` installer ships. An MSI suits managed or company installs, but needs a second bundle
-target and a second file per release (and numeric pre-release versions).
-
 ## 52. Automatic updates (Release and build)
 
 The installed app checks a small `latest.json` on start and from a "Check for updates" button, asks "Version X.Y.Z is
