@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-11. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-13. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -110,6 +110,14 @@ is not changed (a later Settings save of that section writes the default over it
 planned wording, the notice list only (no line in Settings), one notice per key, only that key replaced, a Settings
 save may write the default. A wrong type (`"5"`) still refuses the file. The owner checks review item 89; open
 follow-ups are in the plan's follow-ups file.
+
+Released 1.5.2 on 2026-11-13 (https://github.com/EightBitBoy/breccia/releases/tag/v1.5.2): a backlog round without a plan. New:
+a card dragged to the window edge scrolls the board sideways, and open cards show the day the task was created. Fixed:
+an email in angle brackets links, keys typed right after Ctrl Enter are kept, an older sidebar page list no longer wins,
+"Keep mine" no longer brings back undone text, a half-written config is read again, a hidden byte-order mark in pasted
+text is dropped, a refused paste says so, and the index repair names the real problem. Also in that round: the backlog
+was cut from 81 to 24 open items (closed ones are in `docs/backlogged.md`), `docs/vocabulary.md` was added, and 29 tests
+were added (review items 91 to 102). The owner ticks those review items.
 
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
