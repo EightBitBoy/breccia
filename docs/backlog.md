@@ -11,11 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 3. Unfinished IME input is lost when clicking away (Editor)
-
-Text being composed with an input method (Japanese, Chinese, some keyboards) and not yet committed disappears when the
-user clicks elsewhere. Matters once non-Latin input is a goal. Accepted so far.
-
 ## 4. Menu keyboard edge cases (Editor)
 
 Enter does nothing while the slash menu is open and the editor is busy; the slash menu opens when the cursor is merely

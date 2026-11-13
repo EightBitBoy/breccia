@@ -21,6 +21,14 @@ After `Ctrl Enter`, `Ctrl Shift Enter` or a state picked from the slash menu, th
 answers, and anything typed in that moment disappears. Queue those keys, as a block split already does
 (`app/src/editor/split.ts`), or keep the editor editable (`app/src/editor/host.svelte.ts`).
 
+## 3. Unfinished IME input is lost when clicking away (Editor) (won't fix for now, 2026-11-13)
+
+Text being composed with an input method (Japanese, Chinese, some keyboards) and not yet committed disappears when the
+user clicks elsewhere. Matters once non-Latin input is a goal. Accepted so far.
+
+Owner, 2026-11-13: closed for now. Only IME users are affected (Japanese, Chinese, Korean and similar), Latin keyboards are not. Checked: the editor ignores keys while composing (`blockEditor.ts`, `menu.ts`) but nothing commits a composition when a block is left, so an unconfirmed word is lost. A fix would commit it before the editor closes, and can only be verified with a real IME and a person to try it (the Node tests have none). Re-open once non-Latin input is a goal and someone can test it.
+
+
 ## 5. A paste can be dropped without a message (Editor) (done 2026-11-12, no plan)
 
 An outline paste that arrives at a bad moment (stale editor state) is ignored silently; the text stays on the
