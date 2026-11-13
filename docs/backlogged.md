@@ -175,6 +175,14 @@ Owner, 2026-11-13: closed as won't fix. Breccia stays keyword-only: Obsidian's `
 read as states and are never written.
 
 
+## 45. Notes outside `pages/` and `journals/` (Compatibility) (won't fix, 2026-11-13)
+
+An Obsidian vault keeps notes anywhere. Open: the page tree's root; where new pages go; how journals are found
+elsewhere; whether this is a per-folder setting.
+
+Owner, 2026-11-13: closed as won't fix. Breccia keeps its own layout (`journals/` and `pages/`): a top-level `.md` file or another folder is ignored, as the format reference says. An Obsidian vault can be copied into `pages/` by hand. Supporting any layout would change where every file operation puts things.
+
+
 ## 56. The graph at 5,000 pages (Performance) (closed 2026-11-13: moved to #83)
 
 Dragging meets the 50-frames-per-second bar, wheel zoom does not (about 10 FPS, frames up to 670 ms; the one
