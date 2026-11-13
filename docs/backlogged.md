@@ -308,6 +308,13 @@ to show the chip, change what `app/e2e/screenshots.mjs` frames (scroll the journ
 Owner, 2026-11-13: the screenshots stay as they are. The demo data has `created::` lines and done times, so the chip shows in the app; the README images do not show it (the journal image ends above the finished task on 27 Oct), and the README text explains the chip. To show it later, change what `app/e2e/screenshots.mjs` frames (scroll the journal to 27 Oct) and run `just screenshots`.
 
 
+## 62. Long lines in the format reference (Docs) (closed 2026-11-13: one line fixed)
+
+`docs/format.md` has a few lines over 120 characters in code examples and tables (to check: not re-counted).
+
+Owner, 2026-11-13: only line 522 was rewrapped, the paragraph made long by the `<name@example.com>` sentence of 12 Nov. The other long lines stay: 8 older prose lines (16, 132, 431, 485, 552, 553, 573, 605 at the time) and the table rows, which cannot wrap.
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain

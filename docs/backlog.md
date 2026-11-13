@@ -137,10 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 62. Long lines in the format reference (Docs)
-
-`docs/format.md` has a few lines over 120 characters in code examples and tables (to check: not re-counted).
-
 ## 63. A fixed vocabulary (Docs)
 
 One glossary (for example `docs/vocabulary.md`): each term, a one-line meaning, where it shows up (page, journal day,
