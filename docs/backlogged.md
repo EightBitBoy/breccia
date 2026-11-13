@@ -295,6 +295,19 @@ Enter (split) trims spaces at the join, and "Keep mine" overwriting onto a non-U
 Owner, 2026-11-13: the two behaviours are now written as doc comments, no behaviour change: `Document::split` (`crates/core/src/edit.rs`) drops the spaces and tabs at the join on purpose, and `Workspace::save_overwrite` (`crates/core/src/workspace/mod.rs`) replaces whatever is at the path, even a file that is no longer valid UTF-8, and fails with the system's error on a folder (checked with a scratch test).
 
 
+## 61. Show the created time in the demo and screenshots (Docs) (demo done 2026-11-12; screenshots left) (demo done 2026-11-12; screenshots won't fix, 2026-11-13)
+
+`docs/demo/` has no `created::` lines, so the README screenshots never show "after N days" on a done chip. Add some and
+retake the screenshots (`just screenshots`).
+
+Update 2026-11-12 (#61): the three finished tasks in `docs/demo/` now have `created::` lines and done times, so the
+chip reads "after 7 days" and so on in the app. The README screenshots still do not show it: the journal image ends
+above the one finished task (27 Oct), and board cards show only the done date. Retaking them would change nothing;
+to show the chip, change what `app/e2e/screenshots.mjs` frames (scroll the journal to 27 Oct).
+
+Owner, 2026-11-13: the screenshots stay as they are. The demo data has `created::` lines and done times, so the chip shows in the app; the README images do not show it (the journal image ends above the finished task on 27 Oct), and the README text explains the chip. To show it later, change what `app/e2e/screenshots.mjs` frames (scroll the journal to 27 Oct) and run `just screenshots`.
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain

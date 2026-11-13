@@ -137,16 +137,6 @@ would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
-## 61. Show the created time in the demo and screenshots (Docs) (demo done 2026-11-12; screenshots left)
-
-`docs/demo/` has no `created::` lines, so the README screenshots never show "after N days" on a done chip. Add some and
-retake the screenshots (`just screenshots`).
-
-Update 2026-11-12 (#61): the three finished tasks in `docs/demo/` now have `created::` lines and done times, so the
-chip reads "after 7 days" and so on in the app. The README screenshots still do not show it: the journal image ends
-above the one finished task (27 Oct), and board cards show only the done date. Retaking them would change nothing;
-to show the chip, change what `app/e2e/screenshots.mjs` frames (scroll the journal to 27 Oct).
-
 ## 62. Long lines in the format reference (Docs)
 
 `docs/format.md` has a few lines over 120 characters in code examples and tables (to check: not re-counted).
