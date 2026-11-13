@@ -366,6 +366,15 @@ for the wheel to be handled before reading the status item; one step reuses anot
 Owner, 2026-11-13: (1) The end-to-end test runs only on Windows: a fact, kept in `docs/STATUS.md` and the Linux note (#53 in this file). (2) The slash menu's date items and the real clock: already handled, step 129 accepts each pairing of the two days across a midnight and checks the one on disk; every other step uses the one date fixed at the start (`BRECCIA_TODAY`). (3) The Ctrl and mouse-wheel zoom step (84) failed once in five runs: fixed in steps 84 and 132 by releasing Ctrl only after the zoom has happened, so the page can never handle the wheel without it; one e2e run passes (206 PASS lines), the flake is rare and not proven gone by repeated runs. (4) One step reusing another step's locator: not identified, no action.
 
 
+## 69. Missing end-to-end steps (Tests) (closed as accepted, 2026-11-13)
+
+A full app restart (hidden columns read back at start); the Git history's "No commits yet", "not pushed" mark and "Show
+more"; a folder switch clearing Back/Forward; a board renamed in its dialog being followed. All have unit tests or
+by-hand checks only.
+
+Owner, 2026-11-13: closed. The four situations (a full app restart reading the hidden columns back, the Git history's "No commits yet", "not pushed" and "Show more", a folder switch clearing Back and Forward, a board renamed in its dialog being followed) keep their unit tests and by-hand checks; the e2e run is already about 5 minutes. If one is added later, a folder switch and a board rename are the cheapest, a restart needs a harness that can close and start the app inside one run.
+
+
 ## 71. Dev runs share the installed app's settings and notes folder (Tests) (done 2026-11-06, no plan: `just dev` part)
 
 Asked by the owner on 2026-11-06: can a test run clash with the installed Breccia used for real notes? Findings:

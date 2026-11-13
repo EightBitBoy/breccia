@@ -149,12 +149,6 @@ Left: no test for the message when Git's own rebase abort fails (needs a fake `g
 `.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
 the separate push URL has one; the same fake `git`).
 
-## 69. Missing end-to-end steps (Tests)
-
-A full app restart (hidden columns read back at start); the Git history's "No commits yet", "not pushed" mark and "Show
-more"; a folder switch clearing Back/Forward; a board renamed in its dialog being followed. All have unit tests or
-by-hand checks only.
-
 ## 70. Test and code tidy-ups (Tests)
 
 An unused field in the link test helper (`app/src/lib/links.test.ts`); "go to day" repeats "open page" in
