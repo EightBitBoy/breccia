@@ -264,18 +264,22 @@ impl IndexState {
         self.index = None;
         let file = self.file.take();
         let mut fresh = None;
+        // Why the repair itself failed (the delete, or opening the new file), when it did.
+        let mut failed = None;
         if let Some(file) = file.filter(|_| !self.rebuilt) {
             self.rebuilt = true;
-            if remove_index_files(&file).is_ok()
-                && let Ok(index) = SearchIndex::open(&file)
-            {
-                fresh = Some(index);
-                self.file = Some(file);
+            match remove_index_files(&file).and_then(|()| SearchIndex::open(&file)) {
+                Ok(index) => {
+                    fresh = Some(index);
+                    self.file = Some(file);
+                }
+                Err(e) => failed = Some(e),
             }
         }
         if fresh.is_none() {
             fresh = SearchIndex::in_memory().ok();
-            self.warning = Some(cannot_store(cause));
+            // The failed repair is the news; without one (a second damage), the damage is.
+            self.warning = Some(cannot_store(failed.as_ref().unwrap_or(cause)));
         }
         self.index = fresh;
         self.pending.clear();

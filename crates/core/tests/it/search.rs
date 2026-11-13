@@ -688,3 +688,31 @@ fn query_link_to_an_unknown_page_keeps_its_key() {
     assert_eq!(both.len(), 1, "{both:?}");
     assert!(both[0].contains("three"), "{both:?}");
 }
+
+#[test]
+fn a_repair_that_cannot_delete_the_file_names_that_failure() {
+    let t = tempfile::tempdir().unwrap();
+    let cache = tempfile::tempdir().unwrap();
+    put(t.path(), "pages/P.md", "- a zebra\n");
+    let (mut s, _) = open_cached(&t, cache.path());
+    assert_eq!(hits(&search(&mut s, "zebra")).len(), 1);
+
+    // The delete of the damaged index fails: a directory stands where a companion file would be.
+    let file = index_file(cache.path());
+    let mut blocker = file.clone().into_os_string();
+    blocker.push("-journal");
+    fs::create_dir(&blocker).unwrap();
+    break_schema(&file);
+
+    let out = query_out(&mut s, "zebra");
+    let warnings = load_warnings(&out);
+    assert_eq!(warnings.len(), 1, "{:?}", out.notices);
+    assert!(warnings[0].contains("cannot be stored"), "{}", warnings[0]);
+    // It names the failed delete, not the damage that started the repair.
+    assert!(
+        !warnings[0].contains("not a database") && !warnings[0].contains("malformed"),
+        "{}",
+        warnings[0]
+    );
+    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+}

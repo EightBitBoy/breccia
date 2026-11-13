@@ -170,9 +170,9 @@ to judge this while trying the app.
 Owner, 2026-11-13: closed. Rare, only the progress label is affected, search works, and the timing cannot be reproduced to test a fix. Original note: in rare timings (a folder just opened, the first index message of a new folder, or an index loop ending just as a
 request arrives) the status bar does not show indexing progress until the next step. Search still works.
 
-## 30. Search index repair messages (Search)
+## 30. Search index repair messages (Search) (wording done 2026-11-13; the rest left open)
 
-When a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
+Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
 the file until the next start. Wording, code comments and progress counts only.
 
 ## 31. Link filters in search are paired by position (Search) (done 2026-11-11, plan 9)

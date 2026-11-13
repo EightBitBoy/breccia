@@ -300,3 +300,7 @@ are its questions for you; each answer decides what a later plan does.
    `Release 2 · created 26 Oct` (a journal task: `29 Oct 2026 · created 26 Oct`). A finished card still shows only
    `· ✓ 28 Oct`; a task without a `created::` line (made before version 5, or by another program) shows nothing extra.
    Is the wording right ("created 26 Oct" or an age such as "3 days ago"), and is the line too long on narrow columns?
+
+98. [ ] **Index repair warning (backlog #30):** when Breccia finds the search index damaged and cannot delete or reopen
+   the file, the warning "the search index cannot be stored (...)" now names that failure (for example a file that is
+   in use), not the damage that started the repair. It is only unit-tested: no need to try to provoke it.
