@@ -142,6 +142,17 @@ position is placed from a hash of its key inside the area the known dots occupy,
 fixes it. Closed and folded into #43: the planned graph rework may replace the placement, so no change now.
 
 
+## 42. Decide: show links that exist only through journal days? (Graph) (closed 2026-11-13: folded into #43)
+
+With journal pages hidden (the default), two pages mentioned on the same day show no line. If the graph looks too
+sparse, "lines between pages mentioned on the same day" is the candidate.
+
+Owner, 2026-11-13: folded into #43 (the graph rework). Explained and checked against spec §7.11: with "Hide journal pages"
+on (the default), pages mentioned on one journal day are loose dots; unticking the filter shows the days and connects
+them. Lines between pages of the same day would add n(n-1)/2 weak lines per day (10 pages: 45), so it would need its own
+switch and paler lines.
+
+
 ## 64. A GitHub Pages site (Docs) (done 2026-11-09, plan 5)
 
 After the repository is public (Pages needs a paid plan before that). A `site/` folder published by a workflow, plain
