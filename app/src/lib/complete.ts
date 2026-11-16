@@ -59,10 +59,15 @@ function linkable(name: string): boolean {
 }
 
 /**
- * The menu for `query`: the best `limit` names, then "Create page" unless a name
- * is exactly the query. Names the link syntax cannot hold are never offered.
+ * The menu for `query`: the best `limit` names, then "Create page" ("New tag" for a tag)
+ * unless a name is exactly the query. Names the link syntax cannot hold are never offered.
  */
-export function completions(names: NameView[], query: string, limit = 8): CompletionItem[] {
+export function completions(
+  names: NameView[],
+  query: string,
+  limit = 8,
+  kind: 'page' | 'tag' = 'page',
+): CompletionItem[] {
   const q = query.trim()
   const byKey = (a: NameView, b: NameView) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
   const offered = names.filter((n) => linkable(n.name))
@@ -75,7 +80,8 @@ export function completions(names: NameView[], query: string, limit = 8): Comple
     .map((r) => pageItem(r.n))
   const lower = q.toLowerCase()
   if (!linkable(q) || names.some((n) => n.key === lower)) return ranked
-  return [...ranked, { kind: 'create', name: q, label: `Create page “${q}”` }]
+  const label = kind === 'tag' ? `New tag “${q}”` : `Create page “${q}”`
+  return [...ranked, { kind: 'create', name: q, label }]
 }
 
 function pageItem(n: NameView): CompletionItem {

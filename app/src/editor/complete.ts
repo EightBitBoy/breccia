@@ -1,5 +1,5 @@
-// The `[[` and `#` autocomplete: a caret-menu source that offers page names for
-// the link or tag being typed, and writes the chosen one (or a new name) as a link.
+// The `[[` and `#` autocomplete: a caret-menu source that offers page names for a
+// link and the existing tags for a tag, and writes the chosen one (or a new name).
 import { EditorSelection } from '@codemirror/state'
 import { completions, linkQuery, linkText, type CompletionItem } from '../lib/complete'
 import type { NameView } from '../lib/types'
@@ -10,8 +10,14 @@ export interface LinkMenuQuery extends MenuQuery {
   query: string
 }
 
-/** `fetchNames` lists the pages (`pages.list`); it runs once per opening of the menu. */
-export function linkSource(fetchNames: () => Promise<NameView[]>): MenuSource<CompletionItem, LinkMenuQuery> {
+/**
+ * `fetchNames` lists the pages (`pages.list`); it runs once per opening of the `[[` menu.
+ * `tags` lists the names used as `#tag` (the sidebar's Tags); the `#` menu offers only those.
+ */
+export function linkSource(
+  fetchNames: () => Promise<NameView[]>,
+  tags: () => NameView[] = () => [],
+): MenuSource<CompletionItem, LinkMenuQuery> {
   let fetched: Promise<NameView[]> | null = null
   let names: NameView[] | null = null
 
@@ -21,6 +27,7 @@ export function linkSource(fetchNames: () => Promise<NameView[]>): MenuSource<Co
       return q && { start: q.from, end: q.to, key: `${q.kind}:${q.query}`, kind: q.kind, query: q.query }
     },
     items(q) {
+      if (q.kind === 'tag') return completions(tags(), q.query, 8, 'tag')
       if (names) return completions(names, q.query)
       if (!fetched) {
         const p: Promise<NameView[]> = fetchNames().then((list) => {

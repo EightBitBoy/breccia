@@ -60,3 +60,7 @@ test('linkText writes safe tag syntax', () => {
   expect(linkText('tag', 'Project X')).toBe('#[[Project X]]')
   expect(linkText('tag', 'a.b')).toBe('#[[a.b]]')
 })
+
+test('the create item of a tag menu is a new tag', () => {
+  expect(completions([], 'zz', 8, 'tag')).toEqual([{ kind: 'create', name: 'zz', label: 'New tag “zz”' }])
+})

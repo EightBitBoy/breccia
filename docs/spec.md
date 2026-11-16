@@ -229,7 +229,8 @@ second click on the Git history button is Back.
   `Ctrl Y` undo / redo, also across block boundaries (splits, merges, moves).
 - Blocks with children have a fold arrow; folding is remembered per block for the session. *(my call: Logseq writes
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
-- **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` does the same for tags.
+- **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` lists only the existing
+  tags (the sidebar's Tags, fuzzy) and offers "new tag"; other pages are not offered.
 - **Slash menu:** `/` at the start of a word opens a menu with every configured state (`/todo`, `/waiting`, …), "link
   to page", "Today" and "Yesterday" (a link to that journal day; "date" finds both) and "Date…", which opens the date
   picker at the sidebar and inserts the picked day as a `[[YYYY-MM-DD]]` link at the caret; the three date entries

@@ -231,6 +231,7 @@
       order: (id) => walkOrder(editable(), folded, id),
       pageOf: (id) => editablePageOf(editable(), id),
       states: () => states,
+      tags: () => (tree?.tags ?? []).map((t) => ({ key: t.key, name: t.name, exists: !t.linkedOnly })),
       notify: (n) => notify(n),
       showMenu: (which, m) => (which === 'link' ? (linkMenu = m) : (slashMenu = m)),
       pickDate: (onpick) => {

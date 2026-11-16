@@ -335,3 +335,10 @@ are its questions for you; each answer decides what a later plan does.
    Clicking still opens the whole address, the block you edit shows the whole text, and the file is unchanged. Only a bare address is
    changed, not `[text](url)` or a mail link. The length (8 characters after the domain) is fixed. Question: should the number be a setting, and should it also apply
    inside the block being edited?
+
+## Tag autocomplete
+
+104. [ ] **`#` lists only tags:** type `#` in a block: the menu lists only names already used as a tag (the sidebar's
+   "Tags"), no longer every page. A page that has never been used as a tag is not offered; typing its name ends with
+   "New tag “…”", which writes the tag as before. `[[` still lists all pages. My call: the last item now reads "New tag"
+   instead of "Create page", since choosing it only writes the tag. Journal days are never offered after `#`.

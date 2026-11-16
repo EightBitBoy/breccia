@@ -479,11 +479,28 @@ try {
   const afterStep11 = `${afterStep8}- see [[Project X]]\n`
   await expectFile('11 link autocomplete picks Project X', afterStep11, journal)
 
-  // 12: tag autocomplete
-  await kb.type(' #ann')
-  await linkMenu.waitFor()
+  const waitFor = async (what, fn, want, timeout = 10_000) => {
+    const end = Date.now() + timeout
+    let got = await fn()
+    while (JSON.stringify(got) !== JSON.stringify(want) && Date.now() < end) {
+      await sleep(100)
+      got = await fn()
+    }
+    assert(JSON.stringify(got) === JSON.stringify(want), `${what}: ${JSON.stringify(got)}`)
+  }
+  // 12: tag autocomplete offers only tags: the page Anna is no tag yet, so `#Anna` is a new tag
+  const menuItems = () => linkMenu.locator('.slash-item').allInnerTexts()
+  await kb.type(' #Anna')
+  await waitFor('12 # offers no pages', async () => (await menuItems()).join('|'), 'New tag “Anna”')
   await kb.press('Enter')
-  await expectFile('12 tag autocomplete picks Anna', `${afterStep11.trimEnd()} #Anna\n`, journal)
+  await expectFile('12 a new tag is written', `${afterStep11.trimEnd()} #Anna\n`, journal)
+  // Now it is a tag (the sidebar lists it), so `#` offers it.
+  await side.locator('[data-row="t:anna"]').waitFor()
+  await kb.type(' #an')
+  await waitFor('12 # offers the tag Anna', async () => (await menuItems())[0], 'Anna')
+  await kb.press('Escape')
+  for (let i = 0; i < 4; i++) await kb.press('Backspace')
+  await expectFile('12 tag autocomplete leaves the text', `${afterStep11.trimEnd()} #Anna\n`, journal)
   await kb.press('Escape')
 
   // 13: navigate the tree to the page; its linked reference shows the block
@@ -639,15 +656,6 @@ try {
   assert(iy >= 0 && iy < ib && ib < io, `revived day order: ${order.slice(0, 6)}`)
   console.log('PASS 24 revived day appears between its neighbours')
 
-  const waitFor = async (what, fn, want, timeout = 10_000) => {
-    const end = Date.now() + timeout
-    let got = await fn()
-    while (JSON.stringify(got) !== JSON.stringify(want) && Date.now() < end) {
-      await sleep(100)
-      got = await fn()
-    }
-    assert(JSON.stringify(got) === JSON.stringify(want), `${what}: ${JSON.stringify(got)}`)
-  }
   const releaseFile = join(folder, 'pages', 'Release plan.md')
   const releaseText = (write, update, archived = false) =>
     `- TODO Release version 2\n\t- ${write} Write release notes\n\t- ${update} Update the changelog\n\t  done:: [[${older}]]\n${archived ? `\t  archived:: ${archived}\n` : ''}\t- Check with [[Anna]] about the date\n`

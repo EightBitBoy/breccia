@@ -52,3 +52,24 @@ test('create writes the typed name as a tag', () => {
   src.apply(w as unknown as EditorView, src.query('#[[two wo', '')!, { kind: 'create', name: 'two wo', label: '' })
   expect(w.state.doc.toString()).toBe('#[[two wo]]')
 })
+
+test('# offers only tags, never other pages, and fetches no page names', async () => {
+  let fetches = 0
+  const pages: NameView[] = [...names, { key: 'pro tips', name: 'Pro tips', exists: true }]
+  const tags: NameView[] = [{ key: 'progress', name: 'progress', exists: false }]
+  const src = linkSource(
+    () => (fetches++, Promise.resolve(pages)),
+    () => tags,
+  )
+  expect(await src.items(src.query('a #pro', '')!)).toEqual([
+    { kind: 'page', name: 'progress', label: 'progress' },
+    { kind: 'create', name: 'pro', label: 'New tag “pro”' },
+  ])
+  expect(await src.items(src.query('#[[pro', '')!)).toEqual([
+    { kind: 'page', name: 'progress', label: 'progress' },
+    { kind: 'create', name: 'pro', label: 'New tag “pro”' },
+  ])
+  expect(fetches).toBe(0)
+  expect(await src.items(src.query('[[pro', '')!)).toHaveLength(3)
+  expect(fetches).toBe(1)
+})

@@ -29,6 +29,8 @@ export interface EditorEnv {
   /** The page key a block belongs to, for undo/redo; null if unknown. */
   pageOf(id: BlockId): string | null
   states(): StateView[]
+  /** The names used as `#tag` (the sidebar's Tags), offered by the `#` completion. */
+  tags?(): NameView[]
   notify(n: Notice): void
   /** Draws a caret menu (the slash menu or the link completion), or hides it with null. */
   showMenu(which: CaretMenuKind, m: MenuView | null): void
@@ -449,7 +451,10 @@ export class EditorHost {
     this.destroyEditor()
     const canApply = () => this.locks === 0 && this.splitting === null
     // Link completion goes first: while it has the caret, the slash menu stays closed.
-    const link = createCaretMenu(linkSource(() => this.pageNames()), {
+    const link = createCaretMenu(linkSource(
+      () => this.pageNames(),
+      () => this.env.tags?.() ?? [],
+    ), {
       show: (m) => this.env.showMenu('link', m),
       canApply,
     })
