@@ -12,7 +12,7 @@
 
 use std::collections::BTreeSet;
 
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub(super) struct Changes {
     tree_version: u64,
     link_version: u64,

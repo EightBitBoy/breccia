@@ -92,7 +92,7 @@ pub fn parse_color(value: &str) -> Option<PageColor> {
     if !word.eq_ignore_ascii_case("hue") {
         return None;
     }
-    let hue = u16::try_from(bounded_number(num, 359)?).ok()?;
+    let hue = u16::try_from(bounded_number(num, 359)?).expect("bounded to 359 above");
     let vivid = match (words.next(), words.next(), words.next()) {
         (None, ..) => DEFAULT_VIVID,
         (Some(w), Some(v), None) if w.eq_ignore_ascii_case("vivid") => {
@@ -100,7 +100,7 @@ pub fn parse_color(value: &str) -> Option<PageColor> {
             if v < u32::from(MIN_VIVID) {
                 return None;
             }
-            u8::try_from(v).ok()?
+            u8::try_from(v).expect("bounded to 200 above")
         }
         _ => return None,
     };
