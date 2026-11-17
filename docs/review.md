@@ -343,3 +343,7 @@ are its questions for you; each answer decides what a later plan does.
    "New tag “#…”", which writes the tag as before. `[[` still lists all pages. Each tag is shown as it is written:
    `#budget`, or `#[[two words]]` for a name with spaces. My call: the last item now reads "New tag" instead of "Create
    page", since choosing it only writes the tag. Journal days are never offered after `#`.
+
+105. [ ] **Appearance section, tidied:** in Settings > Appearance the two checkboxes ("Hide https://…" and "Shorten long
+   web addresses…") now sit one above the other, styled like the Git section's checkbox, and the "This computer only…"
+   note above them is gone. The Themes and Keyboard sections keep their own short "This computer only" notes.

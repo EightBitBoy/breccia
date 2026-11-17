@@ -5,11 +5,7 @@
   let { onchange }: { onchange: (hideScheme: boolean, shorten: boolean) => void } = $props()
 </script>
 
-<p class="settings-hint">
-  This computer only: how a web address in the text is shown. The text in the file and the link's target do not
-  change, and the block you are editing shows the whole address.
-</p>
-<label class="tog">
+<label class="settings-field">
   <input
     type="checkbox"
     data-testid="hide-link-scheme"
@@ -18,7 +14,7 @@
   />
   Hide https:// in web addresses
 </label>
-<label class="tog">
+<label class="settings-field">
   <input
     type="checkbox"
     data-testid="shorten-links"
