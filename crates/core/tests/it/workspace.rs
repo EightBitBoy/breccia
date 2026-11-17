@@ -988,6 +988,22 @@ const OPEN_ROWS: &[(&str, bool, &[&str], &[&str], &[(&str, &str)])] = &[
     ("a.md", false, &[], &[], &[]),
 ];
 
+/// A warning's variant name, matched exhaustively so a new variant needs a name here.
+fn warning_kind(w: &LoadWarning) -> &'static str {
+    match w {
+        LoadWarning::NotUtf8(_) => "NotUtf8",
+        LoadWarning::BadJournalName(_) => "BadJournalName",
+        LoadWarning::NonUnicodeName(_) => "NonUnicodeName",
+        LoadWarning::LinkedFolder(_) => "LinkedFolder",
+        LoadWarning::ExtensionCase(_) => "ExtensionCase",
+        LoadWarning::Unreadable { .. } => "Unreadable",
+        LoadWarning::InvalidName(_) => "InvalidName",
+        LoadWarning::DuplicatePage { .. } => "DuplicatePage",
+        LoadWarning::AliasIsName { .. } => "AliasIsName",
+        LoadWarning::DuplicateAlias { .. } => "DuplicateAlias",
+    }
+}
+
 #[test]
 fn open_table() {
     for &(rel, is_dir, keys, folders, warnings) in OPEN_ROWS {
@@ -1006,9 +1022,10 @@ fn open_table() {
         let got_warn: Vec<(String, String)> = warn
             .iter()
             .map(|w| {
-                let kind = format!("{w:?}");
-                let kind = kind.split(['(', ' ']).next().unwrap().to_string();
-                (kind, w.path().to_string_lossy().replace('\\', "/"))
+                (
+                    warning_kind(w).to_string(),
+                    w.path().to_string_lossy().replace('\\', "/"),
+                )
             })
             .collect();
         let want_warn: Vec<(String, String)> = warnings

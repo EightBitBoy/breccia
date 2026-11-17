@@ -836,10 +836,16 @@ fn check_states_reports_the_first_state_first() {
 #[test]
 fn parse_and_check_states_agree_on_keywords() {
     let d = Config::default().states;
-    let cases: [(&[&str], &str); 3] = [
-        (&["bad word"], "InvalidKeyword"),
-        (&[""], "InvalidKeyword"),
-        (&["TODO", "TODO"], "DuplicateState"),
+    let cases: [(&[&str], ConfigError); 3] = [
+        (
+            &["bad word"],
+            ConfigError::InvalidKeyword("bad word".into()),
+        ),
+        (&[""], ConfigError::InvalidKeyword(String::new())),
+        (
+            &["TODO", "TODO"],
+            ConfigError::DuplicateState("TODO".into()),
+        ),
     ];
     for (kws, want) in cases {
         let text: String = kws
@@ -847,10 +853,20 @@ fn parse_and_check_states_agree_on_keywords() {
             .map(|k| format!("[[states]]\nkeyword = \"{k}\"\ncolor = \"grey\"\n"))
             .collect();
         let states: Vec<State> = kws.iter().map(|k| st(k, "grey", false, false)).collect();
-        let a = format!("{:?}", Config::parse(&text).unwrap_err());
-        let b = format!("{:?}", Config::check_states(&states, &d).unwrap_err());
-        assert!(a.starts_with(want), "{a}");
-        assert!(b.starts_with(want), "{b}");
+        let a = Config::parse(&text).unwrap_err();
+        let b = Config::check_states(&states, &d).unwrap_err();
+        // `ConfigError` is not `PartialEq` (it holds an `io::Error`): the display text carries the
+        // payload, and the discriminant the variant.
+        assert_eq!(a.to_string(), want.to_string());
+        assert_eq!(b.to_string(), want.to_string());
+        assert!(
+            std::mem::discriminant(&a) == std::mem::discriminant(&want),
+            "{a:?}"
+        );
+        assert!(
+            std::mem::discriminant(&b) == std::mem::discriminant(&want),
+            "{b:?}"
+        );
     }
 }
 
