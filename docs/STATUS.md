@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-13. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-17. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -34,6 +34,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 9 | Core housekeeping (from the audit) | done 2026-11-11 | `docs/plans/2026-11-11-09-core-housekeeping.md` | `docs/plans/2026-11-11-09-core-housekeeping-followups.md` |
 | 10 | The changelog inside the app | done 2026-11-11 | `docs/plans/2026-11-11-10-changelog-in-app.md` | `docs/plans/2026-11-11-10-changelog-in-app-followups.md` |
 | 11 | Out-of-range values in config.toml | done 2026-11-11 | `docs/plans/2026-11-11-11-config-out-of-range-values.md` | `docs/plans/2026-11-11-11-config-out-of-range-values-followups.md` |
+| 12 | Open follow-ups of plans 1 to 11 | in progress (approved 2026-11-17) | `docs/plans/2026-11-17-12-open-followups.md` | |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -134,7 +135,11 @@ A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audi
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
 
-Candidates for the next plan, to settle with the owner:
+Plan 12 (open follow-ups of plans 1 to 11) is in progress: approved 2026-11-17 with the owner's answers to Q1 to Q6 in
+the plan's "Owner decisions"; ledger `.superpowers/sdd/2026-11-17-12-open-followups/progress.md`. Commit only, no push
+(owner).
+
+Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
