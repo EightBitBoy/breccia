@@ -55,8 +55,11 @@ describe('ci workflow', () => {
     }
   })
 
-  it('runs_on_every_branch_push_and_pull_request', () => {
+  it('runs_on_every_branch_push_and_on_pull_requests_from_forks_only', () => {
     expect(yml).toMatch(/^on:\n  push:\n    branches:\n      - '\*\*'\n  pull_request:\n/m)
+    expect(yml).toContain(
+      "    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork\n",
+    )
   })
 
   it('reads_only', () => {
@@ -65,7 +68,9 @@ describe('ci workflow', () => {
   })
 
   it('cancels_a_superseded_run', () => {
-    expect(yml).toMatch(/^concurrency:\n  group: ci-\$\{\{ github\.ref \}\}\n  cancel-in-progress: true\n/m)
+    expect(yml).toContain(
+      "concurrency:\n  group: ci-${{ github.ref }}\n  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}\n",
+    )
   })
 
   it('runs_the_release_build_steps_up_to_lint', () => {
@@ -81,7 +86,8 @@ describe('ci workflow', () => {
       '          node app/scripts/version.mjs check\n' +
       '          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }\n'
     const ci = buildSteps(yml)
-    expect(ci).toEqual(expected)
+    expect(ci.length, 'the CI job has a different number of steps than the release build up to Lint').toBe(expected.length)
+    ci.forEach((step, i) => expect(step, `CI step ${i + 1}: ${expected[i].split('\n')[0]}`).toEqual(expected[i]))
     for (const s of ci) expect(s).not.toContain('just bundle')
   })
 

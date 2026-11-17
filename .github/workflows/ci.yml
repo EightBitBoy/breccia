@@ -11,10 +11,11 @@ permissions:
 
 concurrency:
   group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build:
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.fork
     runs-on: windows-latest
     timeout-minutes: 60
     defaults:
