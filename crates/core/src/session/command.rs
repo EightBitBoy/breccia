@@ -278,7 +278,8 @@ pub enum CommandKind {
     /// Only reads (or writes the cache): the run of typing goes on across it.
     Query,
     /// Sent by the app itself, not by the user: the run goes on unless the
-    /// command changed what the user sees (`files.changed`).
+    /// command changed what the user sees (`files.changed`). `archive.auto`
+    /// writes (it archives old finished tasks) and still keeps the run.
     Background,
 }
 

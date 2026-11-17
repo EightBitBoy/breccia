@@ -2356,24 +2356,46 @@ fn page_show_finds_a_page_opened_without_a_file() {
 }
 
 /// `a`, typed to `ab` at ms 0, then `step` at ms 100, then `abc` at ms 500,
-/// then one undo: the page text the undo leaves.
-fn undo_after_keystrokes_around(step: Value) -> String {
-    let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
+/// then one undo: the page text the undo leaves, and the error code `step`
+/// was answered with (none when it succeeded).
+fn keystrokes_around(step: Value) -> (String, Option<String>) {
+    keystrokes_around_in(
+        &[(
+            "pages/P.md",
+            "- a
+",
+        )],
+        step,
+    )
+    .1
+}
+
+/// The same with the notes `files` (page `p` must be among them): the folder
+/// and the result.
+fn keystrokes_around_in(
+    files: &[(&str, &str)],
+    step: Value,
+) -> (TempDir, (String, Option<String>)) {
+    let (t, mut s) = folder(files);
     let id = ids(&mut s, "p")[0];
     ok(
         &mut s,
         json!({"type": "block.setText", "id": id, "text": "ab"}),
         0,
     );
-    // A query may be answered with an error (no such board); the run goes on.
-    let _ = cmd(&mut s, step, 100);
+    let answer = cmd(&mut s, step, 100).err().map(|e| e.code.to_string());
     ok(
         &mut s,
         json!({"type": "block.setText", "id": id, "text": "abc"}),
         500,
     );
     ok(&mut s, json!({"type": "history.undo", "page": "p"}), 600);
-    read(&t, "pages/P.md")
+    let text = read(&t, "pages/P.md");
+    (t, (text, answer))
+}
+
+fn undo_after_keystrokes_around(step: Value) -> String {
+    keystrokes_around(step).0
 }
 
 #[test]
@@ -2387,16 +2409,72 @@ fn a_query_between_two_keystrokes_keeps_one_undo_step() {
         json!({"type": "states.usage"}),
         json!({"type": "session.dirty"}),
         json!({"type": "graph.get"}),
+        json!({"type": "graph.saveLayout", "positions": []}),
         json!({"type": "journal.feed"}),
+        json!({"type": "journal.day", "key": "2026-01-01"}),
+        json!({"type": "search.query", "text": "a"}),
+        json!({"type": "archive.list"}),
         json!({"type": "folder.tree"}),
         json!({"type": "folder.status"}),
         json!({"type": "page.refs", "key": "p"}),
         json!({"type": "page.renameReach", "key": "p", "name": "Q"}),
         json!({"type": "pages.table"}),
     ];
+    // Every query is tried; the failures are reported together. A query that
+    // is answered with an error never reaches its success path, so it proves
+    // less: that counts as a failure too.
+    let mut failures = Vec::new();
     for q in queries {
-        assert_eq!(undo_after_keystrokes_around(q.clone()), "- a\n", "{q}");
+        let (text, answer) = keystrokes_around(q.clone());
+        if text
+            != "- a
+"
+        {
+            failures.push(format!("{q}: undo left {text:?}"));
+        }
+        if let Some(code) = answer {
+            failures.push(format!("{q}: answered with the error {code}"));
+        }
     }
+    assert!(
+        failures.is_empty(),
+        "{}",
+        failures.join(
+            "
+"
+        )
+    );
+}
+
+/// `archive.auto` is sent by the app and writes (it archives old finished
+/// tasks), yet it leaves the typing run alone.
+#[test]
+fn an_archive_run_between_two_keystrokes_keeps_one_undo_step() {
+    let files = [
+        (
+            "pages/P.md",
+            "- a
+",
+        ),
+        (
+            "pages/Q.md",
+            "- DONE old
+  done:: [[2020-01-01]]
+",
+        ),
+    ];
+    let (t, (text, answer)) = keystrokes_around_in(&files, json!({"type": "archive.auto"}));
+    assert_eq!(answer, None);
+    assert!(
+        read(&t, "pages/Q.md").contains("archived::"),
+        "the run must have written: {}",
+        read(&t, "pages/Q.md")
+    );
+    assert_eq!(
+        text,
+        "- a
+"
+    );
 }
 
 #[test]
