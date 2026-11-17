@@ -715,3 +715,43 @@ fn setting_the_state_a_task_already_has_keeps_every_byte() {
         assert_eq!(d.render(), src, "{src:?}");
     }
 }
+
+#[test]
+fn an_empty_valued_property_line_is_kept() {
+    // `priority::` with no value is the user's text: a state change touches only the state word...
+    assert_eq!(
+        apply(
+            "- TODO a
+  priority::
+",
+            0,
+            Some("DOING")
+        ),
+        "- DOING a
+  priority::
+"
+    );
+    // ...and giving a plain block its first state adds only `created::`, after the property lines.
+    assert_eq!(
+        apply(
+            "- a
+  priority::
+",
+            0,
+            Some("TODO")
+        ),
+        "- TODO a
+  priority::
+  created:: 2026-10-29 14:05:09
+"
+    );
+}
+
+#[test]
+fn crlf_properties_are_read() {
+    let at = |t: &str| created_at(t).map(|t| t.to_string());
+    assert_eq!(
+        at("TODO x\r\ncreated:: 2026-11-04 09:12:30\r\n").as_deref(),
+        Some("2026-11-04 09:12:30")
+    );
+}
