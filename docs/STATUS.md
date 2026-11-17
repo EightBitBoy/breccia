@@ -131,6 +131,11 @@ Released 1.7.0 on 2026-11-17 (https://github.com/EightBitBoy/breccia/releases/ta
 checkboxes are stacked without the note (105); a third one, "Trim the trailing slash", shows a web address without a
 `/` at the end, trimmed before shortening (106).
 
+Released 1.7.1 on 2026-11-17 (https://github.com/EightBitBoy/breccia/releases/tag/v1.7.1): plan 12's fixes (the log
+masks a Git password with `/`, `?` or `#` and is kept when it cannot be moved aside; a press on a slider's knob keeps
+the color; joining a block onto a task keeps its `created::` and `done::` lines, and a refused join says why; the
+caret after `Ctrl Shift K` stops before a task's property lines; a changelog link without text shows its address).
+
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
