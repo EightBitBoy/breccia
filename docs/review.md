@@ -346,4 +346,4 @@ are its questions for you; each answer decides what a later plan does.
 
 105. [ ] **Appearance section, tidied:** in Settings > Appearance the two checkboxes ("Hide https://…" and "Shorten long
    web addresses…") now sit one above the other, styled like the Git section's checkbox, and the "This computer only…"
-   note above them is gone. The Themes and Keyboard sections keep their own short "This computer only" notes.
+   note above them is gone. The Themes and Journal sections keep their own short "This computer only" notes.
