@@ -2,6 +2,15 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.7.0] - 2026-11-17
+
+### Features
+
+- Tags: typing # lists only existing tags, not every page
+- Tags: the # menu shows each tag with its #, as it is written
+- Settings: the web address options sit one above the other, without the note
+- Links: web addresses can be shown without a trailing slash, set in Settings
+
 ## [1.6.0] - 2026-11-13
 
 ### Features
