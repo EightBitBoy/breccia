@@ -3,6 +3,7 @@ import { THEMES, THEME_CHOICES, applyTheme, parseTheme, storedTheme, windowTheme
 import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
 import {
   CUSTOM_CHROMA,
+  CUSTOM_DL,
   customShade,
   hueTrack,
   readThemeTokens,
@@ -308,10 +309,8 @@ test('custom shades: pinned values', () => {
 })
 
 test('every custom hue is readable in every theme', () => {
-  const lowest: string[] = []
   for (const s of THEME_SELECTORS) {
     const t = tokensOf(s)
-    let min = t.wash
     for (let h = 0; h < 360; h++) {
       const r = customShade(h, t)
       expect(r.shade, `${s} hue ${h}`).toMatch(/^#[0-9a-f]{6}$/)
@@ -320,12 +319,8 @@ test('every custom hue is readable in every theme', () => {
       expect(contrast(t.link, r.wash), `${s} hue ${h} link`).toBeGreaterThanOrEqual(3)
       expect(contrast(t.tag, r.wash), `${s} hue ${h} tag`).toBeGreaterThanOrEqual(3)
       expect(r.strength, `${s} hue ${h} strength`).toBeLessThanOrEqual(t.wash)
-      min = Math.min(min, r.strength)
     }
-    lowest.push(`${Math.round(min * 100)}/${Math.round(t.wash * 100)}`)
   }
-  // lowest wash strength needed / the theme's strength, in theme order (for re-tuning; no bar)
-  console.info(`custom hue lowest wash strength per theme: ${lowest.join(' ')}`)
 })
 
 test('custom shades step down only when needed', () => {
@@ -430,14 +425,14 @@ test('every vividness is readable in every theme', () => {
         expect(contrast(t.link, r.wash), `${at} link`).toBeGreaterThanOrEqual(3)
         expect(contrast(t.tag, r.wash), `${at} tag`).toBeGreaterThanOrEqual(3)
         expect(r.strength, `${at} strength`).toBeLessThanOrEqual(T)
-        const gamut = ruleShade(t.l, CUSTOM_CHROMA * t.cs * (v / DEFAULT_VIVID), h).chroma
+        const gamut = ruleShade(t.l + CUSTOM_DL * t.ds, CUSTOM_CHROMA * t.cs * (v / DEFAULT_VIVID), h).chroma
         expect(r.limited, `${at} limited`).toBe(r.strength < T || r.chroma < gamut)
         if (v <= 100) expect(r.limited, `${at} limited at or below 100`).toBe(false)
       }
     }
   }
   // Over 200,000 shades: about 2 s alone, over 5 s while the whole suite runs in parallel.
-}, 60_000)
+}, 20_000)
 
 test('the readability guard is reported as limited', () => {
   const light = tokensOf(THEME_SELECTORS[0])
