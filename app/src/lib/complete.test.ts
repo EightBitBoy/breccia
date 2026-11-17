@@ -61,6 +61,15 @@ test('linkText writes safe tag syntax', () => {
   expect(linkText('tag', 'a.b')).toBe('#[[a.b]]')
 })
 
-test('the create item of a tag menu is a new tag', () => {
-  expect(completions([], 'zz', 8, 'tag')).toEqual([{ kind: 'create', name: 'zz', label: 'New tag “zz”' }])
+test('a tag menu shows each tag as it is written, with its #', () => {
+  const tags = [
+    { key: 'zz top', name: 'zz top', exists: false },
+    { key: 'zzz', name: 'zzz', exists: true },
+  ]
+  expect(completions(tags, 'zz', 8, 'tag')).toEqual([
+    { kind: 'page', name: 'zzz', label: '#zzz' },
+    { kind: 'page', name: 'zz top', label: '#[[zz top]]' },
+    { kind: 'create', name: 'zz', label: 'New tag “#zz”' },
+  ])
+  expect(completions(tags, '', 8, 'tag').map((i) => i.label)).toEqual(['#[[zz top]]', '#zzz'])
 })

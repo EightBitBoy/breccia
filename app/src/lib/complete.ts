@@ -59,7 +59,7 @@ function linkable(name: string): boolean {
 }
 
 /**
- * The menu for `query`: the best `limit` names, then "Create page" ("New tag" for a tag)
+ * The menu for `query`: the best `limit` names (a tag as written, `#tag`), then "Create page" ("New tag" for a tag)
  * unless a name is exactly the query. Names the link syntax cannot hold are never offered.
  */
 export function completions(
@@ -71,21 +71,18 @@ export function completions(
   const q = query.trim()
   const byKey = (a: NameView, b: NameView) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0)
   const offered = names.filter((n) => linkable(n.name))
-  if (!q) return offered.sort(byKey).slice(0, limit).map(pageItem)
+  const item = (n: NameView): CompletionItem => ({ kind: 'page', name: n.name, label: kind === 'tag' ? linkText('tag', n.name) : n.name })
+  if (!q) return offered.sort(byKey).slice(0, limit).map(item)
   const ranked = offered
     .map((n) => ({ n, tier: fuzzyTier(q, n.name) }))
     .filter((r): r is { n: NameView; tier: 0 | 1 | 2 | 3 } => r.tier !== null)
     .sort((a, b) => a.tier - b.tier || a.n.name.length - b.n.name.length || a.n.name.localeCompare(b.n.name))
     .slice(0, limit)
-    .map((r) => pageItem(r.n))
+    .map((r) => item(r.n))
   const lower = q.toLowerCase()
   if (!linkable(q) || names.some((n) => n.key === lower)) return ranked
-  const label = kind === 'tag' ? `New tag “${q}”` : `Create page “${q}”`
+  const label = kind === 'tag' ? `New tag “${linkText('tag', q)}”` : `Create page “${q}”`
   return [...ranked, { kind: 'create', name: q, label }]
-}
-
-function pageItem(n: NameView): CompletionItem {
-  return { kind: 'page', name: n.name, label: n.name }
 }
 
 /** The link syntax for `name`; a tag is bracketed unless the name is plainly one word. */

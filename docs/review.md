@@ -340,5 +340,6 @@ are its questions for you; each answer decides what a later plan does.
 
 104. [ ] **`#` lists only tags:** type `#` in a block: the menu lists only names already used as a tag (the sidebar's
    "Tags"), no longer every page. A page that has never been used as a tag is not offered; typing its name ends with
-   "New tag “…”", which writes the tag as before. `[[` still lists all pages. My call: the last item now reads "New tag"
-   instead of "Create page", since choosing it only writes the tag. Journal days are never offered after `#`.
+   "New tag “#…”", which writes the tag as before. `[[` still lists all pages. Each tag is shown as it is written:
+   `#budget`, or `#[[two words]]` for a name with spaces. My call: the last item now reads "New tag" instead of "Create
+   page", since choosing it only writes the tag. Journal days are never offered after `#`.

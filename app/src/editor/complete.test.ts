@@ -62,12 +62,12 @@ test('# offers only tags, never other pages, and fetches no page names', async (
     () => tags,
   )
   expect(await src.items(src.query('a #pro', '')!)).toEqual([
-    { kind: 'page', name: 'progress', label: 'progress' },
-    { kind: 'create', name: 'pro', label: 'New tag “pro”' },
+    { kind: 'page', name: 'progress', label: '#progress' },
+    { kind: 'create', name: 'pro', label: 'New tag “#pro”' },
   ])
   expect(await src.items(src.query('#[[pro', '')!)).toEqual([
-    { kind: 'page', name: 'progress', label: 'progress' },
-    { kind: 'create', name: 'pro', label: 'New tag “pro”' },
+    { kind: 'page', name: 'progress', label: '#progress' },
+    { kind: 'create', name: 'pro', label: 'New tag “#pro”' },
   ])
   expect(fetches).toBe(0)
   expect(await src.items(src.query('[[pro', '')!)).toHaveLength(3)

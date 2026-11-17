@@ -491,13 +491,13 @@ try {
   // 12: tag autocomplete offers only tags: the page Anna is no tag yet, so `#Anna` is a new tag
   const menuItems = () => linkMenu.locator('.slash-item').allInnerTexts()
   await kb.type(' #Anna')
-  await waitFor('12 # offers no pages', async () => (await menuItems()).join('|'), 'New tag “Anna”')
+  await waitFor('12 # offers no pages', async () => (await menuItems()).join('|'), 'New tag “#Anna”')
   await kb.press('Enter')
   await expectFile('12 a new tag is written', `${afterStep11.trimEnd()} #Anna\n`, journal)
   // Now it is a tag (the sidebar lists it), so `#` offers it.
   await side.locator('[data-row="t:anna"]').waitFor()
   await kb.type(' #an')
-  await waitFor('12 # offers the tag Anna', async () => (await menuItems())[0], 'Anna')
+  await waitFor('12 # offers the tag Anna', async () => (await menuItems())[0], '#Anna')
   await kb.press('Escape')
   for (let i = 0; i < 4; i++) await kb.press('Backspace')
   await expectFile('12 tag autocomplete leaves the text', `${afterStep11.trimEnd()} #Anna\n`, journal)
