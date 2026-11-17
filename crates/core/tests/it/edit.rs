@@ -352,6 +352,24 @@ fn delete_block_keeps_an_emptied_only_block() {
 }
 
 #[test]
+fn delete_block_empties_an_only_block_with_a_state_properties_or_a_fence() {
+    for src in [
+        "- TODO a\n  created:: 2026-10-29 14:05:09\n",
+        "- a\n  k:: v\n",
+        "- a\n  ```\n  code\n  ```\n",
+    ] {
+        assert_eq!(
+            with(src, |d, b, _| assert_eq!(
+                d.delete_block(b[0]),
+                Ok(Some(b[0]))
+            )),
+            "-\n",
+            "{src:?}"
+        );
+    }
+}
+
+#[test]
 fn delete_block_refuses_an_unknown_block() {
     assert_eq!(
         with("- a\n", |d, _, _| assert_eq!(
