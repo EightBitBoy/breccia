@@ -57,3 +57,9 @@ Task 7: minor (deferred): bulletCount does not strip a BOM; versionsOf does
 Task 7: minor (deferred): the chore commit carries no tests (they come in the next commit)
 Task 7: minor (deferred): the "keeps every word" test keeps its own copy of the comment regex
 Task 7: complete (commits 6261a97..40670d9, review clean)
+Task 8: dispatched (sonnet), BASE 99bce23
+Task 8: step 101 flake not reproduced (3 passes); cause unclear — goes to the follow-ups
+Task 8: minor (deferred): step 128's pointer moves cannot be shown to fail (stabilisation only)
+Task 8: minor (deferred): step 127's "typed but not sent" case documented unreachable, not checked against app code
+Task 8: minor (deferred): one commit for all step groups instead of one per group
+Task 8: complete (commits 99bce23..811012b, review clean; e2e 207 twice)
