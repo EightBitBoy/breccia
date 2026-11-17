@@ -1,4 +1,5 @@
 // Summarises the `trace ...` lines the app prints to stderr under BRECCIA_TRACE.
+const GIT_STATE = /^trace git state=(\S+)$/
 const LINE = /^trace (\S+) (\S+) wait=([\d.]+)ms run=([\d.]+)ms$/
 
 function percentile(sorted, p) {
@@ -8,8 +9,14 @@ function percentile(sorted, p) {
 
 export function summarize(log) {
   const rows = new Map()
+  const states = new Map()
   let unparsed = 0
   for (const line of log.split(/\r?\n/)) {
+    const g = GIT_STATE.exec(line.trim())
+    if (g) {
+      states.set(g[1], (states.get(g[1]) ?? 0) + 1)
+      continue
+    }
     const m = LINE.exec(line.trim())
     if (!m) {
       if (line.trim().startsWith('trace ')) unparsed += 1
@@ -41,6 +48,10 @@ export function summarize(log) {
   const out = lines.map((l) =>
     l.map((c, i) => (i === 0 ? c.padEnd(widths[i]) : c.padStart(widths[i]))).join('  '),
   )
+  if (states.size > 0) {
+    const list = [...states].map(([name, n]) => `${name} ${n}`).join(', ')
+    out.push(`git states: ${list}`)
+  }
   if (unparsed > 0) out.push(`unparsed trace lines: ${unparsed}`)
   return out.join('\n')
 }

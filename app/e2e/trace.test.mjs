@@ -27,4 +27,16 @@ describe('summarize', () => {
   it('ignores lines that are not trace lines', () => {
     expect(out).not.toContain('some other')
   })
+  it('counts the Git state lines in a line of their own, not as unparsed', () => {
+    const git = summarize(
+      [
+        'trace git state=Ready',
+        'trace git state=Working',
+        'trace git state=Ready',
+        'trace run block.setText wait=0.1ms run=2.0ms',
+      ].join('\n'),
+    )
+    expect(git).toContain('git states: Ready 2, Working 1')
+    expect(git).not.toContain('unparsed')
+  })
 })
