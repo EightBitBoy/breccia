@@ -49,3 +49,11 @@ Task 6: minor (deferred): it/session.rs ~2352-2420 string literals hold real lin
 Task 6: minor (deferred): contract.test.ts ~75 regex tied to the exact `code === '…') return true` line shape
 Task 6: minor (deferred): `/// <reference types="node" />` in contract.test.ts and theme.test.ts; a tsconfig types entry would be tidier
 Task 6: complete (commits 7d2ed03..d44becd, review clean)
+Task 7: dispatched (sonnet), BASE 6261a97
+Task 7: note: first e2e run failed at step 101 ("wrap!" → "wrapy!es"), rerun passed — flaky, carry to Task 8
+Task 7: minor (deferred): changelog.ts VERSION counts a linked heading with whitespace in the URL that then renders literally
+Task 7: minor (deferred): changelog.test.ts:93 linked-heading test does not check the heading's inlines
+Task 7: minor (deferred): bulletCount does not strip a BOM; versionsOf does
+Task 7: minor (deferred): the chore commit carries no tests (they come in the next commit)
+Task 7: minor (deferred): the "keeps every word" test keeps its own copy of the comment regex
+Task 7: complete (commits 6261a97..40670d9, review clean)
