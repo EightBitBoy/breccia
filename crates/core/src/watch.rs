@@ -39,7 +39,19 @@ pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
         Ok(Some(NotePath::Journal(_) | NotePath::Page { .. } | NotePath::Config)) => true,
         Err(LoadWarning::BadJournalName(_) | LoadWarning::ExtensionCase(_)) => true,
         Ok(None) => parts.len() >= 2 && parts[0] == PAGES && rel.extension().is_none(),
-        Err(_) => false,
+        // One arm per variant, so a new `LoadWarning` fails to compile here
+        // and gets a decision; `classify` only returns `NonUnicodeName` of
+        // the others today.
+        Err(
+            LoadWarning::NonUnicodeName(_)
+            | LoadWarning::NotUtf8(_)
+            | LoadWarning::LinkedFolder(_)
+            | LoadWarning::Unreadable { .. }
+            | LoadWarning::InvalidName(_)
+            | LoadWarning::DuplicatePage { .. }
+            | LoadWarning::AliasIsName { .. }
+            | LoadWarning::DuplicateAlias { .. },
+        ) => false,
     };
     ok.then(|| rel.to_path_buf())
 }
