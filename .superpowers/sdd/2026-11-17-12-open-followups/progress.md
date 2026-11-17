@@ -43,3 +43,9 @@ Task 5: minor (deferred): watching.rs:77-84 notes_root set after the watcher sta
 Task 5: minor (deferred): watching.rs:20-84 an older-generation watcher starts fully before being dropped (check may_replace first)
 Task 5: minor (deferred): no RED run for Step 1; may_clear not mutation-checked; no test that the shell calls may_replace/may_clear
 Task 5: complete (commits 98d3ae4..1031fba, review clean)
+Task 6: dispatched (sonnet), BASE 7d2ed03
+Task 6: Ruling: no query in the command-kind list reaches only its error path today, so the test fails on any error answer and four queries were added — the brief's premise was stale — cost if wrong: none
+Task 6: minor (deferred): it/session.rs ~2352-2420 string literals hold real line breaks instead of \n
+Task 6: minor (deferred): contract.test.ts ~75 regex tied to the exact `code === '…') return true` line shape
+Task 6: minor (deferred): `/// <reference types="node" />` in contract.test.ts and theme.test.ts; a tsconfig types entry would be tidier
+Task 6: complete (commits 7d2ed03..d44becd, review clean)
