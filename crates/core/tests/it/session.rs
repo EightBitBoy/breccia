@@ -912,6 +912,41 @@ fn block_delete_of_the_only_block_keeps_it_empty() {
 }
 
 #[test]
+fn block_delete_of_an_already_empty_only_block_writes_nothing() {
+    let (t, mut s) = folder(&[("pages/P.md", "-\n")]);
+    let a = ids(&mut s, "p")[0];
+    ok(&mut s, json!({"type":"block.delete","id":a}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+    // With an earlier step on the stack, the delete must not have added one of its own: the
+    // first undo takes back the typing, not the delete.
+    let (t, mut s) = folder(&[("pages/Q.md", "- a\n")]);
+    let a = ids(&mut s, "q")[0];
+    ok(&mut s, json!({"type":"block.setText","id":a,"text":""}), 0);
+    assert_eq!(read(&t, "pages/Q.md"), "-\n");
+    ok(&mut s, json!({"type":"block.delete","id":a}), 5000);
+    assert_eq!(read(&t, "pages/Q.md"), "-\n");
+    ok(&mut s, json!({"type":"history.undo","page":"q"}), 6000);
+    assert_eq!(read(&t, "pages/Q.md"), "- a\n");
+}
+
+#[test]
+fn a_state_settle_after_deleting_an_only_todo_block_changes_nothing() {
+    let (t, mut s) = folder(&[("pages/P.md", "- TODO a\n")]);
+    let a = ids(&mut s, "p")[0];
+    ok(&mut s, json!({"type":"block.delete","id":a}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+    // The editor closes on the emptied block and settles it for the state it opened with.
+    ok(
+        &mut s,
+        json!({"type":"block.settle","id":a,"before":"TODO"}),
+        100,
+    );
+    assert_eq!(read(&t, "pages/P.md"), "-\n");
+}
+
+#[test]
 fn blocks_delete_of_every_block_keeps_one_empty_block() {
     let original = "- a\n\t- c\n- b\n";
     let (t, mut s) = folder(&[("pages/P.md", original)]);
