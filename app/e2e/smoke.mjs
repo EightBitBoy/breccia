@@ -2225,8 +2225,14 @@ try {
   // 134: Settings > About shows the changelog built into the app (CHANGELOG.md, in the bundle); Esc returns to Settings
   {
     const md = readFileSync(join(root, 'CHANGELOG.md'), 'utf8')
-    const versions = [...md.matchAll(/^## \[([^\]]+)\]/gm)].map((m) => m[1])
-    const items = (md.match(/^\s*[-*+] /gm) ?? []).length
+    // The same rules as versionsOf and bulletCount in app/src/lib/changelog.ts (e2e cannot import TypeScript): comment
+    // lines are skipped, a version heading is "## [x]" with or without a link, a bullet is - * or + then whitespace.
+    const mdLines = md.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => !/^\s*<!--.*-->\s*$/.test(l))
+    const versions = mdLines.flatMap((l) => {
+      const m = /^\s{0,3}##\s+\[([^\]]+)\]/.exec(l)
+      return m ? [m[1]] : []
+    })
+    const items = mdLines.filter((l) => !/^\s{0,3}#+\s+/.test(l) && /^\s*[-*+]\s+/.test(l)).length
     const showBtn = page.locator('[data-testid="show-changelog"]')
     const overlay = page.locator('[data-testid="changelog"]')
     const body = overlay.locator('[data-testid="changelog-body"]')

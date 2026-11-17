@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest'
 import text from 'virtual:changelog'
-import { changelogNote, parseChangelog, parseInline, plainText, type Block, type Inline } from './changelog'
+import {
+  bulletCount,
+  changelogNote,
+  parseChangelog,
+  parseInline,
+  plainText,
+  versionsOf,
+  type Block,
+  type Inline,
+} from './changelog'
 
 const t = (s: string): Inline => ({ kind: 'text', text: s })
 const h = (level: 1 | 2 | 3, s: string, version: string | null = null): Block => ({
@@ -30,9 +39,25 @@ describe('parseChangelog', () => {
     expect(parseChangelog('#### Deep')).toEqual([h(3, 'Deep')])
     expect(parseChangelog('a\n\n# Title')).toEqual([p('a'), h(1, 'Title')])
   })
-  it('does not treat a linked bracket as a version', () => {
-    const [b] = parseChangelog('## [1.0](https://x.org) - d')
-    expect(b).toMatchObject({ kind: 'heading', version: null })
+  it('a linked heading is a version heading, and versionsOf agrees', () => {
+    const md = '## [1.2.0](https://x) - 2026\n\n## [1.1.0] - 2025\n\n## Unreleased\n'
+    const got = parseChangelog(md).flatMap((b) => (b.kind === 'heading' && b.version !== null ? [b.version] : []))
+    expect(got).toEqual(['1.2.0', '1.1.0'])
+    expect(versionsOf(md)).toEqual(got)
+  })
+  it('a comment line before the title does not keep the title', () => {
+    expect(parseChangelog('<!-- c -->\n# Changelog\n\n## [1.0.0] - 2026-11-06\n')).toEqual([
+      h(2, '1.0.0 - 2026-11-06', '1.0.0'),
+    ])
+  })
+  it('bulletCount agrees with the parser on every marker', () => {
+    const md = '- a\n-\tb\n+ c\n* d\n- \n  - e\n---\n<!-- - x -->\n'
+    const n = parseChangelog(md).reduce((a, b) => a + (b.kind === 'list' ? b.items.length : 0), 0)
+    expect(n).toBe(6)
+    expect(bulletCount(md)).toBe(n)
+  })
+  it('+, * and an empty - are bullets', () => {
+    expect(parseChangelog('+ x\n* y\n- ')).toEqual([{ kind: 'list', items: [[t('x')], [t('y')], []] }])
   })
   it('joins indented lines to the item and keeps nested items', () => {
     expect(parseChangelog('- one\n  continued\n  - nested\n- two')).toEqual([list('one continued', 'nested', 'two')])
@@ -53,9 +78,10 @@ describe('parseChangelog', () => {
   })
   it('drops nothing in a hostile sample', () => {
     const input = '| a | b |\n1. one\n_em_ <script>x</script> & &amp;\n- [x](ftp://h) `c`'
-    const out = plainText(parseChangelog(input))
-    const words = (input.match(/\w+/g) ?? []).filter((w) => w !== 'ftp' && w !== 'h')
-    for (const w of words) expect(out).toContain(w)
+    expect(plainText(parseChangelog(input)).split('\n')).toEqual([
+      '| a | b | 1. one _em_ <script>x</script> & &amp;',
+      'x c',
+    ])
   })
 })
 
@@ -101,12 +127,12 @@ describe('changelogNote', () => {
 describe('the real CHANGELOG.md', () => {
   const blocks = parseChangelog(text)
   it('keeps every version heading', () => {
-    const want = [...text.matchAll(/^## \[([^\]]+)\]/gm)].map((m) => m[1])
+    const want = versionsOf(text)
     const got = blocks.flatMap((b) => (b.kind === 'heading' && b.version !== null ? [b.version] : []))
     expect(got).toEqual(want)
   })
   it('keeps every list item', () => {
-    const n = (text.match(/^\s*[-*+] /gm) ?? []).length
+    const n = bulletCount(text)
     const got = blocks.reduce((a, b) => a + (b.kind === 'list' ? b.items.length : 0), 0)
     expect(got).toBe(n)
   })
