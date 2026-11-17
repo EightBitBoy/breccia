@@ -140,6 +140,12 @@ fn format_line(level: Level, target: &str, message: &str) -> String {
     )
 }
 
+/// What goes to stderr: the message, redacted like the file line (a trace line
+/// has no credentials and passes unchanged).
+fn stderr_text(message: &str) -> String {
+    redact(message)
+}
+
 /// Only Breccia's own records (`breccia_core`, `breccia_lib`, the `trace` and
 /// `panic` targets): the libraries below it (tauri, tao, wry, notify) are
 /// chatty and may quote paths and window text.
@@ -160,7 +166,7 @@ impl Log for LogFile {
         // Stderr gets the bare message, as the old stderr print had it; the e2e
         // trace summary parses these lines. Plain `writeln!`: the print macro panics when
         // stderr is closed.
-        let _ = writeln!(std::io::stderr(), "{message}");
+        let _ = writeln!(std::io::stderr(), "{}", stderr_text(&message));
         self.write_line(&format_line(record.level(), record.target(), &message));
     }
 
@@ -173,8 +179,12 @@ fn is_url_scheme_char(c: char) -> bool {
 
 /// In every `scheme://userinfo@host`, the credentials become `***`: the whole
 /// user-info part of an `http` or `https` URL (a token may stand alone), and
-/// `user:secret` of any other scheme. `ssh://git@host` and `git@host:path`
-/// carry no secret and stay.
+/// `user:secret` of any other scheme. The user-info is everything up to the last
+/// `@` before the first whitespace, quote or angle bracket, so a password with
+/// `/`, `?`, `#` or `@` is masked whole; it counts only when the `@` comes before
+/// the first `/`, `?` or `#`, or the part before it has a `:` (so
+/// `https://host/a@b` stays). `ssh://git@host` and `git@host:path` carry no
+/// secret and stay.
 pub fn redact(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
     let mut rest = line;
@@ -190,14 +200,13 @@ pub fn redact(line: &str) -> String {
             .rev()
             .collect();
         let end = tail
-            .find(|c: char| {
-                c.is_whitespace() || matches!(c, '/' | '?' | '#' | '"' | '\'' | '<' | '>')
-            })
+            .find(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
             .unwrap_or(tail.len());
-        let (authority, after) = tail.split_at(end);
-        match authority.rfind('@') {
-            Some(i) => {
-                let user = &authority[..i];
+        let (token, after) = tail.split_at(end);
+        let first_delimiter = token.find(['/', '?', '#']).unwrap_or(token.len());
+        match token.rfind('@') {
+            Some(i) if i < first_delimiter || token[..i].contains(':') => {
+                let user = &token[..i];
                 let web =
                     scheme.eq_ignore_ascii_case("http") || scheme.eq_ignore_ascii_case("https");
                 if web || user.contains(':') {
@@ -205,9 +214,9 @@ pub fn redact(line: &str) -> String {
                 } else {
                     out.push_str(user);
                 }
-                out.push_str(&authority[i..]);
+                out.push_str(&token[i..]);
             }
-            None => out.push_str(authority),
+            _ => out.push_str(token),
         }
         rest = after;
     }
@@ -217,13 +226,27 @@ pub fn redact(line: &str) -> String {
 
 /// The line for a panic. A panic message can quote note text (a bad string
 /// slice quotes the string in backticks, an unwrap on an error or an assert
-/// shows it in double quotes), so every backtick-quoted and double-quoted
-/// span is replaced; the location stays, it is what a bug report needs.
+/// shows it in double quotes, a char boundary error in single quotes), so every
+/// backtick-quoted, double-quoted and single-quoted span is replaced; the
+/// location stays, it is what a bug report needs. A `'` opens a span only when
+/// it does not follow a letter or digit (`don't` is an apostrophe), and a single
+/// quote without a closing one keeps the rest of the text.
 pub fn panic_line(message: &str, file: Option<&str>, line: Option<u32>) -> String {
+    let chars: Vec<char> = message.chars().collect();
     let mut text = String::new();
-    let mut chars = message.chars();
-    while let Some(c) = chars.next() {
-        if c != '`' && c != '"' {
+    let mut i = 0;
+    while i < chars.len() {
+        let c = chars[i];
+        i += 1;
+        let opens = match c {
+            '`' | '"' => true,
+            '\'' => {
+                let apostrophe = i >= 2 && chars[i - 2].is_alphanumeric();
+                !apostrophe && chars[i..].contains(&'\'')
+            }
+            _ => false,
+        };
+        if !opens {
             text.push(c);
             continue;
         }
@@ -231,15 +254,14 @@ pub fn panic_line(message: &str, file: Option<&str>, line: Option<u32>) -> Strin
         text.push('…');
         text.push(c);
         // Skip to the closing quote; a backslash escapes in a double-quoted
-        // (Debug) string. An unclosed quote drops the rest.
-        loop {
-            match chars.next() {
-                Some('\\') if c == '"' => {
-                    chars.next();
-                }
-                Some(d) if d == c => break,
-                Some(_) => {}
-                None => break,
+        // (Debug) string. An unclosed backtick or double quote drops the rest.
+        while i < chars.len() {
+            let d = chars[i];
+            i += 1;
+            if d == '\\' && c == '"' {
+                i += 1;
+            } else if d == c {
+                break;
             }
         }
     }
@@ -507,5 +529,47 @@ mod tests {
         let log = LogFile::open(t.path(), 1000);
         let _held = log.lock();
         log.try_write_line("dropped, not blocked");
+    }
+
+    #[test]
+    fn redact_masks_passwords_with_url_characters() {
+        for url in [
+            "https://u:pa/ss@host/x",
+            "https://u:pa?ss@host",
+            "https://u:pa#ss@host",
+            "https://u:p@ss@host/x",
+        ] {
+            let out = redact(&format!("push {url} failed"));
+            assert!(out.starts_with("push https://***@host"), "{out}");
+            assert!(out.ends_with(" failed"), "{out}");
+            for part in ["pa", "ss@", "p@ss", "u:"] {
+                assert!(!out.contains(part), "{part} in {out}");
+            }
+        }
+        assert_eq!(redact("https://host/a@b"), "https://host/a@b");
+        assert_eq!(redact("ssh://git@host/x"), "ssh://git@host/x");
+        assert_eq!(redact("git@host:x"), "git@host:x");
+    }
+
+    #[test]
+    fn panic_line_masks_single_quoted_spans() {
+        let line = panic_line("called with 'secret' now", None, None);
+        assert!(!line.contains("secret"), "{line}");
+        assert!(line.ends_with("called with '…' now"), "{line}");
+        // An apostrophe after a letter is no quote, and an unclosed one keeps the rest.
+        let line = panic_line("it doesn't fail, 'it' did", None, None);
+        assert!(line.ends_with("it doesn't fail, '…' did"), "{line}");
+        let line = panic_line("see 'open and more", None, None);
+        assert!(line.ends_with("see 'open and more"), "{line}");
+    }
+
+    #[test]
+    fn stderr_gets_the_redacted_message() {
+        assert_eq!(
+            stderr_text("push https://me:tok@github.com/a.git failed"),
+            "push https://***@github.com/a.git failed"
+        );
+        let trace = "trace cmd x wait=1.0ms run=2.0ms";
+        assert_eq!(stderr_text(trace), trace);
     }
 }
