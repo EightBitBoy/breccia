@@ -83,3 +83,9 @@ Task 12: minor (deferred): site.css:179-181 the fade mask also clips the horizon
 Task 12: minor (deferred): site.css:156-157 `order` tied to nth-child numbers; a reordered card list breaks the pairing silently
 Task 12: minor (deferred): hero.js wiring of afterDecode has no unit test
 Task 12: complete (commits addd806..de650a8, review clean; fade degrades to none without scroll-driven animation)
+Task 13: dispatched (sonnet), BASE 48f8d9f
+Task 13: minor (deferred, controller fixes at finish): STATUS test baseline counts and the "24 open / 62 closed" backlog line are stale
+Task 13: minor (deferred): spec §7.2 Ctrl Shift K caret clause runs far past 120 columns
+Task 13: minor (deferred): review item 113 says "does nothing" where the spec says "not joined"
+Task 13: complete (commits 48f8d9f..60e5dec, review clean)
+Final review: dispatched (opus) over 6a2dbf8..HEAD
