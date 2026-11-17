@@ -300,17 +300,19 @@ fn open_startup_folder(session: &Mutex<Session>, path: PathBuf, clock: Clock) ->
     }
 }
 
+/// The clock of the shell's tests: a fixed day and time.
+#[cfg(test)]
+pub(crate) fn test_clock() -> Clock {
+    Clock {
+        today: chrono::NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
+        time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
+        ms: 0,
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    fn clock() -> Clock {
-        Clock {
-            today: chrono::NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-            time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-            ms: 0,
-        }
-    }
 
     #[test]
     fn startup_open_keeps_load_warnings() {
@@ -318,7 +320,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join("pages")).unwrap();
         std::fs::write(dir.path().join("pages").join("Bin.md"), b"\xff\xfe\x00- x").unwrap();
         let session = Mutex::new(Session::new());
-        let notices = open_startup_folder(&session, dir.path().to_path_buf(), clock());
+        let notices = open_startup_folder(&session, dir.path().to_path_buf(), test_clock());
         assert!(
             notices.iter().any(|n| matches!(
                 n,
@@ -334,7 +336,7 @@ mod tests {
         std::fs::create_dir_all(dir.path().join("breccia")).unwrap();
         std::fs::write(dir.path().join("breccia").join("config.toml"), "states = 1").unwrap();
         let session = Mutex::new(Session::new());
-        let notices = open_startup_folder(&session, dir.path().to_path_buf(), clock());
+        let notices = open_startup_folder(&session, dir.path().to_path_buf(), test_clock());
         assert!(
             matches!(notices.as_slice(), [Notice::Refused { .. }]),
             "{notices:?}"
@@ -346,7 +348,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let gone = dir.path().join("gone");
         let session = Mutex::new(Session::new());
-        let notices = open_startup_folder(&session, gone.clone(), clock());
+        let notices = open_startup_folder(&session, gone.clone(), test_clock());
         assert!(
             matches!(notices.as_slice(), [Notice::Refused { message }] if message.contains("no longer exists")),
             "{notices:?}"
@@ -360,7 +362,7 @@ mod tests {
                     generation: 0,
                     command: Command::FolderStatus,
                 },
-                clock(),
+                test_clock(),
             )
             .unwrap();
         assert_eq!(status.folder.unwrap().path, None);
@@ -371,7 +373,7 @@ mod tests {
     fn startup_open_of_a_clean_folder_says_nothing() {
         let dir = tempfile::tempdir().unwrap();
         let session = Mutex::new(Session::new());
-        let notices = open_startup_folder(&session, dir.path().to_path_buf(), clock());
+        let notices = open_startup_folder(&session, dir.path().to_path_buf(), test_clock());
         assert!(notices.is_empty(), "{notices:?}");
     }
 

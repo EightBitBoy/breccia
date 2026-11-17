@@ -38,3 +38,4 @@ Task 4: minor (deferred): rotation test failure message "never truncated" says t
 Task 4: fix round 1/5 dispatched (resume implementer, sonnet), FIX_BASE b3a1561
 Task 4: fix round 1/5 (1 addressed, 0 open; commits b3a1561..026789f)
 Task 4: complete (commits 239d50f..026789f, review clean after round 1)
+Task 5: dispatched (sonnet), BASE 98d3ae4

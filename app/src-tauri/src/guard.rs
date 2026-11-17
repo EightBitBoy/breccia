@@ -100,15 +100,7 @@ mod tests {
     use super::*;
     use std::sync::Arc;
 
-    use breccia_core::{Clock, Command, Request};
-
-    fn clock() -> Clock {
-        Clock {
-            today: chrono::NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-            time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-            ms: 0,
-        }
-    }
+    use breccia_core::{Command, Request};
 
     /// A session with `dir` open.
     fn opened(dir: &std::path::Path) -> Session {
@@ -121,7 +113,7 @@ mod tests {
                         path: dir.to_path_buf(),
                     },
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap();
         session
@@ -198,7 +190,7 @@ mod tests {
                     generation,
                     command,
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap()
         };

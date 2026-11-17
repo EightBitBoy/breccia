@@ -70,15 +70,7 @@ pub(crate) fn emit_all(app: &AppHandle, output: &Output, from_watcher: bool) {
 mod tests {
     use super::*;
     use breccia_core::session::Notice;
-    use breccia_core::{Clock, Command, Request, Session};
-
-    fn clock() -> Clock {
-        Clock {
-            today: chrono::NaiveDate::from_ymd_opt(2026, 10, 29).unwrap(),
-            time: chrono::NaiveTime::from_hms_opt(14, 5, 9).unwrap(),
-            ms: 0,
-        }
-    }
+    use breccia_core::{Command, Request, Session};
 
     #[test]
     fn events_cover_pages_tree_and_removals() {
@@ -91,7 +83,7 @@ mod tests {
                     generation,
                     command,
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap()
         };
@@ -153,7 +145,7 @@ mod tests {
                         path: dir.path().to_path_buf(),
                     },
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap();
         let generation = session.generation();
@@ -163,7 +155,7 @@ mod tests {
                     generation,
                     command: Command::PageToday,
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap()
             .page
@@ -196,7 +188,7 @@ mod tests {
                         path: dir.path().to_path_buf(),
                     },
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap();
         let generation = session.generation();
@@ -206,7 +198,7 @@ mod tests {
                     generation,
                     command: Command::ConfigGet,
                 },
-                clock(),
+                crate::test_clock(),
             )
             .unwrap()
             .config
