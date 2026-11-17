@@ -22,6 +22,9 @@ test('slash items filter', () => {
   expect(slashItems(s, 'tod').map((i) => i.label)).toEqual(['TODO', 'Today'])
   expect(slashItems(s, 'da').map((i) => i.label)).toEqual(['Today', 'Yesterday', 'Date…'])
   expect(slashItems(s, 'page').map((i) => i.label)).toEqual(['Link to page'])
+  expect(slashItems(s, 'toda').map((i) => i.label)).toEqual(['Today'])
+  // 'd' starts DOING, the date items' search word "date", and "Date…" itself.
+  expect(slashItems(s, 'd').map((i) => i.label)).toEqual(['DOING', 'Today', 'Yesterday', 'Date…'])
   expect(slashItems(s, '').map((i) => i.label)).toHaveLength(7)
   expect(slashItems(s, 'TODO')[0]).toEqual({ kind: 'state', keyword: 'TODO', label: 'TODO' })
 })
