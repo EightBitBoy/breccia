@@ -91,6 +91,45 @@ Recommendation first. "Cost if wrong" is what changes later.
 - R2 (written with the plan). **The log file** (Task 4) never holds credentials (owner decision, plan 6 Q5/Q6), so a
   password that leaks today is a `fix`, with a changelog line.
 
+Pre-flight scan 2026-11-17 at `fa74e01` (details: `.superpowers/sdd/2026-11-17-12-open-followups/preflight.md`):
+
+- R3. The workspace is `.superpowers/sdd/2026-11-17-12-open-followups/` (`triage.md`, `progress.md`) wherever this
+  plan says `2026-11-17-12-followups`.
+- R4. Task 1 Step 3: `Changes` already derives `Default`; drop `Debug` (P9.6).
+- R5. Task 1 Step 5: `bounded()` is already the one table; build each label from section and key at compile time
+  (`concat!` in a small `macro_rules!`), keeping `Replaced.key: &'static str`.
+- R6. Task 2 Step 1: rename/tree tests use `support::folder_at` where `dirs` is empty; `scale.rs` has no `2026-10-29`
+  text, its `from_ymd_opt(2026, 10, 29)` uses `DAY`. Step 5's "mtime-independent content" means "the same bytes".
+- R7. Task 4: a failed rename at rotation neither deletes nor truncates `breccia.log`; writing goes on, the rename is
+  retried once the file has grown by another cap, and only if that fails too is the file truncated (never above 2×
+  the cap). Subject: `fix(app): Log: the log is kept when it cannot be moved aside at its size limit`.
+- R8. Task 4: in `panic_line` a `'` opens a masked span only when it does not follow a letter or digit; an unclosed
+  `'` keeps the rest (apostrophes are not quotes).
+- R9. Task 5 Step 2: `Recovery::NoFolder` has no generation today. The core's variant becomes
+  `NoFolder { generation }` (the session's generation after its reset); `after_recovery` clears watcher and root only
+  when `may_clear`. Task 5 also changes `crates/core/src/session/folder.rs`, its tests and every match site, and the
+  readers of `notes_root`.
+- R10. Task 5 Step 3: the Git states are Off, NoGit, NotRepo, Ready, Working, Problem; test with those names.
+- R11. Behaviour changes no user sees are `chore(…)`, not `refactor`: Task 5 Step 2 (`chore(app): the watcher and the
+  notes root keep their folder generation`) and Task 7 D1/D2.
+- R12. Task 6 Step 2: read `STALE_TEXT` from `recovery.ts` as text; export nothing for tests only.
+- R13. Task 7 Step 3 (D3) runs (Q5).
+- R14. e2e step 137 goes right after step 135's block (`smoke.mjs` ~3923, before the Git steps from 45); step 136's
+  block is at ~875, among the board steps.
+- R15. Task 11: the caret after `Ctrl Shift K` is the window's (`host.svelte.ts` `deleteFocusOf`), not the core's.
+  The core's `merge_into_previous` uses `own_text_end` (built on `inline::property`/`properties`). The window gets
+  `ownTextEnd(text)` in `app/src/lib/deleteBlock.ts`, same rule, a comment naming the core function, a Vitest test and
+  a `host.test.ts` case. The core test `delete_block_puts_the_caret_before_property_lines` is dropped. Second commit:
+  `fix(app): Editor: after Ctrl Shift K the caret stops before the created line of a task above`.
+- R16. Task 11: `own_text_end` is the start of the property lines only when they run to the end of the text, else
+  `text.len()`. The refusal of a multi-line join onto a block with property lines stays (an open point for the owner).
+- R17. Task 12 Step 1: a pure `afterDecode(img, go)` in `site/shards.js` (calls `go` once after `img.decode()` settles
+  either way, at once without `decode`), tested in `site-hero.test.mjs` with a fake image; `hero.js` uses it and
+  checks the fallback's time inside `go`. No new site file.
+- R18. Task 13 writes every review item (107 on), Task 10's included; the log item covers both Task 4 fixes, the join
+  item both Task 11 fixes. Spec §7.2 also gets Q3: after `Backspace` in an empty block and after `Ctrl Shift K` the
+  caret goes to the end of the block above's own text, before its property lines.
+
 ## Global Constraints
 
 - No notes-file format change. Files Breccia does not change stay byte-identical; notes files are saved with LF
@@ -368,7 +407,7 @@ step-equality test), `app/scripts/docs.test.mjs` (line 10), `CLAUDE.md`, `docs/s
 - [ ] **Step 4:** `just test`, `just lint`. Commits: `ci: one CI run per change, and main keeps its cache`;
   `docs: …`; `chore: …`.
 
-### Task 10: Pressing on a slider thumb keeps its value (model: opus; UI integration; only if Q1 is yes)
+### Task 10: Pressing on a slider thumb keeps its value (model: opus; UI integration)
 
 **Files:** `app/src/lib/pageColors.ts`, `app/src/lib/pageColors.test.ts`, `app/src/components/PageColorGrid.svelte`
 (`sliderDrag`, ~line 233), `app/e2e/smoke.mjs` (new step 137 after step 136's block, before the shared tail).
@@ -386,9 +425,9 @@ it jumps as today.
   release without moving: the file still says `hue 200` (assert bytes; today it changes); press on the track 30 px
   away: the hue changes and the file says so; the same for vividness.
 - [ ] **Step 4:** `just test`, `just lint`, `just e2e` → 208 PASS. Commit:
-  `fix(app): Page colors: pressing on a slider's knob no longer nudges the color`. Review item.
+  `fix(app): Page colors: pressing on a slider's knob no longer nudges the color`. Review item in Task 13 (R18).
 
-### Task 11: The caret and joined text after a task's property lines (model: sonnet; only if Q3 is a or recommended)
+### Task 11: The caret and joined text after a task's property lines (model: sonnet; see R15, R16)
 
 **Files:** `crates/core/src/edit.rs` (`merge_into_previous`, `delete_block`'s focus), `crates/core/tests/it/edit.rs`,
 `crates/core/tests/it/session.rs`, `app/e2e/smoke.mjs` (step 130's caret check, if it moves).
@@ -398,8 +437,7 @@ property lines (`key:: value` lines directly after the first line, spec §5 "Pro
 
 - [ ] **Step 1 RED:** `it/edit.rs` `merge_keeps_the_task_property_lines`: `- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n`
   merged → `- TODO ab\n  created:: 2026-10-29 14:05:09\n`, caret at 6 (after `a`); with a `done::` line too; a
-  plain block (no properties) behaves as before. `delete_block_puts_the_caret_before_property_lines`.
-  (If Q3 is (a), only the delete test.)
+  plain block (no properties) behaves as before. The delete caret is tested in the window instead (R15).
 - [ ] **Step 2:** implement with `own_text_end`; joined text is inserted there; a following multi-line text keeps its
   lines after the first line (if that would put text lines after property lines, refuse with
   `WouldChangeStructure`, as the fence case does, and test it).
@@ -413,8 +451,8 @@ property lines (`key:: value` lines directly after the first line, spec §5 "Pro
 - [ ] **Step 1 (P5.6) RED:** `site-hero.test.mjs`: the assembly starts only after the screenshot's `decode()` promise
   settles (resolved or rejected). Implement in `hero.js`.
 - [ ] **Step 2 (Q4, as answered):** board image scroll hint (a fade mask on the right edge while it can scroll; CSS
-  only), lone cards at 768 px take the grid; the hero tiles item only if Q4 (a). Check with `just site-shots` and
-  `just site-check`.
+  only), lone cards at 768 px take the grid; the hero tiles stay as they are (Q4; P5.4 is closed in Task 13).
+  Check with `just site-shots` and `just site-check`.
 - [ ] **Step 3:** `just test`. Commits `chore(site): …` (never `fix`/`feat`).
 
 ### Task 13: Bookkeeping (model: sonnet)
@@ -428,8 +466,8 @@ property lines (`key:: value` lines directly after the first line, spec §5 "Pro
   item 2 is struck as done (review 79).
 - [ ] **Step 2:** `docs/backlog.md`: new items #87 to #91 (heading, area, the follow-up text it came from, "from plan
   12 triage"), and a dated note on #85 listing P1.9, P1.15 and P7.19.
-- [ ] **Step 3 (Q2):** if recommended, spec §7.2: `Backspace` in an empty block removes it and its sub-blocks move up
-  one level; `Ctrl Shift K` deletes them.
+- [ ] **Step 3 (Q2, Q3):** spec §7.2: `Backspace` in an empty block removes it and its sub-blocks move up one level;
+  `Ctrl Shift K` deletes them; the caret goes before the block above's property lines (R18).
 - [ ] **Step 4:** `docs/review.md` heading `## Open follow-ups (plan 12)`, items from 107: the log password masking
   (Task 4), the slider press (Task 10), the join onto a task (Task 11), the empty changelog link (Task 7), the website
   points (Task 12), CI running once per change (Task 9).
