@@ -222,7 +222,8 @@ second click on the Git history button is Back.
   at the first/last line move to the previous/next block; `Backspace` in an empty block removes it (its sub-blocks move up
   one level) and moves the caret to the end of the previous one's own text, before its property lines; at the start of a
   non-empty block it merges the block into the previous one, after that block's own text and before its property lines
-  (a block of several lines is not joined onto a block with property lines); `Esc` leaves editing;
+  (a block of several lines is not joined onto a block with property lines, and a notice says why); `Esc` leaves
+  editing;
   `Ctrl Enter` cycles the state through the states marked "in cycle", in list order, and after the last one starts
   again at the first (default: none → TODO → DOING → DONE → TODO); it never removes the state. `Ctrl Shift Enter`
   removes the state, also on a selection; so does deleting the keyword; `Ctrl Shift K` deletes the block with its

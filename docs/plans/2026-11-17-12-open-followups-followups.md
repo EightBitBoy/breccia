@@ -10,9 +10,9 @@ were made in the fix wave.
 1. **Review items 107 to 112** ask the owner to look at the changes by hand: the log without a Git password (107), the
    slider knob (108), joining a block onto a task (109), the changelog link without text (110), the website at phone
    and tablet width (111) and one CI run per change (112). Item 107 is hard to try by hand and is covered by unit tests.
-2. **Review item 113 is an open question:** `Backspace` at the start of a task right below another task is now refused
-   with a notice (every task has a `created::` line, so it counts as a block of several lines). Should the refusal
-   stay, or should the text join before the task's property lines? Until the owner decides, the refusal stands.
+2. ~~**Review item 113 is an open question:** `Backspace` at the start of a task right below another task is now
+   refused with a notice.~~ Answered (owner, 2026-11-17): the refusal stays, and the notice now says why in plain
+   words (review item 114).
 
 ## Code
 

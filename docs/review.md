@@ -391,10 +391,15 @@ are its questions for you; each answer decides what a later plan does.
    cancels the run of the older one, but a run on `main` is never cancelled, so it always saves its cache. Developer
    only; look at the Actions page after the next pull request.
 
-113. [ ] **Question: `Backspace` at the start of a task that sits right below another task:** this is new in plan 12.
+113. [ ] **Question (answered): `Backspace` at the start of a task that sits right below another task:** this is new in plan 12.
    Before, `Backspace` at the start of a block with several lines, under a task, joined its text onto the task's
    `created::` line and so corrupted that line. Now the join is refused: nothing is joined and a notice appears ("the
    change would alter the outline around the block"). Every task has a `created::` line, so this is what you see when
    you press `Backspace` at the start of a task right below another task. A block with one line still joins as
    described in item 109. Should the refusal stay? Or should it join anyway, putting the joined text before the
    task's property lines and keeping the lower task's own property lines (a later change)? Or something else?
+   **Answered (owner, 2026-11-17): keep the refusal, with a notice in plain words. Done** (item 114).
+114. [ ] **The notice when a block can't be joined onto a task:** in a page with two tasks one below the other, put
+   the caret at the start of the lower task and press `Backspace`. Nothing is joined, both files stay as they were, and
+   the notice reads "This block can't be joined onto the one above: its own lines would end up after the created:: and
+   other property lines there". The same happens for any block with several lines under a block with property lines.

@@ -38,6 +38,8 @@ Counts: 145 open items found; 17 already done or settled since (struck through i
   that item).
 - **Q5:** recommended. A changelog link without text shows its web address.
 - **Q6:** approved. The close and backlog lists stand as written.
+- **Review item 113 (after the plan, 2026-11-17):** a block of several lines (every task) is still not joined onto a
+  block with property lines; the notice says why in plain words instead of the core's developer text (review 114).
 - **Pushing:** commit only during this plan; the owner pushes (to limit GitHub Actions runs). This overrides the
   push rule in "Global Constraints".
 
