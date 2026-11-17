@@ -2,6 +2,18 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.7.1] - 2026-11-17
+
+### Fixes
+
+- Log: a Git password with a slash or a question mark no longer shows in the log
+- Log: the log is kept when it cannot be moved aside at its size limit
+- Changelog: a link without text shows its web address
+- Page colors: pressing on a slider's knob no longer nudges the color
+- Editor: joining a block onto a task keeps its created and done lines intact
+- Editor: after Ctrl Shift K the caret stops before the created line of a task above
+- Editor: a block that can't be joined onto a task says why
+
 ## [1.7.0] - 2026-11-17
 
 ### Features
