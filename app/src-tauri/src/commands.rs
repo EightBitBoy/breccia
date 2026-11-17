@@ -182,7 +182,11 @@ fn run_blocking(app: &AppHandle, request: serde_json::Value) -> Result<Output, C
         serde_json::from_value(request).map_err(|e| error("badRequest", e.to_string()))?;
     // On this blocking thread, outside the session lock and the Git thread,
     // so a long sync does not hold the history up.
-    let root = state.notes_root.lock().ok().and_then(|r| r.clone());
+    let root = state
+        .notes_root
+        .lock()
+        .ok()
+        .and_then(|r| r.as_ref().map(|(root, _)| root.clone()));
     if let Some(answer) = git_log_answer(&request.command, &Git::new(), root.as_deref()) {
         return answer;
     }

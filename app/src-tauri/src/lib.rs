@@ -41,8 +41,9 @@ struct App {
     /// What the startup folder open has to tell the user (its load warnings,
     /// or why it failed), handed out once.
     startup_notices: Mutex<Vec<Notice>>,
-    /// Watches the open folder; replaced whenever a folder is opened.
-    watcher: Mutex<Option<FolderWatcher>>,
+    /// Watches the open folder, with the folder generation it was started
+    /// for; replaced whenever a folder is opened, never by an older generation.
+    watcher: Mutex<Option<(FolderWatcher, u64)>>,
     /// `BRECCIA_TRACE`: print command and watcher timings to stderr.
     trace: bool,
     /// `BRECCIA_TODAY`: the date `today` means (the e2e hook).
@@ -59,8 +60,9 @@ struct App {
     /// The generation of the running index loop, 0 for none.
     indexing: AtomicU64,
     /// The open notes folder, set with its watcher, so `git.log` finds the
-    /// repository without the session lock (a pull's rebase holds it).
-    notes_root: Mutex<Option<PathBuf>>,
+    /// repository without the session lock (a pull's rebase holds it). It
+    /// carries the folder generation of its watcher.
+    notes_root: Mutex<Option<(PathBuf, u64)>>,
     /// The folder of the log file; `None` if the app has none.
     log_dir: Option<PathBuf>,
     /// `BRECCIA_TEST_PANIC`: the search text whose `search.query` panics, once.

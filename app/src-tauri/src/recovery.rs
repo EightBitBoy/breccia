@@ -14,7 +14,7 @@ use crate::events::SESSION_RECOVERED;
 use crate::git::GitMsg;
 use crate::guard::{Guarded, recovery_notice, with_session};
 use crate::indexing::index_in_background;
-use crate::watching::start_watcher;
+use crate::watching::{start_watcher, stop_watching};
 
 /// The payload of `session:recovered`.
 #[derive(serde::Serialize, Clone, Debug, PartialEq, Eq)]
@@ -85,8 +85,8 @@ pub(crate) struct FollowUp {
     watch: Option<u64>,
     /// Index the reopened folder in this generation.
     index: Option<u64>,
-    /// Stop watching: no folder is open.
-    stop_watching: bool,
+    /// Stop watching: no folder is open; the generation after the reset.
+    stop_watching: Option<u64>,
     /// Tell the Git thread to look again.
     tell_git: bool,
 }
@@ -98,12 +98,15 @@ pub(crate) struct FollowUp {
 pub(crate) fn follow_up(r: &Recovery, cause: Cause) -> FollowUp {
     let reopened = match r {
         Recovery::Reopened { generation } => Some(*generation),
-        Recovery::Kept | Recovery::NoFolder => None,
+        Recovery::Kept | Recovery::NoFolder { .. } => None,
     };
     FollowUp {
         watch: reopened,
         index: reopened.filter(|_| cause != Cause::Index),
-        stop_watching: *r == Recovery::NoFolder,
+        stop_watching: match r {
+            Recovery::NoFolder { generation } => Some(*generation),
+            _ => None,
+        },
         tell_git: cause != Cause::Git,
     }
 }
@@ -116,7 +119,7 @@ pub(crate) fn after_recovery(app: &AppHandle, r: &Recovery, cause: Cause) {
     let what = match r {
         Recovery::Reopened { .. } => "reopened",
         Recovery::Kept => "kept",
-        Recovery::NoFolder => "no folder",
+        Recovery::NoFolder { .. } => "no folder",
     };
     log::error!("the session was recovered ({what})");
     let state = app.state::<App>();
@@ -146,14 +149,8 @@ pub(crate) fn after_recovery(app: &AppHandle, r: &Recovery, cause: Cause) {
             }
         }
     }
-    if follow.stop_watching {
-        let old = state
-            .watcher
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .take();
-        drop(old);
-        *state.notes_root.lock().unwrap_or_else(|e| e.into_inner()) = None;
+    if let Some(generation) = follow.stop_watching {
+        stop_watching(app, generation);
     }
     if follow.tell_git {
         send_git(app, GitMsg::Changed);
@@ -176,10 +173,10 @@ mod tests {
         assert_eq!(follow_up(&reopened, Cause::Other).index, Some(3));
         for cause in [Cause::Index, Cause::Git, Cause::Other] {
             assert_eq!(follow_up(&Recovery::Kept, cause).index, None);
-            let none = follow_up(&Recovery::NoFolder, cause);
+            let none = follow_up(&Recovery::NoFolder { generation: 5 }, cause);
             assert_eq!(
                 (none.index, none.watch, none.stop_watching),
-                (None, None, true)
+                (None, None, Some(5))
             );
         }
     }
@@ -189,7 +186,7 @@ mod tests {
         for r in [
             Recovery::Reopened { generation: 3 },
             Recovery::Kept,
-            Recovery::NoFolder,
+            Recovery::NoFolder { generation: 4 },
         ] {
             assert!(!follow_up(&r, Cause::Git).tell_git, "{r:?}");
             assert!(follow_up(&r, Cause::Other).tell_git, "{r:?}");
@@ -236,7 +233,7 @@ mod tests {
         // The window reloads after a reopen and after the folder was closed;
         // only a kept session stays as it is.
         assert!(RecoveredEvent::of(&Recovery::Reopened { generation: 2 }).reopened);
-        assert!(RecoveredEvent::of(&Recovery::NoFolder).reopened);
+        assert!(RecoveredEvent::of(&Recovery::NoFolder { generation: 4 }).reopened);
         assert!(!RecoveredEvent::of(&Recovery::Kept).reopened);
         assert_eq!(
             RecoveredEvent::of(&Recovery::Kept).notice,

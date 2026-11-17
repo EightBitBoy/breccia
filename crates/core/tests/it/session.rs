@@ -2476,14 +2476,15 @@ fn recover_keeps_a_session_with_unsaved_pages() {
 #[test]
 fn recover_without_a_folder() {
     let mut s = Session::new();
-    assert_eq!(s.recover(), Recovery::NoFolder);
+    let g0 = s.generation();
+    assert_eq!(s.recover(), Recovery::NoFolder { generation: g0 });
     // A folder that is gone by the time of the recovery: no folder is open after it.
     let (t, mut s) = folder(&[("pages/P.md", "- a\n")]);
     let g = s.generation();
     let root = t.path().to_path_buf();
     drop(t);
     assert!(!root.exists());
-    assert_eq!(s.recover(), Recovery::NoFolder);
+    assert_eq!(s.recover(), Recovery::NoFolder { generation: g + 1 });
     let status = ok(&mut s, json!({"type":"folder.status"}), 0);
     let folder = status.folder.unwrap();
     assert_eq!(folder.path, None);

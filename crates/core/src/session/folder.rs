@@ -17,8 +17,9 @@ pub enum Recovery {
     Reopened { generation: u64 },
     /// Some page holds edits its file does not, so nothing was changed.
     Kept,
-    /// No folder is open (none was, or it could not be opened again).
-    NoFolder,
+    /// No folder is open (none was, or it could not be opened again);
+    /// `generation` is the session's generation after that.
+    NoFolder { generation: u64 },
 }
 
 impl Session {
@@ -132,7 +133,9 @@ impl Session {
     /// again from disk.
     pub fn reopen(&mut self) -> Recovery {
         let Some(ws) = self.ws.as_ref() else {
-            return Recovery::NoFolder;
+            return Recovery::NoFolder {
+                generation: self.generation,
+            };
         };
         let root = ws.root.clone();
         // As `folder.open`: a folder that is gone never opens as an empty one.
@@ -155,7 +158,9 @@ impl Session {
             Err(e) => {
                 log::error!("recovery: the notes folder could not be opened again: {e}");
                 self.reset();
-                Recovery::NoFolder
+                Recovery::NoFolder {
+                    generation: self.generation,
+                }
             }
         }
     }

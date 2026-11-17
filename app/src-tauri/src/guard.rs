@@ -70,7 +70,9 @@ fn recover(
         Ok(r) => r,
         Err(_) => {
             session.reset();
-            Recovery::NoFolder
+            Recovery::NoFolder {
+                generation: session.generation(),
+            }
         }
     }
 }
@@ -84,7 +86,7 @@ pub fn recovery_notice(r: &Recovery) -> Notice {
         Recovery::Kept => {
             "Breccia hit an internal error. Some changes are not saved yet, so your notes were not reloaded. Copy what you need from the 'could not be saved' notices, then restart Breccia."
         }
-        Recovery::NoFolder => {
+        Recovery::NoFolder { .. } => {
             "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders."
         }
     };
@@ -172,7 +174,7 @@ mod tests {
         let g = session.generation();
         // The unsaved check passed; the reopen panics.
         let got = recover(&mut session, |_| false, |_| panic!("reopen fails"));
-        assert_eq!(got, Recovery::NoFolder);
+        assert_eq!(got, Recovery::NoFolder { generation: g + 1 });
         assert!(session.git_target().is_none());
         assert!(session.generation() > g, "old block ids are stale");
     }
@@ -222,7 +224,7 @@ mod tests {
             |_| panic!("the unsaved check fails"),
             |_| {
                 reopened = true;
-                Recovery::NoFolder
+                Recovery::NoFolder { generation: 0 }
             },
         );
         assert_eq!(got, Recovery::Kept);
@@ -247,7 +249,7 @@ mod tests {
             "Breccia hit an internal error. Some changes are not saved yet, so your notes were not reloaded. Copy what you need from the 'could not be saved' notices, then restart Breccia."
         );
         assert_eq!(
-            text(Recovery::NoFolder),
+            text(Recovery::NoFolder { generation: 4 }),
             "Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders."
         );
     }

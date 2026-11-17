@@ -22,10 +22,6 @@ pub(crate) fn start_watcher(
     root: &std::path::Path,
     generation: u64,
 ) -> Option<Notice> {
-    *app.state::<App>()
-        .notes_root
-        .lock()
-        .unwrap_or_else(|e| e.into_inner()) = Some(root.to_path_buf());
     let handle = app.clone();
     let started = FolderWatcher::start(root, move |paths| {
         let handle = handle.clone();
@@ -79,10 +75,70 @@ pub(crate) fn start_watcher(
             None
         }
     };
+    // The notes root decides, then the watcher (the same order everywhere).
+    let mut slot_root = state.notes_root.lock().unwrap_or_else(|e| e.into_inner());
+    if !may_replace(slot_root.as_ref().map(|(_, g)| *g), generation) {
+        // A newer folder generation already owns the watcher and the root.
+        return notice;
+    }
+    *slot_root = Some((root.to_path_buf(), generation));
     let old = match state.watcher.lock() {
-        Ok(mut slot) => std::mem::replace(&mut *slot, new),
+        Ok(mut slot) => std::mem::replace(&mut *slot, new.map(|w| (w, generation))),
         Err(_) => None,
     };
+    drop(slot_root);
     drop(old);
     notice
+}
+
+/// Whether a watcher of folder generation `incoming` may replace the one of
+/// generation `current` (none: nothing is watched). An older generation never
+/// replaces a newer one.
+pub(crate) fn may_replace(current: Option<u64>, incoming: u64) -> bool {
+    current.is_none_or(|c| incoming >= c)
+}
+
+/// Whether a recovery that ended in generation `by` may clear the watcher
+/// and the root of generation `current`: only its own or an older one.
+pub(crate) fn may_clear(current: Option<u64>, by: u64) -> bool {
+    current.is_none_or(|c| c <= by)
+}
+
+/// Stops watching and forgets the notes root, if they belong to generation
+/// `by` or an older one.
+pub(crate) fn stop_watching(app: &AppHandle, by: u64) {
+    let state = app.state::<App>();
+    let mut root = state.notes_root.lock().unwrap_or_else(|e| e.into_inner());
+    if !may_clear(root.as_ref().map(|(_, g)| *g), by) {
+        return;
+    }
+    *root = None;
+    let old = state
+        .watcher
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .take();
+    drop(root);
+    drop(old);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_watcher_is_replaced_by_the_same_or_a_newer_generation_only() {
+        assert!(may_replace(None, 3));
+        assert!(may_replace(Some(3), 3));
+        assert!(!may_replace(Some(4), 3));
+        assert!(may_replace(Some(3), 4));
+    }
+
+    #[test]
+    fn a_recovery_clears_its_own_or_an_older_generation_only() {
+        assert!(may_clear(None, 3));
+        assert!(may_clear(Some(3), 3));
+        assert!(may_clear(Some(2), 3));
+        assert!(!may_clear(Some(4), 3));
+    }
 }
