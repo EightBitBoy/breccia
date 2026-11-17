@@ -29,7 +29,10 @@ import {
   vividValueText,
   washRows,
 } from './pageColors'
-import appCss from '../styles/app.css?raw'
+import appCssRaw from '../styles/app.css?raw'
+
+// Whitespace collapsed, so a re-wrapped rule does not break a test.
+const appCss = appCssRaw.replace(/\s+/g, ' ')
 
 const k = (key: string, over: Partial<{ shift: boolean; alt: boolean; ctrl: boolean; meta: boolean }> = {}) => ({
   key,
