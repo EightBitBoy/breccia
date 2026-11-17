@@ -78,3 +78,8 @@ Task 11: minor (deferred): it/edit.rs:148-181 no core test for a property line f
 Task 11: minor (deferred): edit.rs merge_into_previous doc comment has one ~120-column line among ~75
 Task 11: minor (deferred): own_text_end is pub(crate) but used only in edit.rs
 Task 11: complete (commits 980b625..d6d23eb, review clean; e2e 208)
+Task 12: dispatched (sonnet), BASE addd806
+Task 12: minor (deferred): site.css:179-181 the fade mask also clips the horizontal scrollbar
+Task 12: minor (deferred): site.css:156-157 `order` tied to nth-child numbers; a reordered card list breaks the pairing silently
+Task 12: minor (deferred): hero.js wiring of afterDecode has no unit test
+Task 12: complete (commits addd806..de650a8, review clean; fade degrades to none without scroll-driven animation)
