@@ -995,7 +995,7 @@ pull_interval_minutes = 5
 
 The numbers below have a range: 0 to 1440 for the Git minutes, 1 to 3650 for `archive_after_days`. A whole number
 outside it (a negative one too) is read as the key's default, with a notice naming the key; Breccia does not change
-the file.
+the file when it reads it (a later Settings save of that section writes the default).
 
 | Key | Type | Default when missing | Meaning |
 |---|---|---|---|

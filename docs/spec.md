@@ -182,7 +182,8 @@ properties). The frontend gets parsed structure from the core and only adds synt
   Changes to `breccia/config.toml` made while Breccia runs are read at once; a file that cannot be read keeps the
   settings in use, and Breccia does not write it until it can.
   A number outside the range Settings allows (Git minutes 0 to 1440, archive days 1 to 3650) does not stop the file from
-  being read: Breccia uses that setting's default and shows a notice naming it, and leaves the file as it is.
+  being read: Breccia uses that setting's default and shows a notice naming it, and leaves the file as it is when it
+  is read (a later Settings save of that section writes the default).
 - **Saving** happens shortly after typing pauses (well under a second); there is no Save button.
 
 ## 7. Features
