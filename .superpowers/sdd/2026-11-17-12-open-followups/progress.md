@@ -73,3 +73,8 @@ Task 10: minor (deferred): sliderDrag's grabbed offset not cleared on release/ca
 Task 10: review clean; implementer's e2e killed for low memory — controller e2e run pending
 Task 10: controller `just e2e` (CARGO_BUILD_JOBS=2, low memory): 208 PASS, 0 FAIL, step 137 passes
 Task 10: complete (commits be6a1b1..4b73064, review clean)
+Task 11: dispatched (sonnet), BASE 980b625
+Task 11: minor (deferred): it/edit.rs:148-181 no core test for a property line followed by a text line (window side has it)
+Task 11: minor (deferred): edit.rs merge_into_previous doc comment has one ~120-column line among ~75
+Task 11: minor (deferred): own_text_end is pub(crate) but used only in edit.rs
+Task 11: complete (commits 980b625..d6d23eb, review clean; e2e 208)
