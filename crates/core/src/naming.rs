@@ -76,7 +76,7 @@ pub fn parse_journal_name(s: &str) -> Option<NaiveDate> {
 
 /// Long English form of a journal date, e.g. `Thursday, 29 Oct 2026`.
 pub fn journal_display(date: NaiveDate) -> String {
-    day_long(date)
+    date.format("%A, %-d %b %Y").to_string()
 }
 
 /// `29 Oct`.
@@ -87,11 +87,6 @@ pub fn day_short(d: NaiveDate) -> String {
 /// `29 Oct 2026`.
 pub fn day_with_year(d: NaiveDate) -> String {
     d.format("%-d %b %Y").to_string()
-}
-
-/// `Thursday, 29 Oct 2026`.
-pub fn day_long(d: NaiveDate) -> String {
-    d.format("%A, %-d %b %Y").to_string()
 }
 
 /// The month's English name, e.g. `October`.
