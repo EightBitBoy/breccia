@@ -3,6 +3,7 @@
   import type { SettingsSection } from '../lib/settings.svelte'
   import type { ThemeChoice } from '../lib/theme'
   import type { JournalsAt } from '../lib/treeRows'
+  import type { LinkDisplay } from '../lib/linkDisplay'
   import type { BoardSummary, GitSettings, RecentFolder, StateRename, StateUsage, StateView } from '../lib/types'
   import appIcon from '../../src-tauri/icons/icon.svg'
   import RecentFolders from './RecentFolders.svelte'
@@ -92,7 +93,7 @@
     ongit: (patch: Partial<GitSettings>) => Promise<void>
     ontheme: (c: ThemeChoice) => void
     onjournalsat: (at: JournalsAt) => void
-    onlinkdisplay: (hideScheme: boolean, shorten: boolean) => void
+    onlinkdisplay: (d: LinkDisplay) => void
     /** "Open folder…" or "New folder…": the parent asks for the folder and switches. */
     onpickfolder: (type: 'folder.open' | 'folder.create') => void
     onopenfolder: (path: string) => void

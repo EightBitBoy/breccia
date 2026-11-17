@@ -6,6 +6,8 @@ export interface LinkDisplay {
   hideScheme: boolean
   /** Show only the first characters after the host, then an ellipsis. */
   shorten: boolean
+  /** Leave out one `/` at the end. */
+  trimSlash: boolean
 }
 
 /** How many characters after the host's `/` stay visible when shortening. */
@@ -23,15 +25,16 @@ function head(escaped: string, n: number): { text: string; cut: boolean } {
 
 /** `html` with each bare web address's visible text changed as `opts` ask; named links and mail links stay as they are. */
 export function shortenLinks(html: string, opts: LinkDisplay): string {
-  if (!opts.hideScheme && !opts.shorten) return html
+  if (!opts.hideScheme && !opts.shorten && !opts.trimSlash) return html
   return html.replace(BARE, (whole, href: string, text: string) => {
     if (href !== text || !SCHEME.test(text)) return whole
-    let shown = text
+    // Trimmed first, so a path that fits without its slash is not cut short.
+    let shown = opts.trimSlash && text.endsWith('/') ? text.slice(0, -1) : text
     if (opts.shorten) {
-      const slash = text.indexOf('/', text.indexOf('//') + 2)
+      const slash = shown.indexOf('/', shown.indexOf('//') + 2)
       if (slash >= 0) {
-        const { text: kept, cut } = head(text.slice(slash + 1), SHORT_LENGTH)
-        if (cut) shown = `${text.slice(0, slash + 1)}${kept}…`
+        const { text: kept, cut } = head(shown.slice(slash + 1), SHORT_LENGTH)
+        if (cut) shown = `${shown.slice(0, slash + 1)}${kept}…`
       }
     }
     if (opts.hideScheme) shown = shown.replace(SCHEME, '')

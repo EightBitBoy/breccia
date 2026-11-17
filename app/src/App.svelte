@@ -40,6 +40,7 @@
   import { extendsTo, route, selectionPageOf } from './lib/route'
   import { Journal } from './lib/journal.svelte'
   import { linkDisplay } from './lib/linkDisplay.svelte'
+  import type { LinkDisplay } from './lib/linkDisplay'
   import { everyMidnight } from './lib/feed'
   import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
   import { ancestorsOf, visible } from './lib/tree'
@@ -1206,10 +1207,11 @@
   }
 
   /** Applies at once; the choices are kept on this computer. */
-  function chooseLinkDisplay(hideScheme: boolean, shorten: boolean) {
-    linkDisplay.hideScheme = hideScheme
-    linkDisplay.shorten = shorten
-    setLinkDisplay(hideScheme, shorten).catch(refuse)
+  function chooseLinkDisplay(d: LinkDisplay) {
+    linkDisplay.hideScheme = d.hideScheme
+    linkDisplay.shorten = d.shorten
+    linkDisplay.trimSlash = d.trimSlash
+    setLinkDisplay(d).catch(refuse)
   }
 
   /** The wheel over the status bar's theme button: one notch, one theme (as the Ctrl+wheel zoom counts notches). */

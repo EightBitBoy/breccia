@@ -347,3 +347,9 @@ are its questions for you; each answer decides what a later plan does.
 105. [ ] **Appearance section, tidied:** in Settings > Appearance the two checkboxes ("Hide https://…" and "Shorten long
    web addresses…") now sit one above the other, styled like the Git section's checkbox, and the "This computer only…"
    note above them is gone. The Themes and Journal sections keep their own short "This computer only" notes.
+
+106. [ ] **Trim the trailing slash:** Settings > Appearance has a third checkbox, "Trim the trailing slash from web
+   addresses", off at first. With it, `https://x.com/docs/` reads `https://x.com/docs` (with "Hide https://" too:
+   `x.com/docs`). Only one slash at the end goes; the file and the link's target keep it, and the block you edit shows
+   the whole address. My call: the slash is trimmed before shortening, so `https://x.com/12345678/` with "Shorten" on
+   reads `x.com/12345678` instead of `x.com/12345678…`.

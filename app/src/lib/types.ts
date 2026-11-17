@@ -377,6 +377,8 @@ export interface UiState {
   hideLinkScheme?: boolean | null
   /** Show a long web address cut short; null or missing is off. `setUiState` leaves it alone. */
   shortenLinks?: boolean | null
+  /** Show a web address without a `/` at the end; null or missing is off. `setUiState` leaves it alone. */
+  trimLinkSlash?: boolean | null
 }
 
 /** One entry of the recent-folders list. */

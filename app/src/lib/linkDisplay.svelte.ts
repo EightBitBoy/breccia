@@ -1,13 +1,15 @@
-// The two link-display choices, kept on this computer, shared by every rendered block.
+// The link-display choices, kept on this computer, shared by every rendered block.
 import { shortenLinks, type LinkDisplay } from './linkDisplay'
 
 class LinkDisplayChoice implements LinkDisplay {
   hideScheme = $state(false)
   shorten = $state(false)
+  trimSlash = $state(false)
 
-  restore(ui: { hideLinkScheme?: boolean | null; shortenLinks?: boolean | null }): void {
+  restore(ui: { hideLinkScheme?: boolean | null; shortenLinks?: boolean | null; trimLinkSlash?: boolean | null }): void {
     this.hideScheme = ui.hideLinkScheme === true
     this.shorten = ui.shortenLinks === true
+    this.trimSlash = ui.trimLinkSlash === true
   }
 
   /** `html` as the choices ask; reading it in a template makes the template follow the choices. */

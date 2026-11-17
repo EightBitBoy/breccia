@@ -126,6 +126,10 @@ Settings got a "Themes" section (the theme picker) and "Appearance" now holds th
 view only, new section layout, both off, length fixed. Review item 103 asks whether the length should be adjustable and
 whether the editor should shorten too.
 
+Since 1.6.0 (not released yet): the `#` menu lists only existing tags, shown as `#tag` (review 104); the Appearance
+checkboxes are stacked without the note (105); a third one, "Trim the trailing slash", shows a web address without a
+`/` at the end, trimmed before shortening (106).
+
 A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audit/2026-11-10/`, start with its
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.

@@ -2,6 +2,7 @@
 // one named command (`lib/api.ts`); these are the few raw calls besides it.
 import { invoke } from '@tauri-apps/api/core'
 import type { CommandError, Notice, Output, Request, UiState, RecentFolder } from './lib/types'
+import type { LinkDisplay } from './lib/linkDisplay'
 
 /**
  * The event the shell emits with every page a command returns (§9's `page.changed`;
@@ -70,8 +71,8 @@ export function setJournalsAt(at: string): Promise<void> {
 }
 
 /** Saves how web addresses are shown in rendered text (machine-local). */
-export function setLinkDisplay(hideScheme: boolean, shorten: boolean): Promise<void> {
-  return invoke<void>('set_link_display', { hideScheme, shorten })
+export function setLinkDisplay(d: LinkDisplay): Promise<void> {
+  return invoke<void>('set_link_display', { hideScheme: d.hideScheme, shorten: d.shorten, trimSlash: d.trimSlash })
 }
 
 /** Saves the chosen theme; null follows the operating system. */

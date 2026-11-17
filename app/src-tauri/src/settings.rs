@@ -35,6 +35,9 @@ pub struct Settings {
     /// Show a long web address cut short; `None` is off.
     #[serde(default)]
     pub shorten_links: Option<bool>,
+    /// Show a web address without a `/` at the end; `None` is off.
+    #[serde(default)]
+    pub trim_link_slash: Option<bool>,
     /// Folders opened before, the most recent first, at most `RECENT_MAX`.
     #[serde(default)]
     pub recent_folders: Vec<PathBuf>,
@@ -160,6 +163,7 @@ fn from_bytes(bytes: &[u8]) -> Option<Settings> {
         journals_at: field(&mut map, "journals_at"),
         hide_link_scheme: field(&mut map, "hide_link_scheme"),
         shorten_links: field(&mut map, "shorten_links"),
+        trim_link_slash: field(&mut map, "trim_link_slash"),
         recent_folders,
         hidden_columns: hidden_from(map.remove("hidden_columns")),
         other: map,
@@ -362,20 +366,24 @@ mod tests {
         update(dir.path(), |s| {
             s.hide_link_scheme = Some(true);
             s.shorten_links = Some(false);
+            s.trim_link_slash = Some(true);
         })
         .unwrap();
         let s = load(dir.path());
         assert_eq!(
-            (s.hide_link_scheme, s.shorten_links),
-            (Some(true), Some(false))
+            (s.hide_link_scheme, s.shorten_links, s.trim_link_slash),
+            (Some(true), Some(false), Some(true))
         );
         std::fs::write(
             dir.path().join(FILE),
-            r#"{"hide_link_scheme":"yes","shorten_links":1}"#,
+            r#"{"hide_link_scheme":"yes","shorten_links":1,"trim_link_slash":[]}"#,
         )
         .unwrap();
         let s = load(dir.path());
-        assert_eq!((s.hide_link_scheme, s.shorten_links), (None, None));
+        assert_eq!(
+            (s.hide_link_scheme, s.shorten_links, s.trim_link_slash),
+            (None, None, None)
+        );
     }
 
     #[test]

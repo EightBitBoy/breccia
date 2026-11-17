@@ -43,6 +43,9 @@ pub(crate) struct UiState {
     /// Whether a long web address is shown cut short; `set_ui_state` never changes it (see `set_link_display`).
     #[serde(default)]
     shorten_links: Option<bool>,
+    /// Whether a web address is shown without a `/` at the end; `set_ui_state` never changes it (see `set_link_display`).
+    #[serde(default)]
+    trim_link_slash: Option<bool>,
 }
 
 /// One entry of the recent-folders list, for the folder picker.
@@ -252,6 +255,7 @@ pub fn ui_state(app: State<'_, App>) -> UiState {
         journals_at: s.journals_at,
         hide_link_scheme: s.hide_link_scheme,
         shorten_links: s.shorten_links,
+        trim_link_slash: s.trim_link_slash,
     }
 }
 
@@ -271,12 +275,13 @@ pub fn set_journals_at(app: State<'_, App>, at: Option<String>) {
     }
 }
 
-/// Saves how web addresses are shown in rendered text (both default to off).
+/// Saves how web addresses are shown in rendered text (all default to off).
 #[tauri::command]
-pub fn set_link_display(app: State<'_, App>, hide_scheme: bool, shorten: bool) {
+pub fn set_link_display(app: State<'_, App>, hide_scheme: bool, shorten: bool, trim_slash: bool) {
     let result = settings::update(&app.config_dir, |s| {
         s.hide_link_scheme = Some(hide_scheme);
         s.shorten_links = Some(shorten);
+        s.trim_link_slash = Some(trim_slash);
     });
     if let Err(e) = result {
         log::warn!("could not save settings: {e}");
