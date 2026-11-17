@@ -1,7 +1,7 @@
 // The hero: shards of the page colours drift in from all sides, snap together into one stone, and the stone
 // resolves into the journal screenshot. Then the frame shards follow the pointer a little. Nothing moves with
 // reduced motion; without JavaScript the page shows the assembled stone (site.css).
-import { colorFor, inset, parallax, scatter, tiles } from './shards.js'
+import { afterDecode, colorFor, inset, parallax, scatter, tiles } from './shards.js'
 
 const SEED = 665
 const COLS = 6
@@ -173,10 +173,13 @@ function follow() {
 }
 
 if (stone && img && !still) {
-  const fallback = reveal()
-  // Too late (the fallback is about to show the stone, or did): skip the assembly.
-  if (fallback && fallback.currentTime !== null && fallback.currentTime > 1800) root.classList.remove('hero-intro')
-  else assemble()
+  // The assembly waits for the screenshot to decode; the fallback's time is checked then.
+  afterDecode(img, () => {
+    const fallback = reveal()
+    // Too late (the fallback is about to show the stone, or did): skip the assembly.
+    if (fallback && fallback.currentTime !== null && fallback.currentTime > 1800) root.classList.remove('hero-intro')
+    else assemble()
+  })
   if (matchMedia('(pointer: fine)').matches) follow()
 } else {
   root.classList.remove('hero-intro')

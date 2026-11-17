@@ -1,6 +1,6 @@
 // The hero's pure geometry and colour choice (site/shards.js).
 import { describe, expect, it } from 'vitest'
-import { colorFor, inset, parallax, rng, scatter, tiles } from '../../site/shards.js'
+import { afterDecode, colorFor, inset, parallax, rng, scatter, tiles } from '../../site/shards.js'
 
 const NAMES = [
   'crimson', 'red', 'coral', 'orange', 'amber', 'yellow', 'olive', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky',
@@ -141,5 +141,28 @@ describe('shards', () => {
     const ji = inset(j, 930, 580, 1.5)
     expect(area(ji)).toBeLessThan(area(j))
     expect(area(ji)).toBeGreaterThan(area(j) * 0.8)
+  })
+
+  it('afterDecode_runs_go_once_after_decode_settles_either_way', async () => {
+    for (const settle of ['resolve', 'reject']) {
+      let done
+      const p = new Promise((res, rej) => {
+        done = settle === 'resolve' ? res : () => rej(new Error('broken'))
+      })
+      const img = { decode: () => p }
+      let calls = 0
+      afterDecode(img, () => calls++)
+      expect(calls).toBe(0)
+      done()
+      await p.catch(() => {})
+      await Promise.resolve()
+      expect(calls).toBe(1)
+    }
+  })
+
+  it('afterDecode_runs_go_at_once_without_decode', () => {
+    let calls = 0
+    afterDecode({}, () => calls++)
+    expect(calls).toBe(1)
   })
 })

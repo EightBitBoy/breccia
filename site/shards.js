@@ -118,3 +118,11 @@ export function inset(quad, w, h, gap) {
     return [(x / w) * 100, (y / h) * 100]
   })
 }
+
+/** Calls `go` once, after the image has decoded (or failed to), so the assembly never starts on a half-loaded
+ *  screenshot. Without `decode` it calls `go` at once. */
+export function afterDecode(img, go) {
+  if (!img || typeof img.decode !== 'function') return go()
+  const done = () => go()
+  img.decode().then(done, done)
+}

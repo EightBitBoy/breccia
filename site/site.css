@@ -337,11 +337,14 @@ h3::before {
 @media (min-width: 40rem) {
   .grid { grid-template-columns: repeat(6, minmax(0, 1fr)); }
   .grid article { grid-column: span 3; }
-  .grid article:nth-child(3), .grid article:nth-child(7) { grid-column: span 6; }
+}
+/* Tablet: the one-line cards (Page colors, Graph) pair up instead of filling a row alone. */
+@media (min-width: 40rem) and (max-width: 63.99rem) {
+  .grid article:nth-child(4), .grid article:nth-child(5), .grid article:nth-child(6) { order: 1; }
+  .grid article:nth-child(8), .grid article:nth-child(9) { order: 2; }
 }
 @media (min-width: 64rem) {
   .grid article { grid-column: span 2; }
-  .grid article:nth-child(3), .grid article:nth-child(7) { grid-column: span 2; }
 }
 
 .grid article {
@@ -354,6 +357,18 @@ h3::before {
 .grid .shot-scroll { overflow-x: auto; margin-top: 1rem; border-radius: 0.4rem; }
 .grid .shot-scroll img { min-width: 40rem; margin-top: 0; }
 @media (min-width: 40rem) { .grid .shot-scroll img { min-width: 0; } }
+/* Phone: a fade on the right edge says the board scrolls sideways; it goes when the end is reached. */
+@property --fade { syntax: '<length>'; inherits: false; initial-value: 0px; }
+@keyframes scroll-end { 0%, 96% { --fade: 2.5rem; } 100% { --fade: 0rem; } }
+@media (max-width: 39.99rem) {
+  .grid .shot-scroll {
+    --fade: 2.5rem;
+    -webkit-mask-image: linear-gradient(to right, black calc(100% - var(--fade)), transparent);
+    mask-image: linear-gradient(to right, black calc(100% - var(--fade)), transparent);
+    animation: scroll-end linear both;
+    animation-timeline: scroll(self inline);
+  }
+}
 .grid article.wide p, .grid article.wide ul { max-width: 70ch; }
 
 .grid article:nth-child(1) h3 { --m: var(--pc-violet); }
