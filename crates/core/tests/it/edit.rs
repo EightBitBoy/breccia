@@ -146,6 +146,54 @@ fn merge_that_would_leave_a_fence_open_is_refused() {
 }
 
 #[test]
+fn merge_keeps_the_task_property_lines() {
+    // the joined text goes to the end of the task's own text, the caret after "a"
+    assert_eq!(
+        with(
+            "- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n",
+            |d, b, ids| assert_eq!(d.merge_into_previous(b[1], ids).unwrap(), (b[0], 6))
+        ),
+        "- TODO ab\n  created:: 2026-10-29 14:05:09\n"
+    );
+    assert_eq!(
+        with(
+            "- DONE a\n  created:: 2026-10-29 14:05:09\n  done:: 2026-10-30 08:00:00\n- b\n\t- c\n",
+            |d, b, ids| assert_eq!(d.merge_into_previous(b[1], ids).unwrap(), (b[0], 6))
+        ),
+        "- DONE ab\n  created:: 2026-10-29 14:05:09\n  done:: 2026-10-30 08:00:00\n\t- c\n"
+    );
+    // an empty block below adds nothing
+    assert_eq!(
+        with(
+            "- TODO a\n  created:: 2026-10-29 14:05:09\n- \n",
+            |d, b, ids| assert_eq!(d.merge_into_previous(b[1], ids).unwrap(), (b[0], 6))
+        ),
+        "- TODO a\n  created:: 2026-10-29 14:05:09\n"
+    );
+    // a block without property lines behaves as before
+    assert_eq!(
+        with("- a\n  note\n- b\n", |d, b, ids| assert_eq!(
+            d.merge_into_previous(b[1], ids).unwrap(),
+            (b[0], 6)
+        )),
+        "- a\n  noteb\n"
+    );
+}
+
+#[test]
+fn merge_of_several_lines_onto_property_lines_is_refused() {
+    // the second line would land after the property lines
+    let src = "- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n  more\n";
+    assert_eq!(
+        with(src, |d, b, ids| assert_eq!(
+            d.merge_into_previous(b[1], ids),
+            Err(EditError::WouldChangeStructure)
+        )),
+        src
+    );
+}
+
+#[test]
 fn split_inside_fence_is_refused() {
     let src = "- ```\n  one\n  two\n  ```\n";
     // right after "one\n"

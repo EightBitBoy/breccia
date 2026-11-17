@@ -5,6 +5,7 @@
 //! `raw` bytes; a block whose text or depth changes is regenerated.
 
 use crate::error::EditError;
+use crate::inline;
 use crate::outline::{
     Block, BlockId, Document, IdGen, LineEnding, closing_fence, front_matter_len, parse,
     regenerate, ws_width,
@@ -218,10 +219,12 @@ impl Document {
         Ok(new)
     }
 
-    /// Appends the block's text to the preceding block (Backspace at the
-    /// start). The block's children move under the previous block. Returns
-    /// the previous block and the cursor offset in its new text (its old
-    /// text length, at most the new length).
+    /// Appends the block's text to the end of the preceding block's own text,
+    /// before its property lines (Backspace at the start). The block's children move under the previous block. Returns
+    /// the previous block and the cursor offset in its new text (the end of
+    /// its old own text, at most the new length). A block with several lines
+    /// joined onto one with property lines is refused with
+    /// [`EditError::WouldChangeStructure`].
     /// If the merged text holds bullet lines, they become new blocks after
     /// the previous block, ahead of the re-parented children.
     /// A merge whose text would end inside an open fence (for example text
@@ -237,10 +240,16 @@ impl Document {
             return Err(EditError::NoPrevious);
         }
         let p = i - 1;
-        let offset = self.blocks[p].text.len();
+        let prev = &self.blocks[p].text;
+        let offset = own_text_end(prev);
         let (from, to) = (self.blocks[i].depth, self.blocks[p].depth);
         let children = self.subtree_end(i) - i - 1;
-        let joined = format!("{}{}", self.blocks[p].text, self.blocks[i].text);
+        let next = &self.blocks[i].text;
+        // Text lines after the first would land behind the property lines.
+        if offset < prev.len() && next.contains('\n') {
+            return Err(EditError::WouldChangeStructure);
+        }
+        let joined = format!("{}{}{}", &prev[..offset], next, &prev[offset..]);
         if self.ends_in_fence(&joined) {
             return Err(EditError::WouldChangeStructure);
         }
@@ -558,5 +567,19 @@ impl Document {
         if frag.len() == 1 {
             let _ = self.store(i, frag, &mut IdGen::new());
         }
+    }
+}
+
+/// Where a block's own text ends: the start of its property lines (the
+/// `key:: value` lines directly after the first line, spec section 5) when they
+/// run to the end of the text, else the end of the text. The window has the same
+/// rule in `ownTextEnd` (`app/src/lib/deleteBlock.ts`).
+pub(crate) fn own_text_end(text: &str) -> usize {
+    let props = inline::properties(text).len();
+    let lines = text.split('\n').count();
+    if props > 0 && props == lines - 1 {
+        text.find('\n').unwrap_or(text.len())
+    } else {
+        text.len()
     }
 }

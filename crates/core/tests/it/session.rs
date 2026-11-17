@@ -441,6 +441,20 @@ fn undo_restores_the_text_and_saves_it_with_lf() {
 }
 
 #[test]
+fn undo_of_a_merge_onto_a_task_restores_the_file_byte_for_byte() {
+    let original = "- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let b = ids(&mut s, "p")[1];
+    ok(&mut s, json!({"type":"block.merge","id":b}), 0);
+    assert_eq!(
+        read(&t, "pages/P.md"),
+        "- TODO ab\n  created:: 2026-10-29 14:05:09\n"
+    );
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 100);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
 fn coalescing_stops_after_a_pause_or_another_block() {
     let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
     let [a, _]: [BlockId; 2] = ids(&mut s, "p").try_into().unwrap();
