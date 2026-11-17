@@ -63,3 +63,7 @@ Task 8: minor (deferred): step 128's pointer moves cannot be shown to fail (stab
 Task 8: minor (deferred): step 127's "typed but not sent" case documented unreachable, not checked against app code
 Task 8: minor (deferred): one commit for all step groups instead of one per group
 Task 8: complete (commits 99bce23..811012b, review clean; e2e 207 twice)
+Task 9: dispatched (sonnet), BASE 1198334
+Task 9: minor (deferred): ci-workflow.test.mjs lines over 120 characters
+Task 9: minor (deferred): the `if` assertion is not tied to the build job (fine while there is one job)
+Task 9: complete (commits 1198334..d79e01f, review clean)
