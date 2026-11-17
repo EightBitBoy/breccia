@@ -30,6 +30,10 @@ struct Inner {
     file: Option<File>,
     size: u64,
     cap: u64,
+    /// The size `breccia.log` had when moving it aside failed. The move is tried
+    /// again once the file has grown by another `cap`; if that fails too, the
+    /// file is truncated, so it never passes twice the cap.
+    rename_failed_at: Option<u64>,
 }
 
 impl Inner {
@@ -43,14 +47,27 @@ impl Inner {
         Some((file, size))
     }
 
-    /// Moves `breccia.log` to `breccia.1.log` (replacing it) and starts a new one.
+    /// Moves `breccia.log` to `breccia.1.log` (replacing it) and starts a new
+    /// one. When the move fails, `breccia.log` is neither deleted nor
+    /// truncated: writing goes on, and the move is tried again after the file
+    /// has grown by another cap. Only when that second try fails too is the file
+    /// truncated.
     fn rotate(&mut self) {
         let Some(dir) = self.dir.clone() else { return };
         // Windows refuses to rename an open file.
         self.file = None;
         let moved = fs::rename(dir.join(LOG_FILE), dir.join(OLD_LOG_FILE)).is_ok();
-        if !moved {
-            let _ = fs::remove_file(dir.join(LOG_FILE));
+        if moved {
+            self.rename_failed_at = None;
+        } else if self.rename_failed_at.is_none() {
+            self.rename_failed_at = Some(self.size);
+        } else {
+            // A failed second try: start the file again.
+            let _ = OpenOptions::new()
+                .write(true)
+                .truncate(true)
+                .open(dir.join(LOG_FILE));
+            self.rename_failed_at = None;
         }
         let (file, size) = Inner::open_file(&dir).unzip();
         self.file = file;
@@ -59,8 +76,22 @@ impl Inner {
 
     fn write(&mut self, line: &str) {
         let need = line.len() as u64 + 1;
+        // A handle lost to a failed reopen is tried again.
+        if self.file.is_none() {
+            let reopened = self.dir.as_deref().and_then(Inner::open_file);
+            if let Some((file, size)) = reopened {
+                self.file = Some(file);
+                self.size = size;
+            }
+        }
         if self.file.is_some() && self.size > 0 && self.size + need > self.cap {
-            self.rotate();
+            let due = match self.rename_failed_at {
+                None => true,
+                Some(at) => self.size + need > at + self.cap,
+            };
+            if due {
+                self.rotate();
+            }
         }
         if let Some(file) = &mut self.file {
             // A failed write drops the line; logging never fails the app.
@@ -91,6 +122,7 @@ impl LogFile {
                 file,
                 size: size.unwrap_or(0),
                 cap,
+                rename_failed_at: None,
             }),
         }
     }
@@ -103,6 +135,7 @@ impl LogFile {
                 file: None,
                 size: 0,
                 cap: LOG_CAP,
+                rename_failed_at: None,
             }),
         }
     }
@@ -119,6 +152,8 @@ impl LogFile {
 
     /// The panic hook's path: the file only (the previous hook prints to
     /// stderr), and no waiting for a lock that the panicking thread may hold.
+    /// A panic while another thread writes can leave a line half written; that
+    /// is accepted.
     fn try_write_line(&self, line: &str) {
         let mut inner = match self.inner.try_lock() {
             Ok(inner) => inner,
@@ -283,6 +318,7 @@ pub fn init(dir: Option<&Path>, trace: bool) {
         Some(dir) => LogFile::open(dir, LOG_CAP),
         None => LogFile::stderr_only(),
     });
+    // Another logger already installed (only in tests): nothing else is set up.
     if log::set_logger(logger).is_err() {
         return;
     }
@@ -571,5 +607,66 @@ mod tests {
         );
         let trace = "trace cmd x wait=1.0ms run=2.0ms";
         assert_eq!(stderr_text(trace), trace);
+    }
+
+    #[test]
+    fn rotation_keeps_the_log_when_rename_fails() {
+        let t = tempfile::tempdir().unwrap();
+        // A folder where the old log goes: the rename onto it fails.
+        fs::create_dir(t.path().join(OLD_LOG_FILE)).unwrap();
+        let log = LogFile::open(t.path(), 100);
+        let line = |i: usize| format!("line {i:02}{}", "x".repeat(21));
+        // 30 bytes each: the cap is passed after the third line.
+        for i in 0..6 {
+            log.write_line(&line(i));
+        }
+        let current = read(t.path(), LOG_FILE);
+        for i in 0..6 {
+            assert!(current.contains(&line(i)), "line {i} lost: {current}");
+        }
+        // Far on, the file is cut at most at twice the cap and the newest lines stay.
+        for i in 6..40 {
+            log.write_line(&line(i));
+            let len = fs::metadata(t.path().join(LOG_FILE)).unwrap().len();
+            assert!(len <= 200, "{len}");
+        }
+        let current = read(t.path(), LOG_FILE);
+        assert!(current.contains(&line(39)));
+        assert!(!current.contains(&line(0)), "never truncated");
+        assert!(t.path().join(OLD_LOG_FILE).is_dir());
+    }
+
+    #[test]
+    fn a_failed_reopen_is_retried() {
+        let t = tempfile::tempdir().unwrap();
+        let log = LogFile::open(t.path(), 1000);
+        log.write_line("before");
+        log.lock().file = None;
+        log.write_line("after");
+        assert_eq!(read(t.path(), LOG_FILE), "before\nafter\n");
+    }
+
+    #[test]
+    fn two_threads_write_whole_lines() {
+        let t = tempfile::tempdir().unwrap();
+        let log = LogFile::open(t.path(), 10_000_000);
+        std::thread::scope(|s| {
+            for name in ["a", "b"] {
+                let log = &log;
+                s.spawn(move || {
+                    for i in 0..500 {
+                        log.write_line(&format!("{name} {i} {}", name.repeat(40)));
+                    }
+                });
+            }
+        });
+        let text = read(t.path(), LOG_FILE);
+        assert_eq!(text.lines().count(), 1000);
+        for l in text.lines() {
+            let mut parts = l.split(' ');
+            let name = parts.next().unwrap();
+            parts.next().unwrap();
+            assert_eq!(parts.next().unwrap(), name.repeat(40), "{l}");
+        }
     }
 }
