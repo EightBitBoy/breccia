@@ -1,15 +1,23 @@
 // Contract between the Rust side (core and shell) and the hand-kept TypeScript types.
 // The Rust sources are read as text; each case compares the names on the wire.
+/// <reference types="node" />
+import { readdirSync, readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import commandRs from '../../../crates/core/src/session/command.rs?raw'
 import viewRs from '../../../crates/core/src/session/view.rs?raw'
 import typesTs from './types.ts?raw'
 import apiTs from '../api.ts?raw'
+import recoveryTs from './recovery.ts?raw'
 
 // Every shell source, joined: the event names live wherever the shell keeps them.
-const shellRs = Object.values(
-  import.meta.glob<string>('../../src-tauri/src/*.rs', { query: '?raw', import: 'default', eager: true }),
-).join('\n')
+const shellDir = new URL('../../src-tauri/src/', import.meta.url)
+const shellFile = (name: string) => readFileSync(new URL(name, shellDir), 'utf8')
+const shellRs = readdirSync(shellDir)
+  .filter((f) => f.endsWith('.rs'))
+  .sort()
+  .map(shellFile)
+  .join('\n')
+const sessionRs = readFileSync(new URL('../../../crates/core/src/session/mod.rs', import.meta.url), 'utf8')
 
 const lines = (s: string) => s.replace(/\r\n/g, '\n').split('\n')
 
@@ -93,5 +101,50 @@ test('notice_kinds_match', () => {
   }
   const ts = new Set<string>()
   for (const m of tsSection(typesTs, 'export type Notice =').matchAll(/kind: '([^']+)'/g)) ts.add(m[1])
+  sameSet(rust, ts)
+})
+
+/** The string constant `name` of recovery.ts. */
+function recoveryConst(name: string): string {
+  const m = new RegExp(`^const ${name} = '([^']+)'`, 'm').exec(recoveryTs)
+  if (!m) throw new Error(`not found in recovery.ts: ${name}`)
+  return m[1]
+}
+
+test('the recovered error code matches', () => {
+  const rust = /commands::error\("([^"]+)", message\)/.exec(shellFile('recovery.rs'))
+  expect(rust, 'the recovered answer in recovery.rs').not.toBeNull()
+  const ts = /code === '([^']+)'\) return true/.exec(recoveryTs)
+  expect(ts, 'the recovered code in recovery.ts').not.toBeNull()
+  expect(rust![1]).toBe('recovered')
+  expect(ts![1]).toBe(rust![1])
+})
+
+test('the stale refusal text starts as the window expects', () => {
+  const m = /"(request is for generation) \{\}/.exec(sessionRs)
+  expect(m, 'the stale text in session/mod.rs').not.toBeNull()
+  expect(recoveryConst('STALE_TEXT')).toBe(m![1])
+})
+
+test('the recovery notices start as the window expects', () => {
+  const guard = shellFile('guard.rs')
+  const body = guard.slice(0, guard.indexOf('#[cfg(test)]'))
+  const notices = [...body.matchAll(/^\s+"(Breccia hit [^"]*)"$/gm)].map((m) => m[1])
+  expect(notices.length, 'the three recovery notices').toBe(3)
+  const start = recoveryConst('RECOVERY_TEXT')
+  expect(notices.filter((n) => !n.startsWith(start))).toEqual([])
+})
+
+test('recovered_event_fields_match', () => {
+  const rust = new Set<string>()
+  for (const l of block(shellFile('recovery.rs'), 'pub(crate) struct RecoveredEvent {')) {
+    const m = /^ {4}(\w+):/.exec(l)
+    if (m) rust.add(camel(m[1]))
+  }
+  const ts = new Set<string>()
+  for (const l of block(typesTs, 'export interface RecoveredEvent {')) {
+    const m = /^ {2}(\w+)\??:/.exec(l)
+    if (m) ts.add(m[1])
+  }
   sameSet(rust, ts)
 })

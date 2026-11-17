@@ -1,3 +1,5 @@
+/// <reference types="node" />
+import { readdirSync, readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import { THEMES, THEME_CHOICES, applyTheme, parseTheme, storedTheme, windowTheme } from './theme'
 import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, PAGE_COLOR_ROWS } from './pageColors'
@@ -79,11 +81,15 @@ test('faded is visible but quieter than text in every theme', () => {
   }
 })
 
-const sources = import.meta.glob('/src/**/*.{css,svelte,ts}', {
-  query: '?raw',
-  import: 'default',
-  eager: true,
-}) as Record<string, string>
+/** Every .css, .svelte and .ts file under app/src, by its path from app/ (`/src/...`). */
+function sourcesUnder(dir: URL, prefix: string, out: Record<string, string> = {}): Record<string, string> {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) sourcesUnder(new URL(`${e.name}/`, dir), `${prefix}/${e.name}`, out)
+    else if (/\.(css|svelte|ts)$/.test(e.name)) out[`${prefix}/${e.name}`] = readFileSync(new URL(e.name, dir), 'utf8')
+  }
+  return out
+}
+const sources = sourcesUnder(new URL('../', import.meta.url), '/src')
 
 test('no colour literals outside tokens', () => {
   const funcs = /\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color|color-mix)\(/
