@@ -220,7 +220,7 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 }
 .page-color-btn.none { box-shadow: inset 0 0 0 1.5px var(--faded); }
 .page-color-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-.page-color-picker { z-index: 35; padding: 8px; min-width: 0; user-select: none; }
+.page-color-picker { user-select: none; }
 /* The `.menu` rule below gives the picker 150 px and 4 px of padding, more than the grid's five cells need. The
    choices take only the grid's width, in the middle, so the sliders and the preview are exactly as wide as the grid. */
 .pc-choice { width: fit-content; margin-inline: auto; }
