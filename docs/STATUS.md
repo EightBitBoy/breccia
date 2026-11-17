@@ -143,22 +143,21 @@ size limit is kept; a press on a page color slider's knob no longer nudges the v
 the task's `created::` and `done::` lines, and after `Backspace` in an empty block or `Ctrl Shift K` the caret stops
 before them; a changelog link without text shows its web address; the website has a scroll fade on the board image at
 phone width, pairs the one-line cards at tablet width and waits for the hero image. The rest is tests, tidy-ups, CI
-(one run per change) and docs. The owner checks review items 107 to 113 (113 is a question: should `Backspace` join a
-block of several lines under a task?). Ledger `.superpowers/sdd/2026-11-17-12-open-followups/progress.md`.
+(one run per change) and docs. The owner checks review items 107 to 113 (113 is an open question: `Backspace` at the start of a task right below another task is now refused with a notice; should it join instead?). Ledger `.superpowers/sdd/2026-11-17-12-open-followups/progress.md`.
 
 Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md` holds the 24 open ones; the 62 closed ones are in
+- backlog items the owner picks (`docs/backlog.md` holds the 29 open ones; the 62 closed ones are in
   `docs/backlogged.md`);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 
 ## Test baseline
 
-- `just test`: Vitest (1127 tests) and cargo tests (core: lib 50, integration 798 with 2 ignored; shell 77) pass
+- `just test`: Vitest (1156 tests) and cargo tests (core: lib 50, integration 807 with 2 ignored; shell 86) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 208 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused

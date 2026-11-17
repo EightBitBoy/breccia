@@ -363,8 +363,8 @@ are its questions for you; each answer decides what a later plan does.
    copy `breccia.1.log` cannot be replaced (for example because it is open in another program), `breccia.log` is kept
    and keeps growing; it is only cut when it is over twice the limit. Hard to try by hand; covered by unit tests.
 
-108. [ ] **A press on a slider's knob keeps the value:** in a page's color picker, press the "Custom hue" knob on its
-   exact middle and release without moving: the hue stays as it was (before, it jumped by up to about 11). Dragging the
+108. [ ] **A press on a slider's knob keeps the value:** in a page's color picker, press the "Custom hue" knob a few
+   pixels off its centre (near its edge) and release without moving: the hue stays as it was (before, it jumped by up to about 11). Dragging the
    knob still follows the pointer and saves once on release. A press on the track away from the knob still jumps there.
    The same on the "Vividness" slider.
 
@@ -386,11 +386,15 @@ are its questions for you; each answer decides what a later plan does.
    animation, where tiles cross the "What it is" text at 375 px for about half a second, is left as it is.
 
 112. [ ] **One CI run per change:** push a branch of this repository and open a pull request from it: GitHub Actions
-   shows one CI run (from the push), not two. A pull request from a fork still gets its run. A newer push to a branch
+   lists the run from the push, and the pull request's own run is skipped (it still appears in the list, but its job does not
+   start), so the work is done once, not twice. A pull request from a fork still gets its run. A newer push to a branch
    cancels the run of the older one, but a run on `main` is never cancelled, so it always saves its cache. Developer
    only; look at the Actions page after the next pull request.
 
-113. [ ] **Question: `Backspace` at the start of a block with several lines, under a task:** `Backspace` at the start of
-   a block that has several lines, when the block above is a task with `created::` or `done::` lines, still does
-   nothing: the join is refused so the task's lines stay intact. Should it join anyway (the first line onto the task's
-   text, the other lines after the task's property lines)? A block with one line joins as described in item 109.
+113. [ ] **Question: `Backspace` at the start of a task that sits right below another task:** this is new in plan 12.
+   Before, `Backspace` at the start of a block with several lines, under a task, joined its text onto the task's
+   `created::` line and so corrupted that line. Now the join is refused: nothing is joined and a notice appears ("the
+   change would alter the outline around the block"). Every task has a `created::` line, so this is what you see when
+   you press `Backspace` at the start of a task right below another task. A block with one line still joins as
+   described in item 109. Should the refusal stay? Or should it join anyway, putting the joined text before the
+   task's property lines and keeping the lower task's own property lines (a later change)? Or something else?

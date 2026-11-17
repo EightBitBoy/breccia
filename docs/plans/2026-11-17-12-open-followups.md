@@ -122,7 +122,8 @@ Pre-flight scan 2026-11-17 at `fa74e01` (details: `.superpowers/sdd/2026-11-17-1
   a `host.test.ts` case. The core test `delete_block_puts_the_caret_before_property_lines` is dropped. Second commit:
   `fix(app): Editor: after Ctrl Shift K the caret stops before the created line of a task above`.
 - R16. Task 11: `own_text_end` is the start of the property lines only when they run to the end of the text, else
-  `text.len()`. The refusal of a multi-line join onto a block with property lines stays (an open point for the owner).
+  `text.len()`. The refusal of a multi-line join onto a block with property lines stays (an open point for the owner). The refusal is new in this plan: it replaced the silent corruption of the
+  `created::` line, and it is put to the owner as review item 113.
 - R17. Task 12 Step 1: a pure `afterDecode(img, go)` in `site/shards.js` (calls `go` once after `img.decode()` settles
   either way, at once without `decode`), tested in `site-hero.test.mjs` with a fake image; `hero.js` uses it and
   checks the fallback's time inside `go`. No new site file.
