@@ -67,3 +67,9 @@ Task 9: dispatched (sonnet), BASE 1198334
 Task 9: minor (deferred): ci-workflow.test.mjs lines over 120 characters
 Task 9: minor (deferred): the `if` assertion is not tied to the build job (fine while there is one job)
 Task 9: complete (commits 1198334..d79e01f, review clean)
+Task 10: dispatched (opus, UI integration), BASE be6a1b1
+Task 10: minor (deferred): step 137 reads the file once right after a thumb press; a late write could slip past (aria-valuenow check catches the real regression)
+Task 10: minor (deferred): sliderDrag's grabbed offset not cleared on release/cancel (each press resets it)
+Task 10: review clean; implementer's e2e killed for low memory — controller e2e run pending
+Task 10: controller `just e2e` (CARGO_BUILD_JOBS=2, low memory): 208 PASS, 0 FAIL, step 137 passes
+Task 10: complete (commits be6a1b1..4b73064, review clean)
