@@ -36,6 +36,7 @@ const PAIRS: [string, string, number][] = [
   ]),
   ['--muted', '--bg', 3],
   ['--accent', '--bg', 3],
+  ['--accent', '--select', 3],
   ['--on-accent', '--accent', 4.5],
   ['--hover', '--bg', 1.1],
   ['--select', '--bg', 1.2],
