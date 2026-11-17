@@ -89,3 +89,9 @@ Task 13: minor (deferred): spec §7.2 Ctrl Shift K caret clause runs far past 12
 Task 13: minor (deferred): review item 113 says "does nothing" where the spec says "not joined"
 Task 13: complete (commits 48f8d9f..60e5dec, review clean)
 Final review: dispatched (opus) over 6a2dbf8..HEAD
+Final review (opus): ready with doc-only fixes. Important: the multi-line join refusal under a task is NEW in fbdd8e6 (before, the text was joined onto the created:: line); Backspace at the start of a task right below another task is now refused with the core's notice "the change would alter the outline around the block". Review item 113, R16 and this ledger called it old behaviour.
+Ruling: keep the refusal for now (it replaces silent corruption of the created:: line, spec §2) and put the corrected premise to the owner in review item 113 and the report — cost if wrong: the owner wants such joins; a later change merges the joined task's property lines
+Final review: fix wave dispatched (sonnet, docs only): item 113 premise, item 108 knob edge, item 112 skipped run, STATUS baseline and backlog counts
+Final review: fix wave 1 (4 addressed, 0 open; commit 481925a)
+Finish: `just lint` clean; `BRECCIA_TRACE=1 just e2e` 208 PASS, 0 FAIL, no unparsed trace lines; `just test` green at 481925a (Vitest 1156, core lib 50, core integration 807 + 2 ignored, shell 86). Follow-ups: docs/plans/2026-11-17-12-open-followups-followups.md (3ad35bd). Scratch files deleted.
+Plan 12: complete.
