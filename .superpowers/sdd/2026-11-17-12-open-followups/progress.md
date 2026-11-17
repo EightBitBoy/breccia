@@ -11,3 +11,7 @@ are in the plan's "Pre-flight rulings" (binding over task text). Notable:
 - Ruling: R16 — Backspace that would join a multi-line task onto a task above keeps being refused; only property lines at the end of a block count — cost if wrong: owner may want such joins; flagged for review.
 - Ruling: R7 — a failed log rotation keeps the current log; it is truncated only above twice the cap — cost if wrong: a log up to 2 MB.
 - Ruling: R11 — invisible behaviour changes commit as `chore` — cost if wrong: commit-type wording only.
+Task 1: dispatched (sonnet), BASE 08362eb
+Task 1: minor (deferred): range.rs doc line on replace_out_of_range ~120 columns
+Task 1: minor (deferred): watch.rs comment about which LoadWarning classify returns can go stale
+Task 1: complete (commits 08362eb..0dd348a, review clean)
