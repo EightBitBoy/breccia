@@ -24,3 +24,4 @@ Task 2: minor (deferred): page_color.rs:285 comment carries an extra parenthetic
 Task 2: minor (deferred): task.rs:1389-1415 raw multi-line literals vs \n escapes nearby
 Task 2: minor (deferred): board.rs:74 `ok` still hard-codes (2026, 10, 29) instead of DAY
 Task 2: complete (commits c42b649..bf62822, review clean)
+Task 3: dispatched (sonnet), BASE bfb1def

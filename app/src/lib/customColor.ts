@@ -1,7 +1,7 @@
 // Custom page colors: a hue the user picked becomes a shade and a wash for the current theme.
 // The theme gives lightness, chroma scale and wash strength (tokens); only the hue is the user's.
 // Everything is computed here at runtime, so no theme colour is written down in this file.
-import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, VIVID_STEP, parseCustom } from './pageColors'
+import { DEFAULT_VIVID, MAX_VIVID, MIN_VIVID, PAGE_COLORS, parseCustom } from './pageColors'
 
 export interface ThemeTokens {
   bg: string
@@ -119,7 +119,7 @@ export interface CustomShade {
   wash: string
   strength: number
   chroma: number
-  /** True when readability (or nothing else) forced less than the strength and chroma the vividness asked for. */
+  /** True when the readability guard gave less strength or chroma than the vividness asked for; the sRGB gamut alone never counts. */
   limited: boolean
 }
 
@@ -132,7 +132,10 @@ const cache = new WeakMap<ThemeTokens, Map<number, CustomShade>>()
  */
 export function customShade(hue: number, t: ThemeTokens, vivid: number = DEFAULT_VIVID): CustomShade {
   let perTheme = cache.get(t)
-  if (perTheme === undefined) cache.set(t, (perTheme = new Map()))
+  if (perTheme === undefined) {
+    perTheme = new Map()
+    cache.set(t, perTheme)
+  }
   const key = hue * 1000 + vivid
   const known = perTheme.get(key)
   if (known !== undefined) return known
@@ -151,7 +154,8 @@ function compute(hue: number, t: ThemeTokens, vivid: number): CustomShade {
     const wash = blend(base.hex, t.bg, p / 100)
     if (readable(t, wash)) return { shade: base.hex, wash, strength: p / 100, chroma: base.chroma, limited: p !== full }
   }
-  for (let c = base.chroma - CHROMA_READ_STEP; c > 0; c -= CHROMA_READ_STEP) {
+  for (let n = 1; base.chroma - n * CHROMA_READ_STEP > 0; n++) {
+    const c = base.chroma - n * CHROMA_READ_STEP
     const s = ruleShade(l, c, hue)
     const wash = blend(s.hex, t.bg, floor / 100)
     if (readable(t, wash)) return { shade: s.hex, wash, strength: floor / 100, chroma: s.chroma, limited: true }
@@ -185,6 +189,7 @@ export function hueTrack(t: ThemeTokens, vivid: number = DEFAULT_VIVID): string 
 /** The vividness slider's track: the washes of a hue at vividness 50, 75, ... 200. */
 export function vividTrack(hue: number, t: ThemeTokens): string {
   const stops = []
-  for (let v = MIN_VIVID; v <= MAX_VIVID; v += 5 * VIVID_STEP) stops.push(customShade(hue, t, v).wash)
+  const TRACK_STEP = 25
+  for (let v = MIN_VIVID; v <= MAX_VIVID; v += TRACK_STEP) stops.push(customShade(hue, t, v).wash)
   return `linear-gradient(to right, ${stops.join(', ')})`
 }
