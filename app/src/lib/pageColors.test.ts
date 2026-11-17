@@ -21,6 +21,7 @@ import {
   pickerStart,
   pickerTab,
   pointerHover,
+  pressOffset,
   previewColor,
   swatchKey,
   thumbLeft,
@@ -253,6 +254,15 @@ test('thumbLeft puts the thumb inside the track', () => {
   expect(thumbLeft(2)).toBe(thumbLeft(1))
   expect(thumbLeft(-1)).toBe(thumbLeft(0))
   expect(thumbLeft(212 / 359)).toMatch(/\* 0\.5905\)$/)
+})
+
+test('pressOffset: a press on the thumb gives its distance from the centre, a press beside it null', () => {
+  expect(pressOffset(70, 136, 0.5)).toBe(2) // centre 68
+  expect(pressOffset(80, 136, 0.5)).toBeNull()
+  expect(pressOffset(4, 136, 0)).toBe(0)
+  expect(pressOffset(1, 136, 0)).toBe(-3)
+  expect(pressOffset(72, 136, 0.5)).toBe(4) // the thumb's edge still counts
+  expect(pressOffset(63.5, 136, 0.5)).toBeNull()
 })
 
 describe('pointerHover', () => {

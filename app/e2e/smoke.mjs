@@ -3960,6 +3960,47 @@ try {
   await page.locator('.cm-content').waitFor({ state: 'detached' })
   console.log('PASS 135 keys typed right after Ctrl Enter are kept, after the state, in order')
 
+  // 137: a press on a slider's thumb, 3 px right of its centre, and a release without moving keep the value (the file
+  // is not written); a press on the track 30 px beside the thumb jumps there and saves. The same on the vividness
+  // slider, enabled because the page's color is a custom hue.
+  const knob137 = join(pagesDir, 'Knob 137.md')
+  writeFileSync(knob137, 'color:: hue 200\n- knob\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:knob 137"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:knob 137"]').click()
+  await title.filter({ hasText: 'Knob 137' }).waitFor()
+  await swatch.click()
+  await picker.waitFor()
+  /** Presses at `dx` px right of the slider's thumb centre and releases without moving. */
+  const press137 = async (s, dx) => {
+    const t = await s.locator('.pc-hue-thumb').boundingBox()
+    const b = await s.boundingBox()
+    await page.mouse.move(t.x + t.width / 2 + dx, b.y + b.height / 2)
+    await page.mouse.down()
+    await page.mouse.up()
+    await frames()
+  }
+  await waitFor('137 the hue slider stands at 200', () => slider.getAttribute('aria-valuenow'), '200')
+  await press137(slider, 3)
+  assert((await slider.getAttribute('aria-valuenow')) === '200', `137 a press on the hue thumb moved it to ${await slider.getAttribute('aria-valuenow')}`)
+  assert(readAt(knob137) === 'color:: hue 200\n- knob\n', '137 a press on the hue thumb writes nothing')
+  await press137(slider, 30)
+  const hue137 = await slider.getAttribute('aria-valuenow')
+  assert(hue137 !== '200', '137 a press on the hue track beside the thumb kept the hue')
+  await waitFor('137 a press on the hue track saves the hue', () => readAt(knob137), `color:: hue ${hue137}\n- knob\n`)
+  await waitFor('137 the vividness slider is enabled', () => vslider.getAttribute('aria-disabled'), null)
+  await waitFor('137 the vividness slider stands at 100', () => vslider.getAttribute('aria-valuenow'), '100')
+  await press137(vslider, 3)
+  assert((await vslider.getAttribute('aria-valuenow')) === '100', `137 a press on the vividness thumb moved it to ${await vslider.getAttribute('aria-valuenow')}`)
+  assert(readAt(knob137) === `color:: hue ${hue137}\n- knob\n`, '137 a press on the vividness thumb writes nothing')
+  await press137(vslider, 30)
+  const vivid137 = await vslider.getAttribute('aria-valuenow')
+  assert(vivid137 !== '100', '137 a press on the vividness track beside the thumb kept the vividness')
+  await waitFor('137 a press on the vividness track saves it', () => readAt(knob137), `color:: hue ${hue137} vivid ${vivid137}\n- knob\n`)
+  await kb.press('Escape')
+  await picker.waitFor({ state: 'detached' })
+  console.log('PASS 137 a press on a slider\'s thumb keeps its value, a press on the track beside it jumps there')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

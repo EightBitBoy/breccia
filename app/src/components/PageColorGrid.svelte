@@ -11,8 +11,8 @@
   // the vividness slider, arrows move by 5, Page Up and Down by 25, Home and End to 50 and 200 (`vividSliderKey`).
   // Enter on either slider saves the hue with its vividness. A pick, or Enter on a slider, closes; Esc closes without
   // saving. A drag on either slider previews as it moves and saves once on release (one undo step), and the picker
-  // stays open. While it is open the saved color stays marked; after a save the mark and the sliders follow the new
-  // saved color.
+  // stays open; a press on a thumb keeps its value, one on the track beside it jumps there. While it is open the saved
+  // color stays marked; after a save the mark and the sliders follow the new saved color.
   // No key goes on to the page behind it, so a block selection there stays: Esc, Tab or Delete are the picker's own.
   // That also keeps the keys from the popover's own handlers, so the grid closes on Esc itself and moves Tab itself.
   // The start takes the focus when the grid mounts and again a frame later, in case the content was not yet focusable
@@ -51,6 +51,7 @@
     pickerStart,
     pickerTab,
     pointerHover,
+    pressOffset,
     previewColor,
     thumbLeft,
     vividAt,
@@ -227,18 +228,38 @@
 
   /**
    * The pointer handlers of a slider: a press takes the pointer and the focus, a move previews, the release saves once
-   * and keeps the picker open; a cancelled drag, or one whose pointer was taken away, saves nothing. A disabled
+   * and keeps the picker open. A press on the thumb keeps the value and a drag moves it from there; a press on the track
+   * beside it jumps there. A cancelled drag, or one whose pointer was taken away, saves nothing. A disabled
    * vividness slider ignores them all.
    */
   function sliderDrag(i: SliderIndex) {
     const el = () => (i === CUSTOM ? slider : vividSlider)
+    /**
+     * A press on the thumb: how far from its centre it landed (`pressOffset`), where, and whether the pointer has moved
+     * since; null for a press on the track.
+     */
+    let grab: { offset: number; x: number; moved: boolean } | null = null
     const follow = (e: PointerEvent) => {
       const s = el()
       if (s === null) return
       const box = s.getBoundingClientRect()
       const x = e.clientX - box.left
-      if (i === CUSTOM) hue = hueAt(x, box.width)
-      else vivid = vividAt(x, box.width)
+      // The thumb keeps the value it was grabbed at until the pointer moves, then moves with it from there.
+      if (grab !== null && !grab.moved) {
+        if (x === grab.x) return
+        grab.moved = true
+      }
+      const pos = x - (grab?.offset ?? 0)
+      if (i === CUSTOM) hue = hueAt(pos, box.width)
+      else vivid = vividAt(pos, box.width)
+    }
+    /** Where the press at `e` lands: on the thumb (`grab` is set) or on the track beside it. */
+    const press = (e: PointerEvent, s: HTMLElement) => {
+      const box = s.getBoundingClientRect()
+      const x = e.clientX - box.left
+      const f = i === CUSTOM ? hue / 359 : (vivid - MIN_VIVID) / (MAX_VIVID - MIN_VIVID)
+      const offset = pressOffset(x, box.width, f)
+      grab = offset === null ? null : { offset, x, moved: false }
     }
     const cancel = () => {
       if (dragging === i) dragging = null
@@ -252,6 +273,7 @@
         dragging = i
         hover = i
         s.focus({ preventScroll: true })
+        press(e, s)
         follow(e)
       },
       onpointermove(e: PointerEvent) {

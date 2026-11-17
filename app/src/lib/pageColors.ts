@@ -121,6 +121,17 @@ export function thumbLeft(f: number): string {
   return `calc(${THUMB_W / 2}px + (100% - ${THUMB_W}px) * ${Number(c.toFixed(4))})`
 }
 
+/**
+ * A press at `x` on a slider `width` wide whose thumb stands at fraction `f`: when it lands on the thumb (within
+ * `THUMB_W / 2` of its centre, inset as in `thumbLeft`), its distance from the centre, so a drag can keep the thumb
+ * where it was grabbed; null for a press on the track beside the thumb.
+ */
+export function pressOffset(x: number, width: number, f: number): number | null {
+  const centre = THUMB_W / 2 + Math.max(0, width - THUMB_W) * Math.min(1, Math.max(0, f))
+  const off = x - centre
+  return Math.abs(off) <= THUMB_W / 2 ? off : null
+}
+
 /** The hue under a pointer at `x` on a slider `width` wide. */
 export function hueAt(x: number, width: number): number {
   return Math.round(travel(x, width) * MAX_HUE)
