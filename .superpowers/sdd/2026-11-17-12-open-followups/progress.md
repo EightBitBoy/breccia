@@ -15,3 +15,12 @@ Task 1: dispatched (sonnet), BASE 08362eb
 Task 1: minor (deferred): range.rs doc line on replace_out_of_range ~120 columns
 Task 1: minor (deferred): watch.rs comment about which LoadWarning classify returns can go stale
 Task 1: complete (commits 08362eb..0dd348a, review clean)
+Task 2: dispatched (sonnet), BASE c42b649
+Task 2: Ruling: the empty-valued-property pin checks TODO→DOING (state word only) and plain→TODO (created:: added after the property line), since a later state change adds no created:: — the brief's expectation was wrong about when created:: is added — cost if wrong: none, the test pins real behaviour
+Task 2: minor (deferred): session.rs:1264 first undo half is vacuous (second case covers it)
+Task 2: minor (deferred): task.rs:1418 CRLF pin only fails when all three trims go
+Task 2: minor (deferred): report names no mutations for the step 4 pins (edit.rs:223, session.rs:1279)
+Task 2: minor (deferred): page_color.rs:285 comment carries an extra parenthetical
+Task 2: minor (deferred): task.rs:1389-1415 raw multi-line literals vs \n escapes nearby
+Task 2: minor (deferred): board.rs:74 `ok` still hard-codes (2026, 10, 29) instead of DAY
+Task 2: complete (commits c42b649..bf62822, review clean)
