@@ -28,3 +28,13 @@ Task 3: dispatched (sonnet), BASE bfb1def
 Task 3: minor (deferred): TRACK_STEP is local to vividTrack (as briefed), a module constant would match CUSTOM_DL
 Task 3: minor (deferred): page-colors.test.mjs:133 regexes tied to the const declaration forms
 Task 3: complete (commits bfb1def..58f6088, review clean)
+Task 4: dispatched (sonnet), BASE 239d50f
+Task 4: commit split into 48e4111 (redaction) and b3a1561 (rotation) at the controller's request (one change per commit, two changelog lines)
+Task 4: review (opus): 1 Important — redact leaks a token-only user-info when the path holds another @ (regression vs base)
+Task 4: minor (deferred): over-masking of https://host:8080/a@b and file:///…/a@b.md (paths are allowed in the log)
+Task 4: minor (deferred): a password with ' " or < still shows its first part (brief's cut; same as base)
+Task 4: minor (deferred): two_threads_write_whole_lines never mutation-checked and likely cannot fail; no RED runs captured for the first commits (mutation-checked instead)
+Task 4: minor (deferred): rotation test failure message "never truncated" says the opposite of its check
+Task 4: fix round 1/5 dispatched (resume implementer, sonnet), FIX_BASE b3a1561
+Task 4: fix round 1/5 (1 addressed, 0 open; commits b3a1561..026789f)
+Task 4: complete (commits 239d50f..026789f, review clean after round 1)
