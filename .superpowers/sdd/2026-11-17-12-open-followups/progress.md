@@ -39,3 +39,7 @@ Task 4: fix round 1/5 dispatched (resume implementer, sonnet), FIX_BASE b3a1561
 Task 4: fix round 1/5 (1 addressed, 0 open; commits b3a1561..026789f)
 Task 4: complete (commits 239d50f..026789f, review clean after round 1)
 Task 5: dispatched (sonnet), BASE 98d3ae4
+Task 5: minor (deferred): watching.rs:77-84 notes_root set after the watcher starts — a git.log may see the previous root a little longer after a folder switch
+Task 5: minor (deferred): watching.rs:20-84 an older-generation watcher starts fully before being dropped (check may_replace first)
+Task 5: minor (deferred): no RED run for Step 1; may_clear not mutation-checked; no test that the shell calls may_replace/may_clear
+Task 5: complete (commits 98d3ae4..1031fba, review clean)
