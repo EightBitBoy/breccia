@@ -1574,12 +1574,13 @@ try {
   await page.keyboard.press('Control+Comma')
   await screen.waitFor()
   const sections = await screen.locator('section[data-section]').evaluateAll((s) => s.map((e) => e.dataset.section))
-  assert(JSON.stringify(sections) === JSON.stringify(['folder', 'states', 'boards', 'git', 'journal', 'themes', 'appearance', 'keyboard', 'about', 'troubleshooting']), `sections: ${sections}`)
+  const wantSections51 = ['folder', 'states', 'boards', 'git', 'journal', 'themes', 'appearance', 'keyboard', 'about', 'troubleshooting']
+  assert(JSON.stringify(sections) === JSON.stringify(wantSections51), `sections: ${sections}`)
   await page.locator('[data-testid="nav-journal"]').click()
   await screen.waitFor({ state: 'detached' })
   await page.locator('[data-testid="nav-settings"]').click()
   await screen.waitFor()
-  console.log('PASS 51 Settings opens from the footer and with Ctrl+, with its seven sections')
+  console.log(`PASS 51 Settings opens from the footer and with Ctrl+, with its ${wantSections51.length} sections`)
 
   // 52: a theme applies at once, is kept in settings.json, and the notes folder is untouched
   const config51 = readAt(configFile)
@@ -2557,7 +2558,16 @@ try {
       await page.locator('.main').evaluate((el) => (el.scrollTop += el.clientHeight / 2))
       return false
     }, true)
-    await day.scrollIntoViewIfNeeded()
+    // The feed can draw the day anew between locating and scrolling: that error is retried, any other one is not.
+    await waitFor(`${key} scrolled into view`, async () => {
+      try {
+        await day.scrollIntoViewIfNeeded({ timeout: 2000 })
+        return true
+      } catch (e) {
+        if (/not attached to the DOM/.test(String(e?.message))) return false
+        throw e
+      }
+    }, true)
     await day.getByText(text).first().waitFor({ timeout: 10_000 })
     return day
   }
@@ -3229,53 +3239,62 @@ try {
   // back to the band's color, not to nothing.
   const tone123 = join(pagesDir, 'Tone 123.md')
   writeFileSync(tone123, 'color:: blue\n- t\n')
+  const hueTone123 = join(pagesDir, 'Tone 123 hue.md')
+  writeFileSync(hueTone123, 'color:: hue 200\n- t\n')
   if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
   await side.locator('[data-row="p:tone 123"]').waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:tone 123 hue"]').waitFor({ timeout: 10_000 })
   const day123 = join(folder, 'journals', `${dayKey(11)}.md`)
-  const journal123 = '- [[Tone 123]] flashword123\n- [[Tone 123]] second\n- plain\n'
+  const journal123 = '- [[Tone 123]] flashword123\n- [[Tone 123]] second\n- plain\n- [[Tone 123 hue]] flashhue123\n'
   writeFileSync(day123, journal123)
   await showDay(dayKey(11), 'plain')
-  await openSearch()
-  await searchInput.fill('flashword123')
-  await waitFor('123 one hit', () => rows('hit').count(), 1)
-  for (let i = 0; i < 3 && (await selectedRow().getAttribute('data-kind')) !== 'hit'; i++) await kb.press('ArrowDown')
-  assert((await selectedRow().getAttribute('data-kind')) === 'hit', '123 the hit is not the selected search row')
-  await kb.press('Enter')
-  const flash123 = page.locator('.block.flash', { hasText: 'flashword123' })
-  await flash123.waitFor({ timeout: 5000 })
-  const flashed = await flash123.evaluate(async (el) => {
-    const probe = document.createElement('span')
-    probe.style.backgroundColor = 'var(--wash)'
-    el.append(probe)
-    const wash = getComputedStyle(probe).backgroundColor
-    probe.remove()
-    const anim = el.getAnimations()[0]
-    if (!anim) return { gone: true }
-    anim.pause()
-    anim.currentTime = 1499
-    const end = getComputedStyle(el).backgroundColor
-    const radius = getComputedStyle(el).borderTopLeftRadius
-    anim.finish()
-    // Both colors on white, in 8-bit sRGB: the animation blends in another color space than the wash is written in.
-    const ctx = document.createElement('canvas').getContext('2d')
-    const onWhite = (c) => {
-      ctx.fillStyle = '#fff'
-      ctx.fillRect(0, 0, 1, 1)
-      ctx.fillStyle = c
-      ctx.fillRect(0, 0, 1, 1)
-      return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
-    }
-    return { wash, end, radius, washOnWhite: onWhite(wash), endOnWhite: onWhite(end) }
-  })
-  assert(!flashed.gone, '123 the highlight ended before it was read')
-  assert(flashed.radius === '8px', `123 the highlighted row has a top corner of ${flashed.radius}, not the band's 8px`)
-  assert(
-    flashed.endOnWhite.every((v, k) => Math.abs(v - flashed.washOnWhite[k]) <= 3),
-    `123 the highlight ends on ${flashed.end} (${flashed.endOnWhite} on white), not the band's ${flashed.wash} (${flashed.washOnWhite})`,
-  )
-  await page.locator('.block.flash').waitFor({ state: 'detached', timeout: 5000 })
+  /** Jumps to the block with `word` from the search, and reads its highlight's last frame (a named wash, then a custom one). */
+  const flashAt123 = async (word) => {
+    await openSearch()
+    await searchInput.fill(word)
+    await waitFor(`123 one hit for ${word}`, () => rows('hit').count(), 1)
+    for (let i = 0; i < 3 && (await selectedRow().getAttribute('data-kind')) !== 'hit'; i++) await kb.press('ArrowDown')
+    assert((await selectedRow().getAttribute('data-kind')) === 'hit', '123 the hit is not the selected search row')
+    await kb.press('Enter')
+    const flash = page.locator('.block.flash', { hasText: word })
+    await flash.waitFor({ timeout: 5000 })
+    const flashed = await flash.evaluate(async (el) => {
+      const probe = document.createElement('span')
+      probe.style.backgroundColor = 'var(--wash)'
+      el.append(probe)
+      const wash = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      const anim = el.getAnimations().find((a) => a.animationName === 'flash')
+      if (!anim) return { gone: true }
+      anim.pause()
+      anim.currentTime = 1499
+      const end = getComputedStyle(el).backgroundColor
+      const radius = getComputedStyle(el).borderTopLeftRadius
+      anim.finish()
+      // Both colors on white, in 8-bit sRGB: the animation blends in another color space than the wash is written in.
+      const ctx = document.createElement('canvas').getContext('2d')
+      const onWhite = (c) => {
+        ctx.fillStyle = '#fff'
+        ctx.fillRect(0, 0, 1, 1)
+        ctx.fillStyle = c
+        ctx.fillRect(0, 0, 1, 1)
+        return [...ctx.getImageData(0, 0, 1, 1).data].slice(0, 3)
+      }
+      return { wash, end, radius, washOnWhite: onWhite(wash), endOnWhite: onWhite(end) }
+    })
+    assert(!flashed.gone, `123 the highlight of ${word} ended before it was read, or has no animation named flash`)
+    assert(flashed.radius === '8px', `123 the highlighted row ${word} has a top corner of ${flashed.radius}, not the band's 8px`)
+    assert(
+      flashed.endOnWhite.every((v, k) => Math.abs(v - flashed.washOnWhite[k]) <= 3),
+      `123 the highlight of ${word} ends on ${flashed.end} (${flashed.endOnWhite} on white), not the band's ${flashed.wash} (${flashed.washOnWhite})`,
+    )
+    assert(!flashed.endOnWhite.every((v) => v === 255), `123 the highlight of ${word} ends on white (${flashed.end}): the band's color is not what is compared`)
+    await page.locator('.block.flash').waitFor({ state: 'detached', timeout: 5000 })
+  }
+  await flashAt123('flashword123')
+  await flashAt123('flashhue123')
   const rows123 = page.locator('.main .block[data-block-id]')
-  await waitFor('123 the day page shows the band', () => washesOf(rows123), 'blue blue -')
+  await waitFor('123 the day page shows the band', () => washesOf(rows123), 'blue blue - hue 200')
   const radii = (row) =>
     row.evaluate((el) => {
       const s = getComputedStyle(el)
@@ -3453,6 +3472,8 @@ try {
   // A sidebar row marked now is drawn anew once the reload has shown the folder's tree again (its last step).
   if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
   await side.locator('[data-row="p:anna"]').evaluate((el) => (el.dataset.e2eBefore = '1'))
+  // Today's journal shown now is drawn anew by the reload: the element after it is not this one.
+  await page.locator(`[data-testid="day"][data-day="${today}"]`).first().evaluate((el) => (el.dataset.e2eBefore = '1'))
   const firstRow127 = () => page.locator(`[data-testid="day"][data-day="${today}"] .block[data-block-id]`).first()
   await clickRow(firstRow127())
   await page.locator('.cm-content').waitFor()
@@ -3467,16 +3488,19 @@ try {
       o.disconnect()
     }).observe(document.body, { childList: true, subtree: true })
   })
-  // At once: opening the search box sends the typed text first, so the core has it before the error.
+  // At once: opening the search box sends the typed text first, so the core has it before the error. The case "typed
+  // but not yet sent when the error hits" cannot be reached from here: the panic needs a search query, a search needs
+  // the box open, and opening it always sends the typed text first (a query invoked behind the UI's back would test a
+  // path no user can take).
   await openSearch()
   await searchInput.fill('zz-panic-127')
   const recovery127 = notices127.filter({ hasText: 'Breccia hit an internal error' })
   await recovery127.first().waitFor({ timeout: 10_000 })
   const said127 = await recovery127.first().innerText()
-  assert(said127.includes(RELOADED127), `127 the notes were not reloaded (was a page still unsaved?): ${JSON.stringify(said127)}`)
+  assert(said127.includes(RELOADED127), `127 the notice does not contain the reload text: ${JSON.stringify(said127)}`)
   await dialog.waitFor({ state: 'detached', timeout: 10_000 })
   await side.locator('[data-row="p:anna"]:not([data-e2e-before])').waitFor({ timeout: 10_000 })
-  await page.locator(`[data-testid="day"][data-day="${today}"]`).waitFor()
+  await page.locator(`[data-testid="day"][data-day="${today}"]:not([data-e2e-before])`).waitFor({ timeout: 10_000 })
   assert(await page.evaluate(() => window.__e2eFeedGone127), '127 the old journal stayed shown and clickable during the reload')
   await waitFor('127 the text typed before the error is on disk', () => readAt(journal), typedIn127(' typed before the error'))
   await clickRow(firstRow127())
@@ -3537,12 +3561,14 @@ try {
   /** Waits until the device scale is the zoom's, then brings the bands into view again. */
   const settleZoom128 = async (zoom) => {
     await waitFor(`128 scale ${zoom}`, async () => Math.abs((await dpr128()) - (base128 * zoom) / 100) < 0.01, true)
+    await page.mouse.move(1, 1) // the zoom moves the rows under a resting pointer: a hovered row shows its fold arrow
     // The feed draws its days anew for the new size, so a row can be replaced while it is scrolled to: try again.
     const inView = async () => {
       try {
         if ((await rows128.count()) === 0) await showDay(key128, 'eight')
         await rows128.last().scrollIntoViewIfNeeded({ timeout: 2000 })
         await rows128.first().scrollIntoViewIfNeeded({ timeout: 2000 })
+        await page.mouse.move(1, 1) // scrolling moves the rows under the pointer too
         await frames()
         return await rows128.evaluateAll(
           (els) => els.length === 9 && els.every((e) => e.getBoundingClientRect().top >= 0 && e.getBoundingClientRect().bottom <= innerHeight),
@@ -3740,17 +3766,21 @@ try {
       const r = document.createRange()
       r.setStart(line, 0)
       r.setEnd(s.focusNode, s.focusOffset)
-      return [line.textContent, r.toString().length === line.textContent.length]
+      return [line.textContent, r.toString().length === line.textContent.length, line.closest('.block[data-block-id]')?.getAttribute('data-block-id') ?? null]
     })
+  /** The id of the row of the rendered block whose text is exactly `t`. */
+  const idOf130 = async (t) => (await content130(t)).evaluate((el) => el.closest('.block[data-block-id]')?.getAttribute('data-block-id') ?? null)
   await side.locator('[data-row="p:delete 130"]').waitFor({ timeout: 10_000 })
   await side.locator('[data-row="p:delete 130"]').click()
   await title.filter({ hasText: 'Delete 130' }).waitFor()
+  const oneId130 = await idOf130('one')
+  assert(oneId130, '130 the block one has no id')
   await (await content130('two')).click()
   await unlocked130.waitFor()
   await kb.press('Control+Shift+K')
   await expectFile('130 the block goes with its child', '- one\n- three\n', file130)
   await unlocked130.waitFor()
-  await waitFor('130 the caret is at the end of the block above', caret130, ['one', true])
+  await waitFor('130 the caret is at the end of the block above', caret130, ['one', true, oneId130])
   await kb.press('Control+z')
   await expectFile('130 undo brings it back', text130, file130)
   await kb.press('Escape')
@@ -3758,12 +3788,14 @@ try {
   await side.locator('[data-row="p:solo 130"]').waitFor({ timeout: 10_000 })
   await side.locator('[data-row="p:solo 130"]').click()
   await title.filter({ hasText: 'Solo 130' }).waitFor()
+  const soloId130 = await idOf130('solo')
+  assert(soloId130, '130 the block solo has no id')
   await (await content130('solo')).click()
   await unlocked130.waitFor()
   await kb.press('Control+Shift+K')
   await expectFile('130 the only block is emptied', '-\n', solo130)
   await unlocked130.waitFor()
-  await waitFor('130 the emptied block is still edited', caret130, ['', true])
+  await waitFor('130 the emptied block is still edited', caret130, ['', true, soloId130])
   await kb.press('Control+z')
   await expectFile('130 undo brings the only block back', '- solo\n\t- kid\n', solo130)
   await kb.press('Escape')
@@ -3803,7 +3835,7 @@ try {
   await kb.press('Delete')
   await expectFile('131 one empty block is kept', '-\n', file131)
   await unlocked130.waitFor()
-  await waitFor('131 the kept block is edited, caret in it', caret130, ['', true])
+  await waitFor('131 the kept block is edited, caret in it', async () => (await caret130())?.slice(0, 2) ?? null, ['', true])
   await kb.press('Control+z')
   await expectFile('131 one undo brings every block back', text131, file131)
   await kb.press('Escape')

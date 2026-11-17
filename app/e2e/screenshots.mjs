@@ -107,7 +107,7 @@ try {
   // Close the app the normal way, then check that no note changed.
   closing = true
   // The close button only hides the window to the tray; the tray menu's "Exit" is the real close, and its event is sent.
-  await page.evaluate(() => window.__TAURI_INTERNALS__.invoke('plugin:event|emit', { event: 'tray:exit' })).catch(() => {})
+  await page.evaluate(() => window.__TAURI_INTERNALS__.invoke('plugin:event|emit', { event: 'tray:exit' })).catch((e) => console.warn(`the tray exit event was not sent: ${e?.message ?? e}`))
   const closeEnd = Date.now() + 15_000
   while (!exited && Date.now() < closeEnd) await sleep(100)
   assert(exited, 'the app did not close')
