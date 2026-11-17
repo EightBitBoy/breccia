@@ -441,6 +441,24 @@ fn undo_restores_the_text_and_saves_it_with_lf() {
 }
 
 #[test]
+fn a_task_joined_onto_a_task_is_refused_with_a_plain_notice() {
+    let original = "- TODO a
+  created:: 2026-10-29 14:05:09
+- TODO b
+  created:: 2026-10-29 14:06:00
+";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let b = ids(&mut s, "p")[1];
+    let err = cmd(&mut s, json!({"type":"block.merge","id":b}), 0).unwrap_err();
+    assert_eq!(err.code, "joinOntoProperties");
+    assert_eq!(
+        err.message,
+        "This block can't be joined onto the one above: its own lines would end up          after the created:: and other property lines there"
+    );
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
 fn undo_of_a_merge_onto_a_task_restores_the_file_byte_for_byte() {
     let original = "- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n";
     let (t, mut s) = folder(&[("pages/P.md", original)]);

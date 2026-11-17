@@ -187,7 +187,7 @@ fn merge_of_several_lines_onto_property_lines_is_refused() {
     assert_eq!(
         with(src, |d, b, ids| assert_eq!(
             d.merge_into_previous(b[1], ids),
-            Err(EditError::WouldChangeStructure)
+            Err(EditError::JoinOntoProperties)
         )),
         src
     );

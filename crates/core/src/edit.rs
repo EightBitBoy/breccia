@@ -224,7 +224,7 @@ impl Document {
     /// the previous block and the cursor offset in its new text (the end of
     /// its old own text, at most the new length). A block with several lines
     /// joined onto one with property lines is refused with
-    /// [`EditError::WouldChangeStructure`].
+    /// [`EditError::JoinOntoProperties`].
     /// If the merged text holds bullet lines, they become new blocks after
     /// the previous block, ahead of the re-parented children.
     /// A merge whose text would end inside an open fence (for example text
@@ -247,7 +247,7 @@ impl Document {
         let next = &self.blocks[i].text;
         // Text lines after the first would land behind the property lines.
         if offset < prev.len() && next.contains('\n') {
-            return Err(EditError::WouldChangeStructure);
+            return Err(EditError::JoinOntoProperties);
         }
         let joined = format!("{}{}{}", &prev[..offset], next, &prev[offset..]);
         if self.ends_in_fence(&joined) {

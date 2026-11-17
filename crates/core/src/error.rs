@@ -18,6 +18,12 @@ pub enum EditError {
     InvalidOffset,
     #[error("the change would alter the outline around the block")]
     WouldChangeStructure,
+    /// A block with several lines joined onto one whose text ends in property
+    /// lines (a task's `created::`): its later lines would land after them.
+    #[error(
+        "This block can't be joined onto the one above: its own lines would end up          after the created:: and other property lines there"
+    )]
+    JoinOntoProperties,
     #[error("cannot split a block inside a code fence")]
     InsideFence,
     #[error("No state is in the cycle (Settings → States)")]

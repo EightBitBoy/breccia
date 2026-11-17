@@ -346,6 +346,7 @@ impl From<EditError> for CommandError {
             EditError::InvalidOffset => "invalidOffset",
             EditError::InsideFence => "insideFence",
             EditError::WouldChangeStructure => "wouldChangeStructure",
+            EditError::JoinOntoProperties => "joinOntoProperties",
             EditError::NoCycle => "noCycle",
         };
         CommandError::new(code, e)
