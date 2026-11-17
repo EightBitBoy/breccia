@@ -691,8 +691,8 @@ fn cycle_with_no_state_in_it_is_none() {
     assert!(c.cycle_next(Some("TODO")).is_none());
 }
 
-/// A hand-written file (LF here; the test turns it into CRLF), comments above and beside tables, unknown keys in a
-/// state table and in `[git]`, and inline-table boards.
+/// A hand-written file (LF here; the test turns it into CRLF), comments above and beside tables,
+/// unknown keys in a state table and in `[git]`, and inline-table boards.
 const HAND_LF: &str = "# my settings
 boards = [
   { name = \"Tasks\", columns = [\"TODO\", \"WAITING\", \"DONE\"] }, # main

@@ -169,6 +169,8 @@ fn edit_file(
         .parse()
         .map_err(|e: TomlError| ConfigError::Toml(e.to_string()))?;
     change(&mut doc)?;
+    // toml_edit writes LF already; kept as a safeguard for spec §4 (notes
+    // files are saved with LF).
     let out = doc.to_string().replace("\r\n", "\n");
     crate::fsio::write_atomic(&path, &out)?;
     Ok(out)

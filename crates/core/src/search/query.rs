@@ -20,6 +20,8 @@ pub struct Query {
 pub struct QueryLink {
     /// The target as typed, so the session can widen `keys` from it.
     pub target: String,
+    /// Whether the link was typed as a page link or a tag; it picks how the
+    /// session resolves `target` to its keys.
     pub kind: LinkKind,
     /// The raw link keys that match. `parse_query` fills `vec![key]`; the
     /// session widens them to the page's aliases and heading links.

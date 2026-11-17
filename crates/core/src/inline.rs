@@ -234,6 +234,8 @@ pub(crate) fn with_property(text: &str, key: &str, value: Option<&str>) -> Strin
     let mut out: Vec<&str> = Vec::with_capacity(lines.len() + 1);
     let mut placed = false;
     for (i, l) in lines.iter().enumerate() {
+        // `end` is the first line after the property lines: a new property goes
+        // there, so it follows the existing ones.
         if i == end
             && let (Some(n), false) = (&new, placed)
         {
@@ -249,6 +251,8 @@ pub(crate) fn with_property(text: &str, key: &str, value: Option<&str>) -> Strin
         }
         out.push(l);
     }
+    // `end` was past the last line (the text is only its first line and
+    // property lines), so the loop never reached it: append.
     if let (Some(n), false) = (&new, placed) {
         out.push(n);
     }
