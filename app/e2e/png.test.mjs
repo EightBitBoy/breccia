@@ -106,6 +106,27 @@ describe('decodePng', () => {
     expect(() => decodePng(makePng(1, rows, 4, [0], { interlace: 1 }))).toThrow('unsupported PNG')
     expect(() => decodePng(makePng(1, rows, 4, [0], { depth: 16 }))).toThrow('unsupported PNG')
   })
+  it('decodePng refuses grey, palette and grey-alpha images', () => {
+    const rows = [[1, 2, 3, 4]]
+    for (const colorType of [0, 3, 4]) {
+      expect(() => decodePng(makePng(1, rows, 4, [0], { colorType })), `color type ${colorType}`).toThrow(
+        'unsupported PNG',
+      )
+    }
+  })
+  it('decodePng names a PNG without image data', () => {
+    const h = Buffer.alloc(13)
+    h.writeUInt32BE(1, 0)
+    h.writeUInt32BE(1, 4)
+    h.writeUInt8(8, 8)
+    h.writeUInt8(6, 9)
+    const png = Buffer.concat([
+      Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+      chunk('IHDR', h),
+      chunk('IEND', Buffer.alloc(0)),
+    ])
+    expect(() => decodePng(png)).toThrow('PNG has no image data')
+  })
 })
 
 describe('snapshotFiles', () => {

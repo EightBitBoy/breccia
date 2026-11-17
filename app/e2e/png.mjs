@@ -33,6 +33,7 @@ export function decodePng(buf) {
     if (type === 'IEND') break
     at += 12 + len
   }
+  if (parts.length === 0) throw new Error('PNG has no image data')
   const raw = inflateSync(Buffer.concat(parts))
   const stride = width * channels
   if (raw.length < height * (stride + 1)) throw new Error('unsupported PNG (short image data)')
