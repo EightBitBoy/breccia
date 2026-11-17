@@ -75,6 +75,9 @@ describe('parseInline', () => {
     expect(r[6]).toEqual(t(' rel js)'))
     expect(r).toHaveLength(7)
   })
+  it('a link without text shows its web address', () => {
+    expect(parseInline('[](https://a.b/c)')).toEqual([{ kind: 'link', text: 'https://a.b/c', href: 'https://a.b/c' }])
+  })
   it('keeps unclosed markers literal', () => {
     expect(parseInline('a `b and **c')).toEqual([t('a `b and **c')])
     expect(parseInline('2 * 3 _x_')).toEqual([t('2 * 3 _x_')])

@@ -45,7 +45,7 @@ export function parseInline(s: string): Inline[] {
       if (m) {
         if (/^https?:\/\//.test(m[2])) {
           flush()
-          out.push({ kind: 'link', text: m[1], href: m[2] })
+          out.push({ kind: 'link', text: m[1] === '' ? m[2] : m[1], href: m[2] })
         } else {
           pushText(m[1])
         }
