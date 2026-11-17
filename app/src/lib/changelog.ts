@@ -11,6 +11,12 @@ export type Block =
   | { kind: 'paragraph'; inlines: Inline[] }
   | { kind: 'list'; items: Inline[][] }
 
+const COMMENT = /^\s*<!--.*-->\s*$/
+const HEADING = /^\s{0,3}(#+)\s+(.*?)\s*$/
+// A version heading is "## [x]" with or without a link, as git-cliff may write it.
+const VERSION = /^\[([^\]]+)\](\([^)]*\))?/
+const BULLET = /^\s*[-*+]\s+(.*)$/
+
 export function parseInline(s: string): Inline[] {
   const out: Inline[] = []
   let buf = ''
@@ -82,10 +88,10 @@ export function parseChangelog(md: string): Block[] {
       flushList()
       continue
     }
+    if (COMMENT.test(line)) continue
     const first = !seenContent
     seenContent = true
-    if (/^\s*<!--.*-->\s*$/.test(line)) continue
-    const hm = /^\s{0,3}(#+)\s+(.*?)\s*$/.exec(line)
+    const hm = HEADING.exec(line)
     if (hm) {
       flushPara()
       flushList()
@@ -94,16 +100,17 @@ export function parseChangelog(md: string): Block[] {
       let text = hm[2]
       let version: string | null = null
       if (level === 2) {
-        const vm = /^\[([^\]]+)\](?!\()/.exec(text)
+        const vm = VERSION.exec(text)
         if (vm) {
           version = vm[1]
-          text = vm[1] + text.slice(vm[0].length)
+          // a plain [x] loses its brackets; a linked [x](url) stays whole and parseInline makes the link
+          if (vm[2] === undefined) text = vm[1] + text.slice(vm[0].length)
         }
       }
       blocks.push({ kind: 'heading', level, inlines: parseInline(text), version })
       continue
     }
-    const bm = /^\s*[-*+]\s+(.*)$/.exec(line)
+    const bm = BULLET.exec(line)
     if (bm) {
       flushPara()
       items.push(bm[1].trim())
@@ -134,4 +141,25 @@ export function plainText(blocks: Block[]): string {
   return blocks
     .map((b) => (b.kind === 'list' ? b.items.map(inlineText).join('\n') : inlineText(b.inlines)))
     .join('\n')
+}
+
+// The two functions below apply the parser's rules line by line, so tests can check the parser against the text.
+// e2e step 134 (app/e2e/smoke.mjs) keeps a copy of the same rules, because e2e cannot import TypeScript.
+
+/** The versions of all "## [x]" headings, in file order. */
+export function versionsOf(md: string): string[] {
+  const out: string[] = []
+  for (const line of md.replace(/^\uFEFF/, '').split(/\r?\n/)) {
+    if (COMMENT.test(line)) continue
+    const hm = HEADING.exec(line)
+    if (!hm || hm[1].length !== 2) continue
+    const vm = VERSION.exec(hm[2])
+    if (vm) out.push(vm[1])
+  }
+  return out
+}
+
+/** The number of list items. */
+export function bulletCount(md: string): number {
+  return md.split(/\r?\n/).filter((l) => !COMMENT.test(l) && !HEADING.test(l) && BULLET.test(l)).length
 }
