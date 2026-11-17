@@ -25,3 +25,6 @@ Task 2: minor (deferred): task.rs:1389-1415 raw multi-line literals vs \n escape
 Task 2: minor (deferred): board.rs:74 `ok` still hard-codes (2026, 10, 29) instead of DAY
 Task 2: complete (commits c42b649..bf62822, review clean)
 Task 3: dispatched (sonnet), BASE bfb1def
+Task 3: minor (deferred): TRACK_STEP is local to vividTrack (as briefed), a module constant would match CUSTOM_DL
+Task 3: minor (deferred): page-colors.test.mjs:133 regexes tied to the const declaration forms
+Task 3: complete (commits bfb1def..58f6088, review clean)
