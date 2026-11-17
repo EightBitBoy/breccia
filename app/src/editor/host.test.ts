@@ -688,6 +688,19 @@ test('after the delete the caret is at the end of the block above', async () => 
   expect(host.editor!.ed.cursor16()).toBe(5)
 })
 
+test('after the delete the caret stops before the property lines of a task above', async () => {
+  const task = 'TODO alpha\ncreated:: 2026-10-29 14:05:09'
+  blocks = [block(1, task), block(2, 'beta'), block(3, 'gamma')]
+  await host.edit(2, 1)
+  hooks.onAction('deleteBlock', { cursor16: 1 })
+  const del = sent.at(-1)!
+  blocks = [block(1, task), block(3, 'gamma')]
+  host.apply(del, out(pageOf('p', blocks)), true)
+  await settle()
+  expect(host.editingId).toBe(1)
+  expect(host.editor!.ed.cursor16()).toBe(10)
+})
+
 test('deleting the first block puts the caret at the start of the block after its children', async () => {
   blocks = [block(1, 'alpha'), { ...block(5, 'kid'), depth: 1 }, block(2, 'beta')]
   await host.edit(1, 3)

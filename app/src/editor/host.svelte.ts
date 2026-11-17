@@ -6,7 +6,7 @@ import { tick } from 'svelte'
 import { errorCode, errorMessage } from '../api'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
-import { deleteFocus } from '../lib/deleteBlock'
+import { deleteFocus, ownTextEnd } from '../lib/deleteBlock'
 import { UNSENT } from '../lib/notices'
 import { restoreRemoved } from '../lib/paste'
 import { settleCommand, typedState } from '../lib/settle'
@@ -270,11 +270,11 @@ export class EditorHost {
     this.stepping = background(this.runStep(step, cmd.type === 'block.setText' ? cmd.id : null))
   }
 
-  /** The caret after a `block.delete` the core placed no caret for: the block chosen when the key was pressed. */
+  /** The caret after a `block.delete` the core placed no caret for: the block chosen when the key was pressed (at the end of its own text, before any property lines). */
   private deleteFocusOf(cmd: Command): { id: BlockId; cursor16: number } | null {
     const t = this.deleteTargets.get(cmd)
     const b = t && this.blockOf(t.id)
-    return b ? { id: b.id, cursor16: t.at === 'end' ? b.text.length : 0 } : null
+    return b ? { id: b.id, cursor16: t.at === 'end' ? ownTextEnd(b.text) : 0 } : null
   }
 
   private async runStep(step: Step, typedIn: BlockId | null) {

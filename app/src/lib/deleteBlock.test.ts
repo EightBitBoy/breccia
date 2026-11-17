@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { deleteFocus } from './deleteBlock'
+import { deleteFocus, ownTextEnd } from './deleteBlock'
 
 const rows = (...r: [number, number][]) => r.map(([id, depth]) => ({ id, depth }))
 
@@ -29,4 +29,17 @@ test('a row with children and nothing after them, first on the page → itself',
 
 test('a row that is not shown keeps the caret on itself', () => {
   expect(deleteFocus(rows([1, 0]), 9)).toEqual({ id: 9, at: 'start' })
+})
+
+test('ownTextEnd stops before property lines that run to the end', () => {
+  expect(ownTextEnd('TODO a\ncreated:: 2026-10-29 14:05:09')).toBe(6)
+  expect(ownTextEnd('TODO a\ncreated:: 2026-10-29 14:05:09\ndone:: 2026-10-30 08:00:00')).toBe(6)
+  expect(ownTextEnd('TODO ä😀\ncreated:: x')).toBe(8)
+  expect(ownTextEnd('plain')).toBe(5)
+  expect(ownTextEnd('a\nnote')).toBe(6)
+  // Property lines followed by text, or a non-property line, are not property lines at the end.
+  expect(ownTextEnd('a\ncreated:: x\nnote')).toBe(18)
+  expect(ownTextEnd('a\nnot a:: property')).toBe(18)
+  expect(ownTextEnd('a\nkey::value')).toBe(12)
+  expect(ownTextEnd('a\nkey::')).toBe(1)
 })
