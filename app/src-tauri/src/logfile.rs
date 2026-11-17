@@ -239,8 +239,15 @@ pub fn redact(line: &str) -> String {
             .unwrap_or(tail.len());
         let (token, after) = tail.split_at(end);
         let first_delimiter = token.find(['/', '?', '#']).unwrap_or(token.len());
-        match token.rfind('@') {
-            Some(i) if i < first_delimiter || token[..i].contains(':') => {
+        // The last `@` qualifies when it comes before the first `/`, `?` or `#`
+        // or has a `:` before it; else the last `@` before that delimiter does
+        // (a token before the host, with another `@` later in the path).
+        let last = token
+            .rfind('@')
+            .filter(|&i| i < first_delimiter || token[..i].contains(':'));
+        let user_end = last.or_else(|| token[..first_delimiter].rfind('@'));
+        match user_end {
+            Some(i) => {
                 let user = &token[..i];
                 let web =
                     scheme.eq_ignore_ascii_case("http") || scheme.eq_ignore_ascii_case("https");
@@ -583,6 +590,15 @@ mod tests {
             }
         }
         assert_eq!(redact("https://host/a@b"), "https://host/a@b");
+        // A token before the host, with another `@` later in the same token.
+        for url in [
+            "https://ghp_TOKEN@github.com/o/r@v2.git",
+            "https://ghp_TOKEN@github.com/o/r.git,mail@ex.com",
+        ] {
+            let out = redact(url);
+            assert!(out.starts_with("https://***@github.com/o/r"), "{out}");
+            assert!(!out.contains("ghp_TOKEN"), "{out}");
+        }
         assert_eq!(redact("ssh://git@host/x"), "ssh://git@host/x");
         assert_eq!(redact("git@host:x"), "git@host:x");
     }
