@@ -34,7 +34,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 9 | Core housekeeping (from the audit) | done 2026-11-11 | `docs/plans/2026-11-11-09-core-housekeeping.md` | `docs/plans/2026-11-11-09-core-housekeeping-followups.md` |
 | 10 | The changelog inside the app | done 2026-11-11 | `docs/plans/2026-11-11-10-changelog-in-app.md` | `docs/plans/2026-11-11-10-changelog-in-app-followups.md` |
 | 11 | Out-of-range values in config.toml | done 2026-11-11 | `docs/plans/2026-11-11-11-config-out-of-range-values.md` | `docs/plans/2026-11-11-11-config-out-of-range-values-followups.md` |
-| 12 | Open follow-ups of plans 1 to 11 | in progress (approved 2026-11-17) | `docs/plans/2026-11-17-12-open-followups.md` | |
+| 12 | Open follow-ups of plans 1 to 11 | done 2026-11-17 | `docs/plans/2026-11-17-12-open-followups.md` | `docs/plans/2026-11-17-12-open-followups-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -135,9 +135,16 @@ A whole-application audit was made on 2026-11-10 at commit `4b91b0c` (`docs/audi
 `README.md`; the ledger `progress.md` says what was read). It changed no code: 7 defects, 21 structural themes with
 55 refactor moves, and a proposed order of plans. Review items 65 to 67 and 69 are still open. The audit's plans 3 to 5 (its "Priorities") still wait for the owner.
 
-Plan 12 (open follow-ups of plans 1 to 11) is in progress: approved 2026-11-17 with the owner's answers to Q1 to Q6 in
-the plan's "Owner decisions"; ledger `.superpowers/sdd/2026-11-17-12-open-followups/progress.md`. Commit only, no push
-(owner).
+Plan 12 (open follow-ups of plans 1 to 11) is done (2026-11-17), committed but not yet pushed (owner pushes). It
+worked through the 145 open items of the follow-ups files of plans 1 to 11: 55 done, 17 already settled, 11 moved to
+the backlog (new items #87 to #91, notes on #85), 62 closed with a reason; every item is struck through in its file. What
+a user sees: a Git password with a `/`, `?` or `#` no longer shows in the log, and a log that cannot be moved aside at its
+size limit is kept; a press on a page color slider's knob no longer nudges the value; joining a block onto a task keeps
+the task's `created::` and `done::` lines, and after `Backspace` in an empty block or `Ctrl Shift K` the caret stops
+before them; a changelog link without text shows its web address; the website has a scroll fade on the board image at
+phone width, pairs the one-line cards at tablet width and waits for the hero image. The rest is tests, tidy-ups, CI
+(one run per change) and docs. The owner checks review items 107 to 113 (113 is a question: should `Backspace` join a
+block of several lines under a task?). Ledger `.superpowers/sdd/2026-11-17-12-open-followups/progress.md`.
 
 Candidates for the plan after it, to settle with the owner:
 
@@ -153,7 +160,7 @@ Candidates for the plan after it, to settle with the owner:
 
 - `just test`: Vitest (1127 tests) and cargo tests (core: lib 50, integration 798 with 2 ignored; shell 77) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 207 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 208 PASS lines (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.

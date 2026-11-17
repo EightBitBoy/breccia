@@ -5,9 +5,9 @@ reviews and the final whole-plan review (2026-11-07). The strength slider is bac
 
 ## Behaviour
 
-1. **Yellow-ish custom hues** come out olive-like, darker than the fixed `yellow`, because one lightness serves every
+1. ~~**Yellow-ish custom hues** come out olive-like, darker than the fixed `yellow`, because one lightness serves every
    hue (owner decision: judge at review item 36). If wanted, let the lightness offset follow the hue, interpolated
-   from the fixed colors; it is one function in `app/src/lib/customColor.ts`.
+   from the fixed colors; it is one function in `app/src/lib/customColor.ts`.~~ Settled (owner ticked review item 36, which asked exactly this, with no change asked).
 2. ~~**Stale link-menu picker position** (plan 1 follow-up 2) matters more now: a drag keeps the picker open, so a day
    re-sent meanwhile leaves the popover at its old place (`LinkColorMenu.svelte`, the `anchor` element).~~ Done in plan 4.
 3. ~~**Preview keeps the last hovered cell** when the pointer moves into the gaps or onto the preview box
@@ -21,16 +21,16 @@ reviews and the final whole-plan review (2026-11-07). The strength slider is bac
 
 ## Tests
 
-8. Test strings in `crates/core/tests/it/{color,page_color,render}.rs` use raw newline and tab characters instead of
-   `\n` and `\t`.
+8. ~~Test strings in `crates/core/tests/it/{color,page_color,render}.rs` use raw newline and tab characters instead of
+   `\n` and `\t`.~~ Done in plan 9 (no raw tabs are left in the color tests).
 9. ~~No read test for a lone invalid `color:: hue 999` line returning no color.~~ Done in plan 3.
 10. ~~`parseHue` rejection cases to add: `hue 1000`, `hue -1`, a trailing or double space.~~ Done in plan 3.
-11. The 360-hue sweep prints one `console.info` line into the test output.
+11. ~~The 360-hue sweep prints one `console.info` line into the test output.~~ Done in plan 12 (the hue sweep prints no line).
 
 ## Code tidy-ups
 
-12. `crates/core/src/session/view.rs` spells `crate::color::PageColor` four times; one `use`.
-13. `customColor.ts`: the chroma loop decrements a float; an assignment inside an argument (`cache.set(t, (… = …))`).
-14. The preview's `font-size: 15px; line-height: 1.5` copies the body's font instead of inheriting it (`app.css`).
-15. Lines over the docs' ~120-column wrap in `docs/spec.md` (§7.3 slider line, §7.4), `docs/format.md` and
-    `docs/review.md`. Partly done in plan 4 (`docs/spec.md` §7.3 and §7.4, `docs/review.md`); `docs/format.md` is left.
+12. ~~`crates/core/src/session/view.rs` spells `crate::color::PageColor` four times; one `use`.~~ Done in plan 9 (one occurrence is left).
+13. ~~`customColor.ts`: the chroma loop decrements a float; an assignment inside an argument (`cache.set(t, (… = …))`).~~ Done in plan 12 (integer chroma steps, and the cache assignment moved out of the call).
+14. ~~The preview's `font-size: 15px; line-height: 1.5` copies the body's font instead of inheriting it (`app.css`).~~ Closed in plan 12: the picker menu's font is 13.5 px, so inheriting would shrink the sample; the copy is deliberate (plan 4).
+15. ~~Lines over the docs' ~120-column wrap in `docs/spec.md` (§7.3 slider line, §7.4), `docs/format.md` and
+    `docs/review.md`. Partly done in plan 4 (`docs/spec.md` §7.3 and §7.4, `docs/review.md`); `docs/format.md` is left.~~ Settled (same owner ruling as plan 1 item 18, backlog #62).

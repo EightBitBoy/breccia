@@ -23,30 +23,30 @@ reviews and the final whole-plan review (2026-11-07).
 ## Tests
 
 8. ~~No e2e step for a pick from a link on a journal day opened as a page (only the feed is covered).~~ Done in plan 4 (e2e step 122).
-9. No scale measurement of a pick on a widely linked page that re-sends many journal days.
-10. `crates/core/tests/it/rename.rs` (`rename_reports_links_it_cannot_write`): the relaxed assertion passes when
-    nothing is re-sent; assert the re-sent keys equal `["2026-10-29"]`.
-11. `crates/core/tests/it/page_color.rs`: the null pick on `other` in the tag-only test would pass if a null pick did
-    nothing at all.
+9. ~~No scale measurement of a pick on a widely linked page that re-sends many journal days.~~ Moved to backlog #85 (a note).
+10. ~~`crates/core/tests/it/rename.rs` (`rename_reports_links_it_cannot_write`): the relaxed assertion passes when
+    nothing is re-sent; assert the re-sent keys equal `["2026-10-29"]`.~~ Done in plan 9 (the rename test asserts the re-sent key).
+11. ~~`crates/core/tests/it/page_color.rs`: the null pick on `other` in the tag-only test would pass if a null pick did
+    nothing at all.~~ Done in plan 9 (the test asserts the page has no color after the null pick).
 12. ~~e2e step 114/116 selection check only asserts that the selected row's background differs from the wash; compare it
     with a probe of the selection token.~~ Done in plan 4 (e2e step 116 compares with a probe).
-13. `app/e2e/screenshots.mjs`: the `.catch` on the `tray:exit` emit hides the cause when the app does not close.
+13. ~~`app/e2e/screenshots.mjs`: the `.catch` on the `tray:exit` emit hides the cause when the app does not close.~~ Done in plan 12 (the screenshot script logs a failed exit event).
 
 ## Code tidy-ups
 
 14. ~~The journal → none / page → `page_color` match is written twice (`session/view.rs` and `workspace/pages.rs`);
     share one helper.~~ Done in plan 2 (`own_color`).
-15. Per keystroke on a journal, `PageView::of` parses the links of every top-level block again, and `index_page`
+15. ~~Per keystroke on a journal, `PageView::of` parses the links of every top-level block again, and `index_page`
     allocates a key for every colored page on every re-index. Measured cost is within noise today (scale
-    `block.setText` median 11.95 ms against 12.37 ms before).
+    `block.setText` median 11.95 ms against 12.37 ms before).~~ Moved to backlog #85 (a note).
 16. ~~The Mac detection line is copied three times (`PageColorPicker.svelte`, `App.svelte`, `blockEditor.ts`); export
     one `isMac` from `app/src/lib/`.~~ Done in plan 4 (`app/src/lib/platform.ts`).
 17. ~~`crates/core/src/color.rs`: the doc comment of `is_color_property` says "Whether" though it returns the value;
     `recolor` relies on `title_line` indexes matching `split_inclusive` indexes, worth a comment.~~ Done in plan 2 (doc comment and `title_line` comment).
-18. Lines over the docs' ~120-column wrap in `docs/format.md`, `docs/spec.md` (§7.4, §7.10) and `docs/review.md`
-    (item 31); `app/src/lib/pageColors.ts` has one ~120-character line. Partly done in plan 4 (`pageColors.ts`, `docs/spec.md` §7.3 and §7.4, `docs/review.md`); `docs/format.md` is left.
+18. ~~Lines over the docs' ~120-column wrap in `docs/format.md`, `docs/spec.md` (§7.4, §7.10) and `docs/review.md`
+    (item 31); `app/src/lib/pageColors.ts` has one ~120-character line. Partly done in plan 4 (`pageColors.ts`, `docs/spec.md` §7.3 and §7.4, `docs/review.md`); `docs/format.md` is left.~~ Settled (owner ruling on backlog #62, 2026-11-13: only line 522 of `docs/format.md` was rewrapped, the rest stay).
 
 ## Docs
 
-19. The README feature list names page colors in one line; a short README section with the journal screenshot's
-    colors explained could follow if wanted.
+19. ~~The README feature list names page colors in one line; a short README section with the journal screenshot's
+    colors explained could follow if wanted.~~ Closed in plan 12: the README feature line and the journal screenshot already say what colors do, and the site has a card; nobody asked for more.

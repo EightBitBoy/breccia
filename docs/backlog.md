@@ -218,6 +218,8 @@ not-pushed hash on each load for a remote never pushed to.
 **The first automatic archive run on a large old folder** (was #59):
 It changes many files in one command and is one slow answer, once.
 
+**Notes from plan 12 triage (2026-11-17):** three more measure-first items belong here. Plan 1 follow-up 9: nobody has measured a color pick on a page that many journal days link to (it re-sends every one of those days). Plan 1 follow-up 15: per keystroke on a journal, `PageView::of` parses the links of every top-level block again and `index_page` allocates a key for every colored page (measured within noise: `block.setText` median 11.95 ms against 12.37 ms). Plan 7 follow-up 19: the caret lookup is quadratic in the shown rows (one frame at about 4,000 to 5,000 rows).
+
 ## 86. A refused command splits the typing undo step (Editor)
 
 Found 2026-11-13 while writing the tests of #65 (`a_refused_command_between_two_edits_ends_the_typing_run` in
@@ -227,3 +229,44 @@ that does not exist) the next edit starts a new step: edits before and after it 
 or wrong; the question is whether a refused command, which changed nothing, should leave the typing run alone. Plan 6
 already made read-only commands leave it alone. To settle: refused commands too (the fix would be where the session ends
 the run, `crates/core/src/session/history.rs`), or leave it as it is.
+
+## 87. Run the end-to-end test in CI (Tests)
+
+From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
+and `just lint`. Running it there needs a Windows runner with a display and about 5 minutes per run (WebView2 and the
+release build), so it wants its own plan: when to run it (every push, or only on `main` and tags), and caching of the
+release build.
+
+## 88. A custom domain for the website (Website)
+
+From plan 12 triage (plan 5 follow-up 10; left "Open" by the closed #64). The site is on the GitHub Pages address. A
+custom domain needs a domain purchase and DNS settings, then the `CNAME` file, the HTTPS setting and the links in the
+README and in the app. The owner's decision.
+
+## 89. Recovery after an internal error: edges left (Safety net)
+
+From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery that plan 6 built:
+
+- A Git step that fails mid-rebase leaves a rebase that the fresh Git engine treats as the user's, so sync stays stuck
+  until the user resolves it.
+- After a Git failure the fresh engine's pull is due at once; if it keeps failing, every save recovers and reloads the
+  window (user-paced). Edits made before the failure are not scheduled for a commit until the next change or sync click
+  (closing the app still commits them); no test records this.
+- The 60-second rule can hide a more serious notice: a recovery that keeps the session within a minute of a reload, or a
+  closed folder after a kept session, shows no new notice.
+- The window's reload (`clear()` in `App.svelte`): a flush that never settles keeps the quiet window open; after the
+  "again" notice other commands show the raw "request is for generation" text; an error during the flush ends with the
+  sidebar's actions dropped; an empty "+ Add" card can be left. Best done with the audit's move M39 (the controller into
+  `lib/`).
+
+## 90. Log Git failures, and maybe window errors (Safety net)
+
+From plan 12 triage (plan 6 follow-up 15). Only Git panics are logged (`git.rs`); a failing Git command and the window's
+`console.error` are not. Window errors may hold note text, and the owner's rule is that the log never holds note text,
+so this needs a decision on what may be logged (for example the error kind without its message).
+
+## 91. Undo on the page with nothing selected (Editor)
+
+From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctrl Z` does nothing; the undo history is
+the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
+clicking into a block. A new feature: decide the keys and what it should cover.

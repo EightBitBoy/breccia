@@ -219,12 +219,14 @@ second click on the Git history button is Back.
   Markdown, with light live formatting; leaving it renders it again.
 - Keys (Logseq conventions): `Enter` new block below (the text after the cursor moves into it); `Shift Enter` new line
   inside the block; `Tab` / `Shift Tab` indent / outdent; `Alt ↑` / `Alt ↓` move the block with its children; `↑` / `↓`
-  at the first/last line move to the previous/next block; `Backspace` in an empty block deletes it and moves to the end
-  of the previous one, at the start of a non-empty block merges it into the previous one; `Esc` leaves editing;
+  at the first/last line move to the previous/next block; `Backspace` in an empty block removes it (its sub-blocks move up
+  one level) and moves the caret to the end of the previous one's own text, before its property lines; at the start of a
+  non-empty block it merges the block into the previous one, after that block's own text and before its property lines
+  (a block of several lines is not joined onto a block with property lines); `Esc` leaves editing;
   `Ctrl Enter` cycles the state through the states marked "in cycle", in list order, and after the last one starts
   again at the first (default: none → TODO → DOING → DONE → TODO); it never removes the state. `Ctrl Shift Enter`
   removes the state, also on a selection; so does deleting the keyword; `Ctrl Shift K` deletes the block with its
-  children, also on a selection; the caret moves to the end of the block above (the start of the next one for a page's
+  children, also on a selection; the caret moves to the end of the block above's own text, before its property lines (the start of the next one for a page's
   first block); the only block of a page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and `Delete` do, and if that
   would leave the page (or journal day) without a block, one empty block stays with the caret in it; one `Ctrl Z` brings it back; `Ctrl Z` /
   `Ctrl Y` undo / redo, also across block boundaries (splits, merges, moves).

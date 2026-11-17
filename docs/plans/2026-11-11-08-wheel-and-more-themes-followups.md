@@ -5,33 +5,33 @@ scan, the per-task reviews and the final whole-plan review (2026-11-11). The pla
 
 ## Owner checks
 
-1. **Review items 80 to 86** (`docs/review.md`): the wheel (80), Vampire, Fjord, Ember and Parchment by eye (81 to 84),
+1. ~~**Review items 80 to 86** (`docs/review.md`): the wheel (80), Vampire, Fjord, Ember and Parchment by eye (81 to 84),
    the list of eleven choices (85), and Teal (86). Teal's edited block and inline code now have a slightly fainter tint
    (1.07 against the background, as in Light; it was 1.19) so that selected text shows while editing. Ask the owner
-   whether that looks right; the cost if not is one hex value (`--edit` in Teal, `#02303c`, was `#063845`).
+   whether that looks right; the cost if not is one hex value (`--edit` in Teal, `#02303c`, was `#063845`).~~ Closed in plan 12: review item 86 asks the Teal question already.
 
 ## Teal
 
-2. **`--hover` against `--edit`** is about 1.03 in Teal (the unfocused selection in the edited block); it was so
-   before this plan.
-3. **The jump highlight and the selected row** stand out less from the background in Teal (1.24 and 1.15). A lighter
-   Teal text would give room, at the cost of its look and its custom-color pins.
+2. ~~**`--hover` against `--edit`** is about 1.03 in Teal (the unfocused selection in the edited block); it was so
+   before this plan.~~ Closed in plan 12: predates plan 8; review item 86 covers Teal's look.
+3. ~~**The jump highlight and the selected row** stand out less from the background in Teal (1.24 and 1.15). A lighter
+   Teal text would give room, at the cost of its look and its custom-color pins.~~ Closed in plan 12: review item 86 asks exactly this.
 
 ## Tests
 
-4. **No test pins `--accent` on `--select`** (search hits); the lowest value is 3.15. `['--accent', '--select', 3]`
-   could go into `PAIRS` in `themeSurfaces.test.ts`.
-5. **A scaled wheel delta that rounds to 0** resets a partial count (`themeWheel.ts`, the same as zoom).
-6. **No `stepTheme` test with an unknown theme id** (types prevent it).
-7. **No test that `preventDefault` stops the page from scrolling** (the status bar is not in a scroll container).
-8. **A real wheel cannot reach the button while the menu is open,** so only a script event tests the guard (step 132).
-9. **The wheel uses only `deltaY` in pixels** (WebView2 always sends pixels; line or page `deltaMode` is not handled).
+4. ~~**No test pins `--accent` on `--select`** (search hits); the lowest value is 3.15. `['--accent', '--select', 3]`
+   could go into `PAIRS` in `themeSurfaces.test.ts`.~~ Done in plan 12 (a test pins the accent on the selection color in every theme).
+5. ~~**A scaled wheel delta that rounds to 0** resets a partial count (`themeWheel.ts`, the same as zoom).~~ Closed in plan 12: same as the zoom wheel; WebView2 sends whole pixels.
+6. ~~**No `stepTheme` test with an unknown theme id** (types prevent it).~~ Closed in plan 12: the types prevent it.
+7. ~~**No test that `preventDefault` stops the page from scrolling** (the status bar is not in a scroll container).~~ Closed in plan 12: the status bar is not in a scroll container.
+8. ~~**A real wheel cannot reach the button while the menu is open,** so only a script event tests the guard (step 132).~~ Closed in plan 12: a fact: the script event tests the guard.
+9. ~~**The wheel uses only `deltaY` in pixels** (WebView2 always sends pixels; line or page `deltaMode` is not handled).~~ Closed in plan 12: WebView2 always sends pixels.
 
 ## Open questions
 
-10. **Gruvbox has no LICENSE file;** the README says MIT/X11, and the values are our own.
-11. **The theme menu has eleven entries:** whether it should group light and dark later; whether the Settings >
-    Appearance previews want a second row label.
+10. ~~**Gruvbox has no LICENSE file;** the README says MIT/X11, and the values are our own.~~ Closed in plan 12: the values are Breccia's own; nothing was copied.
+11. ~~**The theme menu has eleven entries:** whether it should group light and dark later; whether the Settings >
+    Appearance previews want a second row label.~~ Closed in plan 12: eleven entries fit; revisit with a twelfth theme.
 
 ## History
 
