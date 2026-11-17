@@ -630,8 +630,7 @@ fn property_lines_edits_keep_every_other_byte() {
     );
     assert_eq!(
         apply("- TODO x\n", 0, Some("DONE")),
-        "- DONE x\n  created:: 2026-10-29 14:05:09\n  done:: [[2026-10-29]] 14:05:09\n"
-            .replace("  created:: 2026-10-29 14:05:09\n", "")
+        "- DONE x\n  done:: [[2026-10-29]] 14:05:09\n"
     );
     // Two priority lines: set replaces the first and drops the second; remove drops both.
     let two = "- TODO x\n  priority:: 1\n  owner:: Ben\n  priority:: 2\n";

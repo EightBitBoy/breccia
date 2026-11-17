@@ -11,7 +11,7 @@ use std::path::Path;
 const DAY: &str = "journals/2026-10-29.md";
 
 fn clock() -> Clock {
-    clock_on((2026, 10, 29), 0)
+    clock_on(support::DAY, 0)
 }
 
 fn cmd(s: &mut Session, json: Value) -> Result<Output, CommandError> {

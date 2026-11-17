@@ -25,7 +25,7 @@ const DAYS: usize = 3000;
 const BLOCKS: usize = 20;
 
 fn today() -> NaiveDate {
-    NaiveDate::from_ymd_opt(2026, 10, 29).unwrap()
+    NaiveDate::from_ymd_opt(DAY.0, DAY.1, DAY.2).unwrap()
 }
 
 fn clock() -> Clock {

@@ -1,6 +1,6 @@
 //! `board.get` and the boards in `config.get`.
 
-use crate::support::{DAY, clock_on, open_at, put, request, run};
+use crate::support::{self, DAY, clock_on, open_at, put, request, run};
 use breccia_core::session::{BoardView, CardView, Notice, SaveFailReason};
 use breccia_core::{Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -11,20 +11,25 @@ fn clock(day: (i32, u32, u32)) -> Clock {
     clock_on(day, 0)
 }
 
-fn cmd_on(s: &mut Session, mut json: Value, date: (i32, u32, u32)) -> Result<Output, CommandError> {
-    // `boards.set` carries the config version it was made from: these tests
-    // make it from the settings the session shows now.
+/// `boards.set` carries the config version it was made from: these tests
+/// make it from the settings the session shows now.
+fn with_version(s: &mut Session, mut json: Value, date: (i32, u32, u32)) -> Value {
     if json["type"] == "boards.set" && json.get("version").is_none() {
         let get = request(s, json!({"type": "config.get"}));
         let v = s.run(get, clock(date)).unwrap().config.unwrap().version;
         json["version"] = json!(v);
     }
+    json
+}
+
+fn cmd_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Result<Output, CommandError> {
+    let json = with_version(s, json, date);
     run(s, json, clock(date))
 }
 
 fn ok_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Output {
-    let j = json.clone();
-    cmd_on(s, json, date).unwrap_or_else(|e| panic!("{j}: {e:?}"))
+    let json = with_version(s, json, date);
+    support::ok(s, json, clock(date))
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {

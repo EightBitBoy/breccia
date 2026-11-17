@@ -5,7 +5,7 @@ use serde_json::{Value, json};
 use tempfile::TempDir;
 
 fn clock(ms: u64) -> Clock {
-    clock_on((2026, 10, 29), ms)
+    clock_on(support::DAY, ms)
 }
 
 fn cmd(s: &mut Session, json: Value, ms: u64) -> Result<Output, CommandError> {
@@ -78,7 +78,7 @@ fn set_color_on_a_tag_only_page_creates_its_file() {
     assert!(out.page.unwrap().has_file);
     assert!(out.tree.is_some());
     let out = pick(&mut s, "other", Value::Null);
-    // The pick is answered with the page as it is: still no file, and no color.
+    // A null pick on a page without a file writes no file. (The answer's color is None either way.)
     let page = out.page.unwrap();
     assert_eq!(page.key, "other");
     assert!(!page.has_file);
@@ -186,7 +186,19 @@ fn undoing_a_pick_on_a_tag_only_page_empties_its_file() {
     assert_eq!(out.page.unwrap().color, None);
 }
 
-const DAY: &str = "- [[Project]]: Today [[Sam]] gave me tasks\n\t- [[Hiring]]: stays with its parent\n- [[2026-10-28]]: follow-up on [[Project]]\n- [[Nowhere]] then #hiring\n- [[Plain]] then [[Project]]\n- no link at all\n- `[[Project]]` in code, then [[Hiring]]\n- [[Project#Goals]] heading link\n- #k8s rollout\n- standup notes\n  with:: [[Hiring]]\n";
+const DAY: &str = concat!(
+    "- [[Project]]: Today [[Sam]] gave me tasks\n",
+    "\t- [[Hiring]]: stays with its parent\n",
+    "- [[2026-10-28]]: follow-up on [[Project]]\n",
+    "- [[Nowhere]] then #hiring\n",
+    "- [[Plain]] then [[Project]]\n",
+    "- no link at all\n",
+    "- `[[Project]]` in code, then [[Hiring]]\n",
+    "- [[Project#Goals]] heading link\n",
+    "- #k8s rollout\n",
+    "- standup notes\n",
+    "  with:: [[Hiring]]\n",
+);
 
 fn topics_folder() -> (TempDir, Session) {
     folder(&[

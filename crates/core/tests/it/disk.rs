@@ -759,7 +759,6 @@ fn reload_of_a_fileless_page_indexes_its_aliases() {
     // through its file alone.
     put(t.path(), "pages/Q.md", "---\naliases: [Other]\n---\n");
     ok(&mut s, json!({"type": "page.reload", "key": "q"}));
-    ok(&mut s, json!({"type": "page.open", "name": "Other"}));
     let out = ok(&mut s, json!({"type": "page.open", "name": "Other"}));
     assert_eq!(out.page.unwrap().key, "q");
 }

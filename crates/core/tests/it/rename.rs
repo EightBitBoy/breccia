@@ -35,8 +35,7 @@ fn folder(files: &[(&str, &str)], dirs: &[&str]) -> (TempDir, Session) {
     for d in dirs {
         fs::create_dir_all(t.path().join(d)).unwrap();
     }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}));
+    let s = support::open_at(t.path(), clock(0));
     (t, s)
 }
 
@@ -112,7 +111,7 @@ const J: (&str, &str) = ("journals/2026-10-29.md", "- [[Old]]\n  owner:: [[OLD]]
 
 #[test]
 fn rename_rewrites_links_and_moves_file() {
-    let (t, mut s) = folder(&[OLD, B, J], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, B, J], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "New Name"}),
@@ -150,9 +149,9 @@ fn rename_rewrites_links_and_moves_file() {
 
 #[test]
 fn rename_rewrites_links_in_the_preamble() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[OLD, ("pages/C.md", "related:: [[Old]]\nnote #old\n- c\n")],
-        &[],
+        clock(0),
     );
     let out = ok(
         &mut s,
@@ -167,7 +166,7 @@ fn rename_rewrites_links_in_the_preamble() {
 
 #[test]
 fn rename_keeps_unrelated_bytes() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             OLD,
             ("pages/B.md", "- see [[Old]]\r\n-   other  \r\n"),
@@ -177,7 +176,7 @@ fn rename_keeps_unrelated_bytes() {
                 "\u{feff}-  keep  \r\n- [[old]]\r\n\t-  child [[x]] \r\n",
             ),
         ],
-        &[],
+        clock(0),
     );
     let c = fs::read(t.path().join("pages/C.md")).unwrap();
     ok(
@@ -194,7 +193,7 @@ fn rename_keeps_unrelated_bytes() {
 
 #[test]
 fn rename_to_a_name_with_forbidden_chars_writes_title() {
-    let (t, mut s) = folder(&[OLD], &[]);
+    let (t, mut s) = support::folder_at(&[OLD], clock(0));
     ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "a/b"}),
@@ -212,7 +211,7 @@ fn rename_to_a_name_with_forbidden_chars_writes_title() {
 
 #[test]
 fn rename_onto_a_taken_stem_adds_suffix_and_title() {
-    let (t, mut s) = folder(&[OLD, ("pages/New.md", "title:: Other\n- o\n")], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/New.md", "title:: Other\n- o\n")], clock(0));
     ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "New"}),
@@ -223,7 +222,10 @@ fn rename_onto_a_taken_stem_adds_suffix_and_title() {
 
 #[test]
 fn rename_replaces_an_existing_title_line() {
-    let (t, mut s) = folder(&[("pages/a_b.md", "x:: 1\ntitle:: a:b\n- body\n")], &[]);
+    let (t, mut s) = support::folder_at(
+        &[("pages/a_b.md", "x:: 1\ntitle:: a:b\n- body\n")],
+        clock(0),
+    );
     ok(
         &mut s,
         json!({"type": "page.rename", "key": "a:b", "name": "a?b"}),
@@ -238,7 +240,7 @@ fn rename_replaces_an_existing_title_line() {
 
 #[test]
 fn rename_case_only_renames_file() {
-    let (t, mut s) = folder(&[("pages/project x.md", "- p\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/project x.md", "- p\n")], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "page.rename", "key": "project x", "name": "Project X"}),
@@ -255,7 +257,7 @@ fn rename_case_only_renames_file() {
 
 #[test]
 fn rename_refuses_existing_name_journal_and_date() {
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- [[old]]\n"), J], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- [[old]]\n"), J], clock(0));
     let before = snapshot(&t);
     for (j, want) in [
         (
@@ -290,7 +292,7 @@ fn rename_refuses_existing_name_journal_and_date() {
 
 #[test]
 fn rename_refuses_when_file_changed_on_disk() {
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- [[old]]\n")], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- [[old]]\n")], clock(0));
     put(t.path(), "pages/Old.md", "- changed\n");
     let before = snapshot(&t);
     assert_eq!(
@@ -315,7 +317,7 @@ fn rename_refuses_when_file_changed_on_disk() {
 
 #[test]
 fn rename_keeps_going_when_a_linking_file_changed_on_disk() {
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- [[old]]\n"), J], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- [[old]]\n"), J], clock(0));
     put(t.path(), "pages/B.md", "- theirs [[old]]\n");
     let out = ok(
         &mut s,
@@ -345,7 +347,7 @@ fn rename_reports_links_it_cannot_write() {
     // rewritten link would not read back.
     let b = "- `x [[old]]\n- x\n";
     let j = "- `y [[Old]]\n  owner:: [[OLD]]\n";
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", b), (J.0, j)], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", b), (J.0, j)], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "a`b"}),
@@ -371,7 +373,7 @@ fn rename_reports_links_it_cannot_write() {
 
 #[test]
 fn rename_keeps_block_ids_valid() {
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- [[old]]\n")], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- [[old]]\n")], clock(0));
     let id = ok(&mut s, json!({"type": "page.get", "key": "old"}))
         .page
         .unwrap()
@@ -402,7 +404,7 @@ fn rename_keeps_block_ids_valid() {
 #[test]
 fn rename_of_a_locked_file_changes_nothing() {
     use std::os::windows::fs::OpenOptionsExt;
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- [[old]]\n")], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- [[old]]\n")], clock(0));
     let before = snapshot(&t);
     // Another program holds the file open and lets others only read it.
     let lock = fs::OpenOptions::new()
@@ -516,12 +518,12 @@ fn move_page_between_folders() {
 
 #[test]
 fn move_onto_a_taken_stem_adds_suffix_and_title() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/a_b.md", "title:: a:b\n- 1\n"),
             ("pages/X/a_b.md", "title:: a?b\n- 2\n"),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -534,12 +536,12 @@ fn move_onto_a_taken_stem_adds_suffix_and_title() {
 
 #[test]
 fn move_onto_a_taken_plain_stem_writes_a_title() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/A.md", "- 1\n"),
             ("pages/X/A.md", "title:: Other\n- 2\n"),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -567,9 +569,9 @@ fn move_refuses_when_file_changed_on_disk() {
 
 #[test]
 fn delete_page_removes_file_and_keeps_links() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[("pages/A.md", "- a\n"), ("pages/B.md", "- [[a]]\n"), J],
-        &[],
+        clock(0),
     );
     let out = ok(&mut s, json!({"type": "page.delete", "key": "a"}));
     assert!(!exists(&t, "pages/A.md"));
@@ -618,13 +620,13 @@ fn row(folder: &str, key: &str, name: &str, linked_only: bool) -> (String, Strin
 
 #[test]
 fn delete_linked_page_leaves_a_linked_only_row() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[
             ("pages/Projects/A.md", "- a\n"),
             ("pages/B.md", "- [[A]]\n"),
             ("pages/C.md", "- c\n"),
         ],
-        &[],
+        clock(0),
     );
     let out = ok(&mut s, json!({"type": "page.delete", "key": "a"}));
     let expected = vec![
@@ -647,7 +649,7 @@ fn delete_linked_page_leaves_a_linked_only_row() {
 
 #[test]
 fn delete_refuses_when_file_changed_on_disk() {
-    let (t, mut s) = folder(&[("pages/A.md", "- a\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/A.md", "- a\n")], clock(0));
     put(t.path(), "pages/A.md", "- theirs\n");
     assert_eq!(
         code(&mut s, json!({"type": "page.delete", "key": "a"})),
@@ -725,7 +727,7 @@ fn folder_rename_moves_pages() {
 
 #[test]
 fn folder_rename_case_only() {
-    let (t, mut s) = folder(&[("pages/projects/X.md", "- x\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/projects/X.md", "- x\n")], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "dir.rename", "path": "projects", "to": "Projects"}),
@@ -737,7 +739,10 @@ fn folder_rename_case_only() {
 
 #[test]
 fn folder_rename_refuses_a_name_a_file_holds() {
-    let (t, mut s) = folder(&[("pages/A/X.md", "- x\n"), ("pages/notes", "plain")], &[]);
+    let (t, mut s) = support::folder_at(
+        &[("pages/A/X.md", "- x\n"), ("pages/notes", "plain")],
+        clock(0),
+    );
     assert_eq!(
         code(
             &mut s,
@@ -815,7 +820,7 @@ fn folder_delete_takes_untouched_new_pages_with_it() {
 
 #[test]
 fn refused_folder_delete_keeps_untouched_new_pages() {
-    let (t, mut s) = folder(&[("pages/Dir/x.txt", "x")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/Dir/x.txt", "x")], clock(0));
     ok(
         &mut s,
         json!({"type": "page.create", "name": "N", "folder": "Dir"}),
@@ -830,7 +835,7 @@ fn refused_folder_delete_keeps_untouched_new_pages() {
 
 #[test]
 fn folder_delete_refuses_a_folder_with_a_page_with_content() {
-    let (t, mut s) = folder(&[("pages/Dir/P.md", "- a\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/Dir/P.md", "- a\n")], clock(0));
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Dir"})),
         "folderNotEmpty"
@@ -840,7 +845,7 @@ fn folder_delete_refuses_a_folder_with_a_page_with_content() {
 
 #[test]
 fn names_with_brackets_are_refused_on_create_and_rename() {
-    let (t, mut s) = folder(&[("pages/P.md", "- a\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/P.md", "- a\n")], clock(0));
     let before = snapshot(&t);
     assert_eq!(
         code(
@@ -871,7 +876,7 @@ fn names_with_brackets_are_refused_on_create_and_rename() {
 
 #[test]
 fn a_file_named_with_a_bracket_still_opens() {
-    let (_t, mut s) = folder(&[("pages/a]b.md", "- x\n")], &[]);
+    let (_t, mut s) = support::folder_at(&[("pages/a]b.md", "- x\n")], clock(0));
     assert_eq!(
         ok(&mut s, json!({"type": "page.open", "name": "a]b"}))
             .page
@@ -883,7 +888,7 @@ fn a_file_named_with_a_bracket_still_opens() {
 
 #[test]
 fn rename_clears_history_of_touched_pages() {
-    let (t, mut s) = folder(&[OLD, ("pages/B.md", "- see [[Old]]\n- x\n")], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/B.md", "- see [[Old]]\n- x\n")], clock(0));
     let id = ok(&mut s, json!({"type": "page.get", "key": "b"}))
         .page
         .unwrap()
@@ -905,7 +910,7 @@ fn rename_clears_history_of_touched_pages() {
 #[test]
 fn a_title_line_goes_after_front_matter() {
     let fm = "---\ntags:\n  - x\n---\n";
-    let (t, mut s) = folder(&[("pages/Old.md", &format!("{fm}- a\n"))], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/Old.md", &format!("{fm}- a\n"))], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "a/b"}),
@@ -924,7 +929,7 @@ fn a_title_line_goes_after_front_matter() {
 
 #[test]
 fn rename_still_rewrites_a_link_inside_front_matter() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             OLD,
             (
@@ -932,7 +937,7 @@ fn rename_still_rewrites_a_link_inside_front_matter() {
                 "---\nrelated: \"[[Old]]\"\ntags:\n  - x\n---\n- c\n",
             ),
         ],
-        &[],
+        clock(0),
     );
     let out = ok(
         &mut s,
@@ -947,12 +952,12 @@ fn rename_still_rewrites_a_link_inside_front_matter() {
 
 #[test]
 fn a_name_listed_as_an_alias_is_refused() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/Kubernetes.md", "---\naliases: [k8s]\n---\n- k\n"),
             ("pages/Ops.md", "- o\n"),
         ],
-        &[],
+        clock(0),
     );
     let before = snapshot(&t);
     assert_eq!(
@@ -982,12 +987,12 @@ fn a_name_listed_as_an_alias_is_refused() {
 fn renaming_a_page_with_breccias_block() {
     let lf = breccia_core::LineEnding::Lf;
     let block = |n: &str| breccia_core::aliases::alias_block(n, lf);
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[(
             "pages/Q&A_ hiring.md",
             &format!("{}title:: Q&A: hiring\n- x\n", block("Q&A: hiring")),
         )],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -1019,9 +1024,9 @@ fn a_rename_never_touches_front_matter_it_did_not_write() {
     let fm = "---\naliases:\n  - p\nowner: \"[[Anna]]\"\n---\n";
     for le in ["\n", "\r\n"] {
         let text = format!("{fm}- x\n").replace('\n', le);
-        let (t, mut s) = folder(
+        let (t, mut s) = support::folder_at(
             &[("pages/Plain.md", &text), ("pages/Anna.md", "- a\n")],
-            &[],
+            clock(0),
         );
         ok(
             &mut s,
@@ -1044,7 +1049,7 @@ const K: (&str, &str) = (
 
 #[test]
 fn alias_links_stay_heading_links_follow() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             K,
             (
@@ -1052,7 +1057,7 @@ fn alias_links_stay_heading_links_follow() {
                 "- [[k8s]] [[Kubernetes#Setup]] [[k8s#Setup]]\n",
             ),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -1072,13 +1077,13 @@ fn alias_links_stay_heading_links_follow() {
 
 #[test]
 fn renaming_c_leaves_links_to_c_sharp_notes() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/C.md", "- c\n"),
             ("pages/C# notes.md", "- n\n"),
             ("pages/Ops.md", "- [[C# notes]] [[C#Intro]]\n"),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -1095,12 +1100,12 @@ fn renaming_c_leaves_links_to_c_sharp_notes() {
 #[test]
 fn a_dangling_heading_like_name_still_renames() {
     // With no page `Issue`, `[[Issue #42]]` names the page.
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/Issue #42.md", "- i\n"),
             ("pages/Ops.md", "- [[Issue #42]]\n"),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -1111,14 +1116,14 @@ fn a_dangling_heading_like_name_still_renames() {
 
 #[test]
 fn a_heading_link_is_left_alone_when_its_new_form_names_another_page() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/Old.md", "- o\n"),
             ("pages/Foo#H.md", "- a page named Foo#H\n"),
             ("pages/Bar.md", "---\naliases: [\"Foo#J\"]\n---\n- b\n"),
             ("pages/Ops.md", "- [[Old#H]] [[Old#J]] [[Old#K]] [[Old]]\n"),
         ],
-        &[],
+        clock(0),
     );
     let out = ok(
         &mut s,
@@ -1141,7 +1146,7 @@ fn a_heading_link_is_left_alone_when_its_new_form_names_another_page() {
 #[test]
 fn a_heading_link_in_front_matter_follows_a_rename() {
     let fm = "---\nowner: \"[[Old#H]]\"\ntags:\n  - x # keep\n---\n";
-    let (t, mut s) = folder(&[OLD, ("pages/C.md", &format!("{fm}- c\n"))], &[]);
+    let (t, mut s) = support::folder_at(&[OLD, ("pages/C.md", &format!("{fm}- c\n"))], clock(0));
     ok(
         &mut s,
         json!({"type": "page.rename", "key": "old", "name": "New"}),
@@ -1199,12 +1204,12 @@ fn move_linked_only_page_with_a_title() {
 
 #[test]
 fn move_linked_only_page_onto_a_taken_stem() {
-    let (t, mut s) = folder(
+    let (t, mut s) = support::folder_at(
         &[
             ("pages/B.md", "- [[Idea]]\n"),
             ("pages/X/Idea.md", "title:: Other\n- o\n"),
         ],
-        &[],
+        clock(0),
     );
     ok(
         &mut s,
@@ -1217,7 +1222,7 @@ fn move_linked_only_page_onto_a_taken_stem() {
 #[test]
 fn empty_page_file_is_a_page() {
     let files = [("pages/B.md", "- [[Idea]]\n"), ("pages/X/Idea.md", "")];
-    let (t, mut s) = folder(&files, &[]);
+    let (t, mut s) = support::folder_at(&files, clock(0));
     let expected = [row("X", "idea", "Idea", false), row("", "b", "B", false)];
     assert_eq!(
         pages_in(&ok(&mut s, json!({"type": "folder.tree"}))),

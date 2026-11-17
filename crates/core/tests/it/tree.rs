@@ -29,8 +29,7 @@ fn folder(files: &[(&str, &str)], dirs: &[&str]) -> (TempDir, Session) {
     for d in dirs {
         fs::create_dir_all(t.path().join(d)).unwrap();
     }
-    let mut s = Session::new();
-    ok(&mut s, json!({"type": "folder.open", "path": t.path()}));
+    let s = support::open_at(t.path(), clock(0));
     (t, s)
 }
 
@@ -96,13 +95,13 @@ fn tree_lists_folders_first_case_insensitively() {
 
 #[test]
 fn tree_groups_journals_newest_first() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[
             ("journals/2025-12-31.md", "- x\n"),
             ("journals/2026-10-27.md", "- x\n"),
             ("journals/2026-10-29.md", "- x\n"),
         ],
-        &[],
+        clock(0),
     );
     let tree = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     let years: Vec<_> = tree.journals.iter().map(|y| y.year).collect();
@@ -130,7 +129,7 @@ fn tree_groups_journals_newest_first() {
 
 #[test]
 fn tree_serializes_with_kind_tags() {
-    let (_t, mut s) = folder(&[("pages/D/X.md", "- x\n")], &[]);
+    let (_t, mut s) = support::folder_at(&[("pages/D/X.md", "- x\n")], clock(0));
     let tree = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     assert_eq!(
         serde_json::to_value(&tree).unwrap()["pages"],
@@ -141,7 +140,7 @@ fn tree_serializes_with_kind_tags() {
 
 #[test]
 fn a_page_enters_the_tree_with_its_first_text() {
-    let (_t, mut s) = folder(&[], &[]);
+    let (_t, mut s) = support::folder_at(&[], clock(0));
     let out = ok(&mut s, json!({"type": "page.open", "name": "Ghost"}));
     assert!(out.tree.is_none());
     let tree = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
@@ -182,7 +181,7 @@ fn create_page_in_a_folder() {
 
 #[test]
 fn create_page_takes_a_free_stem_in_its_folder() {
-    let (t, mut s) = folder(&[("pages/Projects/Plan_.md", "- a\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/Projects/Plan_.md", "- a\n")], clock(0));
     // `Plan?` maps to the taken file name `Plan_.md`; only its folder counts.
     ok(
         &mut s,
@@ -197,7 +196,7 @@ fn create_page_takes_a_free_stem_in_its_folder() {
 
 #[test]
 fn create_page_refusals() {
-    let (t, mut s) = folder(&[("pages/people/Anna.md", "- x\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/people/Anna.md", "- x\n")], clock(0));
     let c =
         |name: &str, folder: &str| json!({"type": "page.create", "name": name, "folder": folder});
     assert_eq!(code(&mut s, c("anna", "")), "pageExists");
@@ -210,7 +209,7 @@ fn create_page_refusals() {
 
 #[test]
 fn create_folder() {
-    let (t, mut s) = folder(&[], &[]);
+    let (t, mut s) = support::folder_at(&[], clock(0));
     let out = ok(
         &mut s,
         json!({"type": "dir.create", "path": "Projects/2027"}),
@@ -256,7 +255,7 @@ fn command_names_deserialize() {
 
 #[test]
 fn linked_only_pages_are_listed_at_the_top_level_alphabetically() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[
             (
                 "pages/Projects/Plan.md",
@@ -276,7 +275,7 @@ fn linked_only_pages_are_listed_at_the_top_level_alphabetically() {
 ",
             ),
         ],
-        &[],
+        clock(0),
     );
     let tree = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     assert_eq!(
@@ -293,13 +292,13 @@ fn linked_only_pages_are_listed_at_the_top_level_alphabetically() {
 
 #[test]
 fn the_tree_is_resent_when_the_linked_only_pages_change() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[(
             "pages/A.md",
             "- x
 ",
         )],
-        &[],
+        clock(0),
     );
     let id = ok(&mut s, json!({"type": "page.get", "key": "a"}))
         .page
@@ -324,13 +323,13 @@ fn the_tree_is_resent_when_the_linked_only_pages_change() {
 
 #[test]
 fn a_linked_only_page_leaves_the_list_when_it_gets_a_file() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[(
             "pages/A.md",
             "- [[New]]
 ",
         )],
-        &[],
+        clock(0),
     );
     ok(&mut s, json!({"type": "page.open", "name": "New"}));
     let out = write_first_text(&mut s, "new", "own text");
@@ -339,14 +338,14 @@ fn a_linked_only_page_leaves_the_list_when_it_gets_a_file() {
 
 #[test]
 fn the_all_pages_table_has_linked_only_rows() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[(
             "pages/A.md",
             "- [[New]]
 - [[New]] again #tag
 ",
         )],
-        &[],
+        clock(0),
     );
     let table = ok(&mut s, json!({"type": "pages.table"})).table.unwrap();
     let rows: Vec<_> = table
@@ -382,7 +381,7 @@ fn tag(key: &str, name: &str, count: usize, linked_only: bool) -> TagEntry {
 
 #[test]
 fn the_tags_section_lists_every_tag_with_its_blocks() {
-    let (_t, mut s) = folder(
+    let (_t, mut s) = support::folder_at(
         &[
             (
                 "pages/A.md",
@@ -391,7 +390,7 @@ fn the_tags_section_lists_every_tag_with_its_blocks() {
             ("pages/B.md", "- [[infra]] #ops\n  - child #ops\n"),
             ("pages/Ops.md", "- x\n"),
         ],
-        &[],
+        clock(0),
     );
     let tree = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     assert_eq!(
@@ -408,7 +407,7 @@ fn the_tags_section_lists_every_tag_with_its_blocks() {
 
 #[test]
 fn the_tree_is_resent_when_the_tags_change() {
-    let (_t, mut s) = folder(&[("pages/A.md", "- x\n- y\n")], &[]);
+    let (_t, mut s) = support::folder_at(&[("pages/A.md", "- x\n- y\n")], clock(0));
     let blocks = ok(&mut s, json!({"type": "page.get", "key": "a"}))
         .page
         .unwrap()
@@ -431,7 +430,8 @@ fn the_tree_is_resent_when_the_tags_change() {
 
 #[test]
 fn the_all_pages_table_has_tag_only_rows() {
-    let (_t, mut s) = folder(&[("pages/A.md", "- #urgent\n- [[Both]] #both\n")], &[]);
+    let (_t, mut s) =
+        support::folder_at(&[("pages/A.md", "- #urgent\n- [[Both]] #both\n")], clock(0));
     let table = ok(&mut s, json!({"type": "pages.table"})).table.unwrap();
     let rows: Vec<_> = table
         .iter()
@@ -442,7 +442,7 @@ fn the_all_pages_table_has_tag_only_rows() {
 
 #[test]
 fn a_tag_without_a_page_can_be_renamed() {
-    let (t, mut s) = folder(&[("pages/A.md", "- #urgent and [[Topic]]\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/A.md", "- #urgent and [[Topic]]\n")], clock(0));
     let reach = ok(
         &mut s,
         json!({"type": "page.renameReach", "key": "urgent", "name": "Important"}),
@@ -467,7 +467,7 @@ fn a_tag_without_a_page_can_be_renamed() {
 
 #[test]
 fn every_tree_carries_a_newer_version_than_the_one_before() {
-    let (_t, mut s) = folder(&[("pages/A.md", "- a\n")], &[]);
+    let (_t, mut s) = support::folder_at(&[("pages/A.md", "- a\n")], clock(0));
     let first = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     let second = ok(&mut s, json!({"type": "folder.tree"})).tree.unwrap();
     assert!(second.version > first.version);
@@ -475,7 +475,7 @@ fn every_tree_carries_a_newer_version_than_the_one_before() {
 
 #[test]
 fn a_blank_page_name_makes_no_page_and_no_file() {
-    let (t, mut s) = folder(&[], &[]);
+    let (t, mut s) = support::folder_at(&[], clock(0));
     for name in ["", " ", "   \t "] {
         let c = code(
             &mut s,
@@ -492,7 +492,7 @@ fn a_blank_page_name_makes_no_page_and_no_file() {
 
 #[test]
 fn a_dot_dot_in_a_folder_path_never_leaves_the_pages_folder() {
-    let (t, mut s) = folder(&[("pages/A/B.md", "- b\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/A/B.md", "- b\n")], clock(0));
     let outside = t.path().parent().unwrap().to_path_buf();
     for path in [
         "..",
@@ -523,7 +523,7 @@ fn a_dot_dot_in_a_folder_path_never_leaves_the_pages_folder() {
 #[test]
 fn creating_a_page_next_to_a_file_with_a_capital_extension_never_overwrites_it() {
     // `A.MD` is reported and not loaded; its bytes are not Breccia's to touch.
-    let (t, mut s) = folder(&[("pages/A.MD", "- theirs\n")], &[]);
+    let (t, mut s) = support::folder_at(&[("pages/A.MD", "- theirs\n")], clock(0));
     ok(
         &mut s,
         json!({"type": "page.create", "name": "a", "folder": ""}),

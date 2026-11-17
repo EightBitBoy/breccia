@@ -1,5 +1,6 @@
 use breccia_core::LineEnding;
 use breccia_core::color::{PAGE_COLORS, PageColor, color_line, page_color, parse_color, recolor};
+use breccia_core::inline::title_line;
 
 #[test]
 fn page_color_reads_the_first_known_color_line() {
@@ -200,9 +201,6 @@ fn recolor_writes_a_vividness() {
 #[test]
 fn title_and_color_lines_skip_front_matter_alike() {
     let preamble = "---\ntitle:: A\ncolor:: blue\n---\r\ntitle:: B\r\ncolor:: red\r\n";
-    assert_eq!(
-        breccia_core::inline::title_line(preamble),
-        Some((4, "B".to_string()))
-    );
+    assert_eq!(title_line(preamble), Some((4, "B".to_string())));
     assert_eq!(color_line(preamble), Some((5, PageColor::Named("red"))));
 }

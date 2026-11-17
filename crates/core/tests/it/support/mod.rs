@@ -39,6 +39,7 @@ pub fn request(s: &Session, command: Value) -> Request {
         .unwrap_or_else(|e| panic!("bad request: {e}"))
 }
 
+/// Runs `command` as a request stamped with the session's generation; the result is left to the caller.
 pub fn run(s: &mut Session, command: Value, clock: Clock) -> Result<Output, CommandError> {
     let req = request(s, command);
     s.run(req, clock)
@@ -67,7 +68,7 @@ pub fn folder_at(files: &[(&str, &str)], clock: Clock) -> (TempDir, Session) {
     (t, s)
 }
 
-/// Block ids of a page, in document order.
+/// Block ids of a page, in document order. It reads the page on `DAY` at ms 0, whatever the caller's clock.
 pub fn ids(s: &mut Session, key: &str) -> Vec<BlockId> {
     let out = ok(s, json!({"type": "page.get", "key": key}), clock_on(DAY, 0));
     out.page.unwrap().blocks.iter().map(|b| b.id).collect()
