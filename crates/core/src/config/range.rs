@@ -5,7 +5,21 @@ use toml_edit::{DocumentMut, Item, Value};
 use super::model::{BoardSettings, GitSettings, Replaced};
 use super::toml_keep::set_keeping_decor;
 
-/// The bounded keys: section, key, label, range, default.
+/// One row of the table of bounded keys: the section and key as written in the file, the label
+/// the notice shows (`[section] key`, built from the two), the allowed range and the default.
+macro_rules! bounded_key {
+    ($section:literal, $key:literal, $range:expr, $default:expr) => {
+        (
+            $section,
+            $key,
+            concat!("[", $section, "] ", $key),
+            $range,
+            $default,
+        )
+    };
+}
+
+/// The bounded keys, in the order the notices list them: section, key, label, range, default.
 fn bounded() -> [(
     &'static str,
     &'static str,
@@ -16,31 +30,28 @@ fn bounded() -> [(
     let git = GitSettings::default();
     let board = BoardSettings::default();
     [
-        (
+        bounded_key!(
             "git",
             "commit_delay_minutes",
-            "[git] commit_delay_minutes",
             GitSettings::MINUTES,
-            git.commit_delay_minutes,
+            git.commit_delay_minutes
         ),
-        (
+        bounded_key!(
             "git",
             "pull_interval_minutes",
-            "[git] pull_interval_minutes",
             GitSettings::MINUTES,
-            git.pull_interval_minutes,
+            git.pull_interval_minutes
         ),
-        (
+        bounded_key!(
             "board",
             "archive_after_days",
-            "[board] archive_after_days",
             BoardSettings::DAYS,
-            board.archive_after_days,
+            board.archive_after_days
         ),
     ]
 }
 
-/// Replaces each whole number outside its range by the default and records it (file order of the keys).
+/// Replaces each whole number outside its range by the default and records it, in the order of the table `bounded` returns.
 pub(super) fn replace_out_of_range(doc: &mut DocumentMut) -> Vec<Replaced> {
     let mut records = Vec::new();
     for (section, key, label, range, default) in bounded() {
