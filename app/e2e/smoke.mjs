@@ -4020,7 +4020,7 @@ try {
     assert(m, `${step}: dailies.md is ${JSON.stringify(readAt(dailiesFile))}, not ${JSON.stringify(expected)}`)
     for (const s of m.slice(1)) {
       const t = new Date(s.replace(' ', 'T')).getTime()
-      assert(Math.abs(Date.now() - t) < 2 * 60_000 + 60_000, `${step}: stamp ${s} is not within two minutes of now`)
+      assert(Math.abs(Date.now() - t) < 2 * 60_000, `${step}: stamp ${s} is not within two minutes of now`)
     }
   }
   const dRows = page.locator('[data-testid="daily-row"]')
@@ -4086,9 +4086,10 @@ try {
 
   // 141: an outside write is followed, and a tick keeps the other lines byte for byte
   const outside141 = '- Water the plants\n  note:: keep\n- Check emails\n  checked:: 2000-01-01 00:00\n'
+  await openDailies()
+  await waitFor('141 the view shows the earlier file', dTexts, ['Check emails', 'Water the plants'])
   writeFileSync(`${dailiesFile}.tmp`, outside141)
   renameSync(`${dailiesFile}.tmp`, dailiesFile)
-  await openDailies()
   await waitFor('141 the view follows the file', dTexts, ['Water the plants', 'Check emails'])
   assert((await dRows.evaluateAll((rs) => rs.map((r) => r.dataset.checked))).join() === 'false,false', '141 a daily shows as checked')
   await waitFor('141 two open', dStatusText, 'Dailies 2 open')
@@ -4113,16 +4114,16 @@ try {
   await confirm142.waitFor()
   await confirm142.getByRole('button', { name: 'Cancel' }).click()
   await confirm142.waitFor({ state: 'detached' })
-  await sleep(600) // longer than the save pause: a wrong write would be there by now
+  await frames() // a wrong delete would have gone through the app by now
   assert(readAt(dailiesFile) === kept142, '142 Cancel changed dailies.md')
   await dRow('Stretch').click({ button: 'right' })
   await page.locator('[data-op="delete"]').click()
   await confirm142.waitFor()
   await kb.press('Escape')
   await confirm142.waitFor({ state: 'detached' })
-  await sleep(600)
+  await frames()
   assert(readAt(dailiesFile) === kept142, '142 Esc changed dailies.md')
-  assert((await dRows.count()) === 3, '142 a row went with Cancel or Esc')
+  await waitFor('142 no row went with Cancel or Esc', () => dRows.count(), 3)
   await dRow('Stretch').click({ button: 'right' })
   await page.locator('[data-op="delete"]').click()
   await confirm142.waitFor()
