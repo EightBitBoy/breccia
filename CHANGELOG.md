@@ -2,6 +2,18 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.8.0] - 2026-11-18
+
+### Features
+
+- Dailies: a list of things to tick each day, which starts afresh daily
+- Status bar: the number of dailies still open; a click opens them
+- Settings: choose the time your dailies start afresh
+
+### Fixes
+
+- Settings: a comment above a changed setting is no longer dropped
+
 ## [1.7.1] - 2026-11-17
 
 ### Fixes
