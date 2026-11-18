@@ -45,3 +45,8 @@ Task 5: minor (deferred): redundant variable in a DST test
 Task 5: minor (deferred): resetParts does not validate its input (core guarantees HH:MM)
 Task 5: minor (deferred): no test for out-of-range input to moveTarget
 Task 5: complete (commits ce4a5cc..ecc7b6c, review clean)
+Task 6: implementer DONE, commit 84bc618 (not wired into App; Task 7 does); review dispatched
+Task 6: minor (deferred): a failed reload inside send can emit a second notice
+Task 6: minor (deferred): redundant now initialiser; dead setClock call and unneeded tick() in tests
+Task 6: minor (deferred): no test for the load() failure notice
+Task 6: complete (commits 9a9e808..84bc618, review clean)
