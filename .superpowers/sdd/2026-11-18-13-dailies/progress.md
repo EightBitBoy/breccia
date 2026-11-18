@@ -80,3 +80,11 @@ Task 10: fix round 1/5 (3 addressed, 0 open; commits 12d2333..27932f0)
 Task 10: minor (deferred): a few lines in review.md and spec.md run past the usual wrap width
 Task 10: complete (commits 3d7fa3a..27932f0, review clean)
 Final review: dispatched (opus) over 4bb9bd0..HEAD
+Final review: ready with fixes; Important 1: stale-text guard compares against the core's own text, so a delete/edit left open across a watcher reload acts on the daily that now holds the id. Minors triage: none must-fix; two one-line doc fixes in the wave.
+Ruling: include the new minor "Settings cannot set a bad hand-edited reset back to 00:00" in the fix wave — a user can otherwise not clear the repeating notice from Settings — cost if wrong: a few lines in SettingsView.
+Final fix wave: dispatched (opus)
+Final fix wave: done, commits b162d25..24305e4 (eb3d868, 100fabd, 4cd5ae2, 24305e4); e2e 215 PASS; scoped re-review dispatched
+Final fix wave: re-review clean (4 addressed, 0 open).
+Ruling: the fix wave's two concerns (number fields can't overwrite a bad value by typing the default; delete does not carry nested) go to follow-ups — narrow cases, nothing else builds on them — cost if wrong: a repeated notice for a bad number until fixed by hand; hidden lines added from outside during an open delete question go unmentioned.
+Controller checks: just test green (core it 847 + 2 ignored), just lint clean, just e2e 215 PASS exit 0.
+Finishing: follow-ups, backlog #92–#94 and STATUS in 1c2e69b; scratch deleted; plan 13 done 2026-11-18.
