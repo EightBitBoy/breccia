@@ -324,6 +324,25 @@ pub struct RenameReport {
     pub saved: Vec<String>,
 }
 
+/// `breccia/dailies.md` held in memory. It is not a page: no index, no links, no search.
+pub(crate) struct DailiesFile {
+    pub doc: Document,
+    /// The text last read or written; `None`: there is no file.
+    pub on_disk: Option<String>,
+    /// Why the file cannot be read, while it cannot: every change is refused.
+    pub unreadable: Option<String>,
+}
+
+impl DailiesFile {
+    fn empty() -> DailiesFile {
+        DailiesFile {
+            doc: parse("", &mut IdGen::new()),
+            on_disk: None,
+            unreadable: None,
+        }
+    }
+}
+
 pub struct Workspace {
     pub root: PathBuf,
     pub config: Config,
@@ -333,7 +352,7 @@ pub struct Workspace {
     /// Numbers in `config.toml` read as their defaults, not yet reported.
     pub(crate) config_replaced: Vec<Replaced>,
     pages: HashMap<String, Page>,
-    ids: IdGen,
+    pub(crate) ids: IdGen,
     block_index: HashMap<BlockId, String>,
     links: LinkIndex,
     /// Each page's aliases and the page each alias goes to.
@@ -347,6 +366,8 @@ pub struct Workspace {
     /// Relative paths a load warning was reported for since `open`: a file
     /// that stays broken is not reported again by every change event.
     warned: HashSet<PathBuf>,
+    /// The list of dailies; see [`DailiesFile`].
+    pub(crate) dailies: DailiesFile,
 }
 
 impl Workspace {
@@ -401,11 +422,38 @@ impl Workspace {
             ws.load_file(f, &mut warnings);
         }
         ws.end_alias_batch();
+        ws.load_dailies(&mut warnings);
         ws.warned = warnings.iter().map(|w| w.path().to_path_buf()).collect();
         // After `warned` is filled: an alias warning never hides a later
         // real warning for the same file.
         warnings.extend(ws.take_alias_warnings());
         Ok((ws, warnings))
+    }
+
+    /// Reads `breccia/dailies.md`: a missing file is an empty list; one that cannot be read gives a warning
+    /// and an empty list, and changes are refused until it can be read.
+    fn load_dailies(&mut self, warnings: &mut Vec<LoadWarning>) {
+        let rel = PathBuf::from(layout::DAILIES_REL);
+        match fs::read(layout::dailies_path(&self.root)) {
+            Ok(bytes) => match decode(&rel, Ok(bytes)) {
+                Ok(text) => {
+                    self.dailies.doc = parse(&text, &mut self.ids);
+                    self.dailies.on_disk = Some(text);
+                }
+                Err(w) => {
+                    self.dailies.unreadable = Some("not valid UTF-8".to_string());
+                    warnings.push(w);
+                }
+            },
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+            Err(e) => {
+                self.dailies.unreadable = Some(e.to_string());
+                warnings.push(LoadWarning::Unreadable {
+                    path: rel,
+                    error: e.to_string(),
+                });
+            }
+        }
     }
 
     /// The out-of-range numbers of `config.toml` not yet reported; a second
@@ -429,6 +477,7 @@ impl Workspace {
             colors: HashMap::new(),
             changes: changes::Changes::default(),
             warned: HashSet::new(),
+            dailies: DailiesFile::empty(),
         }
     }
 

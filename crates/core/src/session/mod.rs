@@ -10,6 +10,7 @@ mod batch;
 mod block;
 mod board;
 mod command;
+mod dailies;
 mod folder;
 mod graph;
 mod history;
@@ -27,6 +28,7 @@ use std::path::{Path, PathBuf};
 pub use crate::workspace::TagEntry;
 pub use board::{ArchivedView, BoardView, CardView, ColumnView};
 pub use command::{Clock, Command, CommandKind, Request, StateInput, StateRename};
+pub use dailies::DailyView;
 pub use folder::Recovery;
 pub use graph::{GraphNode, GraphView, NodePosition, layout_file_name};
 pub use search::{DateView, IndexProgress, SEARCH_LIMIT, SearchGroup, SearchHit, SearchView};
@@ -387,6 +389,25 @@ impl Session {
                 names: Some(self.ws()?.page_names()),
                 ..Output::default()
             }),
+            Command::DailiesList => self.dailies_list(),
+            Command::DailiesAdd { text } => {
+                self.dailies_change(None, |d, ids| d.add_daily(&text, ids).map(|_| ()))
+            }
+            Command::DailiesCheck { id } => {
+                self.dailies_change(Some(id), |d, _| d.check_daily(id, now))
+            }
+            Command::DailiesUncheck { id } => {
+                self.dailies_change(Some(id), |d, _| d.uncheck_daily(id))
+            }
+            Command::DailiesEdit { id, text } => {
+                self.dailies_change(Some(id), |d, _| d.edit_daily(id, &text))
+            }
+            Command::DailiesDelete { id } => {
+                self.dailies_change(Some(id), |d, _| d.delete_daily(id))
+            }
+            Command::DailiesMove { id, before } => {
+                self.dailies_change(Some(id), |d, _| d.move_daily(id, before))
+            }
             Command::PageOverwrite { key } => self.page_overwrite(&key),
             Command::BlockInsert { page, after, text } => self.block_insert(&page, after, text),
             Command::BlockSetText { id, text } => self.block_set_text(id, text, typing, clock.ms),

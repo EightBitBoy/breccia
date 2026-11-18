@@ -125,6 +125,12 @@ impl Document {
         self.replace_keeping_structure(id, &new)
     }
 
+    /// Removes a daily with whatever is nested under it.
+    pub fn delete_daily(&mut self, id: BlockId) -> Result<(), EditError> {
+        self.daily(id)?;
+        self.delete(id)
+    }
+
     /// Moves a daily (with whatever is nested under it) before `before`, or to the end.
     pub fn move_daily(&mut self, id: BlockId, before: Option<BlockId>) -> Result<(), EditError> {
         self.daily(id)?;

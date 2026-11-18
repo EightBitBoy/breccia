@@ -300,6 +300,19 @@ export interface Output {
   archive?: ArchivedView[] | null
   /** One journal day for the date picker (`journal.day`). */
   day?: DateView | null
+  /** The dailies in file order; set by every `dailies.*` command. */
+  dailies?: DailyView[] | null
+}
+
+/** One daily (`breccia/dailies.md`). */
+export interface DailyView {
+  id: BlockId
+  /** The first line. */
+  text: string
+  /** When it was checked, `YYYY-MM-DD HH:MM` local; null: not checked. */
+  checked: string | null
+  /** Lines are written under it; deleting the daily deletes them too. */
+  nested: boolean
 }
 
 /** A row of the Archive view (`archive.list`). */
@@ -458,6 +471,13 @@ export type Command =
   | { type: 'config.setGit'; enabled: boolean; commitDelayMinutes: number; pullIntervalMinutes: number; version: number }
   | { type: 'config.setBoard'; archiveAfterDays: number; autoArchive?: boolean; version: number }
   | { type: 'config.setDailies'; reset: string; version: number }
+  | { type: 'dailies.list' }
+  | { type: 'dailies.add'; text: string }
+  | { type: 'dailies.check'; id: BlockId }
+  | { type: 'dailies.uncheck'; id: BlockId }
+  | { type: 'dailies.edit'; id: BlockId; text: string }
+  | { type: 'dailies.delete'; id: BlockId }
+  | { type: 'dailies.move'; id: BlockId; before: BlockId | null }
   | { type: 'board.archive'; keyword: string }
   | { type: 'blocks.setArchived'; ids: BlockId[]; archived: boolean }
   | { type: 'journal.append'; text: string }

@@ -73,6 +73,8 @@ pub struct Output {
     pub git_log: Option<GitLogView>,
     /// The archived tasks (`archive.list`).
     pub archive: Option<Vec<ArchivedView>>,
+    /// The dailies in file order; set by every `dailies.*` command.
+    pub dailies: Option<Vec<super::DailyView>>,
 }
 
 impl Output {

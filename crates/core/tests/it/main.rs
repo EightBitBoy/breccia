@@ -8,6 +8,7 @@ mod board;
 mod color;
 mod config;
 mod dailies;
+mod dailies_session;
 mod dates;
 mod demo;
 mod disk;

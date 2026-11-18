@@ -177,6 +177,30 @@ pub enum Command {
     ConfigSetDailies { reset: String, version: u64 },
     #[serde(rename = "pages.list")]
     PagesList,
+    /// The dailies in `breccia/dailies.md`, read again first; answers in `dailies`.
+    #[serde(rename = "dailies.list")]
+    DailiesList,
+    /// A new daily at the end of the list.
+    #[serde(rename = "dailies.add")]
+    DailiesAdd { text: String },
+    /// Writes `checked::` with the command's time.
+    #[serde(rename = "dailies.check")]
+    DailiesCheck { id: BlockId },
+    #[serde(rename = "dailies.uncheck")]
+    DailiesUncheck { id: BlockId },
+    /// Changes the daily's first line.
+    #[serde(rename = "dailies.edit")]
+    DailiesEdit { id: BlockId, text: String },
+    /// Removes the daily with whatever is written under it. No undo.
+    #[serde(rename = "dailies.delete")]
+    DailiesDelete { id: BlockId },
+    /// Moves a daily before `before`, or to the end.
+    #[serde(rename = "dailies.move")]
+    DailiesMove {
+        id: BlockId,
+        #[serde(default)]
+        before: Option<BlockId>,
+    },
     #[serde(rename = "block.insert")]
     BlockInsert {
         page: String,
@@ -297,6 +321,7 @@ impl Command {
             | Command::PageGet { .. }
             | Command::PagesGet { .. }
             | Command::PagesList
+            | Command::DailiesList
             | Command::PagesTable
             | Command::PageRefs { .. }
             | Command::PageRenameReach { .. }
@@ -335,6 +360,12 @@ impl Command {
             | Command::ConfigSetGit { .. }
             | Command::ConfigSetBoard { .. }
             | Command::ConfigSetDailies { .. }
+            | Command::DailiesAdd { .. }
+            | Command::DailiesCheck { .. }
+            | Command::DailiesUncheck { .. }
+            | Command::DailiesEdit { .. }
+            | Command::DailiesDelete { .. }
+            | Command::DailiesMove { .. }
             | Command::BlockInsert { .. }
             | Command::BlockSetText { .. }
             | Command::BlockSplit { .. }
@@ -396,6 +427,11 @@ mod tests {
             CommandKind::Background
         );
         assert_eq!(Command::PageToday.kind(), CommandKind::Edit);
+        assert_eq!(Command::DailiesList.kind(), CommandKind::Query);
+        assert_eq!(
+            Command::DailiesCheck { id: BlockId(1) }.kind(),
+            CommandKind::Edit
+        );
         assert_eq!(
             Command::BlockDelete { id: BlockId(1) }.kind(),
             CommandKind::Edit
