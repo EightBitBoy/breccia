@@ -3,7 +3,7 @@
 Breccia keeps notes as Markdown files in a folder, and so do Obsidian and Logseq. This page says how far the three
 agree, how to set Obsidian or Logseq up to open a Breccia folder, and what does not carry over.
 
-Breccia's side is described exactly in [the notes format](format.md) (format version 8); this page links to its sections
+Breccia's side is described exactly in [the notes format](format.md) (format version 9); this page links to its sections
 instead of repeating them. For the other two apps:
 
 - Statements about Obsidian were checked against Obsidian's help pages (obsidian.md/help) on 2026-10-31. The ones about
@@ -125,7 +125,7 @@ Page colors use the same syntax: a `color:: <name>` line in the page's preamble 
 
 | Breccia | Obsidian | Logseq | What carries over |
 |---|---|---|---|
-| `breccia/config.toml`: task states, boards, Git settings ([§11](format.md#11-brecciaconfigtoml)). Nothing else in `breccia/` is read. | `.obsidian/` in the vault holds all its settings. | `logseq/` holds `config.edn` and its other files (not verified). | Nothing; each app keeps its own folder and ignores the others' (Breccia ignores every top-level folder but `pages/`, `journals/` and `breccia/`). |
+| `breccia/config.toml`: task states, boards, Git settings ([§11](format.md#11-brecciaconfigtoml)). `breccia/dailies.md`: the dailies ([§15](format.md#15-dailies)). Nothing else in `breccia/` is read. | `.obsidian/` in the vault holds all its settings. | `logseq/` holds `config.edn` and its other files (not verified). | Nothing; each app keeps its own folder and ignores the others' (Breccia ignores every top-level folder but `pages/`, `journals/` and `breccia/`). |
 
 **Decision:** The three folders can live side by side in one notes folder.
 

@@ -409,3 +409,45 @@ are its questions for you; each answer decides what a later plan does.
 115. [ ] **A comment above a changed setting stays:** in `breccia/config.toml`, put a comment line above a Git or board
    setting (for example `# how long to wait` above `commit_delay_minutes = 5`), then change that setting in Settings.
    Before, the comment line above it was dropped; now the file keeps it byte for byte and only the value changes.
+
+## Dailies (plan 13)
+
+116. [ ] **The Dailies view:** the sidebar has "Dailies" right under Journal. Open it with no file: it says "No dailies yet"
+   and offers the field "Add a daily". Type a text and press Enter: the daily appears and the field stays focused.
+   Click a text to edit it (Enter or leaving the field saves, Esc cancels; an emptied field changes nothing). Right-click
+   a row and choose Delete: Breccia asks "Delete the daily '…'?" (Esc cancels). Check `breccia/dailies.md` in an editor
+   after each step: one `- text` line per daily.
+
+117. [ ] **Ticking:** tick a daily: it turns grey and struck through and sinks below the open ones; the file gets a
+   `checked:: YYYY-MM-DD HH:MM` line under it, and the order of the file does not change. Untick it: the line goes and
+   the row is back. Hover a ticked row for the time it was ticked. Tick them all: the view says "All done for today".
+   With "reduce motion" on in the system, the row jumps instead of sliding.
+
+118. [ ] **Reordering:** drag an open daily above another open one: the file order follows (the daily is written right
+   before the one you dropped it on). A ticked daily moves only among ticked ones. `Alt ↑` / `Alt ↓` on a focused row
+   do the same by one place.
+
+119. [ ] **The status bar item:** the left of the status bar shows "Dailies 3 open"; with all ticked it shows "Dailies ✓";
+   with no dailies at all it shows nothing. A click opens the view. Back and Forward step through the view like the
+   Archive.
+
+120. [ ] **Starting afresh:** in Settings > Dailies (after Journal) the field takes `4:00` and saves `"04:00"` in
+   `breccia/config.toml` under `[dailies]` (its comments stay). With 04:00, a daily ticked at 01:30 counts for the day
+   before: it is open again after the 04:00 reset, and a daily ticked at 05:00 stays ticked until 04:00 the next day.
+   Leave the window open across the reset time: the ticks go on their own (within a minute). Close Breccia, or let the
+   PC sleep, over the reset time: on return the daily is open. Writing `reset = "4am"` in the file gives a notice and
+   is read as 00:00; the file is not changed.
+
+121. [ ] **Outside edits and Git:** edit `breccia/dailies.md` in another editor (add, reorder, tick a daily by adding a
+   `checked::` line): the view follows at once. Delete a daily in the editor while Breccia shows it and tick it in
+   Breccia: the change is refused with "This daily changed in another program; the list now shows the file as it is."
+   Text you added by hand (an intro line, a note under a daily) stays; the other dailies keep their bytes. A Git sync
+   commit that touched only this file says "dailies" in its message.
+
+122. [ ] **Dailies are plain text:** a daily written `Call [[Mum]] #family` shows exactly that, with no link and no
+   tag; the text is not found by search and `Mum` gets no linked reference from it.
+
+123. [ ] **Question (answered): deleting a daily:** the plan recommended an undo for a deleted daily. **Answered (owner,
+   2026-11-18): ask before deleting and have no undo.** Done: the question names the daily, and when the daily has lines
+   under it that the view does not show (nested blocks, a `note::` line, any property but `checked::`), it says that
+   those lines go too. Is that enough, or should a deleted daily also be recoverable (the file is in Git, if you use it)?

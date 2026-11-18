@@ -8,13 +8,16 @@
 //! - ```` ```text page-colors ```` is `PAGE_COLORS`, five to a line;
 //! - a ```` ```markdown before ```` fence is followed by a ```` ```markdown after-<name> ````
 //!   fence (`<name>` a page color, `hue-<h>`, `hue-<h>-vivid-<v>` or `none`): the `after` text is the
-//!   `before` text with its preamble recolored with that color.
+//!   `before` text with its preamble recolored with that color;
+//! - ```` ```markdown dailies ```` is a `breccia/dailies.md`; the next ```` ```text dailies-reads ````
+//!   fence after it must equal [`describe_dailies`] of that file.
 
 use breccia_core::aliases::aliases;
 use breccia_core::color::{
     DEFAULT_VIVID, PAGE_COLORS, PageColor, page_color, parse_color, recolor,
 };
 use breccia_core::config::PALETTE;
+use breccia_core::dailies::{CHECKED_FORMAT, checked_at, daily_text};
 use breccia_core::inline::{LinkKind, links, properties, title_line};
 use breccia_core::naming::file_stem_for;
 use breccia_core::task::{created_at, done_date, done_time, priority, task_state};
@@ -129,6 +132,126 @@ fn describe(src: &str) -> String {
         }
     }
     out
+}
+
+/// What Breccia reads from a `breccia/dailies.md`: one line per top-level block, and
+/// indented its `checked` time when it has a readable one.
+fn describe_dailies(src: &str) -> String {
+    let doc = parse(src, &mut IdGen::new());
+    let mut out = String::new();
+    for b in doc.blocks().iter().filter(|b| b.depth() == 0) {
+        out += &format!(
+            "daily {:?}
+",
+            daily_text(b.text())
+        );
+        if let Some(t) = checked_at(b.text()) {
+            out += &format!(
+                "  checked {}
+",
+                t.format(CHECKED_FORMAT)
+            );
+        }
+    }
+    out
+}
+
+/// Pairs each `markdown dailies` fence with the `text dailies-reads` fence after it.
+fn dailies_failures(fences: &[Fence]) -> (Vec<String>, usize) {
+    let mut failures = Vec::new();
+    let mut pairs = 0;
+    let mut pending: Option<&Fence> = None;
+    for f in fences {
+        match f.info.as_str() {
+            "markdown dailies" => {
+                if let Some(e) = pending {
+                    failures.push(format!(
+                        "line {}: dailies has no `dailies-reads` fence",
+                        e.line
+                    ));
+                }
+                pending = Some(f);
+            }
+            "text dailies-reads" => {
+                let Some(e) = pending.take() else {
+                    failures.push(format!(
+                        "line {}: `dailies-reads` without a `dailies` fence",
+                        f.line
+                    ));
+                    continue;
+                };
+                pairs += 1;
+                if parse(&e.body, &mut IdGen::new()).render() != e.body {
+                    failures.push(format!(
+                        "line {}: dailies example does not round-trip",
+                        e.line
+                    ));
+                }
+                let actual = describe_dailies(&e.body);
+                if actual != f.body {
+                    failures.push(format!(
+                        "line {}: dailies example reads differently from line {}
+                         --- documented ---
+{}--- actual ---
+{actual}",
+                        e.line, f.line, f.body
+                    ));
+                }
+            }
+            _ => {}
+        }
+    }
+    if let Some(e) = pending {
+        failures.push(format!(
+            "line {}: dailies has no `dailies-reads` fence",
+            e.line
+        ));
+    }
+    (failures, pairs)
+}
+
+#[test]
+fn format_doc_dailies_read_as_documented() {
+    let (failures, pairs) = dailies_failures(&fences(&doc()));
+    assert!(
+        failures.is_empty(),
+        "{}",
+        failures.join(
+            "
+
+"
+        )
+    );
+    assert!(pairs >= 2, "only {pairs} dailies examples, want at least 2");
+}
+
+#[test]
+fn format_doc_dailies_fences_must_pair_and_read_right() {
+    let ok = "```markdown dailies
+- A
+  checked:: 2026-11-18 07:42
+- B
+```
+              ```text dailies-reads
+daily \"A\"
+  checked 2026-11-18 07:42
+daily \"B\"
+```
+";
+    assert_eq!(dailies_failures(&fences(ok)), (vec![], 1));
+    let unpaired = "```markdown dailies
+- A
+```
+";
+    assert_eq!(dailies_failures(&fences(unpaired)).0.len(), 1);
+    let wrong = "```markdown dailies
+- A
+```
+```text dailies-reads
+daily \"B\"
+```
+";
+    assert_eq!(dailies_failures(&fences(wrong)).0.len(), 1);
 }
 
 fn with_info<'a>(fences: &'a [Fence], info: &str) -> Vec<&'a Fence> {
@@ -343,7 +466,7 @@ fn hue_value(name: &str) -> Option<String> {
     }
 }
 
-const KNOWN_PAIRS: [&str; 7] = [
+const KNOWN_PAIRS: [&str; 9] = [
     "text page-colors",
     "markdown before",
     "markdown example",
@@ -351,6 +474,8 @@ const KNOWN_PAIRS: [&str; 7] = [
     "toml default-config",
     "text colours",
     "text file-names",
+    "markdown dailies",
+    "text dailies-reads",
 ];
 
 /// `markdown after-<x>` with `<x>` a page color, `hue-<h>` or `none`.

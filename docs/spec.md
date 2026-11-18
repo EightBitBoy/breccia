@@ -96,6 +96,7 @@ Layout:
   pages/Project X.md            pages; sub-folders are the folders of the page tree
   pages/Projects/Website relaunch.md
   breccia/config.toml             states, boards, Git and journal settings (shared, tracked in Git)
+  breccia/dailies.md              the dailies (shared, tracked in Git)
 ```
 
 - **Page names are unique** across all folders; `[[Website relaunch]]` finds the page wherever it lives. The page name
@@ -181,6 +182,8 @@ properties). The frontend gets parsed structure from the core and only adds synt
   versions instead of a silent overwrite. *(my call)*
   Changes to `breccia/config.toml` made while Breccia runs are read at once; a file that cannot be read keeps the
   settings in use, and Breccia does not write it until it can.
+  Changes to `breccia/dailies.md` made while Breccia runs are read at once, and Breccia never writes over text it did
+  not read (§7.14).
   A number outside the range Settings allows (Git minutes 0 to 1440, archive days 1 to 3650) does not stop the file from
   being read: Breccia uses that setting's default and shows a notice naming it, and leaves the file as it is when it
   is read (a later Settings save of that section writes the default).
@@ -195,6 +198,7 @@ A left sidebar, a main area, and a status bar along the bottom of the window (§
 Sidebar, top to bottom:
 - **Search** box with the `Ctrl K` hint (opens search, §7.8).
 - **Journal**: opens the journal feed at today.
+- **Dailies**: opens the Dailies view (§7.14).
 - **All pages**: opens the All pages table.
 - **Boards**: one entry per board, plus "New board".
 - **Pages**: the page tree (folders and pages from `pages/`). Folders fold open and closed. Right-click offers new page,
@@ -208,7 +212,7 @@ Sidebar, top to bottom:
 The sidebar can be resized and hidden. *(my call)*
 
 **Back and forward**: `Alt ←` / `Alt →` (`Cmd [` / `Cmd ]` on a Mac) or the ← → buttons at the top left
-of the main area step through the views shown in this session (pages, journal days, boards, All pages, Archive, Git
+of the main area step through the views shown in this session (pages, journal days, boards, Dailies, All pages, Archive, Git
 history, Graph, Settings), the newest 50, not stored. Scrolling, cards and dialogs are not steps. The scroll position
 comes back; in the journal, the day that was at the top. Deleted pages are skipped; renamed ones are followed. A
 second click on the Git history button is Back.
@@ -489,7 +493,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 ### 7.12 Settings
 
 One screen with sections: Notes folder (open/switch), States, Boards, Git, Journal (nothing yet beyond defaults),
-Themes, Appearance (how web addresses are shown), Keyboard (read-only list of shortcuts in the first version).
+Dailies (the time they start afresh, §7.14), Themes, Appearance (how web addresses are shown), Keyboard (read-only list of shortcuts in the first version).
 
 Settings opens in the main area from the sidebar footer, with `Ctrl ,`, or by clicking the folder name; changes apply
 at once.
@@ -506,9 +510,47 @@ Settings ends with a section "Troubleshooting" whose "Open log folder" opens the
 
 A thin strip along the bottom of the window, as in VS Code, for short state the user may want to glance at: the search
 index while it is built ("Indexing for search · 1,200 of 5,000 pages", with a progress line), the Git status (§7.9),
-and, at its right end, the theme button (§7.10) just left of the help button (?).
+the Dailies count (§7.14), and, at its right end, the theme button (§7.10) just left of the help button (?).
 Any part of Breccia can show and remove an item there; items sit on the left or the right. With nothing to show, the
 strip stays empty and quiet.
+
+### 7.14 Dailies
+
+A list of things you do every day, each with a checkbox. The sidebar entry "Dailies" sits right under Journal and is
+a step of Back and Forward like the Archive. The list is the file `breccia/dailies.md`, shared and tracked in Git like
+the notes; the format is `docs/format.md` §15.
+
+- **One flat list.** Each daily is one line of plain text: no Markdown, and `[[x]]` and `#tag` are not links. The file
+  is not indexed, so dailies have no search hits, linked references, tags or graph dots.
+- **Add** in the field "Add a daily" at the bottom (Enter adds). **Edit** by clicking the text (Enter or leaving the
+  field saves, Esc cancels). **Delete** in the right-click menu. Breccia asks first ("Delete the daily '…'?"); when
+  the daily has lines you cannot see in the view (blocks nested under it, continuation text, a `note::` or any other
+  property but `checked::`), the question says that the lines written under it go too. There is no undo or redo in the
+  Dailies view.
+- **Tick** with the checkbox. A ticked daily is greyed and struck through and sits below the open ones (no
+  animation with reduced motion); unticking brings it back. When every daily is ticked, the view says "All done for
+  today". Showing ticked dailies last is display only; the file keeps the user's order.
+- **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` / `Alt ↓`
+  on a focused row. The file order changes: the daily is written right before the daily it was dropped above.
+- **Starting afresh.** All ticks are gone again at the reset time, midnight unless Settings > Dailies sets another
+  (`[dailies] reset` in `breccia/config.toml`, shared, `HH:MM` on this computer's clock; the field takes `4:00` and
+  saves `"04:00"`; a wrong value in the file is read as `00:00` with a notice, §6). A daily is ticked when the time it
+  was ticked (`checked::`) is at or after the most recent reset, so with the reset at 04:00 a tick at 01:30 counts for
+  the day before. Nothing is written at reset time: the window works it out and redraws at the next reset, also when
+  the PC was asleep over it or the clock was changed (it re-checks on focus, when the window becomes visible, and once
+  a minute). A tick from the future (the clock was set back) counts as ticked.
+- **Status bar.** Left: "Dailies 3 open", or "Dailies ✓" when all are ticked; with no dailies it shows nothing. A click
+  opens the view.
+- **Outside changes.** The file may be edited by hand or arrive with a Git pull: the view follows at once. A change
+  Breccia makes is made on the file as it is now; if the daily is gone it is refused with "This daily changed in
+  another program; the list now shows the file as it is." A failed write keeps the list as it was and says so.
+- **What is kept.** A preamble, nested blocks, continuation lines, other properties, a BOM and CRLF stay as text.
+  Nested blocks are not shown; they move and are deleted with their daily. A daily Breccia changes (tick, untick, edit)
+  is written in Breccia's form, the others keep their bytes; saved files use LF (§4).
+- **Git.** A commit message names a change to this file "dailies" (§7.9). Two computers that tick the same daily between
+  syncs can conflict like any file (§7.9).
+- Not in the first version: dailies on some weekdays only, a history or streaks, groups such as Morning / Evening
+  (`docs/backlog.md`).
 
 ## 8. Scale and speed
 

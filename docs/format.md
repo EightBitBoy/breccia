@@ -1,4 +1,4 @@
-# Breccia notes format, version 8
+# Breccia notes format, version 9
 
 ## 1. About this document
 
@@ -8,7 +8,7 @@ You should not need to run Breccia to follow it.
 
 The format has a version number. It goes up only when a file that already exists would be read differently (a block, a
 link, a name or a state that changes). New things that only appear in new files, and changes to the app, do not change
-the version. The [history](#14-format-history) at the end lists the versions.
+the version. The [history](#14-format-history) lists the versions.
 
 This document describes the files. How the app behaves (screens, keys, boards, search) is described in the design
 spec, [`docs/spec.md`](spec.md), which stays the authority for the app.
@@ -35,6 +35,7 @@ line, with strings written in Rust's debug form (`\n` is a line break inside a b
   pages/Project X.md            pages
   pages/Projects/Website.md     sub-folders of pages/ are the folders of the page tree
   breccia/config.toml           task states, boards and Git settings
+  breccia/dailies.md            the dailies (section 15)
 ```
 
 Breccia reads only these places:
@@ -42,7 +43,8 @@ Breccia reads only these places:
 - `journals/`: the `.md` files directly in it. Sub-folders of `journals/` are ignored.
 - `pages/`: the `.md` files in it and in all its sub-folders, at any depth. A sub-folder is a folder of the page tree;
   it is not part of the page name.
-- `breccia/config.toml` (section 11). Nothing else in `breccia/` is read.
+- `breccia/config.toml` (section 11).
+- `breccia/dailies.md` (section 15). Nothing else in `breccia/` is read.
 
 Everything else is ignored without a message: files and folders at the top level of the notes folder (including `.md`
 files there), files with other extensions, and every file or folder whose name starts with `.` (for example `.git`,
@@ -1012,6 +1014,7 @@ the file when it reads it (a later Settings save of that section writes the defa
 | `[git] enabled` | boolean | `true` | Breccia commits and pulls when the folder is in a Git repository |
 | `[git] commit_delay_minutes` | integer, 0 to 1440 | `5` | commit after this many minutes without changes; `0` turns off the timed commit, and changes are still committed before each pull, when the Git item is clicked and when Breccia closes |
 | `[git] pull_interval_minutes` | integer, 0 to 1440 | `5` | pull this often; `0` pulls only once, at start |
+| `[dailies] reset` | string `HH:MM` | `"00:00"` | the time of day, on this computer's clock, when every daily starts afresh (section 15) |
 
 The colour names:
 
@@ -1024,6 +1027,12 @@ grey amber violet green dim blue red teal
 `_` (`[A-Z][A-Z0-9_]*`), and keywords are unique. A file that breaks these rules stops the folder from opening, and
 the error is reported. Colours and board columns are not checked when the file is read: a column naming a state that is
 not configured is shown as missing. Unknown keys are ignored. A number of the wrong type (`"5"`, `5.5`) is an error like any other type.
+
+`[dailies] reset` is two digits, a colon and two digits, `00:00` to `23:59`. A string that is not such a time (`"24:00"`,
+`"4:00"`, `"4am"`) is read as `"00:00"`, with a notice naming the key, and the file is not changed when it is read. A
+value of another type (`reset = 4`) is an error like any wrong type. Breccia writes `[dailies]` only when the user
+sets a time other than `"00:00"` in Settings (which also takes `4:00` and writes `"04:00"`); a new notes folder's file
+does not list it.
 
 **A missing file** means the defaults above. Breccia writes the file when it creates a notes folder and when the user
 changes a setting.
@@ -1058,6 +1067,7 @@ To work well with Breccia on the same folder:
   and keep Breccia's alias block (or the `aliases` entry that names the page).
 - Keep a page's `color::` line; write one only with a name, `hue <h>` or `hue <h> vivid <v>` from section 8.
 - Leave the comments and unknown keys in `breccia/config.toml` alone.
+- Keep `checked::` values you do not write, in `breccia/dailies.md` as well (section 15).
 - Write files atomically (write a temporary file, then rename it), so Breccia never reads half a file.
 
 ## 14. Format history
@@ -1099,3 +1109,70 @@ To work well with Breccia on the same folder:
 
 - **Version 8**: a custom hue may carry a vividness, `hue <h> vivid <v>` (section 8). Before, such a value was no color
   and was kept as text; older Breccia versions still read it that way.
+
+- **Version 9**: `breccia/dailies.md` is read (section 15), with `[dailies] reset` in `breccia/config.toml` (section 11).
+  Before, nothing in `breccia/` but `config.toml` was read, so a file of that name was ignored.
+
+## 15. Dailies
+
+`breccia/dailies.md` holds the dailies: things the user does every day, each ticked once a day. It is a plain outline
+file (section 6), read and written like a page, with these rules. A folder without the file has no dailies; Breccia
+creates the file when the first daily is added. The file is not indexed: it has no page name, no search hits, no
+links, no tags, and no place in the graph.
+
+- **A daily** is a top-level block. Its text is the block's first line, plain text: `[[x]]` and `#tag` in it are not
+  links.
+- **`checked::`** is a property line (section 8) with the time the daily was last ticked, local time, to the minute:
+  `checked:: 2026-11-18 07:42`. Read: `YYYY-MM-DD HH:MM`, also `YYYY-MM-DD HH:MM:SS` (the seconds are dropped) and a
+  plain `YYYY-MM-DD` (that day, 00:00). Anything else (a `[[link]]`, a word) counts as not ticked and is kept as
+  it is; ticking the daily replaces it. Only the first `checked::` line is read, and unticking removes every one. The
+  value is not a link, so ticking a daily links nothing. `checked::` keeps its plain meaning in pages and journals.
+- **Nothing is written at the reset time.** A daily counts as ticked when its `checked::` time is at or after the most
+  recent reset moment (`[dailies] reset`, section 11, today's or yesterday's, whichever came last). With the reset at
+  `04:00`, a tick at 01:30 counts for the day before. A `checked::` time later than now (the clock was set back, or
+  another computer's clock) counts as ticked.
+- **Order** is the file's order, which is the user's order. Showing ticked dailies after the open ones is display only.
+- **Everything else is kept.** A preamble, blocks nested under a daily, continuation lines, other properties, a BOM and
+  CRLF are text Breccia keeps as it is. Nested blocks are not shown as dailies; they move and are deleted with their
+  daily. A daily Breccia changes (ticked, unticked, edited) is written in Breccia's form (continuation lines get its
+  two-space indent); the other dailies keep their bytes. The file is saved with LF line endings.
+- **Outside changes** are read at once. Before each change Breccia reads the file again and makes the change on what
+  is there; if the daily is gone it refuses the change and shows the file as it is. It never writes over text it did
+  not read.
+
+The owner's example, and what Breccia reads from it:
+
+```markdown dailies
+- Check emails
+  checked:: 2026-11-18 07:42
+- Do the time logging
+```
+
+```text dailies-reads
+daily "Check emails"
+  checked 2026-11-18 07:42
+daily "Do the time logging"
+```
+
+A hand-written file with a preamble, a nested block, a plain date, seconds and a `checked::` value that is no time:
+
+```markdown dailies
+Everything I do every day.
+
+- Water the plants
+  checked:: 2026-11-17
+  - Not the cactus
+- Stretch
+  checked:: 2026-11-18 06:30:45
+  Ten minutes.
+- Read
+  checked:: soon
+```
+
+```text dailies-reads
+daily "Water the plants"
+  checked 2026-11-17 00:00
+daily "Stretch"
+  checked 2026-11-18 06:30
+daily "Read"
+```

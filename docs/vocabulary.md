@@ -9,7 +9,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 
 | Word | Meaning | Where |
 |---|---|---|
-| **notes folder** | The folder Breccia opens: `journals/`, `pages/` and `breccia/config.toml`. Everything else in it is ignored. | Settings, the title of the window, `docs/format.md` §2 |
+| **notes folder** | The folder Breccia opens: `journals/`, `pages/`, `breccia/config.toml` and `breccia/dailies.md`. Everything else in it is ignored. | Settings, the title of the window, `docs/format.md` §2 |
 | **page** | A `.md` file under `pages/`, with a name and a title. Its blocks are what you edit. | Sidebar "Pages", page view, All pages |
 | **journal day** | The page of one day, `journals/YYYY-MM-DD.md`. | "Journal" in the sidebar (the feed of days), the date picker, "Journals" in the page tree |
 | **folder** | A folder inside `pages/`, shown in the page tree. It is not part of the page name. The root is called the notes folder, not a folder. | Sidebar "Pages" |
@@ -18,6 +18,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 | **link** | `[[Page]]`, to a page or a journal day. A link through an alias or with `#Heading` counts for the page it goes to. | The editor, linked references, search |
 | **tag** | `#tag` or `#[[two words]]`; it links to the page of that name. | Sidebar "Tags", the editor |
 | **linked references** | The blocks in other pages that link to this page, listed under the page. | Page view, "Linked from" counts |
+| **daily** | One entry of the Dailies view: a thing you do every day, ticked once a day. One line of text in `breccia/dailies.md`, plain (no links). "Add a daily". It is not a task: it has no state and no board. | Dailies view, status bar |
 | **linked-only page** | A page that has no file yet: `[[links]]` point to it. It is listed in italics and gets a file once it is moved into a folder or given text. | Page tree, All pages |
 | **tag-only page** | A page without a file that is linked to only as `#tag`. | Graph filter, sidebar "Tags" |
 
@@ -36,9 +37,10 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 
 | Word | Meaning | Where |
 |---|---|---|
-| **sidebar** | The left column: search, Journal, All pages, Boards, the page tree, Tags, Graph and Settings. | Left of the window |
-| **status bar** | The strip along the bottom: save and index state, Git, the theme button, help. | Bottom of the window |
-| **view** | What the main area shows: the journal, a page, a board, All pages, Archive, Git history, Graph, Settings. Back and Forward step through views. | The main area |
+| **sidebar** | The left column: search, Journal, Dailies, All pages, Boards, the page tree, Tags, Graph and Settings. | Left of the window |
+| **status bar** | The strip along the bottom: save and index state, Git, the Dailies count ("Dailies 3 open", "Dailies ✓"), the theme button, help. | Bottom of the window |
+| **Dailies** | The view of the things you do every day: a checkbox list, ticked ones greyed and struck through at the bottom, starting afresh at the reset time set in Settings > Dailies. | Sidebar "Dailies", status bar |
+| **view** | What the main area shows: the journal, a page, a board, Dailies, All pages, Archive, Git history, Graph, Settings. Back and Forward step through views. | The main area |
 
 ## Also said (the proposed word is the first one)
 
@@ -48,3 +50,5 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 - **linked-only** and **tag-only** are two different things: a link `[[X]]` or a tag `#X` made the page appear. Do not
   say "virtual page".
 - **notes folder** for the folder that is open, **folder** for a folder of the page tree.
+- **daily** and **Dailies**, not "habit" or "routine". A daily is not a **task**: it has no state, no board and no
+  link to a page.
