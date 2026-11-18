@@ -74,3 +74,9 @@ Task 9: fix round 1/5 (4 addressed, 0 open; commits d186ca0..31620fb)
 Task 9: minor (deferred): frames() after Cancel/Esc is a weaker "no write happened" guard than a wait over the save pause
 Task 9: minor (deferred): older sleeps in smoke.mjs (lines ~127, ~152) predate this plan
 Task 9: complete (commits 3ea6b5d..31620fb, review clean); e2e 215 PASS, last step 144
+Task 10: implementer DONE, commit 12d2333 (review items 116–123); review dispatched
+Task 10: review — Important 1: docs claim CRLF kept; code converts the whole file to LF on first write (as spec §4 for all files). Also fixing minors: refusal also when the daily's text changed outside; format_doc.rs literal newlines in format! strings.
+Task 10: fix round 1/5 (3 addressed, 0 open; commits 12d2333..27932f0)
+Task 10: minor (deferred): a few lines in review.md and spec.md run past the usual wrap width
+Task 10: complete (commits 3d7fa3a..27932f0, review clean)
+Final review: dispatched (opus) over 4bb9bd0..HEAD
