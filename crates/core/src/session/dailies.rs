@@ -110,7 +110,6 @@ impl Session {
         })
     }
 
-    /// The list, as the file is now. A file that cannot be read keeps the list as it was.
     /// Follows a change other programs made to `breccia/dailies.md`. `Some`: the file's text differs from what
     /// Breccia holds (ids carried); a deleted file gives `Some` of an empty list. `None`: nothing changed, or the
     /// file cannot be read (the list stays, `unreadable` is set).
@@ -121,6 +120,7 @@ impl Session {
         (ws.dailies.on_disk != before).then(|| DailyView::list(&ws.dailies.doc))
     }
 
+    /// The list, as the file is now. A file that cannot be read keeps the list as it was.
     pub(super) fn dailies_list(&mut self) -> Result<Output, CommandError> {
         let _ = self.ws_mut()?.sync_dailies();
         self.dailies_output()

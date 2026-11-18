@@ -258,7 +258,8 @@ impl Config {
     }
 
     /// Parses `s`; a whole number outside its range (`[git]` minutes, `[board] archive_after_days`) or a
-    /// `[dailies] reset` that is no time is read as its default and reported. The text is never changed. Other errors are those of the plain parse.
+    /// `[dailies] reset` that is no time is read as its default and reported. The text is never changed.
+    /// Other errors are those of the plain parse.
     pub fn parse_reporting(s: &str) -> Result<(Config, Vec<Replaced>), ConfigError> {
         let plain = |text: &str| -> Result<Config, ConfigError> {
             let config: Config =
