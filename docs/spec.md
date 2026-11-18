@@ -542,8 +542,9 @@ the notes; the format is `docs/format.md` §15.
 - **Status bar.** Left: "Dailies 3 open", or "Dailies ✓" when all are ticked; with no dailies it shows nothing. A click
   opens the view.
 - **Outside changes.** The file may be edited by hand or arrive with a Git pull: the view follows at once. A change
-  Breccia makes is made on the file as it is now; if the daily is gone or its text was changed there, it is refused
-  with "This daily changed in another program; the list now shows the file as it is." A failed write keeps the list as it was and says so.
+  Breccia makes is made on the file as it is now; if the daily is gone or its text there differs from the text the
+  view showed when the user acted (also when the view followed the change while a delete question or an edit field
+  was open), it is refused with "This daily changed in another program; the list now shows the file as it is." A failed write keeps the list as it was and says so.
 - **What is kept.** A preamble, nested blocks, continuation lines, other properties, and a BOM stay as text.
   Nested blocks are not shown; they move and are deleted with their daily. A daily Breccia changes (tick, untick, edit)
   is written in Breccia's form; apart from that, dailies it did not change keep their text. A file with CRLF becomes LF

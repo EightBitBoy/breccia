@@ -1138,7 +1138,8 @@ links, no tags, and no place in the graph.
   two-space indent); apart from that, dailies Breccia did not change keep their text. A file with CRLF line endings
   becomes LF in its whole text the first time Breccia writes it (section 3).
 - **Outside changes** are read at once. Before each change Breccia reads the file again and makes the change on what
-  is there; if the daily is gone, or its text was changed outside Breccia, it refuses the change and shows the file
+  is there; if the daily is gone, or its text there differs from the text Breccia showed when the user acted (also
+  when a delete question or an edit field was open while the file changed), it refuses the change and shows the file
   as it is. It never writes over text it did not read.
 
 The owner's example, and what Breccia reads from it:

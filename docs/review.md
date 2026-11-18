@@ -439,8 +439,11 @@ are its questions for you; each answer decides what a later plan does.
    is read as 00:00; the file is not changed.
 
 121. [ ] **Outside edits and Git:** edit `breccia/dailies.md` in another editor (add, reorder, tick a daily by adding a
-   `checked::` line): the view follows at once. Delete a daily in the editor (or change its text) while Breccia shows it and tick it in
-   Breccia: the change is refused with "This daily changed in another program; the list now shows the file as it is."
+   `checked::` line): the view follows at once. In Breccia, right-click a daily and choose Delete, and leave the
+   question open; change that daily's text in the editor and save; then press Delete in Breccia: it is refused with
+   "This daily changed in another program; the list now shows the file as it is.", and the file keeps the changed
+   daily. The same holds for an edit field left open (click a daily's text, change it in the editor, then press Enter
+   in Breccia): the editor's text stays.
    Text you added by hand (an intro line, a note under a daily) stays; the other dailies keep their text (a file with CRLF line endings becomes LF on Breccia's first write). A Git sync
    commit that touched only this file says "dailies" in its message.
 
