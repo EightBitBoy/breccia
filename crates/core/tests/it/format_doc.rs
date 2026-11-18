@@ -140,17 +140,9 @@ fn describe_dailies(src: &str) -> String {
     let doc = parse(src, &mut IdGen::new());
     let mut out = String::new();
     for b in doc.blocks().iter().filter(|b| b.depth() == 0) {
-        out += &format!(
-            "daily {:?}
-",
-            daily_text(b.text())
-        );
+        out += &format!("daily {:?}\n", daily_text(b.text()));
         if let Some(t) = checked_at(b.text()) {
-            out += &format!(
-                "  checked {}
-",
-                t.format(CHECKED_FORMAT)
-            );
+            out += &format!("  checked {}\n", t.format(CHECKED_FORMAT));
         }
     }
     out
@@ -190,10 +182,8 @@ fn dailies_failures(fences: &[Fence]) -> (Vec<String>, usize) {
                 let actual = describe_dailies(&e.body);
                 if actual != f.body {
                     failures.push(format!(
-                        "line {}: dailies example reads differently from line {}
-                         --- documented ---
-{}--- actual ---
-{actual}",
+                        "line {}: dailies example reads differently from line {}\n\
+                         --- documented ---\n{}--- actual ---\n{actual}",
                         e.line, f.line, f.body
                     ));
                 }
@@ -213,44 +203,18 @@ fn dailies_failures(fences: &[Fence]) -> (Vec<String>, usize) {
 #[test]
 fn format_doc_dailies_read_as_documented() {
     let (failures, pairs) = dailies_failures(&fences(&doc()));
-    assert!(
-        failures.is_empty(),
-        "{}",
-        failures.join(
-            "
-
-"
-        )
-    );
+    assert!(failures.is_empty(), "{}", failures.join("\n\n"));
     assert!(pairs >= 2, "only {pairs} dailies examples, want at least 2");
 }
 
 #[test]
 fn format_doc_dailies_fences_must_pair_and_read_right() {
-    let ok = "```markdown dailies
-- A
-  checked:: 2026-11-18 07:42
-- B
-```
-              ```text dailies-reads
-daily \"A\"
-  checked 2026-11-18 07:42
-daily \"B\"
-```
-";
+    let ok = "```markdown dailies\n- A\n  checked:: 2026-11-18 07:42\n- B\n```\n\
+              ```text dailies-reads\ndaily \"A\"\n  checked 2026-11-18 07:42\ndaily \"B\"\n```\n";
     assert_eq!(dailies_failures(&fences(ok)), (vec![], 1));
-    let unpaired = "```markdown dailies
-- A
-```
-";
+    let unpaired = "```markdown dailies\n- A\n```\n";
     assert_eq!(dailies_failures(&fences(unpaired)).0.len(), 1);
-    let wrong = "```markdown dailies
-- A
-```
-```text dailies-reads
-daily \"B\"
-```
-";
+    let wrong = "```markdown dailies\n- A\n```\n```text dailies-reads\ndaily \"B\"\n```\n";
     assert_eq!(dailies_failures(&fences(wrong)).0.len(), 1);
 }
 

@@ -1132,13 +1132,14 @@ links, no tags, and no place in the graph.
   `04:00`, a tick at 01:30 counts for the day before. A `checked::` time later than now (the clock was set back, or
   another computer's clock) counts as ticked.
 - **Order** is the file's order, which is the user's order. Showing ticked dailies after the open ones is display only.
-- **Everything else is kept.** A preamble, blocks nested under a daily, continuation lines, other properties, a BOM and
-  CRLF are text Breccia keeps as it is. Nested blocks are not shown as dailies; they move and are deleted with their
+- **Everything else is kept.** A preamble, blocks nested under a daily, continuation lines, other properties and a BOM
+  are text Breccia keeps as it is. Nested blocks are not shown as dailies; they move and are deleted with their
   daily. A daily Breccia changes (ticked, unticked, edited) is written in Breccia's form (continuation lines get its
-  two-space indent); the other dailies keep their bytes. The file is saved with LF line endings.
+  two-space indent); apart from that, dailies Breccia did not change keep their text. A file with CRLF line endings
+  becomes LF in its whole text the first time Breccia writes it (section 3).
 - **Outside changes** are read at once. Before each change Breccia reads the file again and makes the change on what
-  is there; if the daily is gone it refuses the change and shows the file as it is. It never writes over text it did
-  not read.
+  is there; if the daily is gone, or its text was changed outside Breccia, it refuses the change and shows the file
+  as it is. It never writes over text it did not read.
 
 The owner's example, and what Breccia reads from it:
 
