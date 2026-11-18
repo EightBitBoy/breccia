@@ -4005,6 +4005,172 @@ try {
   await picker.waitFor({ state: 'detached' })
   console.log('PASS 137 a press on a slider\'s thumb keeps its value, a press on the track beside it jumps there')
 
+  // 138 to 144: the Dailies view, its status bar item and its setting; every step asserts the bytes of
+  // breccia/dailies.md (or config.toml) on disk.
+  const dailiesFile = join(folder, 'breccia', 'dailies.md')
+  const STAMP = '@STAMP@'
+  const stampRe = (expected) =>
+    new RegExp(`^${expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replaceAll(STAMP, '(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2})')}$`)
+  /** Waits until the file matches `expected` with each STAMP any `YYYY-MM-DD HH:MM`; every such stamp is within two minutes of now. */
+  const waitDailies = async (step, expected) => {
+    const re = stampRe(expected)
+    const end = Date.now() + 10_000
+    while (!re.test(readAt(dailiesFile)) && Date.now() < end) await sleep(100)
+    const m = re.exec(readAt(dailiesFile))
+    assert(m, `${step}: dailies.md is ${JSON.stringify(readAt(dailiesFile))}, not ${JSON.stringify(expected)}`)
+    for (const s of m.slice(1)) {
+      const t = new Date(s.replace(' ', 'T')).getTime()
+      assert(Math.abs(Date.now() - t) < 2 * 60_000 + 60_000, `${step}: stamp ${s} is not within two minutes of now`)
+    }
+  }
+  const dRows = page.locator('[data-testid="daily-row"]')
+  const dRow = (text) => dRows.filter({ has: page.locator('[data-testid="daily-text"]', { hasText: text }) })
+  const dTexts = () => dRows.locator('[data-testid="daily-text"]').allInnerTexts()
+  const dStatus = () => page.locator('[data-testid="status-item"][data-id="dailies"]')
+  const dStatusText = () => page.evaluate(() => document.querySelector('[data-testid="status-item"][data-id="dailies"]')?.textContent?.trim() ?? '')
+  const dView = page.locator('[data-testid="dailies"]')
+  const dAdd = async (text) => {
+    const n = await dRows.count()
+    await page.locator('[data-testid="daily-add"]').fill(text)
+    await kb.press('Enter')
+    await waitFor(`138 ${text} is listed`, () => dRows.count(), n + 1)
+  }
+  const openDailies = async () => {
+    if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+    await page.locator('[data-testid="nav-dailies"]').click()
+    await dView.waitFor()
+  }
+
+  // 138: the sidebar's Dailies opens the empty view; two dailies are added
+  assert(!existsSync(dailiesFile), '138 dailies.md exists before the first daily')
+  await openDailies()
+  await page.locator('[data-testid="dailies-empty"]').waitFor()
+  assert((await dStatusText()) === '', '138 the status bar shows Dailies with none')
+  await dAdd('Check emails')
+  await dAdd('Water the plants')
+  const text138 = '- Check emails\n- Water the plants\n'
+  await waitDailies('138 two dailies', text138)
+  assert(readAt(dailiesFile) === text138, '138 dailies.md bytes')
+  await waitFor('138 two open', dStatusText, 'Dailies 2 open')
+  console.log('PASS 138 Dailies opens empty; two added dailies are in dailies.md and the status bar says 2 open')
+
+  // 139: ticking writes checked:: and moves the row last; unticking restores the bytes
+  await dRow('Check emails').locator('[data-testid="daily-check"]').click()
+  await waitDailies('139 ticked', '- Check emails\n  checked:: @STAMP@\n- Water the plants\n')
+  await waitFor('139 the ticked row is last', dTexts, ['Water the plants', 'Check emails'])
+  assert((await dRows.last().getAttribute('data-checked')) === 'true', '139 the last row is not checked')
+  assert((await dRows.first().getAttribute('data-checked')) === 'false', '139 the first row is checked')
+  await waitFor('139 one open', dStatusText, 'Dailies 1 open')
+  await dRow('Check emails').locator('[data-testid="daily-check"]').click()
+  await waitFor('139 unticked bytes', () => readAt(dailiesFile), text138)
+  await waitFor('139 unticked order', dTexts, ['Check emails', 'Water the plants'])
+  await waitFor('139 two open again', dStatusText, 'Dailies 2 open')
+  console.log('PASS 139 ticking writes checked:: and moves the row last; unticking restores the file')
+
+  // 140: all ticked: the check mark and the note; the status item opens Dailies from a page; Back returns to the page
+  await dRow('Check emails').locator('[data-testid="daily-check"]').click()
+  await waitDailies('140 first ticked', '- Check emails\n  checked:: @STAMP@\n- Water the plants\n')
+  await dRow('Water the plants').locator('[data-testid="daily-check"]').click()
+  await waitDailies('140 both ticked', '- Check emails\n  checked:: @STAMP@\n- Water the plants\n  checked:: @STAMP@\n')
+  await waitFor('140 all done', dStatusText, 'Dailies ✓')
+  await page.locator('[data-testid="dailies-done"]').filter({ hasText: 'All done for today' }).waitFor()
+  await side.locator('[data-row="p:knob 137"]').click()
+  await title.filter({ hasText: 'Knob 137' }).waitFor()
+  await dView.waitFor({ state: 'detached' })
+  await dStatus().click()
+  await dView.waitFor()
+  await page.locator('[data-testid="nav-back"]').click()
+  await title.filter({ hasText: 'Knob 137' }).waitFor()
+  await dView.waitFor({ state: 'detached' })
+  console.log('PASS 140 all ticked shows the check mark and the note; the status item opens Dailies, Back returns to the page')
+
+  // 141: an outside write is followed, and a tick keeps the other lines byte for byte
+  const outside141 = '- Water the plants\n  note:: keep\n- Check emails\n  checked:: 2000-01-01 00:00\n'
+  writeFileSync(`${dailiesFile}.tmp`, outside141)
+  renameSync(`${dailiesFile}.tmp`, dailiesFile)
+  await openDailies()
+  await waitFor('141 the view follows the file', dTexts, ['Water the plants', 'Check emails'])
+  assert((await dRows.evaluateAll((rs) => rs.map((r) => r.dataset.checked))).join() === 'false,false', '141 a daily shows as checked')
+  await waitFor('141 two open', dStatusText, 'Dailies 2 open')
+  await dRow('Water the plants').locator('[data-testid="daily-check"]').click()
+  await waitDailies('141 ticked', '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Check emails\n  checked:: 2000-01-01 00:00\n')
+  console.log('PASS 141 an outside write shows at once; a tick keeps note:: and the old checked:: line byte for byte')
+
+  // 142: edit inline, Alt Down, delete from the menu (Cancel and Esc keep the file, Delete removes the daily)
+  await dRow('Check emails').locator('[data-testid="daily-text"]').click()
+  await page.locator('[data-testid="daily-edit"]').fill('Check mails')
+  await kb.press('Enter')
+  await waitDailies('142 edited', '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Check mails\n  checked:: 2000-01-01 00:00\n')
+  await dAdd('Stretch')
+  await waitDailies('142 added', '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Check mails\n  checked:: 2000-01-01 00:00\n- Stretch\n')
+  await dRow('Check mails').locator('[data-testid="daily-text"]').focus()
+  await kb.press('Alt+ArrowDown')
+  await waitDailies('142 moved', '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Stretch\n- Check mails\n  checked:: 2000-01-01 00:00\n')
+  const confirm142 = page.locator('[data-testid="confirm-dialog"]')
+  const kept142 = readAt(dailiesFile)
+  await dRow('Stretch').click({ button: 'right' })
+  await page.locator('[data-op="delete"]').click()
+  await confirm142.waitFor()
+  await confirm142.getByRole('button', { name: 'Cancel' }).click()
+  await confirm142.waitFor({ state: 'detached' })
+  await sleep(600) // longer than the save pause: a wrong write would be there by now
+  assert(readAt(dailiesFile) === kept142, '142 Cancel changed dailies.md')
+  await dRow('Stretch').click({ button: 'right' })
+  await page.locator('[data-op="delete"]').click()
+  await confirm142.waitFor()
+  await kb.press('Escape')
+  await confirm142.waitFor({ state: 'detached' })
+  await sleep(600)
+  assert(readAt(dailiesFile) === kept142, '142 Esc changed dailies.md')
+  assert((await dRows.count()) === 3, '142 a row went with Cancel or Esc')
+  await dRow('Stretch').click({ button: 'right' })
+  await page.locator('[data-op="delete"]').click()
+  await confirm142.waitFor()
+  await page.locator('[data-testid="dialog-ok"]').click()
+  await waitDailies('142 deleted', '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Check mails\n  checked:: 2000-01-01 00:00\n')
+  await waitFor('142 two rows', () => dRows.count(), 2)
+  console.log('PASS 142 inline edit, Alt Down and Delete from the menu write the file; Cancel and Esc leave it')
+
+  // 143: a real pointer drag of one daily below another, inside the open group, reorders the file
+  await dAdd('Stretch')
+  await dAdd('Read')
+  await waitFor('143 open rows', dTexts, ['Check mails', 'Stretch', 'Read', 'Water the plants'])
+  const from143 = await dRow('Check mails').boundingBox()
+  const to143 = await dRow('Read').boundingBox()
+  await page.mouse.move(from143.x + from143.width - 12, from143.y + from143.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(from143.x + from143.width - 12, from143.y + from143.height / 2 + 10, { steps: 4 })
+  await page.mouse.move(to143.x + to143.width - 12, to143.y + to143.height - 3, { steps: 10 })
+  await page.mouse.up()
+  await waitDailies(
+    '143 dragged',
+    '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Stretch\n- Read\n- Check mails\n  checked:: 2000-01-01 00:00\n',
+  )
+  await waitFor('143 the view follows the drag', dTexts, ['Stretch', 'Read', 'Check mails', 'Water the plants'])
+  console.log('PASS 143 dragging a daily below another reorders the open group and the file')
+
+  // 144: Settings > Dailies writes [dailies] reset to config.toml and keeps its earlier bytes
+  unlinkSync(dailiesFile)
+  await waitFor('144 no dailies, no status item', dStatusText, '')
+  const config144 = readAt(configFile)
+  await page.locator('[data-testid="nav-settings"]').click()
+  await screen.waitFor()
+  const reset144 = page.locator('[data-testid="dailies-reset"]')
+  await reset144.fill('4:00')
+  await kb.press('Enter')
+  // The section goes in before the trailing comment a hand edit (step 68) left in the file; every other byte stays.
+  const section144 = (v) => '\n[dailies]\nreset = "' + v + '"\n'
+  await waitFor('144 section written', () => readAt(configFile).includes(section144('04:00')), true)
+  assert(readAt(configFile).replace(section144('04:00'), '') === config144, '144 earlier config.toml bytes changed')
+  await waitFor('144 the box shows 04:00', () => reset144.inputValue(), '04:00')
+  await reset144.fill('00:00')
+  await kb.press('Enter')
+  await waitFor('144 back to 00:00', () => readAt(configFile).includes(section144('00:00')), true)
+  assert(readAt(configFile).replace(section144('00:00'), '') === config144, '144 earlier config.toml bytes changed after 00:00')
+  await page.locator('[data-testid="nav-journal"]').click()
+  await screen.waitFor({ state: 'detached' })
+  console.log('PASS 144 Settings > Dailies writes the reset to config.toml and keeps the rest')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
