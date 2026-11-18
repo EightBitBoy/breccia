@@ -65,3 +65,12 @@ Task 8: review dispatched (opus)
 Task 8: minor (deferred): Enter then blur can send the same value twice (as Git/archive fields)
 Task 8: minor (deferred): the "tidy only" path (4:00 shown as 04:00, nothing sent) has no test
 Task 8: complete (commits 0e652ee..9794f40, review clean)
+Task 9: implementer DONE, commit d186ca0; e2e 215 PASS, last step 144 (drag step 143 added per Task 7 ⚠️; Settings step is 144)
+Ruling: step 144 asserts the [dailies] section is present and that removing it restores the earlier bytes, instead of "ends with" — step 68 leaves a trailing comment after which Breccia correctly does not write — cost if wrong: none.
+Task 9: review dispatched
+Task 9: review — compliant; Important 1: no mutation evidence for the new steps.
+Ruling: promote two minors into the fix round — the new sleep(600) calls break CLAUDE.md's "never sleeps" e2e rule, and step 141 must write the file while the view is open (live follow is what the step is for) — cost if wrong: one more fix round.
+Task 9: fix round 1/5 (4 addressed, 0 open; commits d186ca0..31620fb)
+Task 9: minor (deferred): frames() after Cancel/Esc is a weaker "no write happened" guard than a wait over the save pause
+Task 9: minor (deferred): older sleeps in smoke.mjs (lines ~127, ~152) predate this plan
+Task 9: complete (commits 3ea6b5d..31620fb, review clean); e2e 215 PASS, last step 144
