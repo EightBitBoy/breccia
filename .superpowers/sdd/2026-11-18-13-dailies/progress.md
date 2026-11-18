@@ -35,3 +35,7 @@ Task 3: ⚠️ write_atomic creating breccia/ — covered by add_creates_the_fol
 Task 3: fix round 1/5 (2 addressed, 0 open; commits 8c654dd..f21a9cb)
 Task 3: minor (deferred): a blank continuation line also sets nested (errs safe)
 Task 3: complete (commits 3f89e32..f21a9cb, review clean)
+Task 4: implementer DONE, commit 6049c95 (no-op dailiesChanged handler in App.svelte for Task 6); review dispatched
+Task 4: minor (deferred): misplaced doc line above reload_dailies (session/dailies.rs ~113) belongs on dailies_list
+Task 4: minor (deferred): unreadable notice only on the readable→unreadable transition
+Task 4: complete (commits 5188cf1..6049c95, review clean)
