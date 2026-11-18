@@ -1574,7 +1574,7 @@ try {
   await page.keyboard.press('Control+Comma')
   await screen.waitFor()
   const sections = await screen.locator('section[data-section]').evaluateAll((s) => s.map((e) => e.dataset.section))
-  const wantSections51 = ['folder', 'states', 'boards', 'git', 'journal', 'themes', 'appearance', 'keyboard', 'about', 'troubleshooting']
+  const wantSections51 = ['folder', 'states', 'boards', 'git', 'journal', 'dailies', 'themes', 'appearance', 'keyboard', 'about', 'troubleshooting']
   assert(JSON.stringify(sections) === JSON.stringify(wantSections51), `sections: ${sections}`)
   await page.locator('[data-testid="nav-journal"]').click()
   await screen.waitFor({ state: 'detached' })

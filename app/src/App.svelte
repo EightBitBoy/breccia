@@ -1224,6 +1224,13 @@
     })
   }
 
+  /** `[dailies] reset`, as `HH:MM`. */
+  function setDailiesReset(reset: string) {
+    return settingWrites.run(async () => {
+      await writeConfig(writes, (version) => ({ type: 'config.setDailies', reset, version }))
+    })
+  }
+
   /** `[board]`: only what the user changed changes, over the values shown when it is sent. */
   function setBoardSettings(patch: { archiveAfterDays?: number; autoArchive?: boolean }) {
     return settingWrites.run(async () => {
@@ -1853,6 +1860,8 @@
                 onarchivedays={(archiveAfterDays) => setBoardSettings({ archiveAfterDays })}
                 onautoarchive={(on) => setBoardSettings({ autoArchive: on })}
                 ongit={setGit}
+                dailiesReset={dailies.reset}
+                ondailiesreset={setDailiesReset}
                 onhelp={toggleHelp}
                 ontheme={chooseTheme}
                 {journalsAt}

@@ -13,6 +13,7 @@
   import AppearanceSection from './settings/AppearanceSection.svelte'
   import ThemesSection from './settings/ThemesSection.svelte'
   import KeyboardSection from './settings/KeyboardSection.svelte'
+  import DailiesSection from './settings/DailiesSection.svelte'
 
   let {
     folder,
@@ -26,6 +27,7 @@
     archiveDays,
     autoArchive,
     git,
+    dailiesReset,
     theme,
     journalsAt,
     mac,
@@ -42,6 +44,7 @@
     onarchivedays,
     onautoarchive,
     ongit,
+    ondailiesreset,
     onhelp,
     ontheme,
     onjournalsat,
@@ -68,6 +71,8 @@
     autoArchive: boolean
     /** The `[git]` settings; null until the config is loaded. */
     git: GitSettings | null
+    /** `[dailies] reset` as `HH:MM`. */
+    dailiesReset: string
     theme: ThemeChoice
     journalsAt: JournalsAt
     mac: boolean
@@ -91,6 +96,8 @@
     /** The Keyboard section's link to the F1 list. */
     onhelp: () => void
     ongit: (patch: Partial<GitSettings>) => Promise<void>
+    /** Settles once answered. */
+    ondailiesreset: (reset: string) => Promise<void>
     ontheme: (c: ThemeChoice) => void
     onjournalsat: (at: JournalsAt) => void
     onlinkdisplay: (d: LinkDisplay) => void
@@ -168,6 +175,10 @@
         </button>
       {/each}
     </div>
+  </section>
+  <section data-section="dailies">
+    <h2>Dailies</h2>
+    <DailiesSection reset={dailiesReset} onreset={ondailiesreset} />
   </section>
   <section data-section="themes">
     <h2>Themes</h2>
