@@ -218,6 +218,9 @@ pub struct ConfigView {
     pub git: GitSettingsView,
     /// `[dailies] reset`, `HH:MM`.
     pub dailies_reset: String,
+    /// The keys whose value in the file is refused and read as the default (`"[dailies] reset"`): writing the
+    /// value in use puts the file right.
+    pub replaced: Vec<String>,
     /// Goes up with every reload and every write of `config.toml`; changes
     /// that write the file carry the one they were made from.
     pub version: u64,
@@ -551,7 +554,12 @@ impl RefsView {
 }
 
 impl ConfigView {
-    pub(crate) fn of(cfg: &Config, version: u64) -> ConfigView {
+    /// The settings of `cfg`; `text` is the file it was read from, for `replaced`.
+    pub(crate) fn of(cfg: &Config, text: Option<&str>, version: u64) -> ConfigView {
+        let replaced = text
+            .and_then(|t| Config::parse_reporting(t).ok())
+            .map(|(_, r)| r.iter().map(|r| r.key.to_string()).collect())
+            .unwrap_or_default();
         ConfigView {
             states: cfg
                 .states
@@ -579,6 +587,7 @@ impl ConfigView {
                 pull_interval_minutes: cfg.git.pull_interval_minutes,
             },
             dailies_reset: cfg.dailies.reset.clone(),
+            replaced,
             version,
         }
     }

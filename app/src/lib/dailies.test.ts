@@ -10,6 +10,7 @@ import {
   moveTarget,
   nextReset,
   parseReset,
+  resetCommit,
   resetProblem,
   stampOf,
   stepTarget,
@@ -148,6 +149,21 @@ describe('parseReset', () => {
       expect(parseReset(t)).toBeNull()
       expect(resetProblem(t)).toBe('Enter a time from 00:00 to 23:59, such as 04:00.')
     }
+  })
+})
+
+describe('resetCommit', () => {
+  it('sends a new time, tidies the same one, and ignores what is no time', () => {
+    expect(resetCommit('4:30', '04:00', false)).toEqual({ send: '04:30' })
+    expect(resetCommit('4:00', '04:00', false)).toBe('tidy')
+    expect(resetCommit('24:00', '04:00', false)).toBeNull()
+  })
+  it('writes the shown time when the file holds a reset that is no time', () => {
+    // The file says "24:00": Breccia reads 00:00 and says so on every load until the file is written.
+    expect(resetCommit('00:00', '00:00', true)).toEqual({ send: '00:00' })
+    expect(resetCommit('0:00', '00:00', true)).toEqual({ send: '00:00' })
+    expect(resetCommit('5:00', '00:00', true)).toEqual({ send: '05:00' })
+    expect(resetCommit('nope', '00:00', true)).toBeNull()
   })
 })
 

@@ -8,6 +8,8 @@ import viewRs from '../../../crates/core/src/session/view.rs?raw'
 import typesTs from './types.ts?raw'
 import apiTs from '../api.ts?raw'
 import recoveryTs from './recovery.ts?raw'
+import rangeRs from '../../../crates/core/src/config/range.rs?raw'
+import { RESET_KEY } from './dailies'
 
 // Every shell source, joined: the event names live wherever the shell keeps them.
 const shellDir = new URL('../../src-tauri/src/', import.meta.url)
@@ -147,4 +149,8 @@ test('recovered_event_fields_match', () => {
     if (m) ts.add(m[1])
   }
   sameSet(rust, ts)
+})
+
+test('the reset key in ConfigView.replaced is the one the core names', () => {
+  expect(rangeRs).toContain(`label: "${RESET_KEY}",`)
 })

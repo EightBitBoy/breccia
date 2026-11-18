@@ -28,6 +28,7 @@
     autoArchive,
     git,
     dailiesReset,
+    dailiesResetInvalid,
     theme,
     journalsAt,
     mac,
@@ -73,6 +74,8 @@
     git: GitSettings | null
     /** `[dailies] reset` as `HH:MM`. */
     dailiesReset: string
+    /** The file's `[dailies] reset` is no time (read as 00:00): saving any time writes it. */
+    dailiesResetInvalid: boolean
     theme: ThemeChoice
     journalsAt: JournalsAt
     mac: boolean
@@ -178,7 +181,7 @@
   </section>
   <section data-section="dailies">
     <h2>Dailies</h2>
-    <DailiesSection reset={dailiesReset} onreset={ondailiesreset} />
+    <DailiesSection reset={dailiesReset} invalid={dailiesResetInvalid} onreset={ondailiesreset} />
   </section>
   <section data-section="themes">
     <h2>Themes</h2>

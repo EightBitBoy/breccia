@@ -1,14 +1,17 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { parseReset, resetProblem } from '../../lib/dailies'
+  import { resetCommit, resetProblem } from '../../lib/dailies'
   import { CONFIG_NOTE, keepDraft, settledDraft } from '../../lib/settingsForm'
 
   let {
     reset,
+    invalid,
     onreset,
   }: {
     /** `[dailies] reset` as `HH:MM`. */
     reset: string
+    /** The file's reset is no time (read as `reset`, 00:00): the time is written even when it is the one in use. */
+    invalid: boolean
     /** Sends the new time (`HH:MM`); settles once answered. */
     onreset: (reset: string) => Promise<void>
   } = $props()
@@ -25,14 +28,14 @@
   const problem = $derived(resetProblem(time))
 
   async function commit() {
-    const value = parseReset(time)
-    if (value === null) return
-    if (value === reset) {
+    const next = resetCommit(time, reset, invalid)
+    if (next === null) return
+    if (next === 'tidy') {
       time = reset // `4:00` for `04:00`: the box shows the time as it is stored
       return
     }
     const sent = time
-    await onreset(value)
+    await onreset(next.send)
     time = settledDraft(time, sent, reset) // a refused change shows the file's value again
   }
 </script>

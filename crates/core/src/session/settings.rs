@@ -30,7 +30,11 @@ impl Session {
         ws.config_replaced = replaced;
         ws.config_text = text;
         self.config_version += 1;
-        Ok(Some(ConfigView::of(&ws.config, self.config_version)))
+        Ok(Some(ConfigView::of(
+            &ws.config,
+            ws.config_text.as_deref(),
+            self.config_version,
+        )))
     }
 
     /// Reads `config.toml` once more after a short pause. An editor that saves in place empties the file and then
@@ -48,7 +52,10 @@ impl Session {
 
     pub(super) fn config_output(&self) -> Result<Output, CommandError> {
         Ok(Output {
-            config: Some(ConfigView::of(&self.ws()?.config, self.config_version)),
+            config: Some({
+                let ws = self.ws()?;
+                ConfigView::of(&ws.config, ws.config_text.as_deref(), self.config_version)
+            }),
             ..Output::default()
         })
     }
@@ -215,7 +222,11 @@ impl Session {
             .map(|p| PageView::of(p, ws))
             .collect();
         Ok(Output {
-            config: Some(ConfigView::of(&ws.config, self.config_version)),
+            config: Some(ConfigView::of(
+                &ws.config,
+                ws.config_text.as_deref(),
+                self.config_version,
+            )),
             changed,
             notices,
             ..Output::default()

@@ -2882,6 +2882,38 @@ reset = \"04:00\"
     assert_eq!(read(&t, CONFIG), before);
 }
 
+/// A reset in the file that is no time is read as 00:00 and named in `replaced`, so Settings can write 00:00 over it.
+#[test]
+fn a_bad_reset_is_named_and_writing_00_00_puts_it_right() {
+    let (t, mut s) = folder(&[(
+        CONFIG,
+        "[dailies]
+reset = \"24:00\"
+",
+    )]);
+    let c = ok(&mut s, json!({"type": "config.get"}), 0).config.unwrap();
+    assert_eq!(c.dailies_reset, "00:00");
+    assert_eq!(c.replaced, ["[dailies] reset"]);
+    let out = ok(
+        &mut s,
+        json!({"type": "config.setDailies", "reset": "00:00", "version": c.version}),
+        0,
+    );
+    assert_eq!(
+        read(&t, CONFIG),
+        "[dailies]
+reset = \"00:00\"
+"
+    );
+    assert!(out.config.unwrap().replaced.is_empty());
+    let back = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [CONFIG]}),
+        0,
+    );
+    assert!(back.notices.is_empty(), "{:?}", back.notices);
+}
+
 const DAILIES: &str = "breccia/dailies.md";
 
 fn dailies_ids(out: &Output) -> Vec<(BlockId, String)> {

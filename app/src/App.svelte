@@ -65,6 +65,7 @@
   import { AllPages } from './lib/allPages.svelte'
   import { Archive } from './lib/archive.svelte'
   import { Dailies } from './lib/dailies.svelte'
+  import { RESET_KEY } from './lib/dailies'
   import { Network } from './lib/network.svelte'
   import { isNewFolder } from './lib/folder'
   import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
@@ -166,6 +167,8 @@
   let autoArchiveOn = $state(true)
   /** `ConfigView.version` of the settings shown: the config writes carry it (the core refuses an older one). */
   let configVersion = $state(0)
+  /** The file's `[dailies] reset` is no time and is read as 00:00 (`ConfigView.replaced`). */
+  let dailiesResetInvalid = $state(false)
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
   let appVersion = $state<string | null>(null)
   let appVersionAsked = false
@@ -596,6 +599,7 @@
     archiveDays = c.archiveAfterDays
     autoArchiveOn = c.autoArchive
     dailies.setReset(c.dailiesReset)
+    dailiesResetInvalid = c.replaced.includes(RESET_KEY)
     gitSettings = c.git
     configVersion = c.version
     // Task states and board columns are computed when a view is built: what is shown loads again.
@@ -1861,6 +1865,7 @@
                 onautoarchive={(on) => setBoardSettings({ autoArchive: on })}
                 ongit={setGit}
                 dailiesReset={dailies.reset}
+                {dailiesResetInvalid}
                 ondailiesreset={setDailiesReset}
                 onhelp={toggleHelp}
                 ontheme={chooseTheme}

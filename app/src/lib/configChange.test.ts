@@ -9,6 +9,7 @@ const cfg = (over: Partial<ConfigView> = {}): ConfigView => ({
   autoArchive: true,
   git: { enabled: true, commitDelayMinutes: 5, pullIntervalMinutes: 10 },
   dailiesReset: '00:00',
+  replaced: [],
   version: 1,
   ...over,
 })

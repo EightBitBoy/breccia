@@ -436,7 +436,8 @@ are its questions for you; each answer decides what a later plan does.
    before: it is open again after the 04:00 reset, and a daily ticked at 05:00 stays ticked until 04:00 the next day.
    Leave the window open across the reset time: the ticks go on their own (within a minute). Close Breccia, or let the
    PC sleep, over the reset time: on return the daily is open. Writing `reset = "4am"` in the file gives a notice and
-   is read as 00:00; the file is not changed.
+   is read as 00:00; the file is not changed. Then type `00:00` (or any time) in the Settings field and leave it: the
+   file now says `reset = "00:00"`, and the notice does not come back.
 
 121. [ ] **Outside edits and Git:** edit `breccia/dailies.md` in another editor (add, reorder, tick a daily by adding a
    `checked::` line): the view follows at once. In Breccia, right-click a daily and choose Delete, and leave the

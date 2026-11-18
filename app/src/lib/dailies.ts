@@ -8,6 +8,8 @@ import type { StatusItem } from './status'
 import type { BlockId, DailyView } from './types'
 
 export const DEFAULT_RESET = '00:00'
+/** The reset's name in `ConfigView.replaced`. */
+export const RESET_KEY = '[dailies] reset'
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -138,6 +140,17 @@ export function parseReset(text: string): string | null {
   const min = Number(m[2])
   if (h > 23 || min > 59) return null
   return `${pad(h)}:${pad(min)}`
+}
+
+/**
+ * What leaving the reset box does with `typed`: `send` a time, `tidy` the box (the stored time, `4:00` shown as
+ * `04:00`), or nothing for text that is no time. `invalid`: the file's reset is no time and is read as 00:00, so the
+ * time is written even when it equals the one in use; otherwise the bad value and its notice would stay.
+ */
+export function resetCommit(typed: string, stored: string, invalid: boolean): { send: string } | 'tidy' | null {
+  const value = parseReset(typed)
+  if (value === null) return null
+  return value === stored && !invalid ? 'tidy' : { send: value }
 }
 
 export function resetProblem(text: string): string | null {
