@@ -3,6 +3,7 @@
 // compares wall-clock stamps, so summer time needs no special case: a reset inside the spring
 // gap fires when the clock first shows a later time, and in the repeated autumn hour a reset
 // happens twice by the wall clock (accepted).
+import { formatDate } from './archive'
 import type { StatusItem } from './status'
 import type { BlockId, DailyView } from './types'
 
@@ -72,6 +73,39 @@ export function moveTarget(
   if (place < others.length) return others[place]
   const rest = list.map((x) => x.id).filter((x) => x !== id)
   return rest[rest.indexOf(others[others.length - 1]) + 1] ?? null
+}
+
+/**
+ * Where a drop over daily `over` lands for `moveTarget`: its place among the group's other dailies (`after`: the
+ * pointer is on the lower half of `over`). Null over the dragged daily itself or a daily outside the group.
+ */
+export function dropPlace(group: BlockId[], id: BlockId, over: BlockId, after: boolean): number | null {
+  if (over === id || !group.includes(over)) return null
+  return group.filter((g) => g !== id).indexOf(over) + (after ? 1 : 0)
+}
+
+/** `Alt ↑` (`dir` -1) and `Alt ↓` (1): the `before` of moving `id` one place within its group, as `moveTarget`. */
+export function stepTarget(
+  list: DailyView[],
+  group: BlockId[],
+  id: BlockId,
+  dir: -1 | 1,
+): BlockId | null | undefined {
+  const i = group.indexOf(id)
+  return i < 0 ? undefined : moveTarget(list, group, id, i + dir)
+}
+
+/** A checked row's tooltip: the time of a tick made today, the date too for another day; '' for none. */
+export function tickedTip(checked: string | null, now: Date): string {
+  if (checked === null) return ''
+  const day = checked.slice(0, 10)
+  const time = checked.slice(11, 16)
+  return day === stampOf(now).slice(0, 10) ? `Ticked at ${time}` : `Ticked on ${formatDate(day)} at ${time}`
+}
+
+/** The question before a delete; it names the lines written under the daily, which go too. */
+export function deleteQuestion(d: DailyView): string {
+  return d.nested ? `Delete the daily '${d.text}' and the lines written under it?` : `Delete the daily '${d.text}'?`
 }
 
 export function dailiesItem(

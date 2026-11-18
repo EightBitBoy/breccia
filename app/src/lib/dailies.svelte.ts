@@ -88,24 +88,25 @@ export class Dailies {
     await this.send({ type: 'dailies.check', id })
   }
 
-  uncheck(id: BlockId): Promise<void> {
-    return this.send({ type: 'dailies.uncheck', id })
+  async uncheck(id: BlockId): Promise<void> {
+    await this.send({ type: 'dailies.uncheck', id })
   }
 
-  add(text: string): Promise<void> {
+  /** Resolves false when the core refused it (the field then keeps the text). */
+  add(text: string): Promise<boolean> {
     return this.send({ type: 'dailies.add', text })
   }
 
-  edit(id: BlockId, text: string): Promise<void> {
-    return this.send({ type: 'dailies.edit', id, text })
+  async edit(id: BlockId, text: string): Promise<void> {
+    await this.send({ type: 'dailies.edit', id, text })
   }
 
-  remove(id: BlockId): Promise<void> {
-    return this.send({ type: 'dailies.delete', id })
+  async remove(id: BlockId): Promise<void> {
+    await this.send({ type: 'dailies.delete', id })
   }
 
-  move(id: BlockId, before: BlockId | null): Promise<void> {
-    return this.send({ type: 'dailies.move', id, before })
+  async move(id: BlockId, before: BlockId | null): Promise<void> {
+    await this.send({ type: 'dailies.move', id, before })
   }
 
   /** Arms the reset timer and the 60 s tick; returns the stop. */
@@ -138,13 +139,15 @@ export class Dailies {
     }, ms)
   }
 
-  /** A refused command is one notice; the list is then reloaded (the file may have changed). */
-  private async send(cmd: Command): Promise<void> {
+  /** A refused command is one notice; the list is then reloaded (the file may have changed). False when refused. */
+  private async send(cmd: Command): Promise<boolean> {
     try {
       await this.env.run(cmd)
+      return true
     } catch (e) {
       this.env.notify({ kind: 'refused', message: errorMessage(e) })
       await this.load()
+      return false
     }
   }
 }

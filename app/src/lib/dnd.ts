@@ -1,4 +1,4 @@
-// Drag and drop over pragmatic-drag-and-drop, for boards and the sidebar's page tree.
+// Drag and drop over pragmatic-drag-and-drop, for boards, the sidebar's page tree and the Dailies view.
 // Boards: cards are draggable, columns
 // are drop targets, and one monitor reports every drop with the card the pointer
 // is above (the place in the column). DOM glue, no unit test; the
@@ -289,6 +289,89 @@ export function watchTreeDrops(
       const dragged = id === null ? null : env.row(id)
       const over = target(location.current.dropTargets[0]?.data.over)
       if (dragged && over) env.onDrop(dragged, over)
+    },
+  })
+}
+
+// ---- the Dailies view -----------------------------------------------------------------------------------------------
+// Rows are draggable and are drop targets for rows of their own group (open or checked). One monitor marks the place
+// (a line above or below the row) and reports the drop; the decisions are `dropPlace` and `moveTarget` in dailies.ts.
+
+const DAILY = 'breccia-daily'
+
+interface DailyData {
+  id: BlockId
+  group: string
+}
+
+function dailyData(data: Record<string | symbol, unknown>): DailyData | null {
+  return data[DAILY] === true && typeof data.id === 'number' && typeof data.group === 'string'
+    ? { id: data.id, group: data.group }
+    : null
+}
+
+/** Makes a daily's row draggable while `p.disabled` is false (a row being edited is not); `dragging` while dragged. */
+export const dailyDrag: Action<HTMLElement, DailyData & { disabled: boolean }> = (el, param) => {
+  let p = param
+  const stop = draggable({
+    element: el,
+    canDrag: () => !p.disabled,
+    getInitialData: () => ({ [DAILY]: true, id: p.id, group: p.group }),
+    onDragStart: () => el.classList.add('dragging'),
+    onDrop: () => el.classList.remove('dragging'),
+  })
+  return {
+    update: (next) => (p = next),
+    destroy: () => {
+      el.classList.remove('dragging')
+      stop()
+    },
+  }
+}
+
+/** Makes a daily's row a drop target for the rows of its own group; the data says which half the pointer is on. */
+export const dailyDrop: Action<HTMLElement, DailyData> = (el, param) => {
+  let p = param
+  const stop = dropTargetForElements({
+    element: el,
+    canDrop: ({ source }) => dailyData(source.data)?.group === p.group,
+    getData: ({ input }) => {
+      const r = el.getBoundingClientRect()
+      return { [DAILY]: true, over: p.id, after: input.clientY > r.top + r.height / 2 }
+    },
+  })
+  return {
+    update: (next) => (p = next),
+    destroy: stop,
+  }
+}
+
+/**
+ * Watches the drags of daily rows under `root`: class `drop-before` or `drop-after` goes on the row a drop would land
+ * by, and `onDrop` gets the dragged daily, the row it was dropped on and whether below its middle. Returns the stopper.
+ */
+export function watchDailyDrops(
+  root: HTMLElement,
+  onDrop: (id: BlockId, over: BlockId, after: boolean) => void,
+): () => void {
+  const mark = (over: unknown, after: unknown) => {
+    for (const e of root.querySelectorAll('.drop-before, .drop-after')) e.classList.remove('drop-before', 'drop-after')
+    if (typeof over === 'number') {
+      root.querySelector(`[data-daily="${over}"]`)?.classList.add(after ? 'drop-after' : 'drop-before')
+    }
+  }
+  return monitorForElements({
+    canMonitor: ({ source }) => dailyData(source.data) !== null,
+    onDrag: ({ source, location }) => {
+      const data = location.current.dropTargets[0]?.data
+      const own = data?.over === dailyData(source.data)?.id
+      mark(own ? null : data?.over, data?.after)
+    },
+    onDrop: ({ source, location }) => {
+      mark(null, false)
+      const d = dailyData(source.data)
+      const data = location.current.dropTargets[0]?.data
+      if (d && typeof data?.over === 'number') onDrop(d.id, data.over, data.after === true)
     },
   })
 }

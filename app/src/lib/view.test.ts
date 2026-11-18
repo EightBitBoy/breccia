@@ -105,6 +105,13 @@ test('with the Archive view shown, only navigation navigates', () => {
   expect(placeOf({ type: 'page.show', key: 'a' }, shown, 'a')).toBe('navigate')
 })
 
+test('with the Dailies view shown, only navigation navigates', () => {
+  const shown = { page: null, days: null, board: false, allPages: false, dailies: true }
+  expect(placeOf({ type: 'archive.auto', editing: null }, shown, 'a')).toBe('none')
+  expect(placeOf({ type: 'block.setText', id: 1, text: 'x' }, shown, 'a')).toBe('none')
+  expect(placeOf({ type: 'page.show', key: 'a' }, shown, 'a')).toBe('navigate')
+})
+
 test('with the Git history shown, only navigation navigates', () => {
   const shown = { page: null, days: null, board: false, allPages: false, gitLog: true }
   expect(placeOf({ type: 'block.setText', id: 1, text: 'x' }, shown, 'a')).toBe('none')

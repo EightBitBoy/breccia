@@ -544,6 +544,39 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .archive-table .phead .prow > div { padding: 6px 10px; font-weight: 600; font-size: 12px; color: var(--muted); user-select: none; }
 .archive-table .arows .prow:hover { background: var(--hover); }
 
+/* ---------- the Dailies view ---------- */
+.dailies { max-width: 640px; }
+.dailies .ptitle { display: flex; align-items: baseline; gap: 12px; margin-bottom: 14px; }
+.dailies .ptitle h1 { font-size: 26px; margin: 0; font-weight: 650; }
+.daily-zone { display: block; }
+.daily-list { display: flex; flex-direction: column; }
+.daily {
+  position: relative; display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px;
+}
+.daily:hover { background: var(--hover); }
+.daily input[type='checkbox'] { flex: none; margin: 0; cursor: pointer; }
+.daily-text {
+  flex: 1; min-width: 0; padding: 2px 4px; border: none; background: none; color: var(--text); font: inherit;
+  text-align: left; cursor: text; overflow-wrap: anywhere;
+}
+.daily.checked .daily-text { color: var(--muted); text-decoration: line-through; }
+.daily-edit, .daily-add {
+  flex: 1; min-width: 0; padding: 2px 4px; font: inherit; color: var(--text);
+  background: var(--card); border: 1px solid var(--line); border-radius: 6px;
+}
+.daily-edit:focus, .daily-add:focus { outline: 1px solid var(--accent); }
+.daily-add { display: block; width: 100%; margin-top: 10px; padding: 4px 8px; }
+.daily-add::placeholder { color: var(--muted); }
+.dailies-done { margin: 8px 6px; color: var(--muted); font-size: 13px; }
+.daily.dragging { opacity: .5; }
+/* Where a drop lands: a line above or below that row. */
+.daily.drop-before::before, .daily.drop-after::after {
+  content: ''; position: absolute; left: 0; right: 0; height: 2px;
+  border-radius: 1px; background: var(--accent); pointer-events: none;
+}
+.daily.drop-before::before { top: -1px; }
+.daily.drop-after::after { bottom: -1px; }
+
 /* ---------- the Graph screen (§7.11) ---------- */
 /* Fills the padded `.main` without scrolling; the picture takes what the toolbar leaves. */
 .network { height: 100%; display: flex; flex-direction: column; min-height: 0; }

@@ -26,6 +26,8 @@ export interface ShownView {
   gitLog: boolean
   /** Whether the Archive view is shown. */
   archive: boolean
+  /** Whether the Dailies view is shown. */
+  dailies: boolean
   /** The open card's page key, or null. */
   card: string | null
 }
@@ -66,6 +68,8 @@ export interface Route {
   leaveGitLog: boolean
   /** A navigation or an applied feed answer leaves the Archive view. */
   leaveArchive: boolean
+  /** A navigation or an applied feed answer leaves the Dailies view. */
+  leaveDailies: boolean
   /** The table stays shown and the output changed pages or the tree: reload it. */
   refreshAllPages: boolean
   /** Pages the open card follows: out.page when place is 'none', and out.changed, with key === view.card. */
@@ -98,6 +102,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
             graph: view.graph,
             gitLog: view.gitLog,
             archive: view.archive,
+            dailies: view.dailies,
           },
           out.page.key,
         )
@@ -107,6 +112,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
   const leaveGraph = view.graph && (place === 'navigate' || feedShown)
   const leaveGitLog = view.gitLog && (place === 'navigate' || feedShown)
   const leaveArchive = view.archive && (place === 'navigate' || feedShown)
+  const leaveDailies = view.dailies && (place === 'navigate' || feedShown)
   const r: Route = {
     leavePage,
     place,
@@ -128,6 +134,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     leaveGraph,
     leaveGitLog,
     leaveArchive,
+    leaveDailies,
     refreshAllPages: false,
     cardPages: [],
     refreshBoard: false,

@@ -8,6 +8,7 @@ const none = {
   board: null,
   gitLog: false,
   archive: false,
+  dailies: false,
   allPages: false,
   feed: false,
   feedDay: null,
@@ -20,6 +21,8 @@ test('placeHere follows the order the main area shows views in', () => {
   expect(placeHere({ ...none, graph: true, board: 'Tasks' })).toEqual({ kind: 'graph' })
   expect(placeHere({ ...none, board: 'Tasks', gitLog: true })).toEqual({ kind: 'board', name: 'Tasks' })
   expect(placeHere({ ...none, gitLog: true, archive: true })).toEqual({ kind: 'gitLog' })
+  expect(placeHere({ ...none, archive: true, dailies: true })).toEqual({ kind: 'archive' })
+  expect(placeHere({ ...none, dailies: true, allPages: true, page: 'Anna' })).toEqual({ kind: 'dailies' })
   expect(placeHere({ ...none, archive: true, allPages: true })).toEqual({ kind: 'archive' })
   expect(placeHere({ ...none, allPages: true, feed: true })).toEqual({ kind: 'allPages' })
   expect(placeHere({ ...none, feed: true, feedDay: '2026-03-12', page: 'Anna' })).toEqual({
@@ -38,6 +41,8 @@ test('samePlace compares kind and what the place names', () => {
   expect(samePlace({ kind: 'feed', day: '2026-03-12' }, { kind: 'feed', day: '2026-03-12' })).toBe(true)
   expect(samePlace({ kind: 'board', name: 'A' }, { kind: 'board', name: 'B' })).toBe(false)
   expect(samePlace({ kind: 'allPages' }, { kind: 'archive' })).toBe(false)
+  expect(samePlace({ kind: 'dailies' }, { kind: 'dailies' })).toBe(true)
+  expect(samePlace({ kind: 'dailies' }, { kind: 'archive' })).toBe(false)
   expect(samePlace({ kind: 'settings' }, { kind: 'settings' })).toBe(true)
   expect(samePlace(null, null)).toBe(true)
   expect(samePlace(null, { kind: 'graph' })).toBe(false)

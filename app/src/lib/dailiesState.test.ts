@@ -161,3 +161,8 @@ test('open shows and loads; close hides and keeps the list', async () => {
   d.close()
   expect([d.shown, d.list?.length]).toEqual([false, 1])
 })
+
+test('add answers whether the daily was added, so the field can keep refused text', async () => {
+  expect(await setup(at(8)).d.add('Check emails')).toBe(true)
+  expect(await setup(at(8), true).d.add('Check emails')).toBe(false)
+})

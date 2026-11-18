@@ -29,7 +29,7 @@ const pg = (key: string, ids: number[]): PageView => ({
   blocks: ids.map((id) => ({ id, depth: 0, text: '', html: '', state: null, finished: false, hasChildren: false })),
 })
 
-const view = (o: Partial<ShownView> = {}): ShownView => ({ page: null, days: null, groups: new Set(), editingInRefs: false, board: false, allPages: false, settings: false, graph: false, gitLog: false, archive: false, card: null, ...o })
+const view = (o: Partial<ShownView> = {}): ShownView => ({ page: null, days: null, groups: new Set(), editingInRefs: false, board: false, allPages: false, settings: false, graph: false, gitLog: false, archive: false, dailies: false, card: null, ...o })
 const out = (o: Partial<Output>): Output => ({ ...empty, ...o })
 
 test('an applied feed answer is shown and leaves the page', () => {
@@ -224,6 +224,18 @@ test('a navigation leaves the Archive view; other answers keep it', () => {
   const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ archive: true }), true)
   expect(f.leaveArchive).toBe(true)
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveArchive).toBe(false)
+})
+
+test('a navigation leaves the Dailies view; other answers keep it', () => {
+  const r = route(out({ page: pg('b', [1]) }), { type: 'page.show', key: 'b' }, view({ dailies: true }), false)
+  expect([r.leaveDailies, r.place]).toEqual([true, 'navigate'])
+  const t = route(out({ page: pg('d', [1]), focus: null }), { type: 'block.setText', id: 1, text: 'x' }, view({ dailies: true }), false)
+  expect([t.place, t.leaveDailies, t.show]).toEqual(['none', false, null])
+  const a = route(out({ changed: [pg('d', [1])] }), { type: 'archive.auto', editing: null }, view({ dailies: true }), false)
+  expect([a.place, a.leaveDailies]).toEqual(['none', false])
+  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ dailies: true }), true)
+  expect(f.leaveDailies).toBe(true)
+  expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveDailies).toBe(false)
 })
 
 test('a navigation leaves the Git history; other answers keep it', () => {

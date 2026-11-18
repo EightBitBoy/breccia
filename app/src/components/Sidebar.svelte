@@ -17,6 +17,7 @@
     tree,
     shown,
     journalShown,
+    dailiesShown,
     allPagesShown,
     settingsShown,
     graphShown,
@@ -26,6 +27,7 @@
     width,
     onopen,
     onjournal,
+    ondailies,
     onallpages,
     onsearch,
     onsettings,
@@ -52,6 +54,8 @@
     shown: string | null
     /** Whether the journal feed is shown. */
     journalShown: boolean
+    /** Whether the Dailies view is shown. */
+    dailiesShown: boolean
     /** Whether the All pages table is shown. */
     allPagesShown: boolean
     /** Whether the Settings screen is shown. */
@@ -67,6 +71,8 @@
     width: number
     onopen: (name: string) => void
     onjournal: () => void
+    /** "Dailies", under Journal: the things to tick each day. */
+    ondailies: () => void
     onallpages: () => void
     /** The search box was clicked. */
     onsearch: () => void
@@ -189,6 +195,18 @@
       <span class="ic">📅</span>Journal
     </div>
     <DatePicker bind:open={pickerOpen} {shown} marked={journalDays} onpick={onpickday} />
+  </div>
+  <div
+    class="nav"
+    class:active={dailiesShown}
+    data-testid="nav-dailies"
+    role="button"
+    tabindex="0"
+    title="The things to tick each day"
+    onclick={ondailies}
+    onkeydown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), ondailies())}
+  >
+    <span class="ic">☑</span>Dailies
   </div>
   <div
     class="nav"

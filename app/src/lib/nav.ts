@@ -8,6 +8,7 @@ export type NavPlace =
   | { kind: 'board'; name: string }
   | { kind: 'allPages' }
   | { kind: 'archive' }
+  | { kind: 'dailies' }
   | { kind: 'gitLog' }
   | { kind: 'graph' }
   | { kind: 'settings' }
@@ -33,6 +34,7 @@ export function placeHere(shown: {
   board: string | null
   gitLog: boolean
   archive: boolean
+  dailies: boolean
   allPages: boolean
   feed: boolean
   feedDay: string | null
@@ -44,6 +46,7 @@ export function placeHere(shown: {
   if (shown.board !== null) return { kind: 'board', name: shown.board }
   if (shown.gitLog) return { kind: 'gitLog' }
   if (shown.archive) return { kind: 'archive' }
+  if (shown.dailies) return { kind: 'dailies' }
   if (shown.allPages) return { kind: 'allPages' }
   if (shown.feed) return { kind: 'feed', day: shown.feedDay }
   if (shown.page !== null) return { kind: 'page', key: shown.page }

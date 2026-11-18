@@ -64,6 +64,7 @@
   import { AutoArchive, archiveShift, hourly } from './lib/autoArchive'
   import { AllPages } from './lib/allPages.svelte'
   import { Archive } from './lib/archive.svelte'
+  import { Dailies } from './lib/dailies.svelte'
   import { Network } from './lib/network.svelte'
   import { isNewFolder } from './lib/folder'
   import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
@@ -121,6 +122,7 @@
   import JournalFeed from './components/JournalFeed.svelte'
   import Board from './components/Board.svelte'
   import AllPagesView from './components/AllPagesView.svelte'
+  import DailiesView from './components/DailiesView.svelte'
   import Notices from './components/Notices.svelte'
   import CaretMenu from './components/CaretMenu.svelte'
   import FlowDialog from './components/FlowDialog.svelte'
@@ -309,6 +311,8 @@
       sel.clear()
       boards.close() // the open card too; its typed text is pending already (leave)
       archiveView.close()
+      dailies.close()
+      dailies.forget() // its ids are the old session's; the reload lists them again
       journal.close()
       pickerOpen = false // a pick after the reload would name a block of the old session
       page = null
@@ -357,6 +361,17 @@
   const allPages = new AllPages({ run: (cmd) => client.run(cmd), notify })
   /** The Archive view; a failed load or reload is a notice. */
   const archiveView = new Archive({ run: (cmd) => client.run(cmd), notify })
+  /** The Dailies: the list (for the view and the status bar) and the timers that start each day afresh. */
+  const dailies = new Dailies({
+    run: (cmd) => client.run(cmd),
+    notify,
+    now: () => new Date(),
+    // Bound: WebView2 refuses the window's timer functions called as methods of another object.
+    setTimeout: window.setTimeout.bind(window),
+    clearTimeout: window.clearTimeout.bind(window),
+    setInterval: window.setInterval.bind(window),
+    clearInterval: window.clearInterval.bind(window),
+  })
   /** The F1 list of keyboard shortcuts is open. */
   let helpShown = $state(false)
   /** F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
@@ -407,6 +422,7 @@
       board: boards.index === null ? null : (boardList[boards.index]?.name ?? null),
       gitLog: gitLog.shown,
       archive: archiveView.shown,
+      dailies: dailies.shown,
       allPages: allPages.shown,
       feed: journal.feed !== null,
       feedDay: journal.at,
@@ -490,6 +506,9 @@
     } else if (p.kind === 'archive') {
       await leaveMainView('archive')
       await archiveView.open()
+    } else if (p.kind === 'dailies') {
+      await leaveMainView('dailies')
+      await dailies.open()
     } else if (p.kind === 'gitLog') {
       await leaveMainView('gitLog')
       await gitLog.open()
@@ -571,6 +590,7 @@
     boardList = c.boards
     archiveDays = c.archiveAfterDays
     autoArchiveOn = c.autoArchive
+    dailies.setReset(c.dailiesReset)
     gitSettings = c.git
     configVersion = c.version
     // Task states and board columns are computed when a view is built: what is shown loads again.
@@ -609,6 +629,8 @@
         settings.close()
         gitLog.close()
         archiveView.close() // its rows name the old folder's blocks
+        dailies.close()
+        dailies.forget() // the old folder's dailies; `openFolder` lists the new ones
         network.newFolder()
         search.close()
         folded.clear()
@@ -656,6 +678,7 @@
         graph: network.shown,
         gitLog: gitLog.shown,
         archive: archiveView.shown,
+        dailies: dailies.shown,
         board: boards.index !== null,
         card: boards.card?.key ?? null,
       },
@@ -674,8 +697,10 @@
     if (r.leaveGraph) network.close()
     if (r.leaveGitLog) gitLog.close()
     if (r.leaveArchive) archiveView.close()
+    if (r.leaveDailies) dailies.close()
     if (out.table) allPages.applyTable(out.table)
     if (out.archive) archiveView.applyArchive(out.archive)
+    if (out.dailies) dailies.apply(out.dailies)
     if (out.search) search.applySearch(out.search)
     if (out.names) search.applyNames(out.names)
     if (r.leavePage) {
@@ -754,7 +779,7 @@
    * leaves the editor, closes every other view, clears the page, refs and selection, and scrolls to the top.
    */
   async function leaveMainView(
-    keep: 'feed' | 'board' | 'allPages' | 'archive' | 'settings' | 'graph' | 'gitLog' | 'newPage',
+    keep: 'feed' | 'board' | 'allPages' | 'archive' | 'dailies' | 'settings' | 'graph' | 'gitLog' | 'newPage',
   ): Promise<void> {
     rememberHere() // before the scroll goes to the top
     await closeCard() // a card closing (Esc, a click outside) finishes on the board it belongs to
@@ -762,6 +787,7 @@
     if (keep !== 'board') boards.close()
     if (keep !== 'allPages') allPages.close()
     if (keep !== 'archive') archiveView.close()
+    if (keep !== 'dailies') dailies.close()
     if (keep !== 'feed') journal.close()
     if (keep !== 'settings') settings.close()
     if (keep !== 'graph') network.close()
@@ -794,7 +820,14 @@
 
   // Any other view or page shown ends the untitled page.
   $effect(() => {
-    const view = boards.index !== null || allPages.shown || archiveView.shown || settings.shown || network.shown || gitLog.shown
+    const view =
+      boards.index !== null ||
+      allPages.shown ||
+      archiveView.shown ||
+      dailies.shown ||
+      settings.shown ||
+      network.shown ||
+      gitLog.shown
     if (page || journal.feed || view) {
       untrack(() => (newPageFolder = null))
     }
@@ -916,6 +949,14 @@
   async function openArchive() {
     await leaveMainView('archive')
     void archiveView.open()
+  }
+
+  // ---- Dailies -----------------------------------------------------------------
+
+  /** The Dailies view in the main area; the list is asked again. */
+  async function openDailies() {
+    await leaveMainView('dailies')
+    void dailies.open()
   }
 
   // ---- Graph ------------------------------------------------------------------
@@ -1135,7 +1176,7 @@
     openLogFolder().catch(refuse)
   }
 
-  /** Asks a question from Settings; false when another dialog is open. */
+  /** Asks a question (from Settings, or before deleting a daily); false when another dialog is open. */
   function confirmSetting(message: string, ok: string): Promise<boolean> {
     if (dialogOpen() || search.shown) return Promise.resolve(false)
     return new Promise((resolve) => {
@@ -1390,6 +1431,8 @@
 
   async function openFolder() {
     await exec({ type: 'config.get' })
+    // For the status bar too, so it is there before the view is opened.
+    void dailies.load()
     await openJournal()
     await exec({ type: 'folder.tree' })
     // Once the folder is loaded, the tasks due are archived (the first run may archive many).
@@ -1588,7 +1631,8 @@
           void pageRenamed(r)
         }),
       configChanged: (c) => inFlight.idle.run(() => applyConfig(c, true)),
-      dailiesChanged: () => {}, // Task 6 shows the list
+      // Held like the page events, so a command's answer never overwrites a newer list.
+      dailiesChanged: (list) => inFlight.idle.run(() => dailies.apply(list)),
       // The shell ends every build with `{done: t, total: t}`, so the item always goes away.
       indexChanged: (p) => {
         const item = indexItem(p, lastGeneration)
@@ -1623,6 +1667,11 @@
     const gitClock = setInterval(() => git.tick(), 30_000)
     // Once an hour, so a new day is noticed while the app runs.
     const stopArchive = hourly(() => void autoArchive.run())
+    // The day's dailies start afresh at the reset; a PC waking from sleep or a changed clock is noticed here too.
+    const stopDailies = dailies.start()
+    const wakeDailies = () => dailies.wake()
+    window.addEventListener('focus', wakeDailies)
+    document.addEventListener('visibilitychange', wakeDailies)
     ;(async () => {
       try {
         // A layout that cannot be read is the default one; the folder still opens.
@@ -1653,6 +1702,9 @@
       stopMidnight()
       clearInterval(gitClock)
       stopArchive()
+      stopDailies()
+      window.removeEventListener('focus', wakeDailies)
+      document.removeEventListener('visibilitychange', wakeDailies)
       removeDom()
       document.removeEventListener('wheel', onWheel, true)
       shell.stop()
@@ -1717,6 +1769,8 @@
             {journalsAt}
             shown={page?.key ?? null}
             journalShown={journal.feed !== null}
+            dailiesShown={dailies.shown}
+            ondailies={() => void openDailies()}
             allPagesShown={allPages.shown}
             onallpages={() => void openAllPages()}
             settingsShown={settings.shown}
@@ -1859,6 +1913,8 @@
               {#await import('./components/ArchiveView.svelte') then { default: ArchiveView }}
                 <ArchiveView archive={archiveView} onopen={(r) => void jumpTo(r.page, r.id)} />
               {/await}
+            {:else if dailies.shown}
+              <DailiesView {dailies} onconfirm={confirmSetting} />
             {:else if allPages.shown && scroller}
               <AllPagesView
                 pages={allPages}

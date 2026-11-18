@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_RESET,
   dailiesItem,
+  deleteQuestion,
+  dropPlace,
   groups,
   isChecked,
   lastReset,
@@ -10,6 +12,8 @@ import {
   parseReset,
   resetProblem,
   stampOf,
+  stepTarget,
+  tickedTip,
 } from './dailies'
 import type { DailyView } from './types'
 
@@ -144,5 +148,56 @@ describe('parseReset', () => {
       expect(parseReset(t)).toBeNull()
       expect(resetProblem(t)).toBe('Enter a time from 00:00 to 23:59, such as 04:00.')
     }
+  })
+})
+
+describe('tickedTip', () => {
+  it('names the time for a tick made today, the date too for another day', () => {
+    expect(tickedTip('2026-11-18 07:42', d(18, 9, 0))).toBe('Ticked at 07:42')
+    expect(tickedTip('2026-11-17 23:05', d(18, 9, 0))).toBe('Ticked on 17 Nov 2026 at 23:05')
+    expect(tickedTip('2026-11-19 06:00', d(18, 9, 0))).toBe('Ticked on 19 Nov 2026 at 06:00')
+  })
+  it('is empty for a daily never ticked', () => {
+    expect(tickedTip(null, d(18, 9, 0))).toBe('')
+  })
+})
+
+describe('deleteQuestion', () => {
+  it('names the daily, and the lines under it when there are some', () => {
+    expect(deleteQuestion({ id: 1, text: 'Check emails', checked: null, nested: false })).toBe(
+      "Delete the daily 'Check emails'?",
+    )
+    expect(deleteQuestion({ id: 1, text: 'Check emails', checked: null, nested: true })).toBe(
+      "Delete the daily 'Check emails' and the lines written under it?",
+    )
+  })
+})
+
+describe('dropPlace', () => {
+  it('is the place among the other dailies of the group', () => {
+    expect(dropPlace([1, 2, 3], 3, 1, false)).toBe(0)
+    expect(dropPlace([1, 2, 3], 1, 3, true)).toBe(2)
+    expect(dropPlace([1, 2, 3], 1, 3, false)).toBe(1)
+    expect(dropPlace([1, 2, 3], 2, 1, true)).toBe(1)
+  })
+  it('is null over the dragged daily itself or outside the group', () => {
+    expect(dropPlace([1, 2, 3], 2, 2, true)).toBeNull()
+    expect(dropPlace([1, 2, 3], 2, 9, true)).toBeNull()
+  })
+})
+
+describe('stepTarget', () => {
+  const list = [daily(1), daily(2), daily(3, '2026-11-18 07:00'), daily(4)]
+  const now = d(18, 9, 0)
+  const open = groups(list, now, DEFAULT_RESET).open.map((x) => x.id)
+  it('moves one place up or down within the group', () => {
+    expect(open).toEqual([1, 2, 4])
+    expect(stepTarget(list, open, 2, -1)).toBe(1)
+    expect(stepTarget(list, open, 1, 1)).toBe(4)
+    expect(stepTarget(list, open, 2, 1)).toBeNull()
+  })
+  it("is undefined at the group's edge", () => {
+    expect(stepTarget(list, open, 1, -1)).toBeUndefined()
+    expect(stepTarget(list, open, 4, 1)).toBeUndefined()
   })
 })
