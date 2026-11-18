@@ -1973,6 +1973,10 @@ try {
   // are dragged onto folders, onto a page in a folder, and onto the "Pages" heading; a deleted page still linked to
   // stays listed in italics.
   {
+    // Projects (open since step 13) closes: the drags in 97 to 99 need the tree's rows from Fold96 to Drag97 in view
+    // together, and the sidebar's entries above the tree leave it little height in the test window.
+    await side.locator('[data-row="f:Projects"][aria-expanded="true"]').click()
+    await side.locator('[data-row="f:Projects"][aria-expanded="false"]').waitFor()
     const link96 = join(pagesDir, 'Link96.md')
     const link96Text = '- [[Idea Ninety Six]] and [[Aaa Ninety Eight]]\n'
     writeFileSync(link96, link96Text)
