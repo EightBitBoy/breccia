@@ -372,6 +372,11 @@
     setInterval: window.setInterval.bind(window),
     clearInterval: window.clearInterval.bind(window),
   })
+  /** "Dailies 2 open" or "Dailies ✓" in the status bar; none without dailies. A click opens the view. */
+  $effect(() => {
+    const item = folder ? dailies.item : null
+    untrack(() => (item ? status.set(item) : status.clear('dailies')))
+  })
   /** The F1 list of keyboard shortcuts is open. */
   let helpShown = $state(false)
   /** F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
@@ -1968,7 +1973,7 @@
         onmissing={recentMissing}
       />
     {/if}
-    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
+    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'dailies' ? void openDailies() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
       ontheme={chooseTheme}
       onthemewheel={(dy) => {
         const c = wheelTheme(theme, themeSteps, dy, zoom.percent)
