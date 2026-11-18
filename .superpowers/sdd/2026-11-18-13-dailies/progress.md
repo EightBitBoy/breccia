@@ -15,3 +15,12 @@ Task 1: minor (deferred): EmptyDaily and MultiLineDaily share one message (fine 
 Task 1: minor (deferred): one_line strips every \r, also a lone mid-line one
 Task 1: minor (deferred): add_daily clones the document for rollback
 Task 1: complete (commits ce6f25a..01be7c3, review clean)
+Task 2: implementer DONE_WITH_CONCERNS (also changed set_keeping_decor in toml_keep.rs to keep comments above a changed key), commit 1c282ed; review dispatched
+Task 2: review — spec compliant; Important 1: set_keeping_decor fix belongs in its own fix commit with a git/board test and a review item.
+Ruling: split 1c282ed locally (unpushed, so no shared history changes) into the fix commit first and the chore commit after — the changelog must carry the comment-keeping fix — cost if wrong: none, both commits stay local until the end of the plan.
+Task 2: ⚠️ format.md for [dailies] reset — owned by Task 10 (checked brief), not a gap.
+Task 2: minor (deferred): parse_reporting doc comment badly wrapped (model.rs)
+Ruling: Dailies review items start at 116 (115 taken by the config-comment fix) — the number was only reserved by the plan — cost if wrong: none; carry into Task 10.
+Task 2: fix round 1/5 (1 addressed, 0 open; commits e1909a6..1f847e6 after the local split: e778236 fix, 1f847e6 chore)
+Task 2: minor (deferred): parse_reporting doc comment line model.rs:261 still over 120 chars
+Task 2: complete (commits e1909a6..1f847e6, review clean)
