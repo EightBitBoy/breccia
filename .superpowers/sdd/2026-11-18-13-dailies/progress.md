@@ -39,3 +39,9 @@ Task 4: implementer DONE, commit 6049c95 (no-op dailiesChanged handler in App.sv
 Task 4: minor (deferred): misplaced doc line above reload_dailies (session/dailies.rs ~113) belongs on dailies_list
 Task 4: minor (deferred): unreadable notice only on the readable→unreadable transition
 Task 4: complete (commits 5188cf1..6049c95, review clean)
+Task 5: implementer DONE_WITH_CONCERNS (prettier flags new files — not a project check, existing files fail it too: moot), commit ecc7b6c
+Ruling: moveTarget returns undefined when the group's own order is unchanged (no write), and "last place" returns the next daily after the group's last one or null — dropping in place must not rewrite the file — cost if wrong: one test and a branch.
+Task 5: minor (deferred): redundant variable in a DST test
+Task 5: minor (deferred): resetParts does not validate its input (core guarantees HH:MM)
+Task 5: minor (deferred): no test for out-of-range input to moveTarget
+Task 5: complete (commits ce4a5cc..ecc7b6c, review clean)
