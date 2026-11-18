@@ -60,3 +60,8 @@ Task 7: minor (deferred): confirmSetting name no longer fits (also asks the Dail
 Task 7: minor (deferred): right-click during an edit blocks the field's native text menu
 Task 7: ⚠️ dragging a row is untested (drop monitor depends on listEl at onMount) — carried into Task 9: an e2e step must drag a row and assert bytes. Back to Dailies — Task 9 step 140.
 Task 7: complete (commits 997d925..0de9e4e, review clean)
+Task 8: implementer DONE_WITH_CONCERNS, commit 9794f40; e2e 208 PASS (step 51's section list gained 'dailies'); spec §7.12 Dailies section → Task 10; Enter+blur may send the same value twice (as Git fields)
+Task 8: review dispatched (opus)
+Task 8: minor (deferred): Enter then blur can send the same value twice (as Git/archive fields)
+Task 8: minor (deferred): the "tidy only" path (4:00 shown as 04:00, nothing sent) has no test
+Task 8: complete (commits 0e652ee..9794f40, review clean)
