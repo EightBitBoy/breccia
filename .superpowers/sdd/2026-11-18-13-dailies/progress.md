@@ -24,3 +24,14 @@ Ruling: Dailies review items start at 116 (115 taken by the config-comment fix) 
 Task 2: fix round 1/5 (1 addressed, 0 open; commits e1909a6..1f847e6 after the local split: e778236 fix, 1f847e6 chore)
 Task 2: minor (deferred): parse_reporting doc comment line model.rs:261 still over 120 chars
 Task 2: complete (commits e1909a6..1f847e6, review clean)
+Task 3: implementer DONE_WITH_CONCERNS (no RED run captured; mutation evidence instead; extra field DailiesFile.unreadable), commit 8c654dd; review dispatched
+Task 3: review — spec compliant; Important 1: mutation evidence missing for 5 tests.
+Ruling: promote minor "nested flags only child blocks" into the fix round — P23's purpose is that delete never drops hidden user text without warning (anti-goal §2); a daily's own extra lines (note::, unknown property, continuation text) other than checked:: also set nested=true — cost if wrong: the confirm warns about lines that are only a property.
+Task 3: minor (deferred): outside overwrite between re-read and write is possible (no locking) — note in follow-ups
+Task 3: minor (deferred): unreadable-warning test matches Debug output
+Task 3: minor (deferred): `before` of dailies.move gets no P7 text check (harmless)
+Task 3: minor (deferred): I/O-error branch of load_dailies untested
+Task 3: ⚠️ write_atomic creating breccia/ — covered by add_creates_the_folder_and_file per reviewer; accepted.
+Task 3: fix round 1/5 (2 addressed, 0 open; commits 8c654dd..f21a9cb)
+Task 3: minor (deferred): a blank continuation line also sets nested (errs safe)
+Task 3: complete (commits 3f89e32..f21a9cb, review clean)
