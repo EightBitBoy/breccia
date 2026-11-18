@@ -27,7 +27,8 @@ pub struct DailyView {
     pub text: String,
     /// When it was checked, `YYYY-MM-DD HH:MM`; `None`: not checked.
     pub checked: Option<String>,
-    /// Lines are written under it (deleting the daily deletes them too).
+    /// Text the view does not show is written under it: child blocks, continuation lines or properties other than
+    /// `checked::` (deleting the daily deletes them too).
     pub nested: bool,
 }
 
@@ -43,10 +44,18 @@ impl DailyView {
                 id: b.id(),
                 text: daily_text(b.text()).to_string(),
                 checked: checked_at(b.text()).map(|t| t.format(CHECKED_FORMAT).to_string()),
-                nested: blocks.get(i + 1).is_some_and(|n| n.depth() > 0),
+                nested: blocks.get(i + 1).is_some_and(|n| n.depth() > 0)
+                    || has_hidden_lines(b.text()),
             })
             .collect()
     }
+}
+
+/// Whether the lines after the first hold anything but `checked::`, which the view shows as a state.
+fn has_hidden_lines(text: &str) -> bool {
+    text.lines()
+        .skip(1)
+        .any(|l| !l.trim_start().starts_with("checked::"))
 }
 
 fn changed_elsewhere() -> CommandError {

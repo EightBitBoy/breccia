@@ -288,3 +288,27 @@ fn dailies_are_not_pages() {
             .contains("dailies")
     );
 }
+
+#[test]
+fn a_daily_with_hidden_lines_is_flagged() {
+    let src = "- a\n  note:: x\n- b\n  checked:: 2026-10-29 09:00\n- c\n  more text\n- d\n  checked:: 2026-10-29 09:00\n  other:: 1\n- e\n";
+    let (_t, mut s) = folder(&[(FILE, src)]);
+    let out = support::ok(&mut s, json!({"type": "dailies.list"}), clock());
+    let flags: Vec<(String, bool)> = out
+        .dailies
+        .unwrap()
+        .into_iter()
+        .map(|d| (d.text, d.nested))
+        .collect();
+    assert_eq!(
+        flags,
+        [
+            ("a", true),
+            ("b", false),
+            ("c", true),
+            ("d", true),
+            ("e", false)
+        ]
+        .map(|(t, n)| (t.to_string(), n))
+    );
+}
