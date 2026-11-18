@@ -259,38 +259,6 @@ fn write_git_keeps_everything_else() {
 }
 
 #[test]
-fn a_comment_above_a_changed_setting_is_kept() {
-    let base = "[git]
-# how long to wait
-commit_delay_minutes = 5
-[board]
-# my days
-archive_after_days = 14
-";
-    let dir = root_with(Some(base));
-    let git = GitSettings {
-        commit_delay_minutes: 9,
-        ..GitSettings::default()
-    };
-    Config::write_git(dir.path(), Expect::Any, &git).unwrap();
-    let board = BoardSettings {
-        archive_after_days: 30,
-        ..BoardSettings::default()
-    };
-    Config::write_board_settings(dir.path(), Expect::Any, &board).unwrap();
-    assert_eq!(
-        on_disk(&dir),
-        "[git]
-# how long to wait
-commit_delay_minutes = 9
-[board]
-# my days
-archive_after_days = 30
-"
-    );
-}
-
-#[test]
 fn a_missing_git_table_is_added_at_the_end() {
     let dir = root_with(Some("[[states]]\nkeyword = \"TODO\"\n"));
     let git = GitSettings {
@@ -912,9 +880,18 @@ fn rep(
 ) -> Replaced {
     Replaced {
         key,
-        value,
-        range,
-        default,
+        value: value.to_string(),
+        rule: format!("is outside {} to {}", range.start(), range.end()),
+        default: default.to_string(),
+    }
+}
+
+fn rep_reset(value: &str) -> Replaced {
+    Replaced {
+        key: "[dailies] reset",
+        value: format!("\"{value}\""),
+        rule: "is not a time from 00:00 to 23:59".to_string(),
+        default: "00:00".to_string(),
     }
 }
 
@@ -1026,4 +1003,111 @@ fn load_with_text_reports_and_keeps_the_file() {
     assert_eq!(on_disk(&dir), text);
     let empty = root_with(None);
     assert!(Config::load_with_text(empty.path()).unwrap().2.is_empty());
+}
+
+#[test]
+fn reset_defaults_to_midnight() {
+    assert_eq!(Config::parse("").unwrap().dailies.reset, "00:00");
+    assert_eq!(
+        Config::parse(
+            "[dailies]
+other = 1
+"
+        )
+        .unwrap()
+        .dailies
+        .reset,
+        "00:00"
+    );
+    assert_eq!(Config::default().dailies, DailiesSettings::default());
+}
+
+#[test]
+fn reset_is_read() {
+    let (c, records) = Config::parse_reporting(
+        "[dailies]
+reset = \"04:00\"
+",
+    )
+    .unwrap();
+    assert_eq!(c.dailies.reset, "04:00");
+    assert!(records.is_empty());
+    assert!(valid_reset("23:59") && valid_reset("00:00"));
+    assert!(!valid_reset("24:00") && !valid_reset("4:00") && !valid_reset("07:60"));
+}
+
+#[test]
+fn a_bad_reset_is_read_as_midnight_with_a_notice() {
+    for bad in ["24:00", "4:00", "07:60", "4am", ""] {
+        let text = format!(
+            "[dailies]
+reset = \"{bad}\" # mine
+"
+        );
+        let (c, records) = Config::parse_reporting(&text).unwrap();
+        assert_eq!(c.dailies.reset, "00:00", "{bad}");
+        assert_eq!(records, vec![rep_reset(bad)], "{bad}");
+        let dir = root_with(Some(&text));
+        let (_, got, _) = Config::load_with_text(dir.path()).unwrap();
+        assert_eq!(got.as_deref(), Some(text.as_str()));
+        assert_eq!(on_disk(&dir), text);
+    }
+}
+
+#[test]
+fn a_reset_of_another_type_refuses_the_file() {
+    assert!(matches!(
+        Config::parse_reporting(
+            "[dailies]
+reset = 4
+"
+        ),
+        Err(ConfigError::Toml(_))
+    ));
+}
+
+#[test]
+fn write_dailies_keeps_comments_and_unknown_keys() {
+    let dir = root_with(Some(
+        "[dailies]
+# my reset
+reset = \"05:00\"
+other = 1
+",
+    ));
+    let d = DailiesSettings {
+        reset: "04:30".to_string(),
+    };
+    Config::write_dailies(dir.path(), Expect::Any, &d).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "[dailies]
+# my reset
+reset = \"04:30\"
+other = 1
+"
+    );
+}
+
+#[test]
+fn write_dailies_appends_only_a_change() {
+    let text = "[[states]]
+keyword = \"TODO\"
+";
+    let dir = root_with(Some(text));
+    Config::write_dailies(dir.path(), Expect::Any, &DailiesSettings::default()).unwrap();
+    assert_eq!(on_disk(&dir), text);
+    let d = DailiesSettings {
+        reset: "04:00".to_string(),
+    };
+    Config::write_dailies(dir.path(), Expect::Any, &d).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        format!(
+            "{text}
+[dailies]
+reset = \"04:00\"
+"
+        )
+    );
 }

@@ -13,7 +13,9 @@ use super::toml_keep::{
     put_comments_after, rebuild_array, rebuild_tables, set_columns, set_keeping_decor,
     write_section,
 };
-use super::{Board, BoardSettings, Config, ConfigError, GitSettings, Replaced, State};
+use super::{
+    Board, BoardSettings, Config, ConfigError, DailiesSettings, GitSettings, Replaced, State,
+};
 use crate::layout;
 
 /// What a config writer expects `config.toml` to hold before it writes.
@@ -483,6 +485,21 @@ impl Config {
             ),
         ];
         edit_file(root, expect, |doc| write_section(doc, "git", &entries))
+    }
+
+    /// Sets the `[dailies]` settings, as [`write_git`](Config::write_git) does for `[git]`.
+    pub fn write_dailies(
+        root: &Path,
+        expect: Expect<'_>,
+        dailies: &DailiesSettings,
+    ) -> Result<String, ConfigError> {
+        let d = DailiesSettings::default();
+        let entries = [Entry::new(
+            "reset",
+            dailies.reset.as_str(),
+            d.reset.as_str(),
+        )];
+        edit_file(root, expect, |doc| write_section(doc, "dailies", &entries))
     }
 
     /// Sets the `[board]` settings, as [`write_git`](Config::write_git) does for `[git]`.

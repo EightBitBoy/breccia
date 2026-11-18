@@ -13,15 +13,19 @@ pub const PALETTE: [&str; 8] = [
     "grey", "amber", "violet", "green", "dim", "blue", "red", "teal",
 ];
 
-/// A number in `config.toml` outside its range, read as its default (the file is not changed).
+/// A value in `config.toml` the rules refuse (a number outside its range, a reset that is no time), read as its
+/// default (the file is not changed).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Replaced {
-    /// `"[git] commit_delay_minutes"`, `"[git] pull_interval_minutes"` or `"[board] archive_after_days"`.
+    /// `"[git] commit_delay_minutes"`, `"[git] pull_interval_minutes"`, `"[board] archive_after_days"` or
+    /// `"[dailies] reset"`.
     pub key: &'static str,
-    /// The number as written.
-    pub value: i64,
-    pub range: RangeInclusive<u32>,
-    pub default: u32,
+    /// The value as written in TOML (`5000`, `"24:00"`).
+    pub value: String,
+    /// What is wrong with it, as the notice says it: `is outside 0 to 1440`.
+    pub rule: String,
+    /// The default in use instead, as the notice shows it.
+    pub default: String,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
@@ -65,6 +69,43 @@ pub struct GitSettings {
     pub pull_interval_minutes: u32,
 }
 
+/// `[dailies]`: when the day's checks are cleared.
+#[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[serde(default)]
+pub struct DailiesSettings {
+    /// `HH:MM`, 00:00 to 23:59 local time.
+    pub reset: String,
+}
+
+/// Whether `s` is a time of day written `HH:MM` (two digits each, 00:00 to 23:59).
+pub fn valid_reset(s: &str) -> bool {
+    let b = s.as_bytes();
+    b.len() == 5
+        && b[2] == b':'
+        && [0, 1, 3, 4].iter().all(|&i| b[i].is_ascii_digit())
+        && s[..2].parse::<u32>().is_ok_and(|h| h < 24)
+        && s[3..].parse::<u32>().is_ok_and(|m| m < 60)
+}
+
+impl DailiesSettings {
+    pub fn check(&self) -> Result<(), ConfigError> {
+        if !valid_reset(&self.reset) {
+            return Err(ConfigError::InvalidSetting(
+                "the reset must be a time from 00:00 to 23:59",
+            ));
+        }
+        Ok(())
+    }
+}
+
+impl Default for DailiesSettings {
+    fn default() -> Self {
+        DailiesSettings {
+            reset: "00:00".to_string(),
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
 #[serde(default)]
 pub struct Config {
@@ -72,6 +113,7 @@ pub struct Config {
     pub boards: Vec<Board>,
     pub board: BoardSettings,
     pub git: GitSettings,
+    pub dailies: DailiesSettings,
 }
 
 /// State `i` has a valid keyword that no earlier state has.
@@ -160,6 +202,7 @@ impl Default for Config {
             }],
             board: BoardSettings::default(),
             git: GitSettings::default(),
+            dailies: DailiesSettings::default(),
         }
     }
 }
@@ -214,8 +257,8 @@ impl Config {
         Config::parse_reporting(s).map(|(c, _)| c)
     }
 
-    /// Parses `s`; a whole number outside its range (`[git]` minutes, `[board] archive_after_days`) is read as its
-    /// default and reported. The text is never changed. Other errors are those of the plain parse.
+    /// Parses `s`; a whole number outside its range (`[git]` minutes, `[board] archive_after_days`) or a
+    /// `[dailies] reset` that is no time is read as its default and reported. The text is never changed. Other errors are those of the plain parse.
     pub fn parse_reporting(s: &str) -> Result<(Config, Vec<Replaced>), ConfigError> {
         let plain = |text: &str| -> Result<Config, ConfigError> {
             let config: Config =

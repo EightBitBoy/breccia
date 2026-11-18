@@ -172,6 +172,9 @@ pub enum Command {
         auto_archive: Option<bool>,
         version: u64,
     },
+    /// Sets `[dailies] reset` in `config.toml`; answers with `config`.
+    #[serde(rename = "config.setDailies")]
+    ConfigSetDailies { reset: String, version: u64 },
     #[serde(rename = "pages.list")]
     PagesList,
     #[serde(rename = "block.insert")]
@@ -331,6 +334,7 @@ impl Command {
             | Command::StatesSet { .. }
             | Command::ConfigSetGit { .. }
             | Command::ConfigSetBoard { .. }
+            | Command::ConfigSetDailies { .. }
             | Command::BlockInsert { .. }
             | Command::BlockSetText { .. }
             | Command::BlockSplit { .. }
@@ -375,6 +379,7 @@ impl Command {
                 | Command::StatesSet { .. }
                 | Command::ConfigSetGit { .. }
                 | Command::ConfigSetBoard { .. }
+                | Command::ConfigSetDailies { .. }
         )
     }
 }

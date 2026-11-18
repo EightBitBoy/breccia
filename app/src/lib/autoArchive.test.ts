@@ -75,6 +75,7 @@ const cfg = (archiveAfterDays: number, autoArchive: boolean): ConfigView => ({
   archiveAfterDays,
   autoArchive,
   git: { enabled: true, commitDelayMinutes: 5, pullIntervalMinutes: 5 },
+  dailiesReset: '00:00',
   version: 1,
 })
 

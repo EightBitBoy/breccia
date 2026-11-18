@@ -1,9 +1,9 @@
 //! The settings commands: `config.get`, `boards.set`, `states.usage`,
-//! `states.set`, `config.setGit` and `config.setBoard`, and reading
+//! `states.set`, `config.setGit`, `config.setBoard` and `config.setDailies`, and reading
 //! `breccia/config.toml` again. Every write goes through
 //! [`Session::config_guard`], then [`Session::write_config`].
 
-use crate::config::{Board, BoardSettings, Config, GitSettings, State};
+use crate::config::{Board, BoardSettings, Config, DailiesSettings, GitSettings, State};
 
 use super::command::{StateInput, StateRename};
 use super::view::{CommandError, ConfigView, Notice, Output, PageView};
@@ -89,6 +89,20 @@ impl Session {
             .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
         self.config_guard(version)?;
         self.write_config(|root, expect| Config::write_git(root, expect, &git))?;
+        self.config_output()
+    }
+
+    /// `config.setDailies`: the time is checked first, before the guard.
+    pub(super) fn config_set_dailies(
+        &mut self,
+        dailies: DailiesSettings,
+        version: u64,
+    ) -> Result<Output, CommandError> {
+        dailies
+            .check()
+            .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
+        self.config_guard(version)?;
+        self.write_config(|root, expect| Config::write_dailies(root, expect, &dailies))?;
         self.config_output()
     }
 

@@ -73,6 +73,8 @@ export interface ConfigView {
   /** `[board] auto_archive`: finished tasks are archived by themselves. */
   autoArchive: boolean
   git: GitSettings
+  /** `[dailies] reset`: `HH:MM`, 00:00 to 23:59 local time. */
+  dailiesReset: string
   /** Goes up with every reload and write of config.toml; a change that writes it carries the one it was made from. */
   version: number
 }
@@ -455,6 +457,7 @@ export type Command =
   | { type: 'states.set'; states: StateInput[]; renames: StateRename[]; version: number }
   | { type: 'config.setGit'; enabled: boolean; commitDelayMinutes: number; pullIntervalMinutes: number; version: number }
   | { type: 'config.setBoard'; archiveAfterDays: number; autoArchive?: boolean; version: number }
+  | { type: 'config.setDailies'; reset: string; version: number }
   | { type: 'board.archive'; keyword: string }
   | { type: 'blocks.setArchived'; ids: BlockId[]; archived: boolean }
   | { type: 'journal.append'; text: string }

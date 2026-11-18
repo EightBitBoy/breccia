@@ -50,6 +50,7 @@ fn command_names_deserialize() {
                "renames": [{"from": "B", "to": "A"}], "version": 0}),
         json!({"type": "config.setGit", "enabled": true, "commitDelayMinutes": 5, "pullIntervalMinutes": 5, "version": 0}),
         json!({"type": "config.setBoard", "archiveAfterDays": 30, "version": 0}),
+        json!({"type": "config.setDailies", "reset": "04:00", "version": 0}),
         json!({"type": "page.show", "key": "p"}),
         json!({"type": "pages.table"}),
         json!({"type": "graph.get"}),
@@ -152,6 +153,11 @@ fn every_command() -> Vec<(Value, bool, bool)> {
         ),
         (
             json!({"type": "config.setBoard", "archiveAfterDays": 30, "version": 0}),
+            false,
+            true,
+        ),
+        (
+            json!({"type": "config.setDailies", "reset": "04:00", "version": 0}),
             false,
             true,
         ),
@@ -1442,7 +1448,7 @@ fn config_set_git_and_board_write_and_answer() {
     }
 }
 
-/// The four commands that write config.toml, each made from `version`.
+/// The five commands that write config.toml, each made from `version`.
 fn all_writes(v: u64, states: Vec<Value>) -> Vec<(&'static str, Value)> {
     vec![
         (
@@ -1461,12 +1467,16 @@ fn all_writes(v: u64, states: Vec<Value>) -> Vec<(&'static str, Value)> {
             "config.setBoard",
             json!({"type": "config.setBoard", "archiveAfterDays": 30, "version": v}),
         ),
+        (
+            "config.setDailies",
+            json!({"type": "config.setDailies", "reset": "04:00", "version": v}),
+        ),
     ]
 }
 
 #[test]
 fn a_change_made_from_a_stale_version_is_refused() {
-    for which in 0..4 {
+    for which in 0..5 {
         let (t, mut s) = folder(&[("breccia/config.toml", breccia_core::Config::default_toml())]);
         let old = version(&mut s);
         let states = default_states(&mut s);
@@ -1491,7 +1501,7 @@ fn a_change_made_from_a_stale_version_is_refused() {
 
 #[test]
 fn every_config_write_is_refused_after_an_outside_change() {
-    for which in 0..4 {
+    for which in 0..5 {
         let (t, mut s) = folder(&[("breccia/config.toml", breccia_core::Config::default_toml())]);
         let v = version(&mut s);
         let states = default_states(&mut s);
@@ -2796,4 +2806,44 @@ fn the_alias_winner_follows_the_path_order_so_a_move_can_change_it() {
         0,
     );
     assert_eq!(winner(&mut s), "a");
+}
+
+#[test]
+fn config_set_dailies() {
+    let (t, mut s) = folder(&[("breccia/config.toml", breccia_core::Config::default_toml())]);
+    let v = version(&mut s);
+    let out = ok(
+        &mut s,
+        json!({"type": "config.setDailies", "reset": "04:00", "version": v}),
+        0,
+    );
+    let c = out.config.unwrap();
+    assert_eq!(c.dailies_reset, "04:00");
+    assert!(c.version > v);
+    assert_eq!(
+        read(&t, CONFIG),
+        format!(
+            "{}
+[dailies]
+reset = \"04:00\"
+",
+            breccia_core::Config::default_toml()
+        )
+    );
+    let before = read(&t, CONFIG);
+    let err = cmd(
+        &mut s,
+        json!({"type": "config.setDailies", "reset": "25:00", "version": c.version}),
+        0,
+    )
+    .unwrap_err();
+    assert_eq!(err.code, "invalidSetting");
+    let err = cmd(
+        &mut s,
+        json!({"type": "config.setDailies", "reset": "05:00", "version": v}),
+        0,
+    )
+    .unwrap_err();
+    assert_eq!(err.code, "configChanged");
+    assert_eq!(read(&t, CONFIG), before);
 }

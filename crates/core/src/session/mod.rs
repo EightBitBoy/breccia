@@ -39,7 +39,7 @@ pub use view::{
     RenameView, SaveFailReason, StateUsage, StateView,
 };
 
-use crate::config::{Config, ConfigError, Expect, GitSettings};
+use crate::config::{Config, ConfigError, DailiesSettings, Expect, GitSettings};
 use crate::error::EditError;
 use crate::naming::journal_name;
 use crate::outline::{BlockId, Document, IdGen};
@@ -380,6 +380,9 @@ impl Session {
                 auto_archive,
                 version,
             } => self.config_set_board(archive_after_days, auto_archive, version),
+            Command::ConfigSetDailies { reset, version } => {
+                self.config_set_dailies(DailiesSettings { reset }, version)
+            }
             Command::PagesList => Ok(Output {
                 names: Some(self.ws()?.page_names()),
                 ..Output::default()

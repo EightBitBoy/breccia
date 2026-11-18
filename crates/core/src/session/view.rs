@@ -214,6 +214,8 @@ pub struct ConfigView {
     /// `[board] auto_archive`.
     pub auto_archive: bool,
     pub git: GitSettingsView,
+    /// `[dailies] reset`, `HH:MM`.
+    pub dailies_reset: String,
     /// Goes up with every reload and every write of `config.toml`; changes
     /// that write the file carry the one they were made from.
     pub version: u64,
@@ -574,6 +576,7 @@ impl ConfigView {
                 commit_delay_minutes: cfg.git.commit_delay_minutes,
                 pull_interval_minutes: cfg.git.pull_interval_minutes,
             },
+            dailies_reset: cfg.dailies.reset.clone(),
             version,
         }
     }
@@ -584,12 +587,8 @@ impl Notice {
     pub(crate) fn config_replaced(r: &Replaced) -> Notice {
         Notice::LoadWarning {
             message: format!(
-                "breccia/config.toml: {} = {} is outside {} to {}, so Breccia uses {} instead. Change it in Settings or in the file.",
-                r.key,
-                r.value,
-                r.range.start(),
-                r.range.end(),
-                r.default
+                "breccia/config.toml: {} = {} {}, so Breccia uses {} instead. Change it in Settings or in the file.",
+                r.key, r.value, r.rule, r.default
             ),
         }
     }
