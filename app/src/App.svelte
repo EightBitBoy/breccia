@@ -1588,6 +1588,7 @@
           void pageRenamed(r)
         }),
       configChanged: (c) => inFlight.idle.run(() => applyConfig(c, true)),
+      dailiesChanged: () => {}, // Task 6 shows the list
       // The shell ends every build with `{done: t, total: t}`, so the item always goes away.
       indexChanged: (p) => {
         const item = indexItem(p, lastGeneration)

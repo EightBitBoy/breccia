@@ -16,6 +16,8 @@ pub(crate) const NOTICES_ADDED: &str = "notices:added";
 pub(crate) const PAGES_SAVED: &str = "pages:saved";
 /// New settings (states, boards) that a Git pull brought.
 pub(crate) const CONFIG_CHANGED: &str = "config:changed";
+/// The Dailies list after another program or a Git pull changed `breccia/dailies.md`.
+pub(crate) const DAILIES_CHANGED: &str = "dailies:changed";
 /// The progress of the background build of the search index.
 pub(crate) const INDEX_CHANGED: &str = "index:changed";
 /// The session was recovered after an internal error (see `RecoveredEvent`).
@@ -36,6 +38,10 @@ pub(crate) fn events(
     // own answer carries its config itself.
     if from_watcher && let Some(config) = &output.config {
         out.push((CONFIG_CHANGED, json(config)));
+    }
+    // After the settings (the reset time) and before the pages. A command's own answer carries its list.
+    if from_watcher && let Some(dailies) = &output.dailies {
+        out.push((DAILIES_CHANGED, json(dailies)));
     }
     for page in output.page.iter().chain(&output.changed) {
         out.push((PAGE_CHANGED, json(page)));
@@ -119,6 +125,38 @@ mod tests {
             ]
         );
         assert_eq!(names(true).last(), Some(&"notices:added"));
+    }
+
+    #[test]
+    fn dailies_changed_follows_config_changed_for_watcher_runs_only() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut session = Session::new();
+        let mut run = |command| {
+            let generation = session.generation();
+            session
+                .run(
+                    Request {
+                        generation,
+                        command,
+                    },
+                    crate::test_clock(),
+                )
+                .unwrap()
+        };
+        run(Command::FolderOpen {
+            path: dir.path().to_path_buf(),
+        });
+        let config = run(Command::ConfigGet).config.unwrap();
+        let out = Output {
+            config: Some(config),
+            dailies: Some(Vec::new()),
+            ..Output::default()
+        };
+        let names = |from_watcher| -> Vec<&str> {
+            events(&out, from_watcher).iter().map(|e| e.0).collect()
+        };
+        assert_eq!(names(true), ["config:changed", "dailies:changed"]);
+        assert!(names(false).is_empty());
     }
 
     /// The frontend tells an own command's `page:changed` echo from news by

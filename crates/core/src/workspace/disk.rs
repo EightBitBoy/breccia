@@ -454,7 +454,7 @@ fn found_at(rel: &Path, warnings: &mut Vec<LoadWarning>) -> Option<Found> {
             (String::new(), stem, Some(date))
         }
         Ok(Some(NotePath::Page { folder, stem })) => (folder, stem, None),
-        Ok(Some(NotePath::Config) | None) => return None,
+        Ok(Some(NotePath::Config | NotePath::Dailies) | None) => return None,
         Err(w) => {
             warnings.push(w);
             return None;

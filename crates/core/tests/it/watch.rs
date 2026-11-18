@@ -24,6 +24,37 @@ fn config_toml_is_relevant() {
 }
 
 #[test]
+fn dailies_md_is_relevant() {
+    let r = Path::new("/n");
+    assert_eq!(
+        relevant(r, Path::new("/n/breccia/dailies.md")),
+        Some("breccia/dailies.md".into())
+    );
+    for no in [
+        "/n/breccia/other.md",
+        "/n/breccia/.dailies.md.breccia-tmp",
+        "/n/breccia/sub/dailies.md",
+        "/n/dailies.md",
+    ] {
+        assert_eq!(relevant(r, Path::new(no)), None, "{no}");
+    }
+}
+
+#[test]
+fn rescan_includes_the_dailies_file() {
+    let t = tempfile::tempdir().unwrap();
+    std::fs::create_dir_all(t.path().join("breccia")).unwrap();
+    assert!(!rescan(t.path()).iter().any(|p| p.starts_with("breccia")));
+    std::fs::write(
+        t.path().join("breccia/dailies.md"),
+        "- a
+",
+    )
+    .unwrap();
+    assert!(rescan(t.path()).contains(&PathBuf::from("breccia").join("dailies.md")));
+}
+
+#[test]
 fn rescan_includes_the_config_file() {
     let t = tempfile::tempdir().unwrap();
     std::fs::create_dir_all(t.path().join("breccia")).unwrap();

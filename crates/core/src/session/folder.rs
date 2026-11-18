@@ -206,9 +206,11 @@ impl Session {
     pub(super) fn files_changed(&mut self, paths: &[PathBuf]) -> Result<Output, CommandError> {
         let config_path = Path::new(layout::CONFIG_REL);
         let config_touched = paths.iter().any(|p| p == config_path);
+        let dailies_path = Path::new(layout::DAILIES_REL);
+        let dailies_touched = paths.iter().any(|p| p == dailies_path);
         let paths: Vec<PathBuf> = paths
             .iter()
-            .filter(|p| *p != config_path)
+            .filter(|p| *p != config_path && *p != dailies_path)
             .cloned()
             .collect();
         let ws = self.ws_mut()?;
@@ -251,6 +253,23 @@ impl Session {
                 }),
             }
         }
+        // Dailies are not pages: their list is followed on its own. A file that cannot be read keeps the list, and
+        // is reported once (until it can be read again).
+        let mut dailies = None;
+        if dailies_touched {
+            let was_unreadable = self.ws()?.dailies.unreadable.is_some();
+            dailies = self.reload_dailies();
+            if let Some(reason) = self.ws()?.dailies.unreadable.clone()
+                && !was_unreadable
+            {
+                notices.push(Notice::LoadWarning {
+                    message: format!(
+                        "{} cannot be read ({reason}); Breccia keeps the list it had",
+                        layout::DAILIES_REL
+                    ),
+                });
+            }
+        }
         let ws = self.ws.as_ref().ok_or_else(CommandError::no_folder)?;
         // Marks of blocks and pages that no longer exist can never be used.
         self.marks.retain(|&id, m| match m {
@@ -268,6 +287,7 @@ impl Session {
         Ok(Output {
             notices,
             config,
+            dailies,
             changed,
             removed: report.removed,
             renamed: report

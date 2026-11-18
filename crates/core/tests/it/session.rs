@@ -2869,3 +2869,103 @@ reset = \"04:00\"
     assert_eq!(err.code, "configChanged");
     assert_eq!(read(&t, CONFIG), before);
 }
+
+const DAILIES: &str = "breccia/dailies.md";
+
+fn dailies_ids(out: &Output) -> Vec<(BlockId, String)> {
+    out.dailies
+        .as_ref()
+        .expect("the answer holds dailies")
+        .iter()
+        .map(|d| (d.id, d.text.clone()))
+        .collect()
+}
+
+#[test]
+fn files_changed_reads_outside_dailies() {
+    let (t, mut s) = folder(&[(DAILIES, "- a\n- b\n")]);
+    let first = dailies_ids(&ok(&mut s, json!({"type": "dailies.list"}), 0));
+    put(t.path(), DAILIES, "- a\n- b\n- c\n");
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    let now = dailies_ids(&out);
+    assert_eq!(now.len(), 3);
+    assert_eq!(now[0], first[0]);
+    assert_eq!(now[1], first[1]);
+    assert_eq!(now[2].1, "c");
+    assert!(out.notices.is_empty());
+    // Nothing else changed: the next run is quiet.
+    let again = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert!(again.dailies.is_none());
+}
+
+#[test]
+fn own_save_is_quiet() {
+    let (_t, mut s) = folder(&[(DAILIES, "- a\n")]);
+    let l = dailies_ids(&ok(&mut s, json!({"type": "dailies.list"}), 0));
+    ok(&mut s, json!({"type": "dailies.check", "id": l[0].0}), 0);
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert!(out.dailies.is_none());
+    assert!(out.notices.is_empty());
+}
+
+#[test]
+fn a_deleted_dailies_file_gives_an_empty_list() {
+    let (t, mut s) = folder(&[(DAILIES, "- a\n")]);
+    ok(&mut s, json!({"type": "dailies.list"}), 0);
+    fs::remove_file(t.path().join(DAILIES)).unwrap();
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert_eq!(out.dailies.map(|d| d.len()), Some(0));
+    let again = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert!(again.dailies.is_none());
+}
+
+#[test]
+fn an_unreadable_dailies_file_keeps_the_list_and_warns_once() {
+    let (t, mut s) = folder(&[(DAILIES, "- a\n")]);
+    ok(&mut s, json!({"type": "dailies.list"}), 0);
+    fs::write(t.path().join(DAILIES), [0xff, 0xfe, 0x41]).unwrap();
+    let out = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert!(out.dailies.is_none());
+    assert_eq!(out.notices.len(), 1);
+    assert!(format!("{:?}", out.notices[0]).contains("breccia/dailies.md"));
+    let again = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert!(again.notices.is_empty());
+    let e = cmd(&mut s, json!({"type": "dailies.add", "text": "x"}), 0).unwrap_err();
+    assert_eq!(e.code, "dailiesUnreadable");
+    // Readable again: the list follows.
+    put(t.path(), DAILIES, "- z\n");
+    let back = ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [DAILIES]}),
+        0,
+    );
+    assert_eq!(dailies_ids(&back).len(), 1);
+}

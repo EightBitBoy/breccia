@@ -10,7 +10,7 @@ use chrono::NaiveDate;
 
 use super::LoadWarning;
 use crate::inline::title_line;
-use crate::layout::{CONFIG_DIR, CONFIG_FILE, JOURNALS, PAGES};
+use crate::layout::{CONFIG_DIR, CONFIG_FILE, DAILIES_FILE, JOURNALS, PAGES};
 use crate::naming::parse_journal_name;
 use crate::outline::Document;
 
@@ -32,6 +32,8 @@ pub(crate) enum NotePath {
     Page { folder: String, stem: String },
     /// `breccia/config.toml`.
     Config,
+    /// `breccia/dailies.md`.
+    Dailies,
 }
 
 /// What `rel` is: `Ok(None)` for a path that is not a note file (outside
@@ -53,6 +55,9 @@ pub(crate) fn classify(rel: &Path) -> Result<Option<NotePath>, LoadWarning> {
     };
     if parts == [CONFIG_DIR, CONFIG_FILE] {
         return Ok(Some(NotePath::Config));
+    }
+    if parts == [CONFIG_DIR, DAILIES_FILE] {
+        return Ok(Some(NotePath::Dailies));
     }
     let in_journals = parts.len() == 2 && parts[0] == JOURNALS;
     let in_pages = parts.len() >= 2 && parts[0] == PAGES;

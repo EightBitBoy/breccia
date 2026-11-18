@@ -3,7 +3,7 @@
 use std::cmp::Ordering;
 use std::path::{Path, PathBuf};
 
-use crate::layout::{CONFIG_DIR, CONFIG_FILE, JOURNALS, PAGES};
+use crate::layout::{CONFIG_DIR, CONFIG_FILE, DAILIES_FILE, JOURNALS, PAGES};
 
 /// One staged change in the notes folder, folder-relative.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -32,7 +32,7 @@ fn parts(path: &Path) -> Vec<String> {
 }
 
 /// How a file is named, and where it sorts: pages (by name), journal days
-/// (newest first), settings, then other files (by file name).
+/// (newest first), settings and dailies (same rank, by name), then other files (by file name).
 #[derive(Clone, Debug, PartialEq, Eq)]
 struct Name {
     rank: u8,
@@ -58,6 +58,8 @@ impl Name {
             (1, stem())
         } else if p.len() == 2 && p[0] == CONFIG_DIR && p[1] == CONFIG_FILE {
             (2, "settings".to_string())
+        } else if p.len() == 2 && p[0] == CONFIG_DIR && p[1] == DAILIES_FILE {
+            (2, "dailies".to_string())
         } else {
             (3, file.clone())
         };
@@ -81,7 +83,7 @@ impl Name {
 /// Groups come in the order add, update, rename, move, delete; empty groups are
 /// left out, and `; ` separates them. Names are page names (the file stem of
 /// `pages/**.md`), journal days (`journals/*.md`, newest first), `settings`
-/// (`breccia/config.toml`) and the file names of other files, without repeats.
+/// (`breccia/config.toml`), `dailies` (`breccia/dailies.md`) and the file names of other files, without repeats.
 /// A rename that keeps the name (a page moved to another folder) is a `move`.
 /// While the subject is longer than [`SUBJECT_MAX`] characters, the group with
 /// the most names shown drops its last one into a `+N`; every group keeps at
@@ -200,6 +202,18 @@ mod tests {
     }
 
     #[test]
+    fn dailies_and_settings_share_a_rank_and_sort_by_name() {
+        assert_eq!(
+            commit_message(&[
+                m("breccia/config.toml"),
+                m("breccia/dailies.md"),
+                m("pages/a.md")
+            ]),
+            "update a, dailies, settings"
+        );
+    }
+
+    #[test]
     fn renames_show_both_names_and_moves_one() {
         assert_eq!(
             commit_message(&[
@@ -276,7 +290,9 @@ mod tests {
             ("pages/v1.2", 3, "v1.2"),
             ("pages/f", 3, "f"),
             ("breccia/config.toml", 2, "settings"),
+            ("breccia/dailies.md", 2, "dailies"),
             ("breccia/other.toml", 3, "other.toml"),
+            ("breccia/sub/dailies.md", 3, "dailies.md"),
             ("other/a.md", 3, "a.md"),
             ("a.md", 3, "a.md"),
         ] {

@@ -46,6 +46,8 @@ export const PAGE_RENAMED = 'page:renamed'
 export const GIT_CHANGED = 'git:changed'
 /** Settings (states, boards) a Git pull brought (a `ConfigView`). */
 export const CONFIG_CHANGED = 'config:changed'
+/** The Dailies list another program or a Git pull changed (a `DailyView[]`). */
+export const DAILIES_CHANGED = 'dailies:changed'
 /** Keys of pages saved after a failed save (`string[]`): their "could not be saved" notice goes. */
 export const PAGES_SAVED = 'pages:saved'
 /** The session was recovered after an internal error (`{ reopened, notice }`; `reopened`: the window must reload). */

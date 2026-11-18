@@ -1,8 +1,8 @@
 // The shell's events (§9): other views and programs change pages too.
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWindow, type CloseRequestedEvent } from '@tauri-apps/api/window'
-import { CONFIG_CHANGED, GIT_CHANGED, INDEX_CHANGED, NOTICES_ADDED, PAGE_CHANGED, PAGE_REMOVED, PAGE_RENAMED, PAGES_SAVED, SESSION_RECOVERED, TRAY_EXIT, TREE_CHANGED } from '../api'
-import type { ConfigView, GitView, IndexProgress, Notice, PageView, RecoveredEvent, RenameView, TreeView } from './types'
+import { CONFIG_CHANGED, DAILIES_CHANGED, GIT_CHANGED, INDEX_CHANGED, NOTICES_ADDED, PAGE_CHANGED, PAGE_REMOVED, PAGE_RENAMED, PAGES_SAVED, SESSION_RECOVERED, TRAY_EXIT, TREE_CHANGED } from '../api'
+import type { ConfigView, DailyView, GitView, IndexProgress, Notice, PageView, RecoveredEvent, RenameView, TreeView } from './types'
 
 export interface ShellHandlers {
   pageChanged(p: PageView): void
@@ -13,6 +13,7 @@ export interface ShellHandlers {
   gitChanged(v: GitView): void
   pageRenamed(r: RenameView): void
   configChanged(c: ConfigView): void
+  dailiesChanged(list: DailyView[]): void
   pagesSaved(keys: string[]): void
   closeRequested(e: CloseRequestedEvent): Promise<void>
   /** "Exit" in the tray menu. */
@@ -35,6 +36,7 @@ export function listenShell(h: ShellHandlers): { ready: Promise<void>; stop(): v
     listen<GitView>(GIT_CHANGED, (e) => h.gitChanged(e.payload)),
     listen<RenameView>(PAGE_RENAMED, (e) => h.pageRenamed(e.payload)),
     listen<ConfigView>(CONFIG_CHANGED, (e) => h.configChanged(e.payload)),
+    listen<DailyView[]>(DAILIES_CHANGED, (e) => h.dailiesChanged(e.payload)),
     listen<string[]>(PAGES_SAVED, (e) => h.pagesSaved(e.payload)),
     listen<null>(TRAY_EXIT, () => h.trayExit()),
     listen<RecoveredEvent>(SESSION_RECOVERED, (e) => h.recovered(e.payload)),

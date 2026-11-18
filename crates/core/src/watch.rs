@@ -21,7 +21,7 @@ pub struct WatchError(#[from] notify::Error);
 /// The relative path of `path` if a page file (or a possible folder of
 /// pages) lives there: a `.md` file directly in `journals/` (a name that is
 /// not a date too), a `.md` file anywhere under `pages/`, a `.MD` file in
-/// either place, `breccia/config.toml`, or an extension-less path under
+/// either place, `breccia/config.toml`, `breccia/dailies.md`, or an extension-less path under
 /// `pages/` (the watcher's own rule: it might be a folder). No component may
 /// start with `.`. The workspace's `classify` decides the files; a page file
 /// it cannot load (a bad journal name, a `.MD` file) is passed on, so that
@@ -36,7 +36,9 @@ pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
         }
     }
     let ok = match classify(rel) {
-        Ok(Some(NotePath::Journal(_) | NotePath::Page { .. } | NotePath::Config)) => true,
+        Ok(Some(
+            NotePath::Journal(_) | NotePath::Page { .. } | NotePath::Config | NotePath::Dailies,
+        )) => true,
         Err(LoadWarning::BadJournalName(_) | LoadWarning::ExtensionCase(_)) => true,
         Ok(None) => parts.len() >= 2 && parts[0] == PAGES && rel.extension().is_none(),
         // One arm per variant, so a new `LoadWarning` fails to compile here
@@ -132,6 +134,9 @@ pub fn rescan(root: &Path) -> Vec<PathBuf> {
     // The settings file too, so a lost-events rescan follows a hand edit of it.
     if layout::config_path(root).is_file() {
         out.push(PathBuf::from(CONFIG_DIR).join(CONFIG_FILE));
+    }
+    if layout::dailies_path(root).is_file() {
+        out.push(PathBuf::from(layout::DAILIES_REL));
     }
     for top in [PAGES, JOURNALS] {
         out.push(PathBuf::from(top));
