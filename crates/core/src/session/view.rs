@@ -348,6 +348,8 @@ impl From<EditError> for CommandError {
             EditError::WouldChangeStructure => "wouldChangeStructure",
             EditError::JoinOntoProperties => "joinOntoProperties",
             EditError::NoCycle => "noCycle",
+            EditError::NotADaily => "unknownDaily",
+            EditError::EmptyDaily | EditError::MultiLineDaily => "invalidDaily",
         };
         CommandError::new(code, e)
     }

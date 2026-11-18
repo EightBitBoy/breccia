@@ -1,6 +1,7 @@
 pub mod aliases;
 pub mod color;
 pub mod config;
+pub mod dailies;
 pub mod dates;
 pub mod edit;
 pub mod error;

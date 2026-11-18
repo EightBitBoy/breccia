@@ -26,6 +26,13 @@ pub enum EditError {
     JoinOntoProperties,
     #[error("cannot split a block inside a code fence")]
     InsideFence,
+    /// A daily operation on a block that is not a top-level block.
+    #[error("not a daily")]
+    NotADaily,
+    #[error("A daily needs one line of text.")]
+    EmptyDaily,
+    #[error("A daily needs one line of text.")]
+    MultiLineDaily,
     #[error("No state is in the cycle (Settings → States)")]
     NoCycle,
 }

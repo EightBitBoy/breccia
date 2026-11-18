@@ -13,9 +13,19 @@ pub const CONFIG_FILE: &str = "config.toml";
 /// The settings file relative to the notes folder, as the watcher and Git name it.
 pub const CONFIG_REL: &str = "breccia/config.toml";
 
+/// The list of dailies in [`CONFIG_DIR`].
+pub const DAILIES_FILE: &str = "dailies.md";
+/// The list of dailies relative to the notes folder, as the watcher and Git name it.
+pub const DAILIES_REL: &str = "breccia/dailies.md";
+
 /// `<root>/breccia/config.toml`.
 pub fn config_path(root: &Path) -> PathBuf {
     root.join(CONFIG_DIR).join(CONFIG_FILE)
+}
+
+/// `<root>/breccia/dailies.md`.
+pub fn dailies_path(root: &Path) -> PathBuf {
+    root.join(CONFIG_DIR).join(DAILIES_FILE)
 }
 
 #[cfg(test)]
@@ -26,5 +36,10 @@ mod tests {
     fn the_config_names_agree() {
         assert_eq!(CONFIG_REL, format!("{CONFIG_DIR}/{CONFIG_FILE}"));
         assert_eq!(config_path(Path::new("n")), Path::new("n").join(CONFIG_REL));
+        assert_eq!(DAILIES_REL, format!("{CONFIG_DIR}/{DAILIES_FILE}"));
+        assert_eq!(
+            dailies_path(Path::new("n")),
+            Path::new("n").join(DAILIES_REL)
+        );
     }
 }

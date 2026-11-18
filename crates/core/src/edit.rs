@@ -427,6 +427,45 @@ impl Document {
         Ok(())
     }
 
+    /// Moves the block's subtree directly before `before`'s (a sibling: the
+    /// same parent), or to the end of its parent's children with `None`. The
+    /// blocks keep their bytes. `before == Some(id)` changes nothing; a
+    /// `before` that is not a sibling is refused with
+    /// [`EditError::WouldChangeStructure`].
+    pub fn move_before(&mut self, id: BlockId, before: Option<BlockId>) -> Result<(), EditError> {
+        let i = self.find(id)?;
+        let end = self.subtree_end(i);
+        let bi = match before {
+            Some(b) if b == id => return Ok(()),
+            Some(b) => {
+                let bi = self.find(b)?;
+                if self.blocks[bi].depth != self.blocks[i].depth
+                    || self.parent_of(b) != self.parent_of(id)
+                {
+                    return Err(EditError::WouldChangeStructure);
+                }
+                Some(bi)
+            }
+            None => None,
+        };
+        let parent_end = match self.parent_of(id).and_then(|p| self.index_of(p)) {
+            Some(p) => self.subtree_end(p),
+            None => self.blocks.len(),
+        };
+        let last = self.blocks.last().map(|b| b.id);
+        let target = bi.unwrap_or(parent_end);
+        if target == i || target == end {
+            return Ok(());
+        }
+        let len = end - i;
+        let moved: Vec<Block> = self.blocks.drain(i..end).collect();
+        let pos = if target >= end { target - len } else { target };
+        self.blocks.splice(pos..pos, moved);
+        self.seal_former_last(last);
+        self.fix_indents();
+        Ok(())
+    }
+
     fn prev_sibling(&self, i: usize) -> Option<usize> {
         let depth = self.blocks[i].depth;
         (0..i)

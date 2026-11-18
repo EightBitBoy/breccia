@@ -7,6 +7,7 @@ mod backlinks;
 mod board;
 mod color;
 mod config;
+mod dailies;
 mod dates;
 mod demo;
 mod disk;
