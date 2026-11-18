@@ -50,3 +50,13 @@ Task 6: minor (deferred): a failed reload inside send can emit a second notice
 Task 6: minor (deferred): redundant now initialiser; dead setClock call and unneeded tick() in tests
 Task 6: minor (deferred): no test for the load() failure notice
 Task 6: complete (commits 9a9e808..84bc618, review clean)
+Task 7: implementer DONE_WITH_CONCERNS, commits d1bb283 (feat view), 67b7a50 (feat status bar), 0de9e4e (test e2e setup of steps 96–100); e2e 208 PASS
+Ruling: accept the e2e change closing Projects before steps 96–100 — the taller sidebar left too little tree in the test window; nothing later uses those rows — cost if wrong: steps 96–100 test with one folder fewer open.
+Task 7: follow-up: pressing a row cut off at the page tree's edge can start a drag on the wrong row (pre-existing; more likely in short windows with the Dailies entry) — to follow-ups/backlog.
+Task 7: minor (deferred): Dailies view imported statically, not lazy-loaded like Archive
+Task 7: review dispatched (opus)
+Task 7: minor (deferred): reduced motion read once when the view opens
+Task 7: minor (deferred): confirmSetting name no longer fits (also asks the Dailies delete)
+Task 7: minor (deferred): right-click during an edit blocks the field's native text menu
+Task 7: ⚠️ dragging a row is untested (drop monitor depends on listEl at onMount) — carried into Task 9: an e2e step must drag a row and assert bytes. Back to Dailies — Task 9 step 140.
+Task 7: complete (commits 997d925..0de9e4e, review clean)
