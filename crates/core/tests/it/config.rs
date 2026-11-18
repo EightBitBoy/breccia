@@ -259,6 +259,38 @@ fn write_git_keeps_everything_else() {
 }
 
 #[test]
+fn a_comment_above_a_changed_setting_is_kept() {
+    let base = "[git]
+# how long to wait
+commit_delay_minutes = 5
+[board]
+# my days
+archive_after_days = 14
+";
+    let dir = root_with(Some(base));
+    let git = GitSettings {
+        commit_delay_minutes: 9,
+        ..GitSettings::default()
+    };
+    Config::write_git(dir.path(), Expect::Any, &git).unwrap();
+    let board = BoardSettings {
+        archive_after_days: 30,
+        ..BoardSettings::default()
+    };
+    Config::write_board_settings(dir.path(), Expect::Any, &board).unwrap();
+    assert_eq!(
+        on_disk(&dir),
+        "[git]
+# how long to wait
+commit_delay_minutes = 9
+[board]
+# my days
+archive_after_days = 30
+"
+    );
+}
+
+#[test]
 fn a_missing_git_table_is_added_at_the_end() {
     let dir = root_with(Some("[[states]]\nkeyword = \"TODO\"\n"));
     let git = GitSettings {

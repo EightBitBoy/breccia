@@ -41,7 +41,13 @@ pub(super) fn set_keeping_decor(t: &mut dyn TableLike, key: &str, mut value: Val
     if let Some(old) = t.get(key).and_then(Item::as_value) {
         *value.decor_mut() = old.decor().clone();
     }
-    t.insert(key, Item::Value(value));
+    // Replaced in place: `insert` would make a new key and lose the comment lines above the old one.
+    match t.get_mut(key) {
+        Some(item) => *item = Item::Value(value),
+        None => {
+            t.insert(key, Item::Value(value));
+        }
+    }
 }
 
 /// Rebuilds `tables` from `matched`: entry `i` is the old table that new item `i`

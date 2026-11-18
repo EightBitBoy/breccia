@@ -403,3 +403,9 @@ are its questions for you; each answer decides what a later plan does.
    the caret at the start of the lower task and press `Backspace`. Nothing is joined, both files stay as they were, and
    the notice reads "This block can't be joined onto the one above: its own lines would end up after the created:: and
    other property lines there". The same happens for any block with several lines under a block with property lines.
+
+## Config comments
+
+115. [ ] **A comment above a changed setting stays:** in `breccia/config.toml`, put a comment line above a Git or board
+   setting (for example `# how long to wait` above `commit_delay_minutes = 5`), then change that setting in Settings.
+   Before, the comment line above it was dropped; now the file keeps it byte for byte and only the value changes.
