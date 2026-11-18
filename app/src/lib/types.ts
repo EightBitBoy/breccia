@@ -473,11 +473,12 @@ export type Command =
   | { type: 'config.setDailies'; reset: string; version: number }
   | { type: 'dailies.list' }
   | { type: 'dailies.add'; text: string }
-  | { type: 'dailies.check'; id: BlockId }
-  | { type: 'dailies.uncheck'; id: BlockId }
-  | { type: 'dailies.edit'; id: BlockId; text: string }
-  | { type: 'dailies.delete'; id: BlockId }
-  | { type: 'dailies.move'; id: BlockId; before: BlockId | null }
+  // `shown`: the daily's text as the window showed it; the core refuses the command when the file now says otherwise.
+  | { type: 'dailies.check'; id: BlockId; shown: string }
+  | { type: 'dailies.uncheck'; id: BlockId; shown: string }
+  | { type: 'dailies.edit'; id: BlockId; text: string; shown: string }
+  | { type: 'dailies.delete'; id: BlockId; shown: string }
+  | { type: 'dailies.move'; id: BlockId; before: BlockId | null; shown: string }
   | { type: 'board.archive'; keyword: string }
   | { type: 'blocks.setArchived'; ids: BlockId[]; archived: boolean }
   | { type: 'journal.append'; text: string }

@@ -118,21 +118,36 @@ test('start twice does not leak timers', () => {
 test('commands_send_the_right_names', async () => {
   const { d, sent } = setup(at(8))
   d.apply([daily(1), daily(2)])
-  await d.check(1)
-  await d.uncheck(1)
+  const [one, two] = d.list!
+  await d.check(one)
+  await d.uncheck(one)
   await d.add('x')
-  await d.edit(2, 'y')
-  await d.remove(2)
-  await d.move(1, null)
+  await d.edit(two, 'y')
+  await d.remove(two)
+  await d.move(one, null)
   await d.load()
   expect(sent).toEqual([
-    { type: 'dailies.check', id: 1 },
-    { type: 'dailies.uncheck', id: 1 },
+    { type: 'dailies.check', id: 1, shown: 'd1' },
+    { type: 'dailies.uncheck', id: 1, shown: 'd1' },
     { type: 'dailies.add', text: 'x' },
-    { type: 'dailies.edit', id: 2, text: 'y' },
-    { type: 'dailies.delete', id: 2 },
-    { type: 'dailies.move', id: 1, before: null },
+    { type: 'dailies.edit', id: 2, text: 'y', shown: 'd2' },
+    { type: 'dailies.delete', id: 2, shown: 'd2' },
+    { type: 'dailies.move', id: 1, before: null, shown: 'd1' },
     { type: 'dailies.list' },
+  ])
+})
+
+test('a command sends the text of the row the window showed, not the newer list', async () => {
+  // A confirm or an edit field stayed open while the watcher took an outside change.
+  const { d, sent } = setup(at(8))
+  d.apply([daily(1)])
+  const row = d.list![0]
+  d.apply([{ ...daily(1), text: 'other' }])
+  await d.remove(row)
+  await d.edit(row, 'y')
+  expect(sent).toEqual([
+    { type: 'dailies.delete', id: 1, shown: 'd1' },
+    { type: 'dailies.edit', id: 1, text: 'y', shown: 'd1' },
   ])
 })
 
@@ -140,17 +155,17 @@ test('check on a checked daily sends nothing', async () => {
   const { d, sent } = setup(at(8))
   d.setReset('04:00')
   d.apply([daily(1, '2026-11-10 07:00')])
-  await d.check(1)
+  await d.check(d.list![0])
   expect(sent).toEqual([])
 })
 
 test('a refusal is one notice and one reload', async () => {
   const { d, sent, notices } = setup(at(8), true)
   d.apply([daily(1)])
-  await d.check(1)
+  await d.check(d.list![0])
   await tick()
   expect(notices).toEqual([{ kind: 'refused', message: 'That daily is gone.' }])
-  expect(sent).toEqual([{ type: 'dailies.check', id: 1 }, { type: 'dailies.list' }])
+  expect(sent).toEqual([{ type: 'dailies.check', id: 1, shown: 'd1' }, { type: 'dailies.list' }])
 })
 
 test('open shows and loads; close hides and keeps the list', async () => {

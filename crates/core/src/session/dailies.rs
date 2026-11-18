@@ -127,22 +127,21 @@ impl Session {
     }
 
     /// Makes one change to the list: reads the file, takes an outside change first, applies `op`
-    /// to a copy and writes the result. `target` is the daily the change is about: it is refused
-    /// (`unknownDaily`) when that daily is gone or its text differs from what Breccia showed.
+    /// to a copy and writes the result. `target` is the daily the change is about and the first
+    /// line the window showed for it: the change is refused (`unknownDaily`) when that daily is
+    /// gone or the file now gives it another first line. The window's text is the one compared,
+    /// not the one Breccia held: a watcher run may have taken the outside text (keeping the id)
+    /// while a confirm or an edit field was open.
     pub(super) fn dailies_change(
         &mut self,
-        target: Option<BlockId>,
+        target: Option<(BlockId, &str)>,
         op: impl FnOnce(&mut Document, &mut IdGen) -> Result<(), EditError>,
     ) -> Result<Output, CommandError> {
         let ws = self.ws_mut()?;
-        let held = target.and_then(|id| {
-            let b = ws.dailies.doc.block(id).ok()?;
-            (b.depth() == 0).then(|| daily_text(b.text()).to_string())
-        });
         if let Err(reason) = ws.sync_dailies() {
             return Err(unreadable(&reason));
         }
-        if let Some(id) = target {
+        if let Some((id, shown)) = target {
             let now = ws
                 .dailies
                 .doc
@@ -150,7 +149,7 @@ impl Session {
                 .ok()
                 .filter(|b| b.depth() == 0)
                 .map(|b| daily_text(b.text()));
-            if held.is_none() || now != held.as_deref() {
+            if now != Some(shown) {
                 return Err(changed_elsewhere());
             }
         }

@@ -183,23 +183,30 @@ pub enum Command {
     /// A new daily at the end of the list.
     #[serde(rename = "dailies.add")]
     DailiesAdd { text: String },
+    // `shown` in the commands about one daily: its first line as the window showed it. The
+    // command is refused (`unknownDaily`) when the file now says something else.
     /// Writes `checked::` with the command's time.
     #[serde(rename = "dailies.check")]
-    DailiesCheck { id: BlockId },
+    DailiesCheck { id: BlockId, shown: String },
     #[serde(rename = "dailies.uncheck")]
-    DailiesUncheck { id: BlockId },
-    /// Changes the daily's first line.
+    DailiesUncheck { id: BlockId, shown: String },
+    /// Changes the daily's first line to `text`.
     #[serde(rename = "dailies.edit")]
-    DailiesEdit { id: BlockId, text: String },
+    DailiesEdit {
+        id: BlockId,
+        text: String,
+        shown: String,
+    },
     /// Removes the daily with whatever is written under it. No undo.
     #[serde(rename = "dailies.delete")]
-    DailiesDelete { id: BlockId },
+    DailiesDelete { id: BlockId, shown: String },
     /// Moves a daily before `before`, or to the end.
     #[serde(rename = "dailies.move")]
     DailiesMove {
         id: BlockId,
         #[serde(default)]
         before: Option<BlockId>,
+        shown: String,
     },
     #[serde(rename = "block.insert")]
     BlockInsert {
@@ -429,7 +436,11 @@ mod tests {
         assert_eq!(Command::PageToday.kind(), CommandKind::Edit);
         assert_eq!(Command::DailiesList.kind(), CommandKind::Query);
         assert_eq!(
-            Command::DailiesCheck { id: BlockId(1) }.kind(),
+            Command::DailiesCheck {
+                id: BlockId(1),
+                shown: String::new()
+            }
+            .kind(),
             CommandKind::Edit
         );
         assert_eq!(

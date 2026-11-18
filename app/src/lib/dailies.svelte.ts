@@ -82,14 +82,18 @@ export class Dailies {
     this.now = this.env.now()
   }
 
-  async check(id: BlockId): Promise<void> {
-    const d = this.list?.find((x) => x.id === id)
-    if (d && isChecked(d.checked, this.env.now(), this.reset)) return
-    await this.send({ type: 'dailies.check', id })
+  // The commands about one daily take the row the window showed and send its text as `shown`: the core refuses the
+  // command when the file now gives that daily another text (an outside change taken while a confirm or a field was
+  // open).
+
+  async check(d: DailyView): Promise<void> {
+    const now = this.list?.find((x) => x.id === d.id)
+    if (now && isChecked(now.checked, this.env.now(), this.reset)) return
+    await this.send({ type: 'dailies.check', id: d.id, shown: d.text })
   }
 
-  async uncheck(id: BlockId): Promise<void> {
-    await this.send({ type: 'dailies.uncheck', id })
+  async uncheck(d: DailyView): Promise<void> {
+    await this.send({ type: 'dailies.uncheck', id: d.id, shown: d.text })
   }
 
   /** Resolves false when the core refused it (the field then keeps the text). */
@@ -97,16 +101,16 @@ export class Dailies {
     return this.send({ type: 'dailies.add', text })
   }
 
-  async edit(id: BlockId, text: string): Promise<void> {
-    await this.send({ type: 'dailies.edit', id, text })
+  async edit(d: DailyView, text: string): Promise<void> {
+    await this.send({ type: 'dailies.edit', id: d.id, text, shown: d.text })
   }
 
-  async remove(id: BlockId): Promise<void> {
-    await this.send({ type: 'dailies.delete', id })
+  async remove(d: DailyView): Promise<void> {
+    await this.send({ type: 'dailies.delete', id: d.id, shown: d.text })
   }
 
-  async move(id: BlockId, before: BlockId | null): Promise<void> {
-    await this.send({ type: 'dailies.move', id, before })
+  async move(d: DailyView, before: BlockId | null): Promise<void> {
+    await this.send({ type: 'dailies.move', id: d.id, before, shown: d.text })
   }
 
   /** Arms the reset timer and the 60 s tick; returns the stop. */

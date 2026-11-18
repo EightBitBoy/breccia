@@ -393,20 +393,20 @@ impl Session {
             Command::DailiesAdd { text } => {
                 self.dailies_change(None, |d, ids| d.add_daily(&text, ids).map(|_| ()))
             }
-            Command::DailiesCheck { id } => {
-                self.dailies_change(Some(id), |d, _| d.check_daily(id, now))
+            Command::DailiesCheck { id, shown } => {
+                self.dailies_change(Some((id, &shown)), |d, _| d.check_daily(id, now))
             }
-            Command::DailiesUncheck { id } => {
-                self.dailies_change(Some(id), |d, _| d.uncheck_daily(id))
+            Command::DailiesUncheck { id, shown } => {
+                self.dailies_change(Some((id, &shown)), |d, _| d.uncheck_daily(id))
             }
-            Command::DailiesEdit { id, text } => {
-                self.dailies_change(Some(id), |d, _| d.edit_daily(id, &text))
+            Command::DailiesEdit { id, text, shown } => {
+                self.dailies_change(Some((id, &shown)), |d, _| d.edit_daily(id, &text))
             }
-            Command::DailiesDelete { id } => {
-                self.dailies_change(Some(id), |d, _| d.delete_daily(id))
+            Command::DailiesDelete { id, shown } => {
+                self.dailies_change(Some((id, &shown)), |d, _| d.delete_daily(id))
             }
-            Command::DailiesMove { id, before } => {
-                self.dailies_change(Some(id), |d, _| d.move_daily(id, before))
+            Command::DailiesMove { id, before, shown } => {
+                self.dailies_change(Some((id, &shown)), |d, _| d.move_daily(id, before))
             }
             Command::PageOverwrite { key } => self.page_overwrite(&key),
             Command::BlockInsert { page, after, text } => self.block_insert(&page, after, text),

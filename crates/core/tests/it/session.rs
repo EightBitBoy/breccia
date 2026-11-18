@@ -53,11 +53,11 @@ fn command_names_deserialize() {
         json!({"type": "config.setDailies", "reset": "04:00", "version": 0}),
         json!({"type": "dailies.list"}),
         json!({"type": "dailies.add", "text": "x"}),
-        json!({"type": "dailies.check", "id": 1}),
-        json!({"type": "dailies.uncheck", "id": 1}),
-        json!({"type": "dailies.edit", "id": 1, "text": "x"}),
-        json!({"type": "dailies.delete", "id": 1}),
-        json!({"type": "dailies.move", "id": 1, "before": null}),
+        json!({"type": "dailies.check", "id": 1, "shown": "x"}),
+        json!({"type": "dailies.uncheck", "id": 1, "shown": "x"}),
+        json!({"type": "dailies.edit", "id": 1, "text": "x", "shown": "x"}),
+        json!({"type": "dailies.delete", "id": 1, "shown": "x"}),
+        json!({"type": "dailies.move", "id": 1, "before": null, "shown": "x"}),
         json!({"type": "page.show", "key": "p"}),
         json!({"type": "pages.table"}),
         json!({"type": "graph.get"}),
@@ -171,16 +171,28 @@ fn every_command() -> Vec<(Value, bool, bool)> {
         (json!({"type": "pages.list"}), false, false),
         (json!({"type": "dailies.list"}), false, false),
         (json!({"type": "dailies.add", "text": "x"}), false, false),
-        (json!({"type": "dailies.check", "id": 1}), false, false),
-        (json!({"type": "dailies.uncheck", "id": 1}), false, false),
         (
-            json!({"type": "dailies.edit", "id": 1, "text": "x"}),
+            json!({"type": "dailies.check", "id": 1, "shown": "x"}),
             false,
             false,
         ),
-        (json!({"type": "dailies.delete", "id": 1}), false, false),
         (
-            json!({"type": "dailies.move", "id": 1, "before": null}),
+            json!({"type": "dailies.uncheck", "id": 1, "shown": "x"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "dailies.edit", "id": 1, "text": "x", "shown": "x"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "dailies.delete", "id": 1, "shown": "x"}),
+            false,
+            false,
+        ),
+        (
+            json!({"type": "dailies.move", "id": 1, "before": null, "shown": "x"}),
             false,
             false,
         ),
@@ -2910,7 +2922,11 @@ fn files_changed_reads_outside_dailies() {
 fn own_save_is_quiet() {
     let (_t, mut s) = folder(&[(DAILIES, "- a\n")]);
     let l = dailies_ids(&ok(&mut s, json!({"type": "dailies.list"}), 0));
-    ok(&mut s, json!({"type": "dailies.check", "id": l[0].0}), 0);
+    ok(
+        &mut s,
+        json!({"type": "dailies.check", "id": l[0].0, "shown": "a"}),
+        0,
+    );
     let out = ok(
         &mut s,
         json!({"type": "files.changed", "paths": [DAILIES]}),

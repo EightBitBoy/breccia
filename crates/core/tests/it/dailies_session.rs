@@ -64,14 +64,20 @@ fn check_and_uncheck_write_the_line() {
     let (t, mut s) = folder(&[(FILE, "- Check emails\n- Water\n")]);
     let l = list(&mut s);
     let before = read(&t);
-    let l2 = ok(&mut s, json!({"type": "dailies.check", "id": l[0].0}));
+    let l2 = ok(
+        &mut s,
+        json!({"type": "dailies.check", "id": l[0].0, "shown": "Check emails"}),
+    );
     assert_eq!(
         read(&t),
         "- Check emails\n  checked:: 2026-10-29 14:05\n- Water\n"
     );
     assert_eq!(l2[0].2.as_deref(), Some("2026-10-29 14:05"));
     assert_eq!(l2[1].2, None);
-    let l3 = ok(&mut s, json!({"type": "dailies.uncheck", "id": l[0].0}));
+    let l3 = ok(
+        &mut s,
+        json!({"type": "dailies.uncheck", "id": l[0].0, "shown": "Check emails"}),
+    );
     assert_eq!(read(&t), before);
     assert_eq!(l3[0].2, None);
 }
@@ -83,25 +89,28 @@ fn edit_delete_move_write_the_file() {
     let (a, b, c) = (l[0].0, l[1].0, l[2].0);
     ok(
         &mut s,
-        json!({"type": "dailies.edit", "id": b, "text": "bee"}),
+        json!({"type": "dailies.edit", "id": b, "text": "bee", "shown": "b"}),
     );
     assert_eq!(read(&t), "- a\n- bee\n- c\n");
     ok(
         &mut s,
-        json!({"type": "dailies.move", "id": c, "before": a}),
+        json!({"type": "dailies.move", "id": c, "before": a, "shown": "c"}),
     );
     assert_eq!(read(&t), "- c\n- a\n- bee\n");
     // `before: None` puts the daily last.
     let l = ok(
         &mut s,
-        json!({"type": "dailies.move", "id": c, "before": null}),
+        json!({"type": "dailies.move", "id": c, "before": null, "shown": "c"}),
     );
     assert_eq!(read(&t), "- a\n- bee\n- c\n");
     assert_eq!(
         l.iter().map(|d| d.1.as_str()).collect::<Vec<_>>(),
         ["a", "bee", "c"]
     );
-    let l = ok(&mut s, json!({"type": "dailies.delete", "id": b}));
+    let l = ok(
+        &mut s,
+        json!({"type": "dailies.delete", "id": b, "shown": "bee"}),
+    );
     assert_eq!(read(&t), "- a\n- c\n");
     assert_eq!(l.len(), 2);
 }
@@ -114,7 +123,10 @@ fn nested_lines_are_flagged_and_deleted_with_the_daily() {
     assert_eq!(v.len(), 2);
     assert!(v[0].nested);
     assert!(!v[1].nested);
-    ok(&mut s, json!({"type": "dailies.delete", "id": v[0].id}));
+    ok(
+        &mut s,
+        json!({"type": "dailies.delete", "id": v[0].id, "shown": "a"}),
+    );
     assert_eq!(read(&t), "- b\n");
 }
 
@@ -133,12 +145,15 @@ fn invalid_text_and_unknown_ids_are_refused() {
     assert_eq!(
         err_code(
             &mut s,
-            json!({"type": "dailies.edit", "id": l[0].0, "text": ""})
+            json!({"type": "dailies.edit", "id": l[0].0, "text": "", "shown": "a"})
         ),
         "invalidDaily"
     );
     assert_eq!(
-        err_code(&mut s, json!({"type": "dailies.check", "id": 9999})),
+        err_code(
+            &mut s,
+            json!({"type": "dailies.check", "id": 9999, "shown": "a"})
+        ),
         "unknownDaily"
     );
     // A nested block is no daily.
@@ -150,7 +165,10 @@ fn a_change_on_disk_is_read_before_writing() {
     let (t, mut s) = folder(&[(FILE, "- a\n- b\n")]);
     let l = list(&mut s);
     fs::write(t.path().join(FILE), "- a\n  note:: x\n- b\n- Outside\n").unwrap();
-    let l2 = ok(&mut s, json!({"type": "dailies.check", "id": l[1].0}));
+    let l2 = ok(
+        &mut s,
+        json!({"type": "dailies.check", "id": l[1].0, "shown": "b"}),
+    );
     assert_eq!(
         read(&t),
         "- a\n  note:: x\n- b\n  checked:: 2026-10-29 14:05\n- Outside\n"
@@ -167,7 +185,7 @@ fn a_daily_gone_on_disk_is_refused() {
     fs::write(t.path().join(FILE), "- a\n").unwrap();
     let e = support::run(
         &mut s,
-        json!({"type": "dailies.check", "id": l[1].0}),
+        json!({"type": "dailies.check", "id": l[1].0, "shown": "b"}),
         clock(),
     )
     .unwrap_err();
@@ -188,10 +206,47 @@ fn a_daily_renamed_on_disk_is_refused_not_ticked_wrong() {
     let l = list(&mut s);
     fs::write(t.path().join(FILE), "- a\n- other\n").unwrap();
     assert_eq!(
-        err_code(&mut s, json!({"type": "dailies.check", "id": l[1].0})),
+        err_code(
+            &mut s,
+            json!({"type": "dailies.check", "id": l[1].0, "shown": "b"})
+        ),
         "unknownDaily"
     );
     assert_eq!(read(&t), "- a\n- other\n");
+}
+
+/// The watcher has taken the outside text (the replaced daily keeps its id) while a delete confirm or an edit field
+/// was open: the command carries the text the window showed and is refused.
+#[test]
+fn a_daily_replaced_on_disk_after_the_watcher_ran_is_refused() {
+    let (t, mut s) = folder(&[(FILE, "- a\n- b\n")]);
+    let l = list(&mut s);
+    let b = l[1].0;
+    let outside = "- a\n- other\n  note:: x\n";
+    fs::write(t.path().join(FILE), outside).unwrap();
+    let out = support::ok(
+        &mut s,
+        json!({"type": "files.changed", "paths": [FILE]}),
+        clock(),
+    );
+    let now = out.dailies.expect("the watcher run answers the list");
+    assert_eq!((now[1].id, now[1].text.as_str()), (b, "other"));
+    for cmd in [
+        json!({"type": "dailies.delete", "id": b, "shown": "b"}),
+        json!({"type": "dailies.edit", "id": b, "text": "bee", "shown": "b"}),
+        json!({"type": "dailies.check", "id": b, "shown": "b"}),
+        json!({"type": "dailies.uncheck", "id": b, "shown": "b"}),
+        json!({"type": "dailies.move", "id": b, "before": l[0].0, "shown": "b"}),
+    ] {
+        assert_eq!(err_code(&mut s, cmd.clone()), "unknownDaily", "{cmd}");
+        assert_eq!(read(&t), outside, "{cmd}");
+    }
+    // The text the window shows now is acted on.
+    ok(
+        &mut s,
+        json!({"type": "dailies.delete", "id": b, "shown": "other"}),
+    );
+    assert_eq!(read(&t), "- a\n");
 }
 
 #[test]
@@ -214,15 +269,21 @@ fn a_hand_written_file_survives_every_command() {
     // Nothing is written by a list.
     assert_eq!(bytes(&t), src);
     let c = l[2].0;
-    ok(&mut s, json!({"type": "dailies.check", "id": c}));
+    ok(
+        &mut s,
+        json!({"type": "dailies.check", "id": c, "shown": "c"}),
+    );
     let lf = src.replace("\r\n", "\n");
     let checked = lf.replace("- c\n", "- c\n  checked:: 2026-10-29 14:05\n");
     assert_eq!(bytes(&t), checked);
-    ok(&mut s, json!({"type": "dailies.uncheck", "id": c}));
+    ok(
+        &mut s,
+        json!({"type": "dailies.uncheck", "id": c, "shown": "c"}),
+    );
     assert_eq!(bytes(&t), lf);
     ok(
         &mut s,
-        json!({"type": "dailies.move", "id": c, "before": l[0].0}),
+        json!({"type": "dailies.move", "id": c, "before": l[0].0, "shown": "c"}),
     );
     assert_eq!(
         bytes(&t),
@@ -230,7 +291,7 @@ fn a_hand_written_file_survives_every_command() {
     );
     ok(
         &mut s,
-        json!({"type": "dailies.edit", "id": c, "text": "see"}),
+        json!({"type": "dailies.edit", "id": c, "text": "see", "shown": "c"}),
     );
     assert_eq!(
         bytes(&t),

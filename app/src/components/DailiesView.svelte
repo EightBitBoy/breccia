@@ -44,13 +44,15 @@
       const group = ids(g)
       const place = dropPlace(group, id, over, after)
       if (place === null) return
+      const d = dailies.list?.find((x) => x.id === id)
       const before = moveTarget(dailies.list ?? [], group, id, place)
-      if (before !== undefined) void dailies.move(id, before)
+      if (d && before !== undefined) void dailies.move(d, before)
     })
   })
 
-  /** The daily whose text is being edited, and the field's text. */
+  /** The daily whose text is being edited, the row as it was when the field opened, and the field's text. */
   let editing = $state<BlockId | null>(null)
+  let editRow: DailyView | null = null
   let draft = $state('')
 
   function rowEl(id: BlockId): HTMLElement | null {
@@ -59,17 +61,21 @@
 
   function startEdit(d: DailyView) {
     editing = d.id
+    editRow = d
     draft = d.text
   }
 
   /** Enter or leaving the field saves; an emptied or unchanged field changes nothing. */
   async function endEdit(save: boolean) {
     const id = editing
-    if (id === null) return
+    const row = editRow
+    if (id === null || row === null) return
     editing = null
+    editRow = null
     const old = dailies.list?.find((x) => x.id === id)
     const text = draft.trim()
-    if (save && old && text !== '' && text !== old.text) void dailies.edit(id, text)
+    // The text the field opened with goes along: a daily changed outside meanwhile is refused, not overwritten.
+    if (save && old && text !== '' && text !== row.text) void dailies.edit(row, text)
     await tick()
     rowEl(id)?.focus()
   }
@@ -93,7 +99,7 @@
   /** The checkbox shows the list's answer, not the click: the click only sends the command. */
   function toggle(e: Event, d: DailyView, group: Group) {
     e.preventDefault()
-    void (group === 'open' ? dailies.check(d.id) : dailies.uncheck(d.id))
+    void (group === 'open' ? dailies.check(d) : dailies.uncheck(d))
   }
 
   function rowKey(e: KeyboardEvent, d: DailyView, group: Group) {
@@ -102,7 +108,7 @@
     e.preventDefault()
     e.stopPropagation()
     const before = stepTarget(dailies.list ?? [], ids(group), d.id, e.key === 'ArrowUp' ? -1 : 1)
-    if (before !== undefined) void dailies.move(d.id, before)
+    if (before !== undefined) void dailies.move(d, before)
   }
 
   let addText = $state('')
@@ -132,7 +138,8 @@
   }
 
   async function askDelete(d: DailyView) {
-    if (await onconfirm(deleteQuestion(d), 'Delete')) await dailies.remove(d.id)
+    // `d` is the row the menu was opened on: a daily changed outside while the dialog was open is refused.
+    if (await onconfirm(deleteQuestion(d), 'Delete')) await dailies.remove(d)
   }
 </script>
 
