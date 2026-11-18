@@ -1,0 +1,111 @@
+// The period rules of the Dailies: when a daily counts as checked and when the next reset is.
+// A "stamp" is local wall-clock time as `YYYY-MM-DD HH:MM`, which sorts as text. Everything
+// compares wall-clock stamps, so summer time needs no special case: a reset inside the spring
+// gap fires when the clock first shows a later time, and in the repeated autumn hour a reset
+// happens twice by the wall clock (accepted).
+import type { StatusItem } from './status'
+import type { BlockId, DailyView } from './types'
+
+export const DEFAULT_RESET = '00:00'
+
+const pad = (n: number) => String(n).padStart(2, '0')
+
+/** The local wall-clock stamp of `d`. */
+export function stampOf(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+}
+
+function resetParts(reset: string): [number, number] {
+  const [h, m] = reset.split(':').map(Number)
+  return [h, m]
+}
+
+/** The stamp of the latest reset at or before `now`. */
+export function lastReset(now: Date, reset: string): string {
+  const [h, m] = resetParts(reset)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m)
+  const wall = now.getHours() * 60 + now.getMinutes()
+  if (wall >= h * 60 + m) return `${stampOf(today).slice(0, 10)} ${pad(h)}:${pad(m)}`
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1)
+  return `${stampOf(yesterday).slice(0, 10)} ${pad(h)}:${pad(m)}`
+}
+
+/** A check from the future counts (the clock may have been set back). */
+export function isChecked(checked: string | null, now: Date, reset: string): boolean {
+  return checked !== null && checked >= lastReset(now, reset)
+}
+
+/** The first instant after `now` whose wall time is `reset`. */
+export function nextReset(now: Date, reset: string): Date {
+  const [h, m] = resetParts(reset)
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m)
+  if (today.getTime() > now.getTime()) return today
+  return new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, h, m)
+}
+
+export function groups(
+  list: DailyView[],
+  now: Date,
+  reset: string,
+): { open: DailyView[]; checked: DailyView[] } {
+  const open: DailyView[] = []
+  const checked: DailyView[] = []
+  for (const x of list) (isChecked(x.checked, now, reset) ? checked : open).push(x)
+  return { open, checked }
+}
+
+/**
+ * The `before` of `dailies.move` for dropping `id` at place `index` of its group (the place it
+ * ends up in, counted among the group); `undefined` when the group's order would not change.
+ */
+export function moveTarget(
+  list: DailyView[],
+  group: BlockId[],
+  id: BlockId,
+  index: number,
+): BlockId | null | undefined {
+  const others = group.filter((g) => g !== id)
+  if (others.length === 0) return undefined
+  const place = Math.min(Math.max(index, 0), others.length)
+  const wanted = [...others.slice(0, place), id, ...others.slice(place)]
+  if (wanted.every((x, i) => x === group[i])) return undefined
+  if (place < others.length) return others[place]
+  const rest = list.map((x) => x.id).filter((x) => x !== id)
+  return rest[rest.indexOf(others[others.length - 1]) + 1] ?? null
+}
+
+export function dailiesItem(
+  list: DailyView[] | null,
+  now: Date,
+  reset: string,
+  shown: boolean,
+): StatusItem | null {
+  if (list === null || list.length === 0) return null
+  const open = list.filter((x) => !isChecked(x.checked, now, reset)).length
+  const base: StatusItem = {
+    id: 'dailies',
+    side: 'left',
+    order: 20,
+    text: open === 0 ? 'Dailies ✓' : `Dailies ${open} open`,
+    action: true,
+    pressed: shown,
+    tip: 'Open Dailies',
+    progress: null,
+    tone: 'normal',
+  }
+  return open === 0 ? { ...base, label: 'Dailies: all done' } : base
+}
+
+/** `H:MM` or `HH:MM`, 0:00 to 23:59, as `HH:MM`; null when it is not a time. */
+export function parseReset(text: string): string | null {
+  const m = /^(\d{1,2}):(\d{2})$/.exec(text.trim())
+  if (!m) return null
+  const h = Number(m[1])
+  const min = Number(m[2])
+  if (h > 23 || min > 59) return null
+  return `${pad(h)}:${pad(min)}`
+}
+
+export function resetProblem(text: string): string | null {
+  return parseReset(text) === null ? 'Enter a time from 00:00 to 23:59, such as 04:00.' : null
+}
