@@ -4029,9 +4029,11 @@ try {
   const dStatus = () => page.locator('[data-testid="status-item"][data-id="dailies"]')
   const dStatusText = () => page.evaluate(() => document.querySelector('[data-testid="status-item"][data-id="dailies"]')?.textContent?.trim() ?? '')
   const dView = page.locator('[data-testid="dailies"]')
+  const dAddField = page.locator('[data-testid="daily-add"]')
   const dAdd = async (text) => {
     const n = await dRows.count()
-    await page.locator('[data-testid="daily-add"]').fill(text)
+    if ((await dAddField.count()) === 0) await page.locator('[data-testid="dailies-add-open"]').click()
+    await dAddField.fill(text)
     await kb.press('Enter')
     await waitFor(`138 ${text} is listed`, () => dRows.count(), n + 1)
   }
@@ -4046,13 +4048,21 @@ try {
   await openDailies()
   await page.locator('[data-testid="dailies-empty"]').waitFor()
   assert((await dStatusText()) === '', '138 the status bar shows Dailies with none')
+  assert((await dAddField.count()) === 1, '138 the empty view shows no field "Add a daily"')
   await dAdd('Check emails')
   await dAdd('Water the plants')
   const text138 = '- Check emails\n- Water the plants\n'
   await waitDailies('138 two dailies', text138)
   assert(readAt(dailiesFile) === text138, '138 dailies.md bytes')
   await waitFor('138 two open', dStatusText, 'Dailies 2 open')
-  console.log('PASS 138 Dailies opens empty; two added dailies are in dailies.md and the status bar says 2 open')
+  await kb.press('Escape')
+  await dAddField.waitFor({ state: 'detached' })
+  await dView.waitFor() // Esc closed only the field, not the view
+  await page.locator('[data-testid="dailies-add-open"]').click()
+  await waitFor('138 + opens the field focused', () => page.evaluate(() => document.activeElement?.dataset.testid ?? ''), 'daily-add')
+  await kb.press('Escape')
+  await dAddField.waitFor({ state: 'detached' })
+  console.log('PASS 138 Dailies opens empty with the field; two added dailies are in dailies.md, 2 open; Esc hides the field, + opens it')
 
   // 139: ticking writes checked:: and moves the row into the closed Done section; opened, it shows last; unticking
   // restores the bytes. The section stays open for the later steps.

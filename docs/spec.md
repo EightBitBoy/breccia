@@ -522,8 +522,9 @@ the notes; the format is `docs/format.md` §15.
 
 - **One flat list.** Each daily is one line of plain text: no Markdown, and `[[x]]` and `#tag` are not links. The file
   is not indexed, so dailies have no search hits, linked references, tags or graph dots.
-- **Add** in the field "Add a daily" at the bottom (Enter adds). **Edit** by clicking the text (Enter or leaving the
-  field saves, Esc cancels). **Delete** in the right-click menu. Breccia asks first ("Delete the daily '…'?"); when
+- **Add** with the "+" beside the title: it opens the field "Add a daily" at the bottom (Enter adds and keeps the
+  field open for the next one; Esc, or leaving it empty, closes it). With no dailies the field shows at once.
+  **Edit** by clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu. Breccia asks first ("Delete the daily '…'?"); when
   the daily has lines you cannot see in the view (blocks nested under it, continuation text, a `note::` or any other
   property but `checked::`), the question says that the lines written under it go too. There is no undo or redo in the
   Dailies view.

@@ -80,6 +80,11 @@ export function dailyEntries(
   return e
 }
 
+/** Whether the field "Add a daily" shows: once the + beside the title opened it, or at once while there are no dailies. */
+export function addShown(list: readonly DailyView[] | null, open: boolean): boolean {
+  return open || (list !== null && list.length === 0)
+}
+
 /** The header of the ticked dailies. */
 export function doneLabel(n: number): string {
   return `Done (${n})`

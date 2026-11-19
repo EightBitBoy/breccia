@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_RESET,
+  addShown,
   dailiesItem,
   dailyEntries,
   deleteQuestion,
@@ -102,6 +103,17 @@ describe('dailyEntries', () => {
   it('the label', () => {
     expect(doneLabel(1)).toBe('Done (1)')
     expect(doneLabel(3)).toBe('Done (3)')
+  })
+})
+
+describe('addShown', () => {
+  it('hidden until the + opens it', () => {
+    expect(addShown([daily(1)], false)).toBe(false)
+    expect(addShown([daily(1)], true)).toBe(true)
+  })
+  it('shown at once with no dailies, but not before the list has loaded', () => {
+    expect(addShown([], false)).toBe(true)
+    expect(addShown(null, false)).toBe(false)
   })
 })
 

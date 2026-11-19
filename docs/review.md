@@ -462,3 +462,8 @@ are its questions for you; each answer decides what a later plan does.
    again to close it. The section is closed whenever Breccia starts and stays as you left it while Breccia runs (it is
    not saved). With nothing ticked the header is gone; with all ticked the view still says "All done for today" above
    it. Should the open or closed state be remembered across restarts?
+
+125. [ ] **Dailies: adding with "+":** the field "Add a daily" no longer stays at the bottom. Click the "+" beside the
+   title "Dailies": the field opens at the bottom with the cursor in it. Enter adds the daily and keeps the field open
+   for the next one; Esc, or clicking elsewhere with the field empty, closes it (Esc does not leave the view). Typed
+   text keeps the field open when you click elsewhere. With no dailies at all the field shows at once.

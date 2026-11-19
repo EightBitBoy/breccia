@@ -4,7 +4,7 @@
   import { onMount, tick } from 'svelte'
   import { flip } from 'svelte/animate'
   import { ContextMenu } from 'bits-ui'
-  import { dailyEntries, deleteQuestion, doneLabel, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
+  import { addShown, dailyEntries, deleteQuestion, doneLabel, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
   import type { Dailies } from '../lib/dailies.svelte'
   import { dailyDrag, dailyDrop, watchDailyDrops } from '../lib/dnd'
   import type { BlockId, DailyView } from '../lib/types'
@@ -106,8 +106,31 @@
   }
 
   let addText = $state('')
+  /** The + beside the title opened the field (or it took the focus while there were no dailies). */
+  let addOpen = $state(false)
+  let addEl: HTMLInputElement | undefined = $state()
+  const showAdd = $derived(addShown(dailies.list, addOpen))
+
+  async function openAdd() {
+    addOpen = true
+    await tick()
+    addEl?.focus()
+  }
+
+  /** Esc, or leaving the field empty, closes it; typed text keeps it open. */
+  function closeAdd() {
+    addOpen = false
+    addText = ''
+  }
+
   /** Enter adds the daily and empties the field, which keeps the focus; refused text comes back. */
   async function addKey(e: KeyboardEvent) {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      e.stopPropagation()
+      closeAdd()
+      return
+    }
     if (e.key !== 'Enter') return
     e.preventDefault()
     const text = addText.trim()
@@ -138,7 +161,12 @@
 </script>
 
 <section class="dailies" data-testid="dailies">
-  <div class="ptitle"><h1>Dailies</h1></div>
+  <div class="ptitle">
+    <h1>Dailies</h1>
+    <button class="daily-new" data-testid="dailies-add-open" title="Add a daily" aria-label="Add a daily" onclick={() => void openAdd()}
+      >+</button
+    >
+  </div>
   {#if dailies.list !== null && dailies.list.length === 0}
     <p class="pempty" data-testid="dailies-empty">
       No dailies yet. Add the things you do every day, such as checking your emails.
@@ -220,12 +248,19 @@
       </ContextMenu.Portal>
     {/if}
   </ContextMenu.Root>
-  <input
-    class="daily-add"
-    data-testid="daily-add"
-    placeholder="Add a daily"
-    spellcheck="false"
-    bind:value={addText}
-    onkeydown={(e) => void addKey(e)}
-  />
+  {#if showAdd}
+    <input
+      class="daily-add"
+      data-testid="daily-add"
+      placeholder="Add a daily"
+      spellcheck="false"
+      bind:this={addEl}
+      bind:value={addText}
+      onfocus={() => (addOpen = true)}
+      onblur={() => {
+        if (addText.trim() === '') closeAdd()
+      }}
+      onkeydown={(e) => void addKey(e)}
+    />
+  {/if}
 </section>
