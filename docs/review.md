@@ -467,3 +467,8 @@ are its questions for you; each answer decides what a later plan does.
    title "Dailies": the field opens at the bottom with the cursor in it. Enter adds the daily and keeps the field open
    for the next one; Esc, or clicking elsewhere with the field empty, closes it (Esc does not leave the view). Typed
    text keeps the field open when you click elsewhere. With no dailies at all the field shows at once.
+
+126. [ ] **Dailies: deleting by emptying the text:** click a daily's text, delete all of it and press Enter (or click
+   elsewhere): Breccia asks "Delete the daily '…'?", the same question as Delete in the right-click menu (with the note
+   about hidden lines under it). Delete removes it; Cancel or Esc keeps the daily with its old text. Esc while editing
+   still cancels the edit without asking.

@@ -4,7 +4,7 @@
   import { onMount, tick } from 'svelte'
   import { flip } from 'svelte/animate'
   import { ContextMenu } from 'bits-ui'
-  import { addShown, dailyEntries, deleteQuestion, doneLabel, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
+  import { addShown, dailyEntries, deleteQuestion, editOutcome, doneLabel, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
   import type { Dailies } from '../lib/dailies.svelte'
   import { dailyDrag, dailyDrop, watchDailyDrops } from '../lib/dnd'
   import type { BlockId, DailyView } from '../lib/types'
@@ -59,7 +59,7 @@
     draft = d.text
   }
 
-  /** Enter or leaving the field saves; an emptied or unchanged field changes nothing. */
+  /** Enter or leaving the field saves; an unchanged field changes nothing; an emptied one asks to delete the daily. */
   async function endEdit(save: boolean) {
     const id = editing
     const row = editRow
@@ -67,9 +67,10 @@
     editing = null
     editRow = null
     const old = dailies.list?.find((x) => x.id === id)
-    const text = draft.trim()
+    const out = editOutcome(row, draft)
     // The text the field opened with goes along: a daily changed outside meanwhile is refused, not overwritten.
-    if (save && old && text !== '' && text !== row.text) void dailies.edit(row, text)
+    if (save && old && out.kind === 'edit') void dailies.edit(row, out.text)
+    if (save && old && out.kind === 'delete') await askDelete(row)
     await tick()
     rowEl(id)?.focus()
   }

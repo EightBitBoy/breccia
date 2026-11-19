@@ -524,10 +524,11 @@ the notes; the format is `docs/format.md` §15.
   is not indexed, so dailies have no search hits, linked references, tags or graph dots.
 - **Add** with the "+" beside the title: it opens the field "Add a daily" at the bottom (Enter adds and keeps the
   field open for the next one; Esc, or leaving it empty, closes it). With no dailies the field shows at once.
-  **Edit** by clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu. Breccia asks first ("Delete the daily '…'?"); when
-  the daily has lines you cannot see in the view (blocks nested under it, continuation text, a `note::` or any other
-  property but `checked::`), the question says that the lines written under it go too. There is no undo or redo in the
-  Dailies view.
+  **Edit** by clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu,
+  or by emptying the text and leaving the field (Enter or a click elsewhere; Cancel keeps the daily with its old
+  text). Breccia asks first ("Delete the daily '…'?"); when the daily has lines you cannot see in the view (blocks
+  nested under it, continuation text, a `note::` or any other property but `checked::`), the question says that the
+  lines written under it go too. There is no undo or redo in the Dailies view.
 - **Tick** with the checkbox. A ticked daily moves into the section "Done (N)" below the open ones (no animation with
   reduced motion); unticking brings it back. The section is closed when Breccia starts, so ticked dailies are hidden; a
   click on its header opens it and shows them greyed and struck through, and a second click closes it. It stays open

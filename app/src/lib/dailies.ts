@@ -85,6 +85,16 @@ export function addShown(list: readonly DailyView[] | null, open: boolean): bool
   return open || (list !== null && list.length === 0)
 }
 
+/** What leaving a daily's edit field does: save a changed text, nothing for the same text, ask to delete for none. */
+export function editOutcome(
+  row: DailyView,
+  draft: string,
+): { kind: 'none' } | { kind: 'edit'; text: string } | { kind: 'delete' } {
+  const text = draft.trim()
+  if (text === '') return { kind: 'delete' }
+  return text === row.text ? { kind: 'none' } : { kind: 'edit', text }
+}
+
 /** The header of the ticked dailies. */
 export function doneLabel(n: number): string {
   return `Done (${n})`

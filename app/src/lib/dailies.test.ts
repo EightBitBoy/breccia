@@ -7,6 +7,7 @@ import {
   deleteQuestion,
   doneLabel,
   dropPlace,
+  editOutcome,
   groups,
   isChecked,
   lastReset,
@@ -114,6 +115,20 @@ describe('addShown', () => {
   it('shown at once with no dailies, but not before the list has loaded', () => {
     expect(addShown([], false)).toBe(true)
     expect(addShown(null, false)).toBe(false)
+  })
+})
+
+describe('editOutcome', () => {
+  const row = { ...daily(1), text: 'Water the plants' }
+  it('a changed text is saved, trimmed', () => {
+    expect(editOutcome(row, '  Water the roses ')).toEqual({ kind: 'edit', text: 'Water the roses' })
+  })
+  it('an unchanged text changes nothing', () => {
+    expect(editOutcome(row, 'Water the plants ')).toEqual({ kind: 'none' })
+  })
+  it('an emptied text asks to delete the daily', () => {
+    expect(editOutcome(row, '')).toEqual({ kind: 'delete' })
+    expect(editOutcome(row, '   ')).toEqual({ kind: 'delete' })
   })
 })
 

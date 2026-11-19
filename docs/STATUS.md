@@ -159,7 +159,7 @@ open ones; it opens again at the reset time, set in Settings > Dailies (default 
 `breccia/config.toml`). The status bar shows "Dailies N open", or "Dailies ✓" when all are done. The dailies live in
 the file `breccia/dailies.md` (plain text, followed when it changes outside or by Git), which is format version 9. Deleting
 a daily asks first, and there is no undo. A comment above a changed setting in `config.toml` is no longer dropped (a fix
-found on the way). The owner checks review items 115 to 125 (115 is the config comment; 124 and 125 are owner tweaks after the plan: ticked dailies hide in a closed "Done (N)" section, and a "+" beside the title opens the add field). It is released as 1.8.0 (2026-11-18, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.0); the two tweaks are in 1.8.1 (2026-11-19, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.1).
+found on the way). The owner checks review items 115 to 126 (115 is the config comment; 124 and 125 are owner tweaks after the plan: ticked dailies hide in a closed "Done (N)" section, and a "+" beside the title opens the add field). It is released as 1.8.0 (2026-11-18, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.0); the two tweaks are in 1.8.1 (2026-11-19, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.1).
 Weekday-only dailies, a history and groups are backlog #92 to #94; open follow-ups are in the plan's follow-ups file.
 
 Candidates for the plan after it, to settle with the owner:
@@ -174,7 +174,7 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1215 tests) and cargo tests (core: lib 51, integration 847 with 2 ignored; shell 87) pass
+- `just test`: Vitest (1218 tests) and cargo tests (core: lib 51, integration 847 with 2 ignored; shell 87) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 215 PASS lines, the last step is 144 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
