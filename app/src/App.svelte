@@ -1186,7 +1186,7 @@
   }
 
   /** Asks a question (from Settings, or before deleting a daily); false when another dialog is open. */
-  function confirmSetting(message: string, ok: string): Promise<boolean> {
+  function confirmAsk(message: string, ok: string): Promise<boolean> {
     if (dialogOpen() || search.shown) return Promise.resolve(false)
     return new Promise((resolve) => {
       question = {
@@ -1855,7 +1855,7 @@
                 {hasGit}
                 logFolder={logDir}
                 onstates={setStates}
-                onconfirm={confirmSetting}
+                onconfirm={confirmAsk}
                 onready={settingsReady}
                 onusage={countUsage}
                 onboard={editBoard}
@@ -1933,7 +1933,7 @@
                 <ArchiveView archive={archiveView} onopen={(r) => void jumpTo(r.page, r.id)} />
               {/await}
             {:else if dailies.shown}
-              <DailiesView {dailies} onconfirm={confirmSetting} />
+              <DailiesView {dailies} onconfirm={confirmAsk} />
             {:else if allPages.shown && scroller}
               <AllPagesView
                 pages={allPages}
