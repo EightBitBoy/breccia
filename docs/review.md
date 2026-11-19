@@ -476,15 +476,18 @@ are its questions for you; each answer decides what a later plan does.
 
 ## Open follow-ups (plans 12 and 13)
 
-127. [ ] **The log hides a Git password with an apostrophe:** in the notes folder (a Git repository) run
-   `git remote add origin "https://me:pa'ss@example.com/repo.git"` (or `git remote set-url` if there is one), let a
-   sync fail, and open the log (Settings > Troubleshooting > "Open log folder"): the user name and password are replaced by `***` in `breccia.log`, with no part of the password left
-   (before, everything from the apostrophe on stayed visible).
+127. [ ] **The log hides a Git password with an apostrophe:** a remote such as `https://me:pa'ss@example.com/repo.git`
+   in a log line has its user name and password replaced by `***`, with no part of the password left (before,
+   everything from the apostrophe on stayed visible). Hard to try by hand: Breccia does not log failed Git commands yet
+   (backlog #90), so no remote address reaches `breccia.log`. Covered by the unit test
+   `redact_handles_apostrophes_and_empty_authorities` in `app/src-tauri/src/logfile.rs`; check that it is there.
 
-128. [ ] **The log no longer masks part of a file address:** with a notes folder or remote such as
-   `file:///C:/notes/a@b.md` in the log, the address shows in full, because it has no user name or password. Addresses
-   with credentials are still replaced by `***`, and `https://host:8080/a@b` is still partly masked (it errs on the
-   side of hiding).
+128. [ ] **The log no longer masks part of a file address:** an address such as `file:///C:/notes/a@b.md` in a log
+   line shows in full, because it has no user name or password. Addresses with credentials are still replaced by
+   `***`, and `https://host:8080/a@b` is still partly masked (it errs on the side of hiding). Hard to try by hand:
+   nothing in Breccia writes a `file:///` address to the log today. The file addresses and addresses without
+   credentials are covered by the unit tests `redact_handles_apostrophes_and_empty_authorities` and
+   `redact_leaves_a_quoted_url_without_credentials_alone` in `app/src-tauri/src/logfile.rs`; check that they are there.
 
 129. [ ] **A daily is not deleted when lines were added under it while asking:** right-click a daily and choose Delete,
    and leave the question open. In an editor add a line under that daily in `breccia/dailies.md` (for example
@@ -500,4 +503,6 @@ are its questions for you; each answer decides what a later plan does.
    `breccia/config.toml` write `archive_after_days = 0` (or a wrong `commit_delay_minutes`) and open Settings: the
    field shows the default (14 for the archive days) and Breccia shows a notice. Type the number shown, or any valid
    number, and leave the field: the file now has that number, its comments and other keys are unchanged, and the notice
-   does not come back.
+   does not come back. Just clicking into the field and out again also writes the default it shows (as the Dailies
+   reset field does); in Settings > Git, leaving either minutes field writes both. This happens only while the file's
+   value is refused.

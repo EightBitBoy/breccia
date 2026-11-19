@@ -187,7 +187,9 @@ properties). The frontend gets parsed structure from the core and only adds synt
   A number outside the range Settings allows (Git minutes 0 to 1440, archive days 1 to 3650) does not stop the file from
   being read: Breccia uses that setting's default and shows a notice naming it, and leaves the file as it is when it
   is read (a later Settings save of that section writes the default). Typing a valid value in its Settings field, also
-  the default shown there, writes it, and the notice stops.
+  the default shown there, writes it, and the notice stops. Leaving that field without typing (a click or Tab into it
+  and out again, or Enter) also writes the default it shows, as the Dailies reset field does; in Settings > Git
+  leaving either minutes field writes both. This happens only while the file's value is refused.
 - **Saving** happens shortly after typing pauses (well under a second); there is no Save button.
 
 ## 7. Features
@@ -527,8 +529,9 @@ notes; the format is `docs/format.md` §15.
   is not indexed, so dailies have no search hits, linked references, tags or graph dots.
 - **Add** with the "+" beside the title: it opens the field "Add a daily" at the bottom (Enter adds and keeps the field
   open for the next one; Esc, or leaving it empty, closes it). With no dailies the field shows at once. **Edit** by
-  clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu, or by emptying
-  the text and leaving the field (Enter or a click elsewhere; Cancel keeps the daily with its old text). Breccia asks
+  clicking the text (Enter or leaving the field saves, Esc cancels; a right-click in the field shows the usual text menu
+  with Cut, Copy and Paste). **Delete** in the right-click menu of a row not being edited, or by emptying the text and
+  leaving the field (Enter or a click elsewhere; Cancel keeps the daily with its old text). Breccia asks
   first ("Delete the daily '…'?"); when the daily has lines you cannot see in the view (blocks nested under it,
   continuation text, a `note::` or any other property but `checked::`), the question says that the lines written under
   it go too. There is no undo or redo in the Dailies view.
@@ -553,8 +556,8 @@ notes; the format is `docs/format.md` §15.
   Breccia makes is made on the file as it is now; if the daily is gone or its text there differs from the text the view
   showed when the user acted (also when the view followed the change while a delete question or an edit field was open),
   it is refused with "This daily changed in another program; the list now shows the file as it is." A delete is also
-  refused when lines were written under the daily after the question was asked; asking again names them. A failed write
-  keeps the list as it was and says so.
+  refused when lines were written under the daily after its menu or its edit field was opened; asking again names
+  them. A failed write keeps the list as it was and says so.
 - **What is kept.** A preamble, nested blocks, continuation lines, other properties, and a BOM stay as text. Nested
   blocks are not shown; they move and are deleted with their daily. A daily Breccia changes (tick, untick, edit) is
   written in Breccia's form; apart from that, dailies it did not change keep their text. A file with CRLF becomes LF the
