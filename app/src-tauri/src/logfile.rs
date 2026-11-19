@@ -215,7 +215,8 @@ fn is_url_scheme_char(c: char) -> bool {
 /// In every `scheme://userinfo@host`, the credentials become `***`: the whole
 /// user-info part of an `http` or `https` URL (a token may stand alone), and
 /// `user:secret` of any other scheme. The user-info is everything up to the last
-/// `@` before the first whitespace, quote or angle bracket, so a password with
+/// `@` before the first whitespace, double quote or angle bracket (a `'` may be
+/// part of a password, so it does not end the token), so a password with
 /// `/`, `?`, `#` or `@` is masked whole; it counts only when the `@` comes before
 /// the first `/`, `?` or `#`, or the part before it has a `:` (so
 /// `https://host/a@b` stays). `ssh://git@host` and `git@host:path` carry no
@@ -601,6 +602,18 @@ mod tests {
         }
         assert_eq!(redact("ssh://git@host/x"), "ssh://git@host/x");
         assert_eq!(redact("git@host:x"), "git@host:x");
+    }
+
+    #[test]
+    fn redact_handles_apostrophes_and_empty_authorities() {
+        assert_eq!(
+            redact("push https://u:pa'ss@host/x failed"),
+            "push https://***@host/x failed"
+        );
+        assert_eq!(
+            redact("fatal: unable to access 'https://u:p@h/x.git/': 403"),
+            "fatal: unable to access 'https://***@h/x.git/': 403"
+        );
     }
 
     #[test]
