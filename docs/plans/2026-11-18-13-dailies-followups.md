@@ -3,7 +3,7 @@
 Work the plan deferred. Open items are taken by later plans or moved to `docs/backlog.md`. Found by the per-task
 reviews and the final whole-plan review (2026-11-18). The final review found nothing that had to be fixed before
 shipping; its fix wave (four commits, `eb3d868` to `24305e4`) is done. Features the owner left out of the plan are
-backlog #92 (weekday-only dailies), #93 (a history or streaks of dailies) and #94 (groups of dailies).
+backlog #92 (weekday-only dailies), #93 (a history or streaks of dailies) and #94 (groups of dailies); the owner closed all three as not needed on 2026-11-19 (`docs/backlogged.md`).
 
 ## Owner checks
 

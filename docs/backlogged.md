@@ -561,3 +561,18 @@ daily does not show as open on a weekend. Needs a decision on the property's spe
 counts on a day a daily does not apply.
 
 Not needed (owner, 2026-11-19): every daily counts every day.
+
+## 93. A history or streaks of dailies (Dailies) (won't do, 2026-11-19)
+
+From plan 13, owner decision 6. Dailies keep only their last `checked::` time, so there is no record of the days a
+daily was done. A log (a file or a view) could show history or streaks. A new feature: decide where the record lives and
+how it stays plain text.
+
+Not needed (owner, 2026-11-19): a daily keeps only its last tick.
+
+## 94. Groups of dailies (Dailies) (won't do, 2026-11-19)
+
+From plan 13, owner decision 6. The list is flat. Groups such as Morning and Evening could split it, with their own
+headings and counts. A new feature: decide how a group is written in `breccia/dailies.md` and how it is reordered.
+
+Not needed (owner, 2026-11-19): the list stays flat.

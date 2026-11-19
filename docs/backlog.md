@@ -270,14 +270,3 @@ so this needs a decision on what may be logged (for example the error kind witho
 From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctrl Z` does nothing; the undo history is
 the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
 clicking into a block. A new feature: decide the keys and what it should cover.
-
-## 93. A history or streaks of dailies (Dailies)
-
-From plan 13, owner decision 6. Dailies keep only their last `checked::` time, so there is no record of the days a
-daily was done. A log (a file or a view) could show history or streaks. A new feature: decide where the record lives and
-how it stays plain text.
-
-## 94. Groups of dailies (Dailies)
-
-From plan 13, owner decision 6. The list is flat. Groups such as Morning and Evening could split it, with their own
-headings and counts. A new feature: decide how a group is written in `breccia/dailies.md` and how it is reordered.
