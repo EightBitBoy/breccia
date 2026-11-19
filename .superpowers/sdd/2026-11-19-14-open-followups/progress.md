@@ -63,3 +63,9 @@ Task 9: fix round 1/5 (2 addressed, 0 open; commit c588382) — controller verif
 Task 9: complete (commits f081c2e..c588382, review clean)
 
 ## Final review
+Final review (opus): ready; 0 Critical, 0 Important, 3 Minor (review items 127/128 not hand-checkable; focus+leave a refused Settings number field writes; spec §7.14 misses the edit field's text menu and the emptied-text refusal case).
+Ruling: keep "focus and leave a refused Settings number field writes the shown value" — it is how the Dailies reset field already behaves, it only happens while the file's value is refused, and it ends the repeating notice (Q3's purpose) — record in spec §6 and review item 131 — cost if wrong: a config write the owner did not type; one condition in numberCommit to undo.
+Final fix wave: dispatched (opus) for all 3 minors (docs only).
+Final fix wave: done (commit f739e6f; all 3 minors; ruling recorded in spec §6 and review item 131).
+Finishing: just lint clean; just test green (Vitest 1233, core integration 852 + 2 ignored, core lib 51, shell 89); just e2e 218 PASS, exit 0.
+Follow-ups: docs/plans/2026-11-19-14-open-followups-followups.md (11 items). Plan 14: finished.
