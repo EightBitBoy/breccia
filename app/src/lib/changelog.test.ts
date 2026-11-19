@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import text from 'virtual:changelog'
 import {
   bulletCount,
+  COMMENT,
   changelogNote,
   parseChangelog,
   parseInline,
@@ -44,6 +45,16 @@ describe('parseChangelog', () => {
     const got = parseChangelog(md).flatMap((b) => (b.kind === 'heading' && b.version !== null ? [b.version] : []))
     expect(got).toEqual(['1.2.0', '1.1.0'])
     expect(versionsOf(md)).toEqual(got)
+    // the heading itself: a plain [x] loses its brackets, a linked one keeps the link
+    const heads = parseChangelog(md).flatMap((b) => (b.kind === 'heading' ? [b.inlines] : []))
+    expect(heads[0]).toEqual([{ kind: 'link', text: '1.2.0', href: 'https://x' }, t(' - 2026')])
+    expect(heads[1]).toEqual([t('1.1.0 - 2025')])
+  })
+  it('a link with whitespace is no link: no version, and versionsOf agrees', () => {
+    const md = '## [1.0.0](https://a b) - 2026\n'
+    const got = parseChangelog(md).flatMap((b) => (b.kind === 'heading' ? [b.version] : []))
+    expect(got).toEqual([null])
+    expect(versionsOf(md)).toEqual([])
   })
   it('a comment line before the title does not keep the title', () => {
     expect(parseChangelog('<!-- c -->\n# Changelog\n\n## [1.0.0] - 2026-11-06\n')).toEqual([
@@ -141,7 +152,7 @@ describe('the real CHANGELOG.md', () => {
     const lines = text
       .split(/\r?\n/)
       .slice(1)
-      .filter((l) => l.trim() !== '' && !/^\s*<!--.*-->\s*$/.test(l))
+      .filter((l) => l.trim() !== '' && !COMMENT.test(l))
       .map((l) => l.replace(/\]\([^)]*\)/g, ']'))
     for (const w of lines.join('\n').match(/\w+/g) ?? []) expect(shown).toContain(w)
   })

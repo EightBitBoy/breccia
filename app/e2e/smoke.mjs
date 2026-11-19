@@ -2234,7 +2234,8 @@ try {
     // lines are skipped, a version heading is "## [x]" with or without a link, a bullet is - * or + then whitespace.
     const mdLines = md.replace(/^\uFEFF/, '').split(/\r?\n/).filter((l) => !/^\s*<!--.*-->\s*$/.test(l))
     const versions = mdLines.flatMap((l) => {
-      const m = /^\s{0,3}##\s+\[([^\]]+)\]/.exec(l)
+      // the VERSION regex of app/src/lib/changelog.ts (after "##"); keep the two in step
+      const m = /^\s{0,3}##\s+\[([^\]]+)\](?:(\([^)\s]*\))|(?!\())/.exec(l)
       return m ? [m[1]] : []
     })
     const items = mdLines.filter((l) => !/^\s{0,3}#+\s+/.test(l) && /^\s*[-*+]\s+/.test(l)).length

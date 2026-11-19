@@ -11,10 +11,12 @@ export type Block =
   | { kind: 'paragraph'; inlines: Inline[] }
   | { kind: 'list'; items: Inline[][] }
 
-const COMMENT = /^\s*<!--.*-->\s*$/
+export const COMMENT = /^\s*<!--.*-->\s*$/
 const HEADING = /^\s{0,3}(#+)\s+(.*?)\s*$/
-// A version heading is "## [x]" with or without a link, as git-cliff may write it.
-const VERSION = /^\[([^\]]+)\](\([^)]*\))?/
+// A version heading is "## [x]" with or without a link, as git-cliff may write it. A link whose address has whitespace is
+// no link (as in parseInline), so such a heading is no version heading. e2e step 134 (app/e2e/smoke.mjs) keeps a copy of
+// this regex; keep the two in step.
+const VERSION = /^\[([^\]]+)\](?:(\([^)\s]*\))|(?!\())/
 const BULLET = /^\s*[-*+]\s+(.*)$/
 
 export function parseInline(s: string): Inline[] {
