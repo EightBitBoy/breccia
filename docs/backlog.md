@@ -270,3 +270,16 @@ so this needs a decision on what may be logged (for example the error kind witho
 From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctrl Z` does nothing; the undo history is
 the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
 clicking into a block. A new feature: decide the keys and what it should cover.
+
+## 95. Pressing a cut-off page-tree row can drag the wrong row (Pages and links)
+
+From plan 14 triage (plan 13 follow-up 2). Pressing a page-tree row that is cut off at the sidebar's edge can start a
+drag on the wrong row. It was found while building Dailies and happens more in short windows, since the sidebar now has
+the Dailies entry. The cause is not known (it may be WebView2's own drag handling). To do: find steps that show it,
+then the cause.
+
+## 96. A "nothing left to save" signal for the e2e test (Tests)
+
+From plan 14 triage (plan 13 follow-up 15). `expectFile` and `expectFileLike` in `app/e2e/smoke.mjs` wait a fixed
+second for the save pause. The window could expose when nothing is pending and the write queue is idle, so these waits
+become waits for a state, not for time.

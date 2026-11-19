@@ -473,3 +473,31 @@ are its questions for you; each answer decides what a later plan does.
    elsewhere): Breccia asks "Delete the daily '…'?", the same question as Delete in the right-click menu (with the
    note about hidden lines under it). Delete removes it; Cancel or Esc keeps the daily with its old text. Esc while
    editing still cancels the edit without asking.
+
+## Open follow-ups (plans 12 and 13)
+
+127. [ ] **The log hides a Git password with an apostrophe:** in Settings > Git set a remote such as
+   `https://me:pa'ss@example.com/repo.git`, let a sync fail, and open the log (Settings > Troubleshooting > "Open log
+   folder"): the user name and password are replaced by `***` in `breccia.log`, with no part of the password left
+   (before, everything from the apostrophe on stayed visible).
+
+128. [ ] **The log no longer masks part of a file address:** with a notes folder or remote such as
+   `file:///C:/notes/a@b.md` in the log, the address shows in full, because it has no user name or password. Addresses
+   with credentials are still replaced by `***`, and `https://host:8080/a@b` is still partly masked (it errs on the
+   side of hiding).
+
+129. [ ] **A daily is not deleted when lines were added under it while asking:** right-click a daily and choose Delete,
+   and leave the question open. In an editor add a line under that daily in `breccia/dailies.md` (for example
+   `  note:: x`) and save. Press Delete in Breccia: it is refused with "This daily changed in another program; the list
+   now shows the file as it is.", and the file keeps the daily and the new line. Delete it again: the question now says
+   that the lines under it go too.
+
+130. [ ] **Right-click while editing a daily shows the text menu:** click a daily's text to edit it and right-click in
+   the field: the usual text menu appears with Cut, Copy and Paste, and Paste puts text into the field. Right-click a
+   row you are not editing: the Dailies menu with Delete shows as before.
+
+131. [ ] **Typing the default into a Settings number field fixes a wrong value in the file:** in
+   `breccia/config.toml` write `archive_after_days = 0` (or a wrong `commit_delay_minutes`) and open Settings: the
+   field shows the default (14 for the archive days) and Breccia shows a notice. Type the number shown, or any valid
+   number, and leave the field: the file now has that number, its comments and other keys are unchanged, and the notice
+   does not come back.

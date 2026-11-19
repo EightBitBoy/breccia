@@ -256,7 +256,7 @@ needed for the field's type", and do the three test tidy-ups.
 - **Enter, then a click elsewhere, on a Settings field while the first save is still on its way:** one write, not two.
   Pinned in Task 5 (`oneAtATime` unit test).
 - **A Git password with an apostrophe** (`https://u:pa'ss@host/x`): no part of it in the log. Pinned in Task 1.
-- **A refused Dailies change while `dailies.md` cannot be read:** one notice, not two. Pinned in Task 4.
+- **A refused Dailies change when the reload itself fails:** one notice, not two. Pinned in Task 4.
 
 ---
 

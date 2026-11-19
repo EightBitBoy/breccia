@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-18. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-19. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -36,6 +36,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 11 | Out-of-range values in config.toml | done 2026-11-11 | `docs/plans/2026-11-11-11-config-out-of-range-values.md` | `docs/plans/2026-11-11-11-config-out-of-range-values-followups.md` |
 | 12 | Open follow-ups of plans 1 to 11 | done 2026-11-17 | `docs/plans/2026-11-17-12-open-followups.md` | `docs/plans/2026-11-17-12-open-followups-followups.md` |
 | 13 | Dailies | done 2026-11-18 | `docs/plans/2026-11-18-13-dailies.md` | `docs/plans/2026-11-18-13-dailies-followups.md` |
+| 14 | Open follow-ups of plans 12 and 13 | done 2026-11-19 | `docs/plans/2026-11-19-14-open-followups.md` | `docs/plans/2026-11-19-14-open-followups-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -162,21 +163,29 @@ a daily asks first, and there is no undo. A comment above a changed setting in `
 found on the way). The owner checks review items 115 to 126 (115 is the config comment; 124 and 125 are owner tweaks after the plan: ticked dailies hide in a closed "Done (N)" section, and a "+" beside the title opens the add field). It is released as 1.8.0 (2026-11-18, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.0); the two tweaks are in 1.8.1 (2026-11-19, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.1).
 Weekday-only dailies, a history and groups (backlog #92 to #94) are not needed (owner, 2026-11-19); open follow-ups are in the plan's follow-ups file.
 
+Plan 14 (open follow-ups of plans 12 and 13) is done (2026-11-19; owner decisions Q1 to Q5 and pre-flight rulings F1 to F15 in
+the plan, ledger `.superpowers/sdd/2026-11-19-14-open-followups/progress.md`). Every item of both follow-ups files is
+struck through with its disposition. User-visible: the log hides a Git password with an apostrophe and no longer masks
+part of a `file:///` address; a daily is not deleted when lines were added under it while the question was open; the
+text menu (Cut, Copy, Paste) works while editing a daily; typing a valid number into a Settings number field fixes a wrong
+value in `config.toml`. Two items went to the backlog (#95 a cut-off page-tree row can drag the wrong row; #96 a "nothing
+left to save" signal for the e2e test). The owner checks review items 127 to 131.
+
 Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
   61 to 63 the website);
 - the follow-ups of plans 1 to 3 (`docs/plans/*-followups.md`);
-- backlog items the owner picks (`docs/backlog.md` holds the 32 open ones; the 62 closed ones are in
+- backlog items the owner picks (`docs/backlog.md` holds the 31 open ones; the 63 closed ones are in
   `docs/backlogged.md`);
 - automatic updates (backlog #52);
 - the plans the audit proposes (`docs/audit/2026-11-10/README.md`, "Priorities").
 
 ## Test baseline
 
-- `just test`: Vitest (1218 tests) and cargo tests (core: lib 51, integration 847 with 2 ignored; shell 87) pass
+- `just test`: Vitest (1233 tests) and cargo tests (core: lib 51, integration 852 with 2 ignored; shell 89) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 215 PASS lines, the last step is 144 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 218 PASS lines, the last step is 147 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
