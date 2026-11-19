@@ -4249,6 +4249,7 @@ try {
 
   // 146: a right-click in a daily's edit field is left to the browser's text menu (Cut, Copy, Paste), not the Dailies
   // menu; Esc closes the field and writes nothing. The row menu still works on a row that is not being edited.
+  await waitFor('146 the view follows the delete', () => dRows.count(), 0) // dAdd counts the rows shown before it adds
   await dAdd('Menu')
   await waitDailies('146 Menu added', '- Menu\n')
   await dRow('Menu').locator('[data-testid="daily-text"]').click()
