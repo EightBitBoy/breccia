@@ -18,3 +18,10 @@ Task 2: dispatched (sonnet), BASE 60a5456
 Task 2: implementer DONE, commits b332d21, 10eaf72, c1b5bc6; review dispatched
 Task 2: review — spec ✅, quality approved; 2 minor (ragged doc wrap in edit.rs, under limit — left; 846e2b6 was the controller's ledger line, not a report).
 Task 2: complete (commits 60a5456..c1b5bc6, review clean)
+Task 3: dispatched (sonnet), BASE ef64a1d
+Task 3: implementer DONE, commits bf85ca8, 7fa8ade, d2afb65 (e2e 216 PASS); review dispatched
+Task 3: review — spec ✅, quality approved; 3 minor. Step 145's cancel-and-re-ask loop judged a legitimate waitFor poll (nested shows only through the question text).
+Ruling: carry minor "uneven §7.14 wrap" into Task 8 (docs wrap) — cost if wrong: none.
+Task 3: minor (deferred): new Rust tests use raw multi-line string literals rather than \n escapes (style only).
+Task 3: minor (deferred): e2e 145 covers the menu delete path only; the emptied-text path sends the same row (vitest covers remove's nested).
+Task 3: complete (commits ef64a1d..d2afb65, review clean)
