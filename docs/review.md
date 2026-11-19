@@ -476,9 +476,9 @@ are its questions for you; each answer decides what a later plan does.
 
 ## Open follow-ups (plans 12 and 13)
 
-127. [ ] **The log hides a Git password with an apostrophe:** in Settings > Git set a remote such as
-   `https://me:pa'ss@example.com/repo.git`, let a sync fail, and open the log (Settings > Troubleshooting > "Open log
-   folder"): the user name and password are replaced by `***` in `breccia.log`, with no part of the password left
+127. [ ] **The log hides a Git password with an apostrophe:** in the notes folder (a Git repository) run
+   `git remote add origin "https://me:pa'ss@example.com/repo.git"` (or `git remote set-url` if there is one), let a
+   sync fail, and open the log (Settings > Troubleshooting > "Open log folder"): the user name and password are replaced by `***` in `breccia.log`, with no part of the password left
    (before, everything from the apostrophe on stayed visible).
 
 128. [ ] **The log no longer masks part of a file address:** with a notes folder or remote such as
