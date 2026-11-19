@@ -74,6 +74,157 @@ task and the item is struck through as closed.
 - R2 (written with the plan). The log never holds credentials (owner decision in force, plan 6 Q5/Q6), so a password
   that leaks today is a `fix`, with a changelog line.
 
+The pre-flight scan (2026-11-19) found F1 to F15 below; each ruling is adopted and binding for the tasks.
+
+**F1. Task 6: the planned `VERSION` regex does not give the planned result.**
+`/^\[([^\]]+)\](\([^)\s]*\))?/` still matches `[1.0.0]`, because the link group is optional. So
+`versionsOf('## [1.0.0](https://a b) - 2026\n')` stays `['1.0.0']`, and the heading renders as
+`1.0.0(https://a b) - 2026`. The RED test (`[]`, `version: null`) can never turn green.
+*Ruling:* `VERSION = /^\[([^\]]+)\](?:(\([^)\s]*\))|(?!\())/`, so a `(` right after `]` must be a whole link without
+whitespace. Mirror it in step 134 (`/^\s{0,3}##\s+\[([^\]]+)\](?:\([^)\s]*\)|(?!\())/`), with comments naming each
+other. Keep the plan's expectations.
+*Why:* this keeps the plan's intent (a heading that renders literally is not a version heading).
+*Cost if wrong:* a heading with a malformed link drops out of the version list. git-cliff never writes one.
+
+**F2. Task 6: the BOM half of P12.12 is not a defect.**
+JS `\s` matches U+FEFF, so `bulletCount('\uFEFF- a\n- b\n')` is already 2, and `HEADING` tolerates it too. The
+planned RED cannot fail, and "strip a leading BOM" changes nothing.
+*Ruling:* make no code change for the BOM. Keep the test as a pin only if a mutation is shown to fail it (for example
+`BULLET` with `[ \t]*`); otherwise drop it. Task 9 strikes this half as "closed: not a defect (`\s` matches the BOM)".
+Commit as `chore(app): the changelog reader agrees with itself on a linked heading with spaces`.
+*Why:* a test that cannot fail, and a fix that fixes nothing, are the reviewer defects CLAUDE.md names.
+*Cost if wrong:* none.
+
+**F3. Task 3: a required `nested` breaks the existing callers, and the file list misses one.**
+These send `dailies.delete` without `nested` and would fail:
+
+- `it/session.rs:59`, the parse-all list, which panics;
+- `it/session.rs:190`;
+- `it/dailies_session.rs:112`, `128`, `235` and `247`;
+- `dailiesState.test.ts:134` and `149`.
+
+Line 247 deletes "other", which has `note:: x`, so it must send `nested: true`. Line 128 deletes a nested daily, so it
+also sends `true`.
+*Ruling:* keep `nested` required on the wire, as planned. Add `crates/core/tests/it/session.rs` to Task 3's files and
+update every call above in the same commit as the core change.
+*Why:* the window always knows the row, and a missing field should fail loudly.
+*Cost if wrong:* a red `just test` mid-task.
+
+**F4. Task 3 Step 4: wrong test name, and no path field to match.**
+The test is `an_unreadable_dailies_file_warns_and_refuses`. `Notice` has no variant or path for the warning
+(`LoadWarning { message }` only), and this test's file triggers `NotUtf8`, not `Unreadable`.
+*Ruling:* match `Notice::LoadWarning { message } if message.contains("breccia/dailies.md")` (plus the UTF-8 wording
+from `Notice::load_warning`). Do the same in the new `load_dailies_reports_an_io_error`, with the `Unreadable` arm's
+wording. Then check that `dailies.add` gives `dailiesUnreadable`.
+*Why:* it is the closest structured match the type allows.
+*Cost if wrong:* a test tied to wording. It is acceptable, because the wording is the user-facing contract.
+
+**F5. Task 3 Step 4: two `checked::` lines, wrong expectation.**
+`with_property` replaces the first `checked::` and removes the later ones. The result is
+`- a\n  checked:: 2026-11-18 08:00\n  note:: x\n`, so the second line does not stay. The doc ("Writes one `checked::`
+line") agrees with the code.
+*Ruling:* assert that result. Mutation: keep later matching lines, and see it fail.
+*Why:* the plan already says "write what the code gives".
+*Cost if wrong:* none. A file with two ticks becomes one tick, which is the intended normalisation.
+
+**F6. Task 4 Step 3: `moveTarget` does not give "no move" for both cases.**
+An id outside the group returns a move (`others[place]`, or the next id). A place past the end of the group clamps to
+the end, so it only returns `undefined` when the daily is already last.
+*Ruling:* do not change `moveTarget`. Test three things:
+
+- the place past the end for the last daily → `undefined`;
+- the place past the end for a daily that is not last → the end (`null`, or the next id after the group);
+- a negative place → the start.
+
+The id outside the group is a precondition the callers already guarantee (`groupOf` in `DailiesView.svelte`). Pin its
+current output with a comment, or leave it untested. Mutation-check the clamp.
+*Why:* the follow-up asked for out-of-range input coverage, not a behaviour change.
+*Cost if wrong:* an untested precondition, which is cheap.
+
+**F7. Task 4: an unreadable `dailies.md` does not give two notices today.**
+`dailies.list` ignores the read error and answers Ok, so `send`'s reload never fails in that case. A second notice
+needs `dailies.list` itself to reject (no folder open, or an internal error or recovery). The Review Focus line and
+review item 130 ("with `dailies.md` made unreadable") describe a check that shows nothing.
+*Ruling:* keep the `{ quiet: true }` change and its unit test. Commit it as `chore(app)`, not `fix`. Drop review item
+130, and correct the Review Focus line ("when the reload itself fails").
+*Why:* CLAUDE.md requires `fix` subjects to describe an effect a user sees.
+*Cost if wrong:* one missing changelog line for a near-unreachable case.
+
+**F8. Task 5: `oneAtATime` drops calls, and the double save is invisible.**
+Settings writes already run one at a time through `WriteQueue` (`App.svelte:1207`) with fresh versions. So Enter
+followed by a blur gives two identical writes and no notice: nothing a user sees. A pure drop also loses a value typed
+and committed while the earlier save is still in flight, and the box then shows it as if saved.
+*Ruling:* a call while one is running marks "again". When the first settles, `f` runs once more, and `f` re-checks
+with `numberCommit`/`resetCommit`, so an unchanged value sends nothing. Unit tests:
+
+- two calls in flight → `f` runs twice in total, and the second run sees the stored value and sends nothing;
+- three calls in flight → still only one extra run.
+
+Commit as `chore(app): …`, not `fix`.
+*Why:* this keeps the "one write" property without ever losing a typed value.
+*Cost if wrong:* with drop semantics, a rare lost setting. As a `fix`, a changelog line for a change nobody can see.
+
+**F9. Task 5: gaps in the e2e step and the files list.**
+
+- (a) The Git section is shown in e2e (step 66 types into `git-commit-delay`), so do the Git case in step 147, under
+  the same PASS line.
+- (b) 0 is a valid Git minutes value (0–1440). Use `commit_delay_minutes = 1441` as the refused value. For the board,
+  use 0 (the file holds 40 from step 83 at that point; the field shows 14).
+- (c) Add `app/src/lib/types.ts` to the files (Step 3 edits its doc comment).
+- (d) Add a contract test like `contract.test.ts:154`: every `REPLACED` value's section and key appear as a
+  `bounded_key!` row in `range.rs`.
+- (e) In the unit tests, use the real texts from `daysProblem` and `minutesProblem`.
+
+*Ruling:* as listed.
+*Cost if wrong:* the window's labels drift from the core's without a failing test, and the e2e misses half the fix.
+
+**F10. Task 3 e2e step 145: "wait until the view has followed" has no observable state.**
+The row text does not change, and `nested` is not in the DOM. The core reads `dailies.md` again before every
+command, so the refusal does not depend on the watcher.
+*Ruling:* write the file (tmp plus rename, as other steps do), then press Delete in the dialog at once. Wait for the
+refusal notice, then assert the bytes. Do not add a sleep and do not add a DOM attribute. Then right-click again: the
+question must contain "lines written under it". Confirm, and wait for the bytes without `Solo`. Step 144 removed
+`dailies.md` and left the Journal open, so 145 opens Dailies first.
+*Why:* the rule in CLAUDE.md is to wait for a state, never sleep.
+*Cost if wrong:* a flaky step or a hidden sleep.
+
+**F11. Task 2 Step 3: exact places (the follow-up's paths and lines are stale).**
+
+- `it/board.rs`: `(2026, 10, 29)` at lines 36, 303, 434, 671, 860, 940 and 982 (`DAY` is already imported).
+- `it/page_color.rs:81`: the parenthetical "(The answer's color is None either way.)".
+- `it/task.rs` 720–746: `an_empty_valued_property_line_is_kept` and the test before `crlf_properties_are_read`.
+- `it/session.rs` 2437–2555: the `keystrokes_around` helpers and the undo-run tests. These are not "settle tests".
+
+*Ruling:* only these places. Other multi-line literals in `session.rs` stay.
+*Cost if wrong:* scope creep in a pure-move commit.
+
+**F12. Task 6 Step 3: the heading test is at `changelog.test.ts:41`, not ~93.**
+The test is "a linked heading is a version heading, and versionsOf agrees"; line 93 is `parseInline`.
+*Ruling:* add the `inlines` check there: the linked heading's inlines hold the link, and the plain one's hold the text
+without brackets. Mutation: drop the `text = vm[1] + …` line.
+*Cost if wrong:* none.
+
+**F13. Task 4 Step 4: the "redundant `now` initialiser" is not in the tests.**
+It is `now = $state(new Date())` in `dailies.svelte.ts`, overwritten in the constructor. The other three are:
+
+- the dead `setClock` at `dailiesState.test.ts:57`;
+- the `tick()` at `dailiesState.test.ts:166`;
+- the `second245` variable (or `stamp`) in `dailiesDst.test.ts`.
+
+*Ruling:* leave the production initialiser (the `$state` field needs a typed initial value), strike it as "closed:
+needed for the field's type", and do the three test tidy-ups.
+*Cost if wrong:* none.
+
+**F14. Task 8 Step 2: the check conflicts with Step 3.**
+`git diff --word-diff` will also show Step 3's words in §7.14.
+*Ruling:* the check allows exactly the words of Steps 1 and 3. Task 3 wraps its own new sentence when it adds it.
+*Cost if wrong:* a false alarm in the task review.
+
+**F15. Task 9 Step 2: the backlog heading format.**
+`docs/backlog.md` uses `## 95. Title (Area)`, not a bold `**#95. …**`.
+*Ruling:* follow the file's format.
+*Cost if wrong:* an inconsistent backlog.
+
 ## Global Constraints
 
 - No notes-file format change. Files Breccia does not change stay byte-identical; notes files are saved with LF
