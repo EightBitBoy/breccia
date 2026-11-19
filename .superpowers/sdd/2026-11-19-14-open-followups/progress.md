@@ -41,3 +41,7 @@ Task 5: minor (deferred → follow-ups): oneAtATime skips a pending extra run if
 Task 5: minor (deferred → follow-ups): GitSection sends Number(delay) rather than numberCommit's value (same result today).
 Task 5: minor (deferred): step 147's "no notice came back" check is weak; the byte equality carries the step.
 Task 5: complete (commits 8eb01ce..7525b30, review clean)
+Task 6: dispatched (sonnet), BASE 8236d58
+Task 6: implementer DONE, commit 672cc0f, e2e 218 PASS; review dispatched
+Task 6: review — spec ✅, quality approved; 1 minor (none to act on). All 14 CHANGELOG headings parse with both regexes.
+Task 6: complete (commits 8236d58..672cc0f, review clean)
