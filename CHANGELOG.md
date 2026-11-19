@@ -2,6 +2,13 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.8.1] - 2026-11-19
+
+### Features
+
+- Dailies: ticked dailies are hidden in a Done section that opens with a click
+- Dailies: a + beside the title opens the field to add a daily, which no longer stays on screen
+
 ## [1.8.0] - 2026-11-18
 
 ### Features
