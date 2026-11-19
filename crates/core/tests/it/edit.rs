@@ -181,6 +181,18 @@ fn merge_keeps_the_task_property_lines() {
 }
 
 #[test]
+fn merge_onto_a_block_whose_properties_are_followed_by_text() {
+    // the property line is not the last line, so the text goes to the end of the block
+    assert_eq!(
+        with("- a\n  k:: v\n  more\n- b\n", |d, b, ids| assert_eq!(
+            d.merge_into_previous(b[1], ids).unwrap(),
+            (b[0], 12)
+        )),
+        "- a\n  k:: v\n  moreb\n"
+    );
+}
+
+#[test]
 fn merge_of_several_lines_onto_property_lines_is_refused() {
     // the second line would land after the property lines
     let src = "- TODO a\n  created:: 2026-10-29 14:05:09\n- b\n  more\n";

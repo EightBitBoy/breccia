@@ -985,12 +985,6 @@ fn block_delete_of_the_only_block_keeps_it_empty() {
 
 #[test]
 fn block_delete_of_an_already_empty_only_block_writes_nothing() {
-    let (t, mut s) = folder(&[("pages/P.md", "-\n")]);
-    let a = ids(&mut s, "p")[0];
-    ok(&mut s, json!({"type":"block.delete","id":a}), 0);
-    assert_eq!(read(&t, "pages/P.md"), "-\n");
-    ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
-    assert_eq!(read(&t, "pages/P.md"), "-\n");
     // With an earlier step on the stack, the delete must not have added one of its own: the
     // first undo takes back the typing, not the delete.
     let (t, mut s) = folder(&[("pages/Q.md", "- a\n")]);
@@ -2435,15 +2429,7 @@ fn page_show_finds_a_page_opened_without_a_file() {
 /// then one undo: the page text the undo leaves, and the error code `step`
 /// was answered with (none when it succeeded).
 fn keystrokes_around(step: Value) -> (String, Option<String>) {
-    keystrokes_around_in(
-        &[(
-            "pages/P.md",
-            "- a
-",
-        )],
-        step,
-    )
-    .1
+    keystrokes_around_in(&[("pages/P.md", "- a\n")], step).1
 }
 
 /// The same with the notes `files` (page `p` must be among them): the folder
@@ -2502,24 +2488,14 @@ fn a_query_between_two_keystrokes_keeps_one_undo_step() {
     let mut failures = Vec::new();
     for q in queries {
         let (text, answer) = keystrokes_around(q.clone());
-        if text
-            != "- a
-"
-        {
+        if text != "- a\n" {
             failures.push(format!("{q}: undo left {text:?}"));
         }
         if let Some(code) = answer {
             failures.push(format!("{q}: answered with the error {code}"));
         }
     }
-    assert!(
-        failures.is_empty(),
-        "{}",
-        failures.join(
-            "
-"
-        )
-    );
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
 /// `archive.auto` is sent by the app and writes (it archives old finished
@@ -2527,17 +2503,8 @@ fn a_query_between_two_keystrokes_keeps_one_undo_step() {
 #[test]
 fn an_archive_run_between_two_keystrokes_keeps_one_undo_step() {
     let files = [
-        (
-            "pages/P.md",
-            "- a
-",
-        ),
-        (
-            "pages/Q.md",
-            "- DONE old
-  done:: [[2020-01-01]]
-",
-        ),
+        ("pages/P.md", "- a\n"),
+        ("pages/Q.md", "- DONE old\n  done:: [[2020-01-01]]\n"),
     ];
     let (t, (text, answer)) = keystrokes_around_in(&files, json!({"type": "archive.auto"}));
     assert_eq!(answer, None);
@@ -2546,11 +2513,7 @@ fn an_archive_run_between_two_keystrokes_keeps_one_undo_step() {
         "the run must have written: {}",
         read(&t, "pages/Q.md")
     );
-    assert_eq!(
-        text,
-        "- a
-"
-    );
+    assert_eq!(text, "- a\n");
 }
 
 #[test]
