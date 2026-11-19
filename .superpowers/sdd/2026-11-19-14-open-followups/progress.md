@@ -14,3 +14,4 @@ Task 1: review — spec ✅, quality approved; 3 minor. file:/// C: case is a re
 Ruling: carry minor 1 (logfile.rs:223 typo/wrap) and minor 2 (pin a credential-free quoted URL unchanged) into Task 2's dispatch — cheap, same kind of tidy-up — cost if wrong: none.
 Task 1: minor (deferred to final check): svelte-check not run (Rust-only change).
 Task 1: complete (commits 17934d2..765024d, review clean)
+Task 2: dispatched (sonnet), BASE 60a5456
