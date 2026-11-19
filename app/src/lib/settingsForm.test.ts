@@ -1,5 +1,15 @@
 import { describe, expect, it, test } from 'vitest'
-import { CONFIG_NOTE, daysProblem, keepDraft, keepDrafts, minutesProblem, settleRows, settledDraft, zeroNote } from './settingsForm'
+import {
+  CONFIG_NOTE,
+  daysProblem,
+  keepDraft,
+  keepDrafts,
+  minutesProblem,
+  numberCommit,
+  settleRows,
+  settledDraft,
+  zeroNote,
+} from './settingsForm'
 
 describe('minutesProblem', () => {
   const msg = 'Enter whole minutes from 0 to 1440.'
@@ -57,5 +67,20 @@ describe('settleRows', () => {
   })
   it('reads missing drafts as the keyword', () => {
     expect(settleRows(['A'], ['A', 'B'], [])).toEqual(['A', 'B'])
+  })
+})
+describe('numberCommit', () => {
+  it('sends nothing for the number stored, unless the file holds a refused value', () => {
+    expect(numberCommit('14', 14, false, null)).toBeNull()
+    expect(numberCommit('14', 14, true, null)).toBe(14)
+    expect(numberCommit(' 14 ', 14, true, null)).toBe(14)
+  })
+  it('sends another number', () => {
+    expect(numberCommit('15', 14, false, null)).toBe(15)
+    expect(numberCommit('0', 5, false, minutesProblem('0'))).toBe(0)
+  })
+  it('sends nothing while the box has a problem', () => {
+    expect(numberCommit('0', 14, true, daysProblem('0'))).toBeNull()
+    expect(numberCommit('1441', 5, true, minutesProblem('1441'))).toBeNull()
   })
 })

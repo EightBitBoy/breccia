@@ -1,11 +1,12 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { CONFIG_NOTE, daysProblem, keepDraft, settledDraft } from '../../lib/settingsForm'
+  import { CONFIG_NOTE, daysProblem, keepDraft, numberCommit, settledDraft } from '../../lib/settingsForm'
   import type { BoardSummary } from '../../lib/types'
 
   let {
     boards,
     archiveDays,
+    archiveInvalid,
     autoArchive,
     onboard,
     onmoveboard,
@@ -15,6 +16,8 @@
   }: {
     boards: BoardSummary[]
     archiveDays: number
+    /** The file's `archive_after_days` is refused (read as `archiveDays`): the number is written even when it is the one in use. */
+    archiveInvalid: boolean
     /** `[board] auto_archive`. */
     autoArchive: boolean
     /** "Edit…": the board dialog (rename, columns, delete). */
@@ -39,9 +42,10 @@
   const problem = $derived(daysProblem(days))
 
   async function commit() {
-    if (problem !== null || Number(days) === archiveDays) return
+    const next = numberCommit(days, archiveDays, archiveInvalid, problem)
+    if (next === null) return
     const sent = days
-    await onarchivedays(Number(days))
+    await onarchivedays(next)
     days = settledDraft(days, sent, String(archiveDays)) // a refused change shows the file's value again
   }
 </script>

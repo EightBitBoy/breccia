@@ -66,6 +66,7 @@
   import { Archive } from './lib/archive.svelte'
   import { Dailies } from './lib/dailies.svelte'
   import { RESET_KEY } from './lib/dailies'
+  import { REPLACED } from './lib/settingsForm'
   import { Network } from './lib/network.svelte'
   import { isNewFolder } from './lib/folder'
   import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
@@ -169,6 +170,8 @@
   let configVersion = $state(0)
   /** The file's `[dailies] reset` is no time and is read as 00:00 (`ConfigView.replaced`). */
   let dailiesResetInvalid = $state(false)
+  /** The number keys whose value in the file is refused and read as the default (`ConfigView.replaced`). */
+  let numbersInvalid = $state({ delay: false, interval: false, archive: false })
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
   let appVersion = $state<string | null>(null)
   let appVersionAsked = false
@@ -600,6 +603,11 @@
     autoArchiveOn = c.autoArchive
     dailies.setReset(c.dailiesReset)
     dailiesResetInvalid = c.replaced.includes(RESET_KEY)
+    numbersInvalid = {
+      delay: c.replaced.includes(REPLACED.commitDelay),
+      interval: c.replaced.includes(REPLACED.pullInterval),
+      archive: c.replaced.includes(REPLACED.archiveDays),
+    }
     gitSettings = c.git
     configVersion = c.version
     // Task states and board columns are computed when a view is built: what is shown loads again.
@@ -1846,8 +1854,11 @@
                 skipped={settings.skipped}
                 boards={boardList}
                 {archiveDays}
+                archiveInvalid={numbersInvalid.archive}
                 autoArchive={autoArchiveOn}
                 git={gitSettings}
+                delayInvalid={numbersInvalid.delay}
+                intervalInvalid={numbersInvalid.interval}
                 {theme}
                 {mac}
                 version={configVersion}

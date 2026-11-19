@@ -1,13 +1,18 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { CONFIG_NOTE, keepDraft, minutesProblem, settledDraft, zeroNote } from '../../lib/settingsForm'
+  import { CONFIG_NOTE, keepDraft, minutesProblem, numberCommit, settledDraft, zeroNote } from '../../lib/settingsForm'
   import type { GitSettings } from '../../lib/types'
 
   let {
     git,
+    delayInvalid,
+    intervalInvalid,
     ongit,
   }: {
     git: GitSettings
+    /** The file's value of that number is refused (read as the one shown): it is written even when it is the one in use. */
+    delayInvalid: boolean
+    intervalInvalid: boolean
     /** The Git item's text, or null while it is hidden. */
     /** Sends only what changed, over the settings shown when it is sent; settles once answered. */
     ongit: (patch: Partial<GitSettings>) => Promise<void>
@@ -31,7 +36,10 @@
 
   async function commit() {
     if (delayProblem !== null || intervalProblem !== null) return
-    if (Number(delay) === git.commitDelayMinutes && Number(interval) === git.pullIntervalMinutes) return
+    // Both values go out when either box has something to send.
+    const d = numberCommit(delay, git.commitDelayMinutes, delayInvalid, delayProblem)
+    const i = numberCommit(interval, git.pullIntervalMinutes, intervalInvalid, intervalProblem)
+    if (d === null && i === null) return
     const sent = { delay, interval }
     await ongit({ commitDelayMinutes: Number(delay), pullIntervalMinutes: Number(interval) })
     // A refused change shows the file's values again; text typed meanwhile stays.

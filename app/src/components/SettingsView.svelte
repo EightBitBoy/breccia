@@ -25,8 +25,11 @@
     skipped,
     boards,
     archiveDays,
+    archiveInvalid,
     autoArchive,
     git,
+    delayInvalid,
+    intervalInvalid,
     dailiesReset,
     dailiesResetInvalid,
     theme,
@@ -72,6 +75,10 @@
     autoArchive: boolean
     /** The `[git]` settings; null until the config is loaded. */
     git: GitSettings | null
+    /** The file's value of that number is refused and read as the default: saving any valid number writes it. */
+    archiveInvalid: boolean
+    delayInvalid: boolean
+    intervalInvalid: boolean
     /** `[dailies] reset` as `HH:MM`. */
     dailiesReset: string
     /** The file's `[dailies] reset` is no time (read as 00:00): saving any time writes it. */
@@ -146,7 +153,7 @@
   </section>
   <section data-section="boards">
     <h2>Boards</h2>
-    <BoardsSection {boards} {archiveDays} {onboard} {onmoveboard} {onnewboard} {onarchivedays} {autoArchive} {onautoarchive} />
+    <BoardsSection {boards} {archiveDays} {archiveInvalid} {onboard} {onmoveboard} {onnewboard} {onarchivedays} {autoArchive} {onautoarchive} />
   </section>
   <section data-section="git">
     <h2>Git</h2>
@@ -155,7 +162,7 @@
         💡 Git was not found on this computer. Breccia uses the installed Git for versioning and sync of your notes
         folder. Install Git and restart Breccia for full Git support.
       </p>
-    {:else if git}<GitSection {git} {ongit} />{/if}
+    {:else if git}<GitSection {git} {delayInvalid} {intervalInvalid} {ongit} />{/if}
   </section>
   <section data-section="journal">
     <h2>Journal</h2>

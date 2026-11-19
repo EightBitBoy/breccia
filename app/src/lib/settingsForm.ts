@@ -9,6 +9,24 @@ export function daysProblem(v: string): string | null {
   return whole(v, 1, 3650) ? null : 'Enter whole days from 1 to 3650.'
 }
 
+/** The number keys `ConfigView.replaced` names when the file's value is refused and read as the default (the core's labels). */
+export const REPLACED = {
+  commitDelay: '[git] commit_delay_minutes',
+  pullInterval: '[git] pull_interval_minutes',
+  archiveDays: '[board] archive_after_days',
+} as const
+
+/**
+ * What leaving a number box sends: the number typed, or `null` for nothing (a `problem`, or the `stored` number while
+ * the file's value is not refused). `invalid`: the file holds a refused value read as `stored`, so the number is
+ * written even when it equals the one shown; otherwise the bad value and its notice would stay.
+ */
+export function numberCommit(typed: string, stored: number, invalid: boolean, problem: string | null): number | null {
+  if (problem !== null) return null
+  const n = Number(typed)
+  return n === stored && !invalid ? null : n
+}
+
 export const CONFIG_NOTE = 'Stored in breccia/config.toml in the notes folder, so every computer that syncs this folder shares it.'
 
 export function zeroNote(kind: 'commit' | 'pull'): string {

@@ -10,6 +10,7 @@ import apiTs from '../api.ts?raw'
 import recoveryTs from './recovery.ts?raw'
 import rangeRs from '../../../crates/core/src/config/range.rs?raw'
 import { RESET_KEY } from './dailies'
+import { REPLACED } from './settingsForm'
 
 // Every shell source, joined: the event names live wherever the shell keeps them.
 const shellDir = new URL('../../src-tauri/src/', import.meta.url)
@@ -153,4 +154,10 @@ test('recovered_event_fields_match', () => {
 
 test('the reset key in ConfigView.replaced is the one the core names', () => {
   expect(rangeRs).toContain(`label: "${RESET_KEY}",`)
+})
+
+test('the number keys in ConfigView.replaced are the bounded keys the core names', () => {
+  const rows = new Set<string>()
+  for (const m of rangeRs.matchAll(/bounded_key!\(\s*"(\w+)",\s*"(\w+)",/g)) rows.add(`[${m[1]}] ${m[2]}`)
+  sameSet(rows, new Set(Object.values(REPLACED)))
 })

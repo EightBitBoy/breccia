@@ -75,7 +75,10 @@ export interface ConfigView {
   git: GitSettings
   /** `[dailies] reset`: `HH:MM`, 00:00 to 23:59 local time. */
   dailiesReset: string
-  /** Keys whose value in the file is refused and read as the default (`[dailies] reset`); writing the value fixes it. */
+  /**
+   * Keys whose value in the file is refused and read as the default (`[git] commit_delay_minutes`,
+   * `[git] pull_interval_minutes`, `[board] archive_after_days`, `[dailies] reset`); writing the value fixes it.
+   */
   replaced: string[]
   /** Goes up with every reload and write of config.toml; a change that writes it carries the one it was made from. */
   version: number
