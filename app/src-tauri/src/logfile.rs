@@ -219,7 +219,8 @@ fn is_url_scheme_char(c: char) -> bool {
 /// part of a password, so it does not end the token), so a password with
 /// `/`, `?`, `#` or `@` is masked whole; it counts only when the `@` comes before
 /// the first `/`, `?` or `#`, or the part before it has a `:` (so
-/// `https://host/a@b` stays). `ssh://git@host` and `git@host:path` carry no
+/// `https://host/a@b` stays). A token that starts with `/` (an empty authority,
+/// as in `file:///C:/a@b.md`) has no user part and stays.`ssh://git@host` and `git@host:path` carry no
 /// secret and stay.
 pub fn redact(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
@@ -239,6 +240,12 @@ pub fn redact(line: &str) -> String {
             .find(|c: char| c.is_whitespace() || matches!(c, '"' | '<' | '>'))
             .unwrap_or(tail.len());
         let (token, after) = tail.split_at(end);
+        // An empty authority (`file:///path`) has no user part.
+        if token.starts_with('/') {
+            out.push_str(token);
+            rest = after;
+            continue;
+        }
         let first_delimiter = token.find(['/', '?', '#']).unwrap_or(token.len());
         // The last `@` qualifies when it comes before the first `/`, `?` or `#`
         // or has a `:` before it; else the last `@` before that delimiter does
@@ -614,6 +621,9 @@ mod tests {
             redact("fatal: unable to access 'https://u:p@h/x.git/': 403"),
             "fatal: unable to access 'https://***@h/x.git/': 403"
         );
+        for line in ["open file:///C:/notes/a@b.md", "open file:///home/a@b.md"] {
+            assert_eq!(redact(line), line);
+        }
     }
 
     #[test]
