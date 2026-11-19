@@ -4247,6 +4247,35 @@ try {
   await waitFor('145 deleted with its lines', () => readAt(dailiesFile), '')
   console.log('PASS 145 a delete is refused when lines were written under the daily meanwhile; asked again, it names them and deletes')
 
+  // 146: a right-click in a daily's edit field is left to the browser's text menu (Cut, Copy, Paste), not the Dailies
+  // menu; Esc closes the field and writes nothing. The row menu still works on a row that is not being edited.
+  await dAdd('Menu')
+  await waitDailies('146 Menu added', '- Menu\n')
+  await dRow('Menu').locator('[data-testid="daily-text"]').click()
+  const edit146 = page.locator('[data-testid="daily-edit"]')
+  await edit146.waitFor()
+  await edit146.fill('Menu changed')
+  const prevented146 = await edit146.evaluate((el) => {
+    const ev = new MouseEvent('contextmenu', { bubbles: true, cancelable: true })
+    el.dispatchEvent(ev)
+    return ev.defaultPrevented
+  })
+  assert(prevented146 === false, '146 the edit field blocks the text menu')
+  await frames()
+  assert((await page.locator('[data-op="delete"]').count()) === 0, '146 the Dailies menu opened on the edit field')
+  await kb.press('Escape')
+  await edit146.waitFor({ state: 'detached' })
+  // Barrier: the next real write (a tick) shows the whole file; an edit sent by Esc would be in it.
+  await dRow('Menu').locator('[data-testid="daily-check"]').click()
+  await waitDailies('146 ticked, text unchanged', '- Menu\n  checked:: @STAMP@\n')
+  const confirm146 = page.locator('[data-testid="confirm-dialog"]')
+  await dRow('Menu').click({ button: 'right' })
+  await page.locator('[data-op="delete"]').click()
+  await confirm146.waitFor()
+  await page.locator('[data-testid="dialog-ok"]').click()
+  await waitFor('146 deleted', () => readAt(dailiesFile), '')
+  console.log('PASS 146 right-click in a daily\'s edit field leaves the text menu to the browser; Esc writes nothing')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
