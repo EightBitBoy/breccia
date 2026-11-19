@@ -55,3 +55,11 @@ Task 8: implementer DONE, commit 2902eca; controller ran format_doc:: (9 ok) and
 Task 8: review — spec ✅, quality approved; 2 minor (cosmetic token splits at wraps) — left.
 Task 8: complete (commits a54660e..2902eca, review clean)
 Ruling: review items for plan 14 are numbered contiguously from 127 (F7 dropped the planned 130; no number was assigned yet, so nothing is reused) — cost if wrong: none.
+Task 9: dispatched (sonnet), BASE f081c2e
+Task 9: implementer DONE, commit d96d1c8 (review items 127–131, backlog #95 #96); review dispatched
+Task 9: review — spec ✅, quality changes needed: Important 1 (STATUS closed count 63 → 65); minor: item 127 names a Settings remote field that does not exist (folded into the fix round); minor: STATUS links the follow-ups file the controller writes at finishing.
+Task 9: fix round 1/5 dispatched (resumed implementer)
+Task 9: fix round 1/5 (2 addressed, 0 open; commit c588382) — controller verified the counts (31 + 65 headings) instead of a re-review.
+Task 9: complete (commits f081c2e..c588382, review clean)
+
+## Final review
