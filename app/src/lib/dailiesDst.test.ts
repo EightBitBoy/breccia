@@ -36,7 +36,6 @@ describe('end of summer time', () => {
   it('a check at the second 02:45 counts at the second 02:50', () => {
     const second245 = new Date(Date.UTC(2026, 9, 25, 1, 45))
     expect(second245.getHours()).toBe(2)
-    const stamp = '2026-10-25 02:45'
-    expect(isChecked(stamp, new Date(Date.UTC(2026, 9, 25, 1, 50)), '02:30')).toBe(true)
+    expect(isChecked('2026-10-25 02:45', new Date(Date.UTC(2026, 9, 25, 1, 50)), '02:30')).toBe(true)
   })
 })

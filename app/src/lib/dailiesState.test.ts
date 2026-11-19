@@ -35,7 +35,6 @@ function setup(start: Date, refuse: boolean | 'all' = false) {
   }
   return { d, sent, notices, timers, once, fire, setClock: (c: Date) => (clock = c) }
 }
-const tick = () => new Promise((r) => setTimeout(r, 0))
 
 test('the_timer_fires_at_the_reset', () => {
   const { d, once, fire, setClock } = setup(at(3, 59, 30))
@@ -56,7 +55,6 @@ test('a_late_tick_after_sleep_unchecks', () => {
   d.apply([daily(1, '2026-11-10 07:00')])
   d.start()
   expect(d.allDone).toBe(true)
-  setClock(at(18, 0, 0, 10))
   setClock(at(6, 0, 0, 11))
   const tickH = [...timers.entries()].find(([, t]) => t.every)![0]
   timers.get(tickH)!.f()
@@ -175,7 +173,6 @@ test('a refusal is one notice and one reload', async () => {
   const { d, sent, notices } = setup(at(8), true)
   d.apply([daily(1)])
   await d.check(d.list![0])
-  await tick()
   expect(notices).toEqual([{ kind: 'refused', message: 'That daily is gone.' }])
   expect(sent).toEqual([{ type: 'dailies.check', id: 1, shown: 'd1' }, { type: 'dailies.list' }])
 })
