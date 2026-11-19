@@ -4211,6 +4211,42 @@ try {
   await screen.waitFor({ state: 'detached' })
   console.log('PASS 144 Settings > Dailies writes the reset to config.toml and keeps the rest')
 
+  // 145: lines written under a daily while its delete question is open refuse the delete; asking again names them
+  await openDailies()
+  await dAdd('Solo')
+  await waitDailies('145 Solo added', '- Solo\n')
+  const confirm145 = page.locator('[data-testid="confirm-dialog"]')
+  await dRow('Solo').click({ button: 'right' })
+  await page.locator('[data-op="delete"]').click()
+  await confirm145.waitFor()
+  assert(!(await confirm145.textContent()).includes('lines'), '145 the first question names lines')
+  const outside145 = '- Solo\n  more\n'
+  writeFileSync(`${dailiesFile}.tmp`, outside145)
+  renameSync(`${dailiesFile}.tmp`, dailiesFile)
+  await page.locator('[data-testid="dialog-ok"]').click()
+  const refused145 = page.locator('[data-testid="notice"]', { hasText: 'This daily changed in another program' })
+  await refused145.first().waitFor()
+  assert(readAt(dailiesFile) === outside145, `145 dailies.md is ${JSON.stringify(readAt(dailiesFile))}, not the outside bytes`)
+  // Asking again names the lines; the view may need a moment to follow, so a question without them is cancelled and asked again.
+  await waitFor(
+    '145 the question names the lines',
+    async () => {
+      await dRow('Solo').click({ button: 'right' })
+      await page.locator('[data-op="delete"]').click()
+      await confirm145.waitFor()
+      const named = (await confirm145.textContent()).includes('lines written under it')
+      if (!named) {
+        await confirm145.getByRole('button', { name: 'Cancel' }).click()
+        await confirm145.waitFor({ state: 'detached' })
+      }
+      return named
+    },
+    true,
+  )
+  await page.locator('[data-testid="dialog-ok"]').click()
+  await waitFor('145 deleted with its lines', () => readAt(dailiesFile), '')
+  console.log('PASS 145 a delete is refused when lines were written under the daily meanwhile; asked again, it names them and deletes')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
