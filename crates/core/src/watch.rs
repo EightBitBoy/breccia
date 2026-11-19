@@ -42,8 +42,7 @@ pub fn relevant(root: &Path, path: &Path) -> Option<PathBuf> {
         Err(LoadWarning::BadJournalName(_) | LoadWarning::ExtensionCase(_)) => true,
         Ok(None) => parts.len() >= 2 && parts[0] == PAGES && rel.extension().is_none(),
         // One arm per variant, so a new `LoadWarning` fails to compile here
-        // and gets a decision; `classify` only returns `NonUnicodeName` of
-        // the others today.
+        // and gets a decision.
         Err(
             LoadWarning::NonUnicodeName(_)
             | LoadWarning::NotUtf8(_)

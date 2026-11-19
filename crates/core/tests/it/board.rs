@@ -33,7 +33,7 @@ fn ok_on(s: &mut Session, json: Value, date: (i32, u32, u32)) -> Output {
 }
 
 fn ok(s: &mut Session, json: Value) -> Output {
-    ok_on(s, json, (2026, 10, 29))
+    ok_on(s, json, DAY)
 }
 
 fn open(root: &Path) -> Session {
@@ -297,12 +297,7 @@ fn unknown_columns_are_skipped_and_named() {
 fn unknown_board_is_refused() {
     let t = tempfile::tempdir().unwrap();
     let mut s = open(t.path());
-    let e = cmd_on(
-        &mut s,
-        json!({"type": "board.get", "index": 5}),
-        (2026, 10, 29),
-    )
-    .unwrap_err();
+    let e = cmd_on(&mut s, json!({"type": "board.get", "index": 5}), DAY).unwrap_err();
     assert_eq!(e.code, "unknownBoard");
 }
 
@@ -431,7 +426,7 @@ fn archive_old_is_refused_for_open_states_only() {
     let e = cmd_on(
         &mut s,
         json!({"type": "board.archive", "keyword": "TODO"}),
-        (2026, 10, 29),
+        DAY,
     )
     .unwrap_err();
     assert_eq!(e.code, "notFinished");
@@ -665,12 +660,7 @@ fn invalid_boards_are_refused_and_nothing_is_written() {
         json!([{"name": "A", "columns": ["LATER"]}]),
         json!([{"name": "A", "columns": ["TODO", "TODO"]}]),
     ] {
-        let e = cmd_on(
-            &mut s,
-            json!({"type": "boards.set", "boards": boards}),
-            (2026, 10, 29),
-        )
-        .unwrap_err();
+        let e = cmd_on(&mut s, json!({"type": "boards.set", "boards": boards}), DAY).unwrap_err();
         assert_eq!(e.code, "invalidBoard", "{boards}");
     }
     assert_eq!(
@@ -857,7 +847,7 @@ fn a_board_with_an_unknown_column_does_not_block_other_edits() {
             {"name": "Tasks", "columns": ["TODO", "BLOCKED"]},
             {"name": "Older", "columns": ["BLOCKED", "TODO"]},
             {"name": "Focus", "columns": ["TODO"]}]}),
-        (2026, 10, 29),
+        DAY,
     )
     .unwrap_err();
     assert_eq!(e.code, "invalidBoard");
@@ -937,7 +927,7 @@ fn boards_set_is_refused_when_the_config_changed_on_disk() {
     let err = cmd_on(
         &mut s,
         json!({"type": "boards.set", "boards": [{"name": "Tasks", "columns": ["TODO"]}]}),
-        (2026, 10, 29),
+        DAY,
     )
     .expect_err("the stale list must be refused");
     assert_eq!(err.code, "configChanged");
@@ -979,7 +969,7 @@ fn boards_set_is_refused_while_the_changed_config_does_not_parse() {
         let err = cmd_on(
             &mut s,
             json!({"type": "boards.set", "boards": [{"name": "Tasks", "columns": ["TODO"]}]}),
-            (2026, 10, 29),
+            DAY,
         )
         .expect_err("refused");
         assert_eq!(err.code, "configChanged");

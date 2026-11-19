@@ -220,8 +220,8 @@ impl Document {
     }
 
     /// Appends the block's text to the end of the preceding block's own text,
-    /// before its property lines (Backspace at the start). The block's children move under the previous block. Returns
-    /// the previous block and the cursor offset in its new text (the end of
+    /// before its property lines (Backspace at the start). The block's children
+    /// move under the previous block. Returns the previous block and the cursor offset in its new text (the end of
     /// its old own text, at most the new length). A block with several lines
     /// joined onto one with property lines is refused with
     /// [`EditError::JoinOntoProperties`].
@@ -613,7 +613,7 @@ impl Document {
 /// `key:: value` lines directly after the first line, spec section 5) when they
 /// run to the end of the text, else the end of the text. The window has the same
 /// rule in `ownTextEnd` (`app/src/lib/deleteBlock.ts`).
-pub(crate) fn own_text_end(text: &str) -> usize {
+fn own_text_end(text: &str) -> usize {
     let props = inline::properties(text).len();
     let lines = text.split('\n').count();
     if props > 0 && props == lines - 1 {

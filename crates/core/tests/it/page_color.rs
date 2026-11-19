@@ -78,7 +78,7 @@ fn set_color_on_a_tag_only_page_creates_its_file() {
     assert!(out.page.unwrap().has_file);
     assert!(out.tree.is_some());
     let out = pick(&mut s, "other", Value::Null);
-    // A null pick on a page without a file writes no file. (The answer's color is None either way.)
+    // A null pick on a page without a file writes no file.
     let page = out.page.unwrap();
     assert_eq!(page.key, "other");
     assert!(!page.has_file);

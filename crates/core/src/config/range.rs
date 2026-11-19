@@ -1,4 +1,5 @@
-//! Out-of-range numbers and bad reset times in a `toml_edit` document: found and replaced by their defaults, in memory only.
+//! Out-of-range numbers and bad reset times in a `toml_edit` document: found and replaced by their
+//! defaults, in memory only.
 
 use toml_edit::{DocumentMut, Item, Value};
 
@@ -73,7 +74,8 @@ fn checked_strings() -> [CheckedString; 1] {
     }]
 }
 
-/// Replaces each whole number outside its range by the default and records it, in the order of the table `bounded` returns.
+/// Replaces each whole number outside its range by the default and records it, in the order of the
+/// table `bounded` returns.
 pub(super) fn replace_out_of_range(doc: &mut DocumentMut) -> Vec<Replaced> {
     let mut records = Vec::new();
     for (section, key, label, range, default) in bounded() {
