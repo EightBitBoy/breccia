@@ -21,13 +21,16 @@ triage; each line was checked against `main` at `12ed08c`.
 ## State
 
 Written 2026-11-19 at commit `12ed08c` (after 1.8.1 and the three Dailies changes `589a89d`, `a0b0f07`, `6123efa`;
-backlog #92 to #94 closed by the owner). Not approved yet: the owner decisions below are open.
+backlog #92 to #94 closed by the owner). Approved by the owner on 2026-11-19, with every decision below answered.
 
 Counts: 45 items. Three are not work (P12.1 and P13.1 are owner checks, carried as a note; P12.2 was answered in plan
 12). Of the other 42: 16 fixed (code or docs change), 8 tested (test-only), 2 moved to the backlog (#95, #96; #96 is
 the second half of P13.15, whose first half is tested), 17 closed without work.
 
-## Owner decisions (OPEN)
+## Owner decisions (answered 2026-11-19)
+
+The owner chose the recommendation for all five: Q1 refuse the delete with the notice; Q2 the normal text menu;
+Q3 typing any valid number (also the one shown) writes it; Q4 backlog #95; Q5 the lists as they are.
 
 Plain words, recommendation first. "Cost if wrong" is what changes later. A "leave it" answer drops that part of the
 task and the item is struck through as closed.
