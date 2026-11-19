@@ -45,3 +45,8 @@ Task 6: dispatched (sonnet), BASE 8236d58
 Task 6: implementer DONE, commit 672cc0f, e2e 218 PASS; review dispatched
 Task 6: review — spec ✅, quality approved; 1 minor (none to act on). All 14 CHANGELOG headings parse with both regexes.
 Task 6: complete (commits 8236d58..672cc0f, review clean)
+Task 7: dispatched (sonnet), BASE e4c75e0
+Task 7: implementer DONE, commit 016ff40, e2e 218 PASS x2; review dispatched
+Task 7: review — spec ✅, quality approved; 2 minor. Barrier sound: all commands chain on one queue (api.ts enqueue).
+Task 7: minor (deferred → follow-ups): e2e dAdd hard-codes "138" in its wait label; give it a step argument.
+Task 7: complete (commits e4c75e0..016ff40, review clean)
