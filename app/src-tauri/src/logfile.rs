@@ -236,7 +236,7 @@ pub fn redact(line: &str) -> String {
             .rev()
             .collect();
         let end = tail
-            .find(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
+            .find(|c: char| c.is_whitespace() || matches!(c, '"' | '<' | '>'))
             .unwrap_or(tail.len());
         let (token, after) = tail.split_at(end);
         let first_delimiter = token.find(['/', '?', '#']).unwrap_or(token.len());
