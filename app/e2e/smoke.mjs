@@ -4277,6 +4277,42 @@ try {
   await waitFor('146 deleted', () => readAt(dailiesFile), '')
   console.log('PASS 146 right-click in a daily\'s edit field leaves the text menu to the browser; Esc writes nothing')
 
+  // 147: refused numbers in config.toml (read as their defaults, with a notice) are written back when the default
+  // shown in Settings is typed again and the field is left with Enter and then a click elsewhere; the comments above
+  // them and every other byte stay
+  const config147 = readAt(configFile)
+  assert(config147.includes('\narchive_after_days = 40\n'), `147 config.toml has no archive_after_days = 40: ${config147}`)
+  assert(config147.includes('\ncommit_delay_minutes = 7\n'), `147 config.toml has no commit_delay_minutes = 7: ${config147}`)
+  const hand147 = config147
+    .replace('\narchive_after_days = 40\n', '\n# days 147\narchive_after_days = 0\n')
+    .replace('\ncommit_delay_minutes = 7\n', '\n# minutes 147\ncommit_delay_minutes = 1441\n')
+  writeFileSync(`${configFile}.tmp`, hand147)
+  renameSync(`${configFile}.tmp`, configFile)
+  const refused147 = (key) => page.locator('[data-testid="notice"]', { hasText: `breccia/config.toml: ${key}` })
+  for (const key of ['[board] archive_after_days = 0', '[git] commit_delay_minutes = 1441']) {
+    await refused147(key).waitFor()
+    await refused147(key).getByRole('button', { name: 'Dismiss' }).click()
+  }
+  await page.locator('[data-testid="nav-settings"]').click()
+  await screen.waitFor()
+  const days147 = screen.locator('[data-testid="archive-days"]')
+  await waitFor('147 the days field shows the default', () => days147.inputValue(), '14')
+  await days147.fill('14')
+  await days147.press('Enter')
+  await screen.locator('section[data-section="boards"] h2').click()
+  const fixed147 = hand147.replace('\narchive_after_days = 0\n', '\narchive_after_days = 14\n')
+  await waitFor('147 days written', () => readAt(configFile), fixed147)
+  const delay147 = screen.locator('[data-testid="git-commit-delay"]')
+  await waitFor('147 the minutes field shows the default', () => delay147.inputValue(), '5')
+  await delay147.fill('5')
+  await delay147.press('Enter')
+  await screen.locator('section[data-section="git"] h2').click()
+  await waitFor('147 minutes written', () => readAt(configFile), fixed147.replace('\ncommit_delay_minutes = 1441\n', '\ncommit_delay_minutes = 5\n'))
+  assert((await refused147('').count()) === 0, '147 a notice about config.toml came back')
+  await page.locator('[data-testid="nav-journal"]').click()
+  await screen.waitFor({ state: 'detached' })
+  console.log('PASS 147 typing the default into a Settings number field writes it over a refused value in config.toml')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
