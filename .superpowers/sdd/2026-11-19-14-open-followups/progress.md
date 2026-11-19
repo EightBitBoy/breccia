@@ -15,3 +15,6 @@ Ruling: carry minor 1 (logfile.rs:223 typo/wrap) and minor 2 (pin a credential-f
 Task 1: minor (deferred to final check): svelte-check not run (Rust-only change).
 Task 1: complete (commits 17934d2..765024d, review clean)
 Task 2: dispatched (sonnet), BASE 60a5456
+Task 2: implementer DONE, commits b332d21, 10eaf72, c1b5bc6; review dispatched
+Task 2: review — spec ✅, quality approved; 2 minor (ragged doc wrap in edit.rs, under limit — left; 846e2b6 was the controller's ledger line, not a report).
+Task 2: complete (commits 60a5456..c1b5bc6, review clean)
