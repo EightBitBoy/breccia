@@ -149,3 +149,7 @@ are its questions for you; each answer decides what a later plan does.
    does not come back. Just clicking into the field and out again also writes the default it shows (as the Dailies
    reset field does); in Settings > Git, leaving either minutes field writes both. This happens only while the file's
    value is refused.
+
+132. [ ] **Dailies: a drag handle:** move the pointer over a daily: a handle of six dots appears left of its checkbox
+   (the row does not shift), and the pointer turns into a hand on it. Drag a daily by the handle within its group: it
+   moves as before. The handle hides when the pointer leaves the row; dragging anywhere else on the row still works.

@@ -4185,11 +4185,18 @@ try {
   await dAdd('Stretch')
   await dAdd('Read')
   await waitFor('143 open rows', dTexts, ['Check mails', 'Stretch', 'Read', 'Water the plants'])
-  const from143 = await dRow('Check mails').boundingBox()
+  // The drag handle shows only while the pointer is over its row; the drag starts on the handle.
+  const grip143 = dRow('Check mails').locator('[data-testid="daily-grip"]')
+  const gripOpacity = () => grip143.evaluate((el) => getComputedStyle(el).opacity)
+  await page.mouse.move(0, 0)
+  await waitFor('143 the handle is hidden without the pointer', gripOpacity, '0')
+  await dRow('Check mails').locator('[data-testid="daily-text"]').hover()
+  await waitFor('143 the handle shows on hover', gripOpacity, '1')
+  const from143 = await grip143.boundingBox()
   const to143 = await dRow('Read').boundingBox()
-  await page.mouse.move(from143.x + from143.width - 12, from143.y + from143.height / 2)
+  await page.mouse.move(from143.x + from143.width / 2, from143.y + from143.height / 2)
   await page.mouse.down()
-  await page.mouse.move(from143.x + from143.width - 12, from143.y + from143.height / 2 + 10, { steps: 4 })
+  await page.mouse.move(from143.x + from143.width / 2, from143.y + from143.height / 2 + 10, { steps: 4 })
   await page.mouse.move(to143.x + to143.width - 12, to143.y + to143.height - 3, { steps: 10 })
   await page.mouse.up()
   await waitDailies(
@@ -4197,7 +4204,7 @@ try {
     '- Water the plants\n  note:: keep\n  checked:: @STAMP@\n- Stretch\n- Read\n- Check mails\n  checked:: 2000-01-01 00:00\n',
   )
   await waitFor('143 the view follows the drag', dTexts, ['Stretch', 'Read', 'Check mails', 'Water the plants'])
-  console.log('PASS 143 dragging a daily below another reorders the open group and the file')
+  console.log('PASS 143 the drag handle shows on hover; dragging a daily by it below another reorders the open group and the file')
 
   // 144: Settings > Dailies writes [dailies] reset to config.toml and keeps its earlier bytes
   unlinkSync(dailiesFile)

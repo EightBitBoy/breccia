@@ -205,6 +205,12 @@
                 use:dailyDrop={{ id: d.id, group }}
                 onkeydown={(ev) => rowKey(ev, d, group)}
               >
+                <!-- A hint for the pointer: the whole row drags, the handle shows where to take it. -->
+                <span class="daily-grip" data-testid="daily-grip" aria-hidden="true" title="Drag to reorder">
+                  <svg viewBox="0 0 10 16" width="8" height="13" fill="currentColor">
+                    {#each [3, 8, 13] as cy (cy)}<circle cx="2.5" {cy} r="1.4" /><circle cx="7.5" {cy} r="1.4" />{/each}
+                  </svg>
+                </span>
                 <input
                   type="checkbox"
                   data-testid="daily-check"

@@ -541,8 +541,10 @@ notes; the format is `docs/format.md` §15.
   closed while Breccia runs (also across notes folders) and is not saved. With nothing ticked there is no header. When
   every daily is ticked, the view says "All done for today". Showing ticked dailies last is display only; the file keeps
   the user's order.
-- **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` / `Alt
-  ↓` on a focused row. The file order changes: the daily is written right before the daily it was dropped above.
+- **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` /
+  `Alt ↓` on a focused row. A drag handle (six dots) shows left of a row while the pointer is over it; the row can be
+  taken by the handle or anywhere else. The file order changes: the daily is written right before the daily it was
+  dropped above.
 - **Starting afresh.** All ticks are gone again at the reset time, midnight unless Settings > Dailies sets another
   (`[dailies] reset` in `breccia/config.toml`, shared, `HH:MM` on this computer's clock; the field takes `4:00` and
   saves `"04:00"`; a wrong value in the file is read as `00:00` with a notice, §6). A daily is ticked when the time it

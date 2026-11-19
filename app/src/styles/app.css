@@ -559,6 +559,15 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
   position: relative; display: flex; align-items: center; gap: 8px; padding: 3px 6px; border-radius: 6px;
 }
 .daily:hover { background: var(--hover); }
+/* The drag handle sits in the gutter left of the row, so the row does not move when it shows. */
+.daily-grip {
+  position: absolute; left: -16px; top: 0; bottom: 0; width: 14px; display: flex; align-items: center;
+  justify-content: center; color: var(--muted); cursor: grab; opacity: 0; transition: opacity .1s;
+}
+.daily:hover .daily-grip { opacity: 1; }
+.daily.dragging .daily-grip { cursor: grabbing; }
+.daily-grip:hover { color: var(--text); }
+@media (prefers-reduced-motion: reduce) { .daily-grip { transition: none; } }
 .daily input[type='checkbox'] { flex: none; margin: 0; cursor: pointer; }
 .daily-text {
   flex: 1; min-width: 0; padding: 2px 4px; border: none; background: none; color: var(--text); font: inherit;
