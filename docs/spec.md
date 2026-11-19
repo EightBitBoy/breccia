@@ -223,19 +223,20 @@ second click on the Git history button is Back.
 - Every block is shown rendered. Clicking a block turns **only that block** into a CodeMirror 6 editor showing its
   Markdown, with light live formatting; leaving it renders it again.
 - Keys (Logseq conventions): `Enter` new block below (the text after the cursor moves into it); `Shift Enter` new line
-  inside the block; `Tab` / `Shift Tab` indent / outdent; `Alt ↑` / `Alt ↓` move the block with its children; `↑` / `↓`
-  at the first/last line move to the previous/next block; `Backspace` in an empty block removes it (its sub-blocks move up
-  one level) and moves the caret to the end of the previous one's own text, before its property lines; at the start of a
-  non-empty block it merges the block into the previous one, after that block's own text and before its property lines
-  (a block of several lines is not joined onto a block with property lines, and a notice says why); `Esc` leaves
-  editing;
-  `Ctrl Enter` cycles the state through the states marked "in cycle", in list order, and after the last one starts
-  again at the first (default: none → TODO → DOING → DONE → TODO); it never removes the state. `Ctrl Shift Enter`
-  removes the state, also on a selection; so does deleting the keyword; `Ctrl Shift K` deletes the block with its
-  children, also on a selection; the caret moves to the end of the block above's own text, before its property lines (the start of the next one for a page's
-  first block); the only block of a page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and `Delete` do, and if that
-  would leave the page (or journal day) without a block, one empty block stays with the caret in it; one `Ctrl Z` brings it back; `Ctrl Z` /
-  `Ctrl Y` undo / redo, also across block boundaries (splits, merges, moves).
+  inside the block; `Tab` / `Shift Tab` indent / outdent; `Alt ↑` / `Alt ↓` move the block with its children; `↑`
+  / `↓` at the first/last line move to the previous/next block; `Backspace` in an empty block removes it (its
+  sub-blocks move up one level) and moves the caret to the end of the previous one's own text, before its property
+  lines; at the start of a non-empty block it merges the block into the previous one, after that block's own text and
+  before its property lines (a block of several lines is not joined onto a block whose text ends with property lines,
+  and a notice says why); `Esc` leaves editing; `Ctrl Enter` cycles the state through the states marked "in cycle", in
+  list order, and after the last one starts again at the first (default: none → TODO → DOING → DONE → TODO); it
+  never removes the state. `Ctrl Shift Enter` removes the state, also on a selection; so does deleting the keyword;
+  `Ctrl Shift K` deletes the block with its children, also on a selection; the caret moves to the end of the block
+  above's own text, before its property lines (the start of the next one for a page's first block); the only block of a
+  page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and
+  `Delete` do, and if that would leave the page (or journal day) without a block, one empty block stays with the caret
+  in it; one `Ctrl Z` brings it back; `Ctrl Z` / `Ctrl Y` undo / redo, also across block boundaries (splits, merges,
+  moves).
 - Blocks with children have a fold arrow; folding is remembered per block for the session. *(my call: Logseq writes
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
 - **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` lists only the existing
@@ -494,7 +495,8 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
 ### 7.12 Settings
 
 One screen with sections: Notes folder (open/switch), States, Boards, Git, Journal (nothing yet beyond defaults),
-Dailies (the time they start afresh, §7.14), Themes, Appearance (how web addresses are shown), Keyboard (read-only list of shortcuts in the first version).
+Dailies (the time they start afresh, §7.14), Themes, Appearance (how web addresses are shown), Keyboard (read-only list
+of shortcuts in the first version).
 
 Settings opens in the main area from the sidebar footer, with `Ctrl ,`, or by clicking the folder name; changes apply
 at once.
@@ -517,49 +519,50 @@ strip stays empty and quiet.
 
 ### 7.14 Dailies
 
-A list of things you do every day, each with a checkbox. The sidebar entry "Dailies" sits right under Journal and is
-a step of Back and Forward like the Archive. The list is the file `breccia/dailies.md`, shared and tracked in Git like
-the notes; the format is `docs/format.md` §15.
+A list of things you do every day, each with a checkbox. The sidebar entry "Dailies" sits right under Journal and is a
+step of Back and Forward like the Archive. The list is the file `breccia/dailies.md`, shared and tracked in Git like the
+notes; the format is `docs/format.md` §15.
 
 - **One flat list.** Each daily is one line of plain text: no Markdown, and `[[x]]` and `#tag` are not links. The file
   is not indexed, so dailies have no search hits, linked references, tags or graph dots.
-- **Add** with the "+" beside the title: it opens the field "Add a daily" at the bottom (Enter adds and keeps the
-  field open for the next one; Esc, or leaving it empty, closes it). With no dailies the field shows at once.
-  **Edit** by clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu,
-  or by emptying the text and leaving the field (Enter or a click elsewhere; Cancel keeps the daily with its old
-  text). Breccia asks first ("Delete the daily '…'?"); when the daily has lines you cannot see in the view (blocks
-  nested under it, continuation text, a `note::` or any other property but `checked::`), the question says that the
-  lines written under it go too. There is no undo or redo in the Dailies view.
+- **Add** with the "+" beside the title: it opens the field "Add a daily" at the bottom (Enter adds and keeps the field
+  open for the next one; Esc, or leaving it empty, closes it). With no dailies the field shows at once. **Edit** by
+  clicking the text (Enter or leaving the field saves, Esc cancels). **Delete** in the right-click menu, or by emptying
+  the text and leaving the field (Enter or a click elsewhere; Cancel keeps the daily with its old text). Breccia asks
+  first ("Delete the daily '…'?"); when the daily has lines you cannot see in the view (blocks nested under it,
+  continuation text, a `note::` or any other property but `checked::`), the question says that the lines written under
+  it go too. There is no undo or redo in the Dailies view.
 - **Tick** with the checkbox. A ticked daily moves into the section "Done (N)" below the open ones (no animation with
   reduced motion); unticking brings it back. The section is closed when Breccia starts, so ticked dailies are hidden; a
-  click on its header opens it and shows them greyed and struck through, and a second click closes it. It stays open
-  or closed while Breccia runs (also across notes folders) and is not saved. With nothing ticked there is no header.
-  When every daily is ticked, the view says "All done for today". Showing ticked dailies last is display only; the
-  file keeps the user's order.
-- **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` / `Alt ↓`
-  on a focused row. The file order changes: the daily is written right before the daily it was dropped above.
+  click on its header opens it and shows them greyed and struck through, and a second click closes it. It stays open or
+  closed while Breccia runs (also across notes folders) and is not saved. With nothing ticked there is no header. When
+  every daily is ticked, the view says "All done for today". Showing ticked dailies last is display only; the file keeps
+  the user's order.
+- **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` / `Alt
+  ↓` on a focused row. The file order changes: the daily is written right before the daily it was dropped above.
 - **Starting afresh.** All ticks are gone again at the reset time, midnight unless Settings > Dailies sets another
   (`[dailies] reset` in `breccia/config.toml`, shared, `HH:MM` on this computer's clock; the field takes `4:00` and
   saves `"04:00"`; a wrong value in the file is read as `00:00` with a notice, §6). A daily is ticked when the time it
   was ticked (`checked::`) is at or after the most recent reset, so with the reset at 04:00 a tick at 01:30 counts for
-  the day before. Nothing is written at reset time: the window works it out and redraws at the next reset, also when
-  the PC was asleep over it or the clock was changed (it re-checks on focus, when the window becomes visible, and once
-  a minute). A tick from the future (the clock was set back) counts as ticked.
-- **Status bar.** Left: "Dailies 3 open", or "Dailies ✓" when all are ticked; with no dailies it shows nothing. A click
-  opens the view.
+  the day before. Nothing is written at reset time: the window works it out and redraws at the next reset, also when the
+  PC was asleep over it or the clock was changed (it re-checks on focus, when the window becomes visible, and once a
+  minute). A tick from the future (the clock was set back) counts as ticked.
+- **Status bar.** Left: "Dailies 3 open", or "Dailies ✓" when all are ticked; with no dailies it shows nothing. A
+  click opens the view.
 - **Outside changes.** The file may be edited by hand or arrive with a Git pull: the view follows at once. A change
-  Breccia makes is made on the file as it is now; if the daily is gone or its text there differs from the text the
-  view showed when the user acted (also when the view followed the change while a delete question or an edit field
-  was open), it is refused with "This daily changed in another program; the list now shows the file as it is." A delete is also refused when lines were written under the daily
-  after the question was asked; asking again names them. A failed write keeps the list as it was and says so.
-- **What is kept.** A preamble, nested blocks, continuation lines, other properties, and a BOM stay as text.
-  Nested blocks are not shown; they move and are deleted with their daily. A daily Breccia changes (tick, untick, edit)
-  is written in Breccia's form; apart from that, dailies it did not change keep their text. A file with CRLF becomes LF
-  the first time Breccia writes it (§4).
-- **Git.** A commit message names a change to this file "dailies" (§7.9). Two computers that tick the same daily between
-  syncs can conflict like any file (§7.9).
+  Breccia makes is made on the file as it is now; if the daily is gone or its text there differs from the text the view
+  showed when the user acted (also when the view followed the change while a delete question or an edit field was open),
+  it is refused with "This daily changed in another program; the list now shows the file as it is." A delete is also
+  refused when lines were written under the daily after the question was asked; asking again names them. A failed write
+  keeps the list as it was and says so.
+- **What is kept.** A preamble, nested blocks, continuation lines, other properties, and a BOM stay as text. Nested
+  blocks are not shown; they move and are deleted with their daily. A daily Breccia changes (tick, untick, edit) is
+  written in Breccia's form; apart from that, dailies it did not change keep their text. A file with CRLF becomes LF the
+  first time Breccia writes it (§4).
+- **Git.** A commit message names a change to this file "dailies" (§7.9). Two computers that tick the same daily
+  between syncs can conflict like any file (§7.9).
 - Not in the first version: dailies on some weekdays only, a history or streaks, groups such as Morning / Evening
-  (`docs/backlog.md`).
+  (closed as not needed, `docs/backlogged.md` #92 to #94).
 
 ## 8. Scale and speed
 

@@ -180,6 +180,7 @@ Candidates for the plan after it, to settle with the owner:
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
+  With little memory, `CARGO_BUILD_JOBS=2 just e2e`.
 - CI (`.github/workflows/ci.yml`) runs `just test` and `just lint` on every push; e2e runs only locally.
 
 ## Owner decisions in force

@@ -412,11 +412,11 @@ are its questions for you; each answer decides what a later plan does.
 
 ## Dailies (plan 13)
 
-116. [ ] **The Dailies view:** the sidebar has "Dailies" right under Journal. Open it with no file: it says "No dailies yet"
-   and offers the field "Add a daily". Type a text and press Enter: the daily appears and the field stays focused.
-   Click a text to edit it (Enter or leaving the field saves, Esc cancels; an emptied field changes nothing). Right-click
-   a row and choose Delete: Breccia asks "Delete the daily '…'?" (Esc cancels). Check `breccia/dailies.md` in an editor
-   after each step: one `- text` line per daily.
+116. [ ] **The Dailies view:** the sidebar has "Dailies" right under Journal. Open it with no file: it says "No dailies
+   yet" and offers the field "Add a daily". Type a text and press Enter: the daily appears and the field stays focused.
+   Click a text to edit it (Enter or leaving the field saves, Esc cancels; an emptied field changes nothing).
+   Right-click a row and choose Delete: Breccia asks "Delete the daily '…'?" (Esc cancels). Check `breccia/dailies.md`
+   in an editor after each step: one `- text` line per daily.
 
 117. [ ] **Ticking:** tick a daily: it turns grey and struck through and sinks below the open ones; the file gets a
    `checked:: YYYY-MM-DD HH:MM` line under it, and the order of the file does not change. Untick it: the line goes and
@@ -424,12 +424,12 @@ are its questions for you; each answer decides what a later plan does.
    With "reduce motion" on in the system, the row jumps instead of sliding.
 
 118. [ ] **Reordering:** drag an open daily above another open one: the file order follows (the daily is written right
-   before the one you dropped it on). A ticked daily moves only among ticked ones. `Alt ↑` / `Alt ↓` on a focused row
-   do the same by one place.
+   before the one you dropped it on). A ticked daily moves only among ticked ones. `Alt ↑` / `Alt ↓` on a focused
+   row do the same by one place.
 
-119. [ ] **The status bar item:** the left of the status bar shows "Dailies 3 open"; with all ticked it shows "Dailies ✓";
-   with no dailies at all it shows nothing. A click opens the view. Back and Forward step through the view like the
-   Archive.
+119. [ ] **The status bar item:** the left of the status bar shows "Dailies 3 open"; with all ticked it shows "Dailies
+   ✓"; with no dailies at all it shows nothing. A click opens the view. Back and Forward step through the view like
+   the Archive.
 
 120. [ ] **Starting afresh:** in Settings > Dailies (after Journal) the field takes `4:00` and saves `"04:00"` in
    `breccia/config.toml` under `[dailies]` (its comments stay). With 04:00, a daily ticked at 01:30 counts for the day
@@ -442,11 +442,11 @@ are its questions for you; each answer decides what a later plan does.
 121. [ ] **Outside edits and Git:** edit `breccia/dailies.md` in another editor (add, reorder, tick a daily by adding a
    `checked::` line): the view follows at once. In Breccia, right-click a daily and choose Delete, and leave the
    question open; change that daily's text in the editor and save; then press Delete in Breccia: it is refused with
-   "This daily changed in another program; the list now shows the file as it is.", and the file keeps the changed
-   daily. The same holds for an edit field left open (click a daily's text, change it in the editor, then press Enter
-   in Breccia): the editor's text stays.
-   Text you added by hand (an intro line, a note under a daily) stays; the other dailies keep their text (a file with CRLF line endings becomes LF on Breccia's first write). A Git sync
-   commit that touched only this file says "dailies" in its message.
+   "This daily changed in another program; the list now shows the file as it is.", and the file keeps the changed daily.
+   The same holds for an edit field left open (click a daily's text, change it in the editor, then press Enter in
+   Breccia): the editor's text stays. Text you added by hand (an intro line, a note under a daily) stays; the other
+   dailies keep their text (a file with CRLF line endings becomes LF on Breccia's first write). A Git sync commit that
+   touched only this file says "dailies" in its message.
 
 122. [ ] **Dailies are plain text:** a daily written `Call [[Mum]] #family` shows exactly that, with no link and no
    tag; the text is not found by search and `Mum` gets no linked reference from it.
@@ -454,7 +454,8 @@ are its questions for you; each answer decides what a later plan does.
 123. [ ] **Question (answered): deleting a daily:** the plan recommended an undo for a deleted daily. **Answered (owner,
    2026-11-18): ask before deleting and have no undo.** Done: the question names the daily, and when the daily has lines
    under it that the view does not show (nested blocks, a `note::` line, any property but `checked::`), it says that
-   those lines go too. Is that enough, or should a deleted daily also be recoverable (the file is in Git, if you use it)?
+   those lines go too. Is that enough, or should a deleted daily also be recoverable (the file is in Git, if you use
+   it)?
 
 124. [ ] **Dailies: ticked dailies are hidden:** tick a daily: it leaves the list and the header "▸ Done (1)" appears
    below the open dailies. Click the header: it opens (the triangle turns down) and shows the ticked dailies greyed and
@@ -469,6 +470,6 @@ are its questions for you; each answer decides what a later plan does.
    text keeps the field open when you click elsewhere. With no dailies at all the field shows at once.
 
 126. [ ] **Dailies: deleting by emptying the text:** click a daily's text, delete all of it and press Enter (or click
-   elsewhere): Breccia asks "Delete the daily '…'?", the same question as Delete in the right-click menu (with the note
-   about hidden lines under it). Delete removes it; Cancel or Esc keeps the daily with its old text. Esc while editing
-   still cancels the edit without asking.
+   elsewhere): Breccia asks "Delete the daily '…'?", the same question as Delete in the right-click menu (with the
+   note about hidden lines under it). Delete removes it; Cancel or Esc keeps the daily with its old text. Esc while
+   editing still cancels the edit without asking.
