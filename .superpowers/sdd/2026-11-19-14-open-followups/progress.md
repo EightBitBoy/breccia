@@ -50,3 +50,8 @@ Task 7: implementer DONE, commit 016ff40, e2e 218 PASS x2; review dispatched
 Task 7: review — spec ✅, quality approved; 2 minor. Barrier sound: all commands chain on one queue (api.ts enqueue).
 Task 7: minor (deferred → follow-ups): e2e dAdd hard-codes "138" in its wait label; give it a step argument.
 Task 7: complete (commits e4c75e0..016ff40, review clean)
+Task 8: dispatched (haiku), BASE a54660e
+Task 8: implementer DONE, commit 2902eca; controller ran format_doc:: (9 ok) and docs.test.mjs (6 ok); review dispatched
+Task 8: review — spec ✅, quality approved; 2 minor (cosmetic token splits at wraps) — left.
+Task 8: complete (commits a54660e..2902eca, review clean)
+Ruling: review items for plan 14 are numbered contiguously from 127 (F7 dropped the planned 130; no number was assigned yet, so nothing is reused) — cost if wrong: none.
