@@ -186,7 +186,8 @@ properties). The frontend gets parsed structure from the core and only adds synt
   not read (§7.14).
   A number outside the range Settings allows (Git minutes 0 to 1440, archive days 1 to 3650) does not stop the file from
   being read: Breccia uses that setting's default and shows a notice naming it, and leaves the file as it is when it
-  is read (a later Settings save of that section writes the default).
+  is read (a later Settings save of that section writes the default). Typing a valid value in its Settings field, also
+  the default shown there, writes it, and the notice stops.
 - **Saving** happens shortly after typing pauses (well under a second); there is no Save button.
 
 ## 7. Features
