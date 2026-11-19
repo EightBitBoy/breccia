@@ -25,3 +25,11 @@ Ruling: carry minor "uneven §7.14 wrap" into Task 8 (docs wrap) — cost if wro
 Task 3: minor (deferred): new Rust tests use raw multi-line string literals rather than \n escapes (style only).
 Task 3: minor (deferred): e2e 145 covers the menu delete path only; the emptied-text path sends the same row (vitest covers remove's nested).
 Task 3: complete (commits ef64a1d..d2afb65, review clean)
+Task 4: dispatched (opus), BASE 533e275
+Task 4: implementer DONE_WITH_CONCERNS (upper clamp of moveTarget is redundant, untestable; step 146 synthetic contextmenu), commits 29fa394..d3004d1 (6), e2e 217 PASS; review dispatched (opus)
+Task 4: review (opus) — spec ✅, quality approved; 3 minor.
+Task 4: minor (deferred → plan 14 follow-ups): moveTarget's upper clamp is redundant/defensive only; past-the-end tests do not mutation-check it.
+Task 4: minor (deferred): 'all' comment at dailiesState.test.ts:329 could say every other command is refused too.
+Task 4: minor (deferred → plan 14 follow-ups): pre-existing — a touch long press opens the Dailies menu without `pick` (over the edit field, stale row, or empty).
+Ruling: Task 9 (bookkeeping) owns F7's review-item-130 drop and Review Focus fix, and F13's "closed: needed for the field's type" strike — carried in its dispatch — cost if wrong: none.
+Task 4: complete (commits 533e275..d3004d1, review clean)
