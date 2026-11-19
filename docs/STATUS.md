@@ -159,7 +159,7 @@ open ones; it opens again at the reset time, set in Settings > Dailies (default 
 `breccia/config.toml`). The status bar shows "Dailies N open", or "Dailies ✓" when all are done. The dailies live in
 the file `breccia/dailies.md` (plain text, followed when it changes outside or by Git), which is format version 9. Deleting
 a daily asks first, and there is no undo. A comment above a changed setting in `config.toml` is no longer dropped (a fix
-found on the way). The owner checks review items 115 to 123 (115 is the config comment). It is released as 1.8.0 (2026-11-18, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.0).
+found on the way). The owner checks review items 115 to 125 (115 is the config comment; 124 and 125 are owner tweaks after the plan: ticked dailies hide in a closed "Done (N)" section, and a "+" beside the title opens the add field). It is released as 1.8.0 (2026-11-18, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.0); the two tweaks are in 1.8.1 (2026-11-19, https://github.com/EightBitBoy/breccia/releases/tag/v1.8.1).
 Weekday-only dailies, a history and groups are backlog #92 to #94; open follow-ups are in the plan's follow-ups file.
 
 Candidates for the plan after it, to settle with the owner:
