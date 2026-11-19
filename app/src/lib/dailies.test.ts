@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 import {
   DEFAULT_RESET,
   dailiesItem,
+  dailyEntries,
   deleteQuestion,
+  doneLabel,
   dropPlace,
   groups,
   isChecked,
@@ -75,6 +77,31 @@ describe('groups', () => {
     const g = groups(list, d(18, 9, 0), '00:00')
     expect(g.open.map((x) => x.id)).toEqual([2, 4])
     expect(g.checked.map((x) => x.id)).toEqual([1, 3])
+  })
+})
+
+describe('dailyEntries', () => {
+  const g = { open: [daily(2), daily(4)], checked: [daily(1), daily(3)] }
+  const keys = (doneOpen: boolean, allDone = false, gr = g) => dailyEntries(gr, allDone, doneOpen).map((e) => e.key)
+  it('collapsed: the open dailies, then the Done header; the ticked ones are hidden', () => {
+    expect(keys(false)).toEqual([2, 4, 'fold'])
+  })
+  it('expanded: the ticked ones follow the header', () => {
+    expect(keys(true)).toEqual([2, 4, 'fold', 1, 3])
+  })
+  it('the header counts the ticked ones and says whether it is open', () => {
+    const fold = dailyEntries(g, false, true).find((e) => e.key === 'fold')
+    expect(fold).toMatchObject({ count: 2, open: true })
+  })
+  it('no header without ticked dailies', () => {
+    expect(keys(true, false, { open: g.open, checked: [] })).toEqual([2, 4])
+  })
+  it('all done: the note comes before the header', () => {
+    expect(keys(false, true, { open: [], checked: g.checked })).toEqual(['done', 'fold'])
+  })
+  it('the label', () => {
+    expect(doneLabel(1)).toBe('Done (1)')
+    expect(doneLabel(3)).toBe('Done (3)')
   })
 })
 

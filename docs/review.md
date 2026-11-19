@@ -455,3 +455,10 @@ are its questions for you; each answer decides what a later plan does.
    2026-11-18): ask before deleting and have no undo.** Done: the question names the daily, and when the daily has lines
    under it that the view does not show (nested blocks, a `note::` line, any property but `checked::`), it says that
    those lines go too. Is that enough, or should a deleted daily also be recoverable (the file is in Git, if you use it)?
+
+124. [ ] **Dailies: ticked dailies are hidden:** tick a daily: it leaves the list and the header "▸ Done (1)" appears
+   below the open dailies. Click the header: it opens (the triangle turns down) and shows the ticked dailies greyed and
+   struck through, in their file order; they can be unticked, edited, dragged and deleted there as before. Click it
+   again to close it. The section is closed whenever Breccia starts and stays as you left it while Breccia runs (it is
+   not saved). With nothing ticked the header is gone; with all ticked the view still says "All done for today" above
+   it. Should the open or closed state be remembered across restarts?

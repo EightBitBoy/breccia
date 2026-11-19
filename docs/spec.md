@@ -527,9 +527,12 @@ the notes; the format is `docs/format.md` §15.
   the daily has lines you cannot see in the view (blocks nested under it, continuation text, a `note::` or any other
   property but `checked::`), the question says that the lines written under it go too. There is no undo or redo in the
   Dailies view.
-- **Tick** with the checkbox. A ticked daily is greyed and struck through and sits below the open ones (no
-  animation with reduced motion); unticking brings it back. When every daily is ticked, the view says "All done for
-  today". Showing ticked dailies last is display only; the file keeps the user's order.
+- **Tick** with the checkbox. A ticked daily moves into the section "Done (N)" below the open ones (no animation with
+  reduced motion); unticking brings it back. The section is closed when Breccia starts, so ticked dailies are hidden; a
+  click on its header opens it and shows them greyed and struck through, and a second click closes it. It stays open
+  or closed while Breccia runs (also across notes folders) and is not saved. With nothing ticked there is no header.
+  When every daily is ticked, the view says "All done for today". Showing ticked dailies last is display only; the
+  file keeps the user's order.
 - **Reorder** by dragging a row within its own group (open among open, ticked among ticked), or with `Alt ↑` / `Alt ↓`
   on a focused row. The file order changes: the daily is written right before the daily it was dropped above.
 - **Starting afresh.** All ticks are gone again at the reset time, midnight unless Settings > Dailies sets another

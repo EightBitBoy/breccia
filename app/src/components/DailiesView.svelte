@@ -4,7 +4,7 @@
   import { onMount, tick } from 'svelte'
   import { flip } from 'svelte/animate'
   import { ContextMenu } from 'bits-ui'
-  import { deleteQuestion, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
+  import { dailyEntries, deleteQuestion, doneLabel, dropPlace, moveTarget, stepTarget, tickedTip } from '../lib/dailies'
   import type { Dailies } from '../lib/dailies.svelte'
   import { dailyDrag, dailyDrop, watchDailyDrops } from '../lib/dnd'
   import type { BlockId, DailyView } from '../lib/types'
@@ -19,16 +19,10 @@
   } = $props()
 
   type Group = 'open' | 'checked'
-  type Entry = { key: BlockId; d: DailyView; group: Group } | { key: 'done'; d: null; group: null }
 
   const groups = $derived(dailies.groups)
-  /** One keyed list, so a row slides from one group to the other. */
-  const entries = $derived.by(() => {
-    const e: Entry[] = groups.open.map((d) => ({ key: d.id, d, group: 'open' as const }))
-    if (dailies.allDone) e.push({ key: 'done', d: null, group: null })
-    e.push(...groups.checked.map((d) => ({ key: d.id, d, group: 'checked' as const })))
-    return e
-  })
+  /** One keyed list, so a row slides from one group to the other (or into the closed "Done" section). */
+  const entries = $derived(dailyEntries(groups, dailies.allDone, dailies.doneOpen))
   const ids = (g: Group) => (g === 'open' ? groups.open : groups.checked).map((d) => d.id)
   const groupOf = (id: BlockId): Group | null =>
     groups.open.some((d) => d.id === id) ? 'open' : groups.checked.some((d) => d.id === id) ? 'checked' : null
@@ -155,9 +149,17 @@
       <div class="daily-list" role="list" aria-label="Dailies" bind:this={listEl}>
         {#each entries as e (e.key)}
           <div class="daily-slot" role="listitem" animate:flip={{ duration: reduced ? 0 : 150 }}>
-            {#if e.d === null}
+            {#if e.key === 'done'}
               <p class="dailies-done" data-testid="dailies-done">All done for today</p>
-            {:else}
+            {:else if e.key === 'fold'}
+              <button
+                class="daily-fold"
+                data-testid="dailies-fold"
+                aria-expanded={e.open}
+                onclick={() => (dailies.doneOpen = !dailies.doneOpen)}
+                ><span class="tri" class:open={e.open} aria-hidden="true">▸</span>{doneLabel(e.count)}</button
+              >
+            {:else if 'd' in e}
               {@const d = e.d}
               {@const group = e.group}
               <!-- svelte-ignore a11y_no_static_element_interactions -->

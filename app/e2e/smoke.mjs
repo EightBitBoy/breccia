@@ -4054,18 +4054,26 @@ try {
   await waitFor('138 two open', dStatusText, 'Dailies 2 open')
   console.log('PASS 138 Dailies opens empty; two added dailies are in dailies.md and the status bar says 2 open')
 
-  // 139: ticking writes checked:: and moves the row last; unticking restores the bytes
+  // 139: ticking writes checked:: and moves the row into the closed Done section; opened, it shows last; unticking
+  // restores the bytes. The section stays open for the later steps.
+  const dFold = page.locator('[data-testid="dailies-fold"]')
   await dRow('Check emails').locator('[data-testid="daily-check"]').click()
   await waitDailies('139 ticked', '- Check emails\n  checked:: @STAMP@\n- Water the plants\n')
+  await waitFor('139 the ticked row is hidden', dTexts, ['Water the plants'])
+  await waitFor('139 the Done header', async () => (await dFold.textContent()).replace('▸', '').trim(), 'Done (1)')
+  assert((await dFold.getAttribute('aria-expanded')) === 'false', '139 the Done section starts open')
+  await waitFor('139 one open', dStatusText, 'Dailies 1 open')
+  await dFold.click()
   await waitFor('139 the ticked row is last', dTexts, ['Water the plants', 'Check emails'])
+  assert((await dFold.getAttribute('aria-expanded')) === 'true', '139 the Done section did not open')
   assert((await dRows.last().getAttribute('data-checked')) === 'true', '139 the last row is not checked')
   assert((await dRows.first().getAttribute('data-checked')) === 'false', '139 the first row is checked')
-  await waitFor('139 one open', dStatusText, 'Dailies 1 open')
   await dRow('Check emails').locator('[data-testid="daily-check"]').click()
   await waitFor('139 unticked bytes', () => readAt(dailiesFile), text138)
   await waitFor('139 unticked order', dTexts, ['Check emails', 'Water the plants'])
+  await dFold.waitFor({ state: 'detached' })
   await waitFor('139 two open again', dStatusText, 'Dailies 2 open')
-  console.log('PASS 139 ticking writes checked:: and moves the row last; unticking restores the file')
+  console.log('PASS 139 a ticked daily goes into the closed Done section; opened, it shows last; unticking restores the file')
 
   // 140: all ticked: the check mark and the note; the status item opens Dailies from a page; Back returns to the page
   await dRow('Check emails').locator('[data-testid="daily-check"]').click()

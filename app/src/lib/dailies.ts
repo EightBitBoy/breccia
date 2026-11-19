@@ -57,6 +57,34 @@ export function groups(
   return { open, checked }
 }
 
+/** One row of the Dailies list: a daily, the "All done for today" note, or the header of the ticked ones. */
+export type DailyEntry =
+  | { key: BlockId; d: DailyView; group: 'open' | 'checked' }
+  | { key: 'done' }
+  | { key: 'fold'; count: number; open: boolean }
+
+/**
+ * The rows in order: the open dailies, the note when all are ticked, then the "Done" header and, only when it is
+ * open, the ticked dailies. With nothing ticked there is no header.
+ */
+export function dailyEntries(
+  g: { open: DailyView[]; checked: DailyView[] },
+  allDone: boolean,
+  doneOpen: boolean,
+): DailyEntry[] {
+  const e: DailyEntry[] = g.open.map((d) => ({ key: d.id, d, group: 'open' as const }))
+  if (allDone) e.push({ key: 'done' })
+  if (g.checked.length === 0) return e
+  e.push({ key: 'fold', count: g.checked.length, open: doneOpen })
+  if (doneOpen) e.push(...g.checked.map((d) => ({ key: d.id, d, group: 'checked' as const })))
+  return e
+}
+
+/** The header of the ticked dailies. */
+export function doneLabel(n: number): string {
+  return `Done (${n})`
+}
+
 /**
  * The `before` of `dailies.move` for dropping `id` at place `index` of its group (the place it
  * ends up in, counted among the group); `undefined` when the group's order would not change.

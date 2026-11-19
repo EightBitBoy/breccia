@@ -23,6 +23,8 @@ export class Dailies {
   /** The dailies in file order; null until the first answer and after `forget`. */
   list = $state.raw<DailyView[] | null>(null)
   reset = $state(DEFAULT_RESET)
+  /** Whether the view shows the ticked dailies; closed at start, kept while the app runs. */
+  doneOpen = $state(false)
   now = $state(new Date())
   private resetTimer: number | null = null
   private tickTimer: number | null = null

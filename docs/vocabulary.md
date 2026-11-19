@@ -39,7 +39,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 |---|---|---|
 | **sidebar** | The left column: search, Journal, Dailies, All pages, Boards, the page tree, Tags, Graph and Settings. | Left of the window |
 | **status bar** | The strip along the bottom: save and index state, Git, the Dailies count ("Dailies 3 open", "Dailies ✓"), the theme button, help. | Bottom of the window |
-| **Dailies** | The view of the things you do every day: a checkbox list, ticked ones greyed and struck through at the bottom, starting afresh at the reset time set in Settings > Dailies. | Sidebar "Dailies", status bar |
+| **Dailies** | The view of the things you do every day: a checkbox list, ticked ones hidden in the "Done" section at the bottom, starting afresh at the reset time set in Settings > Dailies. | Sidebar "Dailies", status bar |
 | **view** | What the main area shows: the journal, a page, a board, Dailies, All pages, Archive, Git history, Graph, Settings. Back and Forward step through views. | The main area |
 
 ## Also said (the proposed word is the first one)
