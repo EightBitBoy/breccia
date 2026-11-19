@@ -553,3 +553,11 @@ too. To settle in the plan, with the wording: (a) the file loads, each out-of-ra
 for this run, and one notice names the key (the file is not rewritten); or (b) the file is refused like a file with a
 bad state keyword: Breccia keeps the settings it had and shows "cannot be read". Cost: one call in `Config::validate`
 and a notice text.
+
+## 92. Weekday-only dailies (Dailies) (won't do, 2026-11-19)
+
+From plan 13, owner decision 6. A daily that counts only on some days, for example a line `days:: mon-fri`, so a work
+daily does not show as open on a weekend. Needs a decision on the property's spelling, and on what the status bar
+counts on a day a daily does not apply.
+
+Not needed (owner, 2026-11-19): every daily counts every day.

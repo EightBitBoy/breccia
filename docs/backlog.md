@@ -271,12 +271,6 @@ From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctr
 the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
 clicking into a block. A new feature: decide the keys and what it should cover.
 
-## 92. Weekday-only dailies (Dailies)
-
-From plan 13, owner decision 6. A daily that counts only on some days, for example a line `days:: mon-fri`, so a work
-daily does not show as open on a weekend. Needs a decision on the property's spelling, and on what the status bar
-counts on a day a daily does not apply.
-
 ## 93. A history or streaks of dailies (Dailies)
 
 From plan 13, owner decision 6. Dailies keep only their last `checked::` time, so there is no record of the days a
