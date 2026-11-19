@@ -146,6 +146,8 @@
   /** "Edit" was chosen: the field opens once the menu has closed (it would take the focus back). */
   let editAfterMenu: DailyView | null = null
 
+  // The edit field keeps the browser's text menu (Cut, Copy, Paste): its right-click never reaches `pick`. Any other
+  // right-click while a daily is being edited opens no menu.
   function pick(e: MouseEvent) {
     const id = Number((e.target as Element | null)?.closest?.('[data-daily]')?.getAttribute('data-daily'))
     menuFor = dailies.list?.find((x) => x.id === id) ?? null
@@ -219,6 +221,7 @@
                     bind:value={draft}
                     use:focusField
                     onkeydown={editKey}
+                    oncontextmenu={(ev) => ev.stopPropagation()}
                     onblur={() => void endEdit(true)}
                   />
                 {:else}
