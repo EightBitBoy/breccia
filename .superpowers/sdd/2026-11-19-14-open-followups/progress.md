@@ -33,3 +33,11 @@ Task 4: minor (deferred): 'all' comment at dailiesState.test.ts:329 could say ev
 Task 4: minor (deferred → plan 14 follow-ups): pre-existing — a touch long press opens the Dailies menu without `pick` (over the edit field, stale row, or empty).
 Ruling: Task 9 (bookkeeping) owns F7's review-item-130 drop and Review Focus fix, and F13's "closed: needed for the field's type" strike — carried in its dispatch — cost if wrong: none.
 Task 4: complete (commits 533e275..d3004d1, review clean)
+Task 5: dispatched (opus), BASE 8eb01ce
+Task 5: implementer DONE_WITH_CONCERNS (also fixed a step-146 race in its own test(e2e) commit; focus+leave a Git field while a value is refused writes both), commits 5efe41a..7525b30 (5), e2e 218 PASS; review dispatched (opus)
+Task 5: review (opus) — spec ✅ (⚠️ review item for P13.3 lands in Task 9 Step 3 — carried), quality approved; 4 minor.
+Task 5: minor (deferred → follow-ups): chore subject c81d3fe is 117 chars (pushed; cannot amend).
+Task 5: minor (deferred → follow-ups): oneAtATime skips a pending extra run if `f` rejects (cannot happen today).
+Task 5: minor (deferred → follow-ups): GitSection sends Number(delay) rather than numberCommit's value (same result today).
+Task 5: minor (deferred): step 147's "no notice came back" check is weak; the byte equality carries the step.
+Task 5: complete (commits 8eb01ce..7525b30, review clean)
