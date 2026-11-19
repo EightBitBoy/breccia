@@ -188,6 +188,12 @@ test('a_refused_change_gives_one_notice_even_when_the_reload_fails', async () =>
   expect(sent).toEqual([{ type: 'dailies.check', id: 1, shown: 'd1' }, { type: 'dailies.list' }])
 })
 
+test('a failed load is one refused notice with the error text', async () => {
+  const { d, notices } = setup(at(8), 'all')
+  await d.load()
+  expect(notices).toEqual([{ kind: 'refused', message: 'No list.' }])
+})
+
 test('open shows and loads; close hides and keeps the list', async () => {
   const { d, sent } = setup(at(8))
   d.apply([daily(1)])

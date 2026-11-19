@@ -152,6 +152,17 @@ describe('moveTarget', () => {
     expect(moveTarget(list, group, 1, 0)).toBeUndefined()
     expect(moveTarget(list, [1], 1, 0)).toBeUndefined()
   })
+  it('a place past the end of the group is the end', () => {
+    expect(moveTarget(list, group, 5, 9)).toBeUndefined()
+    expect(moveTarget(list, group, 1, 9)).toBe(null)
+    expect(moveTarget(list, [1, 3], 1, 9)).toBe(4)
+  })
+  it('a negative place is the start', () => {
+    expect(moveTarget(list, group, 5, -3)).toBe(1)
+  })
+  it('an id outside the group is not guarded (the view only moves a daily within its own group)', () => {
+    expect(moveTarget(list, group, 2, 0)).toBe(1)
+  })
 })
 
 describe('dailiesItem', () => {
