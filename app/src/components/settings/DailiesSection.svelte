@@ -1,7 +1,7 @@
 <script lang="ts">
   import { untrack } from 'svelte'
   import { resetCommit, resetProblem } from '../../lib/dailies'
-  import { CONFIG_NOTE, keepDraft, settledDraft } from '../../lib/settingsForm'
+  import { CONFIG_NOTE, keepDraft, oneAtATime, settledDraft } from '../../lib/settingsForm'
 
   let {
     reset,
@@ -27,7 +27,8 @@
   })
   const problem = $derived(resetProblem(time))
 
-  async function commit() {
+  /** Enter and then a click elsewhere save once; a commit while a save runs runs again after it. */
+  const commit = oneAtATime(async () => {
     const next = resetCommit(time, reset, invalid)
     if (next === null) return
     if (next === 'tidy') {
@@ -37,7 +38,7 @@
     const sent = time
     await onreset(next.send)
     time = settledDraft(time, sent, reset) // a refused change shows the file's value again
-  }
+  })
 </script>
 
 <p class="settings-note">{CONFIG_NOTE}</p>

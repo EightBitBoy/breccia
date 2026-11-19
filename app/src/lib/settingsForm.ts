@@ -63,3 +63,31 @@ export function settledDraft(draft: string, sent: string, file: string): string 
 export function settleRows(drafts: string[], keywords: string[], names: string[]): string[] {
   return keywords.map((k, i) => (names.includes(k) ? k : (drafts[i] ?? k)))
 }
+
+/**
+ * `f` one run at a time: a call while it runs makes it run once more after it settles (any number of such calls, one
+ * more run), so Enter and then a click elsewhere save once, and a value typed during a save is still sent. `f` checks
+ * again what there is to send, so the extra run sends nothing when nothing changed. The promise settles after the
+ * last run.
+ */
+export function oneAtATime(f: () => Promise<void>): () => Promise<void> {
+  let running: Promise<void> | null = null
+  let again = false
+  return () => {
+    if (running !== null) {
+      again = true
+      return running
+    }
+    running = (async () => {
+      try {
+        do {
+          again = false
+          await f()
+        } while (again)
+      } finally {
+        running = null
+      }
+    })()
+    return running
+  }
+}

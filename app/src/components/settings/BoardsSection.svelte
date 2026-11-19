@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { CONFIG_NOTE, daysProblem, keepDraft, numberCommit, settledDraft } from '../../lib/settingsForm'
+  import { CONFIG_NOTE, daysProblem, keepDraft, numberCommit, oneAtATime, settledDraft } from '../../lib/settingsForm'
   import type { BoardSummary } from '../../lib/types'
 
   let {
@@ -41,13 +41,14 @@
   })
   const problem = $derived(daysProblem(days))
 
-  async function commit() {
+  /** Enter and then a click elsewhere save once; a commit while a save runs runs again after it. */
+  const commit = oneAtATime(async () => {
     const next = numberCommit(days, archiveDays, archiveInvalid, problem)
     if (next === null) return
     const sent = days
     await onarchivedays(next)
     days = settledDraft(days, sent, String(archiveDays)) // a refused change shows the file's value again
-  }
+  })
 </script>
 
 <p class="settings-note">{CONFIG_NOTE}</p>

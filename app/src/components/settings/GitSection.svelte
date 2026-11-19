@@ -1,6 +1,6 @@
 <script lang="ts">
   import { untrack } from 'svelte'
-  import { CONFIG_NOTE, keepDraft, minutesProblem, numberCommit, settledDraft, zeroNote } from '../../lib/settingsForm'
+  import { CONFIG_NOTE, keepDraft, minutesProblem, numberCommit, oneAtATime, settledDraft, zeroNote } from '../../lib/settingsForm'
   import type { GitSettings } from '../../lib/types'
 
   let {
@@ -34,7 +34,8 @@
   const delayProblem = $derived(minutesProblem(delay))
   const intervalProblem = $derived(minutesProblem(interval))
 
-  async function commit() {
+  /** Enter and then a click elsewhere save once; a commit while a save runs runs again after it. */
+  const commit = oneAtATime(async () => {
     if (delayProblem !== null || intervalProblem !== null) return
     // Both values go out when either box has something to send.
     const d = numberCommit(delay, git.commitDelayMinutes, delayInvalid, delayProblem)
@@ -45,7 +46,7 @@
     // A refused change shows the file's values again; text typed meanwhile stays.
     delay = settledDraft(delay, sent.delay, String(git.commitDelayMinutes))
     interval = settledDraft(interval, sent.interval, String(git.pullIntervalMinutes))
-  }
+  })
 
   function toggle(box: HTMLInputElement) {
     void ongit({ enabled: box.checked })

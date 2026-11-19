@@ -6,6 +6,7 @@ import {
   keepDrafts,
   minutesProblem,
   numberCommit,
+  oneAtATime,
   settleRows,
   settledDraft,
   zeroNote,
@@ -82,5 +83,70 @@ describe('numberCommit', () => {
   it('sends nothing while the box has a problem', () => {
     expect(numberCommit('0', 14, true, daysProblem('0'))).toBeNull()
     expect(numberCommit('1441', 5, true, minutesProblem('1441'))).toBeNull()
+  })
+})
+describe('oneAtATime', () => {
+  /** A promise and its resolver. */
+  function gate() {
+    let open = () => {}
+    const p = new Promise<void>((r) => (open = r))
+    return { p, open }
+  }
+  /** A days box over a file holding a refused value (read as 14): each run sends what `numberCommit` gives, waits for `wait`, then stores it. */
+  function box(wait: Promise<void>) {
+    const s = { typed: '14', stored: 14, invalid: true, runs: 0, sent: [] as number[] }
+    const f = async () => {
+      s.runs++
+      const n = numberCommit(s.typed, s.stored, s.invalid, daysProblem(s.typed))
+      if (n === null) return
+      s.sent.push(n)
+      await wait
+      s.stored = n
+      s.invalid = false
+    }
+    return { s, f }
+  }
+
+  it('runs once more after a call made while it runs, and that run finds nothing to send', async () => {
+    const g = gate()
+    const { s, f } = box(g.p)
+    const commit = oneAtATime(f)
+    const first = commit() // Enter
+    const second = commit() // then a click elsewhere, before the answer
+    expect(s.runs).toBe(1)
+    g.open()
+    await Promise.all([first, second])
+    expect(s.runs).toBe(2)
+    expect(s.sent).toEqual([14])
+  })
+  it('runs only once more for three calls in flight', async () => {
+    const g = gate()
+    const { s, f } = box(g.p)
+    const commit = oneAtATime(f)
+    const calls = [commit(), commit(), commit()]
+    g.open()
+    await Promise.all(calls)
+    expect(s.runs).toBe(2)
+    expect(s.sent).toEqual([14])
+  })
+  it('sends a number typed while the first save is on its way', async () => {
+    const g = gate()
+    const { s, f } = box(g.p)
+    const commit = oneAtATime(f)
+    const first = commit()
+    s.typed = '20'
+    const second = commit()
+    g.open()
+    await Promise.all([first, second])
+    expect(s.sent).toEqual([14, 20])
+  })
+  it('runs again for a call after it settled', async () => {
+    const { s, f } = box(Promise.resolve())
+    const commit = oneAtATime(f)
+    await commit()
+    s.typed = '30'
+    await commit()
+    expect(s.runs).toBe(2)
+    expect(s.sent).toEqual([14, 30])
   })
 })
