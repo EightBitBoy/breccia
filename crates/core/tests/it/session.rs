@@ -56,7 +56,7 @@ fn command_names_deserialize() {
         json!({"type": "dailies.check", "id": 1, "shown": "x"}),
         json!({"type": "dailies.uncheck", "id": 1, "shown": "x"}),
         json!({"type": "dailies.edit", "id": 1, "text": "x", "shown": "x"}),
-        json!({"type": "dailies.delete", "id": 1, "shown": "x"}),
+        json!({"type": "dailies.delete", "id": 1, "shown": "x", "nested": false}),
         json!({"type": "dailies.move", "id": 1, "before": null, "shown": "x"}),
         json!({"type": "page.show", "key": "p"}),
         json!({"type": "pages.table"}),
@@ -187,7 +187,7 @@ fn every_command() -> Vec<(Value, bool, bool)> {
             false,
         ),
         (
-            json!({"type": "dailies.delete", "id": 1, "shown": "x"}),
+            json!({"type": "dailies.delete", "id": 1, "shown": "x", "nested": false}),
             false,
             false,
         ),

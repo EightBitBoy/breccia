@@ -44,11 +44,24 @@ impl DailyView {
                 id: b.id(),
                 text: daily_text(b.text()).to_string(),
                 checked: checked_at(b.text()).map(|t| t.format(CHECKED_FORMAT).to_string()),
-                nested: blocks.get(i + 1).is_some_and(|n| n.depth() > 0)
-                    || has_hidden_lines(b.text()),
+                nested: nested_at(blocks, i),
             })
             .collect()
     }
+}
+
+/// Whether the top-level daily `id` has text the view does not show: a child block, or lines after the first
+/// other than `checked::`.
+pub(super) fn has_nested(doc: &Document, id: BlockId) -> bool {
+    let blocks = doc.blocks();
+    blocks
+        .iter()
+        .position(|b| b.id() == id)
+        .is_some_and(|i| nested_at(blocks, i))
+}
+
+fn nested_at(blocks: &[crate::outline::Block], i: usize) -> bool {
+    blocks.get(i + 1).is_some_and(|n| n.depth() > 0) || has_hidden_lines(blocks[i].text())
 }
 
 /// Whether the lines after the first hold anything but `checked::`, which the view shows as a state.

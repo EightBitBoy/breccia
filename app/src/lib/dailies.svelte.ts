@@ -108,7 +108,7 @@ export class Dailies {
   }
 
   async remove(d: DailyView): Promise<void> {
-    await this.send({ type: 'dailies.delete', id: d.id, shown: d.text })
+    await this.send({ type: 'dailies.delete', id: d.id, shown: d.text, nested: d.nested })
   }
 
   async move(d: DailyView, before: BlockId | null): Promise<void> {

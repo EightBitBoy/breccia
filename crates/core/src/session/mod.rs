@@ -402,8 +402,14 @@ impl Session {
             Command::DailiesEdit { id, text, shown } => {
                 self.dailies_change(Some((id, &shown)), |d, _| d.edit_daily(id, &text))
             }
-            Command::DailiesDelete { id, shown } => {
-                self.dailies_change(Some((id, &shown)), |d, _| d.delete_daily(id))
+            Command::DailiesDelete { id, shown, nested } => {
+                self.dailies_change(Some((id, &shown)), |d, _| {
+                    // Lines written under the daily since the question was asked: refuse, as when it is gone.
+                    if !nested && dailies::has_nested(d, id) {
+                        return Err(EditError::NotADaily);
+                    }
+                    d.delete_daily(id)
+                })
             }
             Command::DailiesMove { id, before, shown } => {
                 self.dailies_change(Some((id, &shown)), |d, _| d.move_daily(id, before))

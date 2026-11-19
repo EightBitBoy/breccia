@@ -61,6 +61,25 @@ fn check_writes_one_line() {
 }
 
 #[test]
+fn check_writes_in_place_of_the_first_checked_line() {
+    let mut d = doc("- a
+  checked:: 2026-11-17 01:00
+  note:: x
+  checked:: 2026-11-16 01:00
+");
+    let a = id(&d, 0);
+    d.check_daily(a, at(8, 0, 0)).unwrap();
+    // The first `checked::` line takes the new time; later ones go (one tick per daily).
+    assert_eq!(
+        d.render(),
+        "- a
+  checked:: 2026-11-18 08:00
+  note:: x
+"
+    );
+}
+
+#[test]
 fn uncheck_removes_every_checked_line() {
     let mut d = doc(
         "- a\n  checked:: 2026-11-18 07:42\n  note:: x\n  checked:: 2026-11-17 01:00\n  other:: y\n- b\n",

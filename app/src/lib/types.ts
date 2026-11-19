@@ -479,7 +479,7 @@ export type Command =
   | { type: 'dailies.check'; id: BlockId; shown: string }
   | { type: 'dailies.uncheck'; id: BlockId; shown: string }
   | { type: 'dailies.edit'; id: BlockId; text: string; shown: string }
-  | { type: 'dailies.delete'; id: BlockId; shown: string }
+  | { type: 'dailies.delete'; id: BlockId; shown: string; nested: boolean }
   | { type: 'dailies.move'; id: BlockId; before: BlockId | null; shown: string }
   | { type: 'board.archive'; keyword: string }
   | { type: 'blocks.setArchived'; ids: BlockId[]; archived: boolean }

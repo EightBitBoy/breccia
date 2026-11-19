@@ -1,4 +1,5 @@
 use crate::support::{self, DAY, clock_on};
+use breccia_core::session::Notice;
 use breccia_core::{BlockId, Clock, Session};
 use serde_json::{Value, json};
 use std::fs;
@@ -109,7 +110,7 @@ fn edit_delete_move_write_the_file() {
     );
     let l = ok(
         &mut s,
-        json!({"type": "dailies.delete", "id": b, "shown": "bee"}),
+        json!({"type": "dailies.delete", "id": b, "shown": "bee", "nested": false}),
     );
     assert_eq!(read(&t), "- a\n- c\n");
     assert_eq!(l.len(), 2);
@@ -125,9 +126,56 @@ fn nested_lines_are_flagged_and_deleted_with_the_daily() {
     assert!(!v[1].nested);
     ok(
         &mut s,
-        json!({"type": "dailies.delete", "id": v[0].id, "shown": "a"}),
+        json!({"type": "dailies.delete", "id": v[0].id, "shown": "a", "nested": true}),
     );
     assert_eq!(read(&t), "- b\n");
+}
+
+#[test]
+fn delete_is_refused_when_lines_were_added_under_the_daily() {
+    let (t, mut s) = folder(&[(
+        FILE, "- a
+- b
+",
+    )]);
+    let l = list(&mut s);
+    let a = l[0].0;
+    let outside = "- a
+  more
+- b
+";
+    fs::write(t.path().join(FILE), outside).unwrap();
+    let cmd =
+        |nested: bool| json!({"type": "dailies.delete", "id": a, "shown": "a", "nested": nested});
+    assert_eq!(err_code(&mut s, cmd(false)), "unknownDaily");
+    assert_eq!(read(&t), outside);
+    ok(&mut s, cmd(true));
+    assert_eq!(
+        read(&t),
+        "- b
+"
+    );
+}
+
+#[test]
+fn delete_with_nested_as_shown_deletes() {
+    let (t, mut s) = folder(&[(
+        FILE,
+        "- a
+	- c
+- b
+",
+    )]);
+    let l = list(&mut s);
+    ok(
+        &mut s,
+        json!({"type": "dailies.delete", "id": l[0].0, "shown": "a", "nested": true}),
+    );
+    assert_eq!(
+        read(&t),
+        "- b
+"
+    );
 }
 
 #[test]
@@ -232,7 +280,7 @@ fn a_daily_replaced_on_disk_after_the_watcher_ran_is_refused() {
     let now = out.dailies.expect("the watcher run answers the list");
     assert_eq!((now[1].id, now[1].text.as_str()), (b, "other"));
     for cmd in [
-        json!({"type": "dailies.delete", "id": b, "shown": "b"}),
+        json!({"type": "dailies.delete", "id": b, "shown": "b", "nested": false}),
         json!({"type": "dailies.edit", "id": b, "text": "bee", "shown": "b"}),
         json!({"type": "dailies.check", "id": b, "shown": "b"}),
         json!({"type": "dailies.uncheck", "id": b, "shown": "b"}),
@@ -244,7 +292,7 @@ fn a_daily_replaced_on_disk_after_the_watcher_ran_is_refused() {
     // The text the window shows now is acted on.
     ok(
         &mut s,
-        json!({"type": "dailies.delete", "id": b, "shown": "other"}),
+        json!({"type": "dailies.delete", "id": b, "shown": "other", "nested": true}),
     );
     assert_eq!(read(&t), "- a\n");
 }
@@ -314,13 +362,38 @@ fn an_unreadable_dailies_file_warns_and_refuses() {
     assert!(
         out.notices
             .iter()
-            .any(|n| format!("{n:?}").contains("breccia/dailies.md")),
+            .any(|n| matches!(n, Notice::LoadWarning { message }
+            if message.contains("breccia/dailies.md") && message.contains("UTF-8"))),
         "{:?}",
         out.notices
     );
     let e = support::run(&mut s, json!({"type": "dailies.add", "text": "x"}), clock()).unwrap_err();
     assert_eq!(e.code, "dailiesUnreadable");
     assert_eq!(fs::read(t.path().join(FILE)).unwrap(), bad);
+}
+
+#[test]
+fn load_dailies_reports_an_io_error() {
+    let t = tempfile::tempdir().unwrap();
+    // A folder in place of the file cannot be read.
+    fs::create_dir_all(t.path().join(FILE)).unwrap();
+    let mut s = Session::new();
+    let out = support::ok(
+        &mut s,
+        json!({"type": "folder.open", "path": t.path()}),
+        clock(),
+    );
+    assert!(
+        out.notices
+            .iter()
+            .any(|n| matches!(n, Notice::LoadWarning { message }
+            if message.contains("breccia/dailies.md") && !message.contains("UTF-8"))),
+        "{:?}",
+        out.notices
+    );
+    let e = support::run(&mut s, json!({"type": "dailies.add", "text": "x"}), clock()).unwrap_err();
+    assert_eq!(e.code, "dailiesUnreadable");
+    assert!(t.path().join(FILE).is_dir());
 }
 
 #[test]

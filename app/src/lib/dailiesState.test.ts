@@ -131,7 +131,7 @@ test('commands_send_the_right_names', async () => {
     { type: 'dailies.uncheck', id: 1, shown: 'd1' },
     { type: 'dailies.add', text: 'x' },
     { type: 'dailies.edit', id: 2, text: 'y', shown: 'd2' },
-    { type: 'dailies.delete', id: 2, shown: 'd2' },
+    { type: 'dailies.delete', id: 2, shown: 'd2', nested: false },
     { type: 'dailies.move', id: 1, before: null, shown: 'd1' },
     { type: 'dailies.list' },
   ])
@@ -146,9 +146,19 @@ test('a command sends the text of the row the window showed, not the newer list'
   await d.remove(row)
   await d.edit(row, 'y')
   expect(sent).toEqual([
-    { type: 'dailies.delete', id: 1, shown: 'd1' },
+    { type: 'dailies.delete', id: 1, shown: 'd1', nested: false },
     { type: 'dailies.edit', id: 1, text: 'y', shown: 'd1' },
   ])
+})
+
+test('remove sends nested from the row the question was asked for', async () => {
+  const { d, sent } = setup(at(8))
+  d.apply([{ ...daily(1), nested: true }])
+  const row = d.list![0]
+  // Lines vanish outside while the confirm is open: the row still says nested.
+  d.apply([daily(1)])
+  await d.remove(row)
+  expect(sent).toEqual([{ type: 'dailies.delete', id: 1, shown: 'd1', nested: true }])
 })
 
 test('check on a checked daily sends nothing', async () => {

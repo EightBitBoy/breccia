@@ -197,9 +197,14 @@ pub enum Command {
         text: String,
         shown: String,
     },
-    /// Removes the daily with whatever is written under it. No undo.
+    /// Removes the daily with whatever is written under it. No undo. `nested`: the row the question was asked for had
+    /// text under it; a delete is refused when the daily now has such text and `nested` is false.
     #[serde(rename = "dailies.delete")]
-    DailiesDelete { id: BlockId, shown: String },
+    DailiesDelete {
+        id: BlockId,
+        shown: String,
+        nested: bool,
+    },
     /// Moves a daily before `before`, or to the end.
     #[serde(rename = "dailies.move")]
     DailiesMove {
