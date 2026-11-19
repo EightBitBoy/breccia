@@ -50,12 +50,12 @@ export class Dailies {
     this.list = list
   }
 
-  /** Runs `dailies.list`; a failure is a notice. */
-  async load(): Promise<void> {
+  /** Runs `dailies.list`; a failure is a notice, unless `quiet` (the caller has shown one already). */
+  async load(opts?: { quiet?: boolean }): Promise<void> {
     try {
       await this.env.run({ type: 'dailies.list' })
     } catch (e) {
-      this.env.notify({ kind: 'refused', message: errorMessage(e) })
+      if (!opts?.quiet) this.env.notify({ kind: 'refused', message: errorMessage(e) })
     }
   }
 
@@ -145,14 +145,17 @@ export class Dailies {
     }, ms)
   }
 
-  /** A refused command is one notice; the list is then reloaded (the file may have changed). False when refused. */
+  /**
+   * A refused command is one notice; the list is then reloaded quietly (the file may have changed). False when
+   * refused.
+   */
   private async send(cmd: Command): Promise<boolean> {
     try {
       await this.env.run(cmd)
       return true
     } catch (e) {
       this.env.notify({ kind: 'refused', message: errorMessage(e) })
-      await this.load()
+      await this.load({ quiet: true })
       return false
     }
   }

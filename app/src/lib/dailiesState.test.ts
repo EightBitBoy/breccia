@@ -5,7 +5,8 @@ import type { Command, DailyView, Notice, Output } from './types'
 const daily = (id: number, checked: string | null = null): DailyView => ({ id, text: `d${id}`, checked, nested: false })
 const at = (h: number, m = 0, s = 0, day = 10) => new Date(2026, 10, day, h, m, s)
 
-function setup(start: Date, refuse = false) {
+// `refuse`: the core refuses every command but `dailies.list`; 'all': `dailies.list` fails too.
+function setup(start: Date, refuse: boolean | 'all' = false) {
   let clock = start
   const sent: Command[] = []
   const notices: Notice[] = []
@@ -14,6 +15,7 @@ function setup(start: Date, refuse = false) {
   const env: DailiesEnv = {
     run: (cmd) => {
       sent.push(cmd)
+      if (refuse === 'all' && cmd.type === 'dailies.list') return Promise.reject({ code: 'internal', message: 'No list.' })
       if (refuse && cmd.type !== 'dailies.list') return Promise.reject({ code: 'unknownDaily', message: 'That daily is gone.' })
       return Promise.resolve({} as Output)
     },
@@ -174,6 +176,14 @@ test('a refusal is one notice and one reload', async () => {
   d.apply([daily(1)])
   await d.check(d.list![0])
   await tick()
+  expect(notices).toEqual([{ kind: 'refused', message: 'That daily is gone.' }])
+  expect(sent).toEqual([{ type: 'dailies.check', id: 1, shown: 'd1' }, { type: 'dailies.list' }])
+})
+
+test('a_refused_change_gives_one_notice_even_when_the_reload_fails', async () => {
+  const { d, sent, notices } = setup(at(8), 'all')
+  d.apply([daily(1)])
+  await d.check(d.list![0])
   expect(notices).toEqual([{ kind: 'refused', message: 'That daily is gone.' }])
   expect(sent).toEqual([{ type: 'dailies.check', id: 1, shown: 'd1' }, { type: 'dailies.list' }])
 })
