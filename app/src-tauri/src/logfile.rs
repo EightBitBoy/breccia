@@ -220,8 +220,8 @@ fn is_url_scheme_char(c: char) -> bool {
 /// `/`, `?`, `#` or `@` is masked whole; it counts only when the `@` comes before
 /// the first `/`, `?` or `#`, or the part before it has a `:` (so
 /// `https://host/a@b` stays). A token that starts with `/` (an empty authority,
-/// as in `file:///C:/a@b.md`) has no user part and stays.`ssh://git@host` and `git@host:path` carry no
-/// secret and stay.
+/// as in `file:///C:/a@b.md`) has no user part and stays. `ssh://git@host` and
+/// `git@host:path` carry no secret and stay.
 pub fn redact(line: &str) -> String {
     let mut out = String::with_capacity(line.len());
     let mut rest = line;
@@ -622,6 +622,13 @@ mod tests {
             "fatal: unable to access 'https://***@h/x.git/': 403"
         );
         for line in ["open file:///C:/notes/a@b.md", "open file:///home/a@b.md"] {
+            assert_eq!(redact(line), line);
+        }
+    }
+
+    #[test]
+    fn redact_leaves_a_quoted_url_without_credentials_alone() {
+        for line in ["see 'https://h/a@b.md' now", "see 'https://h/x?u=a@b' now"] {
             assert_eq!(redact(line), line);
         }
     }
