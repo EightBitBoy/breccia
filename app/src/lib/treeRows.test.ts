@@ -4,14 +4,14 @@ import type { TreeNode, TreeView } from './types'
 
 const tree: TreeView = {
   pages: [
-    { kind: 'folder', name: 'people', path: 'people', children: [{ kind: 'page', key: 'anna', name: 'Anna' }] },
+    { kind: 'folder', name: 'people', path: 'people', children: [{ kind: 'page', key: 'anna', name: 'Anna', linkedOnly: false }] },
     {
       kind: 'folder',
       name: 'Projects',
       path: 'Projects',
-      children: [{ kind: 'page', key: 'project x', name: 'Project X' }],
+      children: [{ kind: 'page', key: 'project x', name: 'Project X', linkedOnly: false }],
     },
-    { kind: 'page', key: 'ideas', name: 'Page Ideas' },
+    { kind: 'page', key: 'ideas', name: 'Page Ideas', linkedOnly: false },
   ],
   journals: [
     {
@@ -80,7 +80,7 @@ test('ancestors open the way to a page or a day', () => {
 })
 
 const folderNode = (path: string, children: TreeNode[]): TreeNode => ({ kind: 'folder', name: path.split('/').pop()!, path, children })
-const pageNode = (key: string): TreeNode => ({ kind: 'page', key, name: key })
+const pageNode = (key: string): TreeNode => ({ kind: 'page', key, name: key, linkedOnly: false })
 const t = (pages: TreeNode[]): TreeView => ({ pages, journals: [], tags: [], version: 0 })
 
 test('locate finds top-level pages too, and null when absent', () => {

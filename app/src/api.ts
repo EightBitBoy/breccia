@@ -1,7 +1,7 @@
 // The Tauri side of the command client. Everything the UI changes goes through
 // one named command (`lib/api.ts`); these are the few raw calls besides it.
 import { invoke } from '@tauri-apps/api/core'
-import type { CommandError, Notice, Output, Request, UiState, RecentFolder } from './lib/types'
+import type { CommandError, ErrorCode, Notice, Output, Request, UiState, RecentFolder } from './lib/types'
 import type { LinkDisplay } from './lib/linkDisplay'
 
 /**
@@ -25,7 +25,7 @@ function isCommandError(e: unknown): e is CommandError {
 }
 
 /** The stable code of a refused command, or null for any other failure. */
-export function errorCode(e: unknown): string | null {
+export function errorCode(e: unknown): ErrorCode | null {
   return isCommandError(e) ? e.code : null
 }
 

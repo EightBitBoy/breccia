@@ -1,10 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { createClient, flushBeforeClose } from './api'
 import type { Command, Output } from './types'
-
-function emptyOutput(): Output {
-  return { page: null, focus: null, notices: [], folder: null, config: null, refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [] }
-}
+import { emptyOutput } from './emptyOutput'
 
 beforeEach(() => {
   vi.useFakeTimers()

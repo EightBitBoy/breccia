@@ -2,11 +2,9 @@ import { expect, test } from 'vitest'
 import { Network } from './network.svelte'
 import { DEFAULT_FILTERS } from './graph'
 import type { Command, GraphView, Notice, Output } from './types'
+import { emptyOutput } from './emptyOutput'
 
-const empty: Output = {
-  page: null, focus: null, notices: [], folder: null, config: null, refs: null, names: null, tree: null,
-  changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-}
+const empty: Output = emptyOutput()
 const view = (o: Partial<GraphView> = {}): GraphView => ({ nodes: [], links: [], ...o }) as unknown as GraphView
 
 function setup(fail: 'none' | 'all' = 'none') {

@@ -1,10 +1,9 @@
-// Contract between the Rust side (core and shell) and the hand-kept TypeScript types.
+// Contract between the Rust side (core and shell) and the window's hand-kept TypeScript: the shell's own types and
+// the names that are not types. The core's wire types are generated (`generated.ts`, checked by `cargo test`).
 // The Rust sources are read as text; each case compares the names on the wire.
 /// <reference types="node" />
 import { readdirSync, readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
-import commandRs from '../../../crates/core/src/session/command.rs?raw'
-import viewRs from '../../../crates/core/src/session/view.rs?raw'
 import typesTs from './types.ts?raw'
 import apiTs from '../api.ts?raw'
 import recoveryTs from './recovery.ts?raw'
@@ -35,7 +34,6 @@ function block(src: string, start: string): string[] {
 }
 
 const camel = (s: string) => s.replace(/_([a-z0-9])/g, (_, c: string) => c.toUpperCase())
-const lowerFirst = (s: string) => s[0].toLowerCase() + s.slice(1)
 
 function sameSet(rust: Set<string>, ts: Set<string>) {
   expect(rust.size, 'the Rust side must not be empty').toBeGreaterThan(0)
@@ -59,18 +57,15 @@ function tsSection(src: string, start: string): string {
   return all.slice(i, end).join('\n')
 }
 
-test('command_names_match', () => {
+test('shell_command_names_match', () => {
   const rust = new Set<string>()
-  // The core's commands, and the four Git commands the shell parses itself.
-  for (const l of [
-    ...block(commandRs, 'pub enum Command {'),
-    ...block(shellRs, 'pub(crate) enum ShellCommand {'),
-  ]) {
+  // The four Git commands the shell parses itself; the core's commands are generated.
+  for (const l of block(shellRs, 'pub(crate) enum ShellCommand {')) {
     const m = /^\s+#\[serde\(rename = "([^"]+)"\)\]/.exec(l)
     if (m) rust.add(m[1])
   }
   const ts = new Set<string>()
-  for (const m of tsSection(typesTs, 'export type Command =').matchAll(/type: '([^']+)'/g)) ts.add(m[1])
+  for (const m of tsSection(typesTs, 'export type ShellCommand =').matchAll(/type: '([^']+)'/g)) ts.add(m[1])
   sameSet(rust, ts)
 })
 
@@ -83,32 +78,6 @@ test('event_names_match', () => {
   }
   const rustEvents = new Set([...rust].filter((x) => /^[a-z]+:[a-z]+$/.test(x)))
   sameSet(rustEvents, ts)
-})
-
-test('output_fields_match', () => {
-  const rust = new Set<string>()
-  for (const l of block(viewRs, 'pub struct Output {')) {
-    const m = /^ {4}pub (\w+):/.exec(l)
-    if (m) rust.add(camel(m[1]))
-  }
-  const ts = new Set<string>()
-  for (const l of block(typesTs, 'export interface Output {')) {
-    const m = /^ {2}(\w+)\??:/.exec(l)
-    if (m) ts.add(m[1])
-  }
-  sameSet(rust, ts)
-})
-
-test('notice_kinds_match', () => {
-  const rust = new Set<string>()
-  for (const l of block(viewRs, 'pub enum Notice {')) {
-    if (/^\s*(\/\/\/|#\[)/.test(l)) continue
-    const m = /^ {4}([A-Z]\w*)/.exec(l)
-    if (m) rust.add(lowerFirst(m[1]))
-  }
-  const ts = new Set<string>()
-  for (const m of tsSection(typesTs, 'export type Notice =').matchAll(/kind: '([^']+)'/g)) ts.add(m[1])
-  sameSet(rust, ts)
 })
 
 /** The string constant `name` of recovery.ts. */
@@ -152,6 +121,20 @@ test('recovered_event_fields_match', () => {
   }
   const ts = new Set<string>()
   for (const l of block(typesTs, 'export interface RecoveredEvent {')) {
+    const m = /^ {2}(\w+)\??:/.exec(l)
+    if (m) ts.add(m[1])
+  }
+  sameSet(rust, ts)
+})
+
+test('index_event_fields_match', () => {
+  const rust = new Set<string>()
+  for (const l of block(shellFile('indexing.rs'), 'pub(crate) struct IndexEvent {')) {
+    const m = /^ {4}(\w+):/.exec(l)
+    if (m) rust.add(camel(m[1]))
+  }
+  const ts = new Set<string>()
+  for (const l of block(typesTs, 'export interface IndexProgress {')) {
     const m = /^ {2}(\w+)\??:/.exec(l)
     if (m) ts.add(m[1])
   }

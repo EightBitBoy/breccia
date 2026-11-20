@@ -1,11 +1,9 @@
 import { expect, test } from 'vitest'
 import { AllPages } from './allPages.svelte'
 import type { Command, Notice, Output, PageRowView } from './types'
+import { emptyOutput } from './emptyOutput'
 
-const empty: Output = {
-  page: null, focus: null, notices: [], folder: null, config: null, refs: null, names: null, tree: null,
-  changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-}
+const empty: Output = emptyOutput()
 const row = (o: Partial<PageRowView>): PageRowView => ({
   key: (o.name ?? 'a').toLowerCase(), name: 'a', title: o.name ?? 'a', kind: 'page', folder: '',
   created: null, edited: null, linkedFrom: 0, linksOut: 0, linkedOnly: false, ...o,

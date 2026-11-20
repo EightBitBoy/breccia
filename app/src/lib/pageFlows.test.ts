@@ -1,23 +1,9 @@
 import { expect, test } from 'vitest'
 import { PageFlows } from './pageFlows.svelte'
 import type { Command, Notice, Output, TreeView } from './types'
+import { emptyOutput } from './emptyOutput'
 
-const out = (removed: string[] = []): Output => ({
-  page: null,
-  focus: null,
-  notices: [],
-  folder: null,
-  config: null,
-  refs: null,
-  names: null,
-  tree: null,
-  changed: [],
-  removed,
-  dirty: null,
-  feed: null,
-  pages: [],
-  board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-})
+const out = (removed: string[] = []): Output => emptyOutput({ removed })
 
 function setup(shown: string | null, removed: string[]) {
   const ran: string[] = []
@@ -133,7 +119,7 @@ function dropSetup(fail: string | null = null) {
   const notices: Notice[] = []
   const tree: TreeView = {
     pages: [
-      { kind: 'folder', name: 'Projects', path: 'Projects', children: [{ kind: 'page', key: 'a', name: 'A' }] },
+      { kind: 'folder', name: 'Projects', path: 'Projects', children: [{ kind: 'page', key: 'a', name: 'A', linkedOnly: false }] },
       { kind: 'folder', name: 'Other', path: 'Other', children: [] },
     ],
     journals: [],
@@ -180,7 +166,7 @@ function createSetup(fail: string | null = null) {
   const notices: Notice[] = []
   const tree: TreeView = {
     pages: [
-      { kind: 'folder', name: 'Projects', path: 'Projects', children: [{ kind: 'page', key: 'a', name: 'A' }] },
+      { kind: 'folder', name: 'Projects', path: 'Projects', children: [{ kind: 'page', key: 'a', name: 'A', linkedOnly: false }] },
     ],
     journals: [],
     tags: [],

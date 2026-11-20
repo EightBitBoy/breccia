@@ -3,11 +3,9 @@ import { cardOf } from './board'
 import { Boards } from './boards.svelte'
 import { refBlocks } from './refs'
 import type { BlockView, BoardView, Command, Notice, Output, PageView } from './types'
+import { emptyOutput } from './emptyOutput'
 
-const empty: Output = {
-  page: null, focus: null, notices: [], folder: null, config: null, refs: null, names: null, tree: null,
-  changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-}
+const empty: Output = emptyOutput()
 const blk = (id: number, text: string, depth: number, state: string | null = null): BlockView => ({
   id, depth, text, html: text, state, finished: false, hasChildren: false,
 })

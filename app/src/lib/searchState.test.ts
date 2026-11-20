@@ -3,16 +3,14 @@ import { Search } from './search.svelte'
 import * as rowsModule from './search'
 import type { SearchRow } from './search'
 import type { Command, NameView, Notice, Output, SearchView } from './types'
+import { emptyOutput } from './emptyOutput'
 
 vi.mock('./search', async (importOriginal) => {
   const orig = await importOriginal<typeof import('./search')>()
   return { ...orig, searchRows: vi.fn(orig.searchRows) }
 })
 
-const empty: Output = {
-  page: null, focus: null, notices: [], folder: null, config: null, refs: null, names: null, tree: null,
-  changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-}
+const empty: Output = emptyOutput()
 const view = (text: string, over: Partial<SearchView> = {}): SearchView => ({
   query: text, text, filtered: false, date: null, more: false,
   groups: [{ page: 'a', title: 'A', kind: 'page', hits: [{ id: 1, state: null, segments: [{ text: 'a', hit: true }] }] }],

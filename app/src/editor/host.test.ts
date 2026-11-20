@@ -4,6 +4,7 @@ import { beforeEach, expect, test } from 'vitest'
 import { createClient, type Client } from '../lib/api'
 import { patchRefs, refBlocks } from '../lib/refs'
 import type { BlockView, Command, Notice, Output, PageView, RefsView } from '../lib/types'
+import { emptyOutput } from '../lib/emptyOutput'
 import type { EditorHooks, mountEditor } from './blockEditor'
 import { EditorHost } from './host.svelte'
 import type { MenuView } from './menu'
@@ -77,14 +78,6 @@ const client: Client = {
   setGeneration() {},
 }
 
-/** An answer that changes nothing. */
-function emptyOut(): Output {
-  return {
-    page: null, focus: null, notices: [], folder: null, config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
-}
-
 function pageOf(key: string, bs: BlockView[]): PageView {
   return { key, name: key, kind: 'page', title: key, preambleHtml: '', hasFile: true, blocks: bs }
 }
@@ -120,14 +113,7 @@ test('a split answer for a page that is not shown still ends the split', async (
   hooks.onAction('split', { cursor16: 2 })
   const split = sent.find((c) => c.type === 'block.split')
   expect(split).toEqual({ type: 'block.split', id: 1, at: 2 })
-  const out: Output = {
-    page: pageOf('other', [block(7, 'x')]),
-    focus: { id: 7, at: 0 },
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  const out: Output = emptyOutput({ page: pageOf('other', [block(7, 'x')]), focus: { id: 7, at: 0 } })
   host.apply(split, out, false)
   hooks.onAction('split', { cursor16: 2 })
   expect(sent.filter((c) => c.type === 'block.split')).toHaveLength(2)
@@ -158,7 +144,7 @@ test('keys typed while a command runs are inserted at the caret once it is answe
   hooks.onLockedText!('x')
   hooks.onLockedText!('y')
   expect(lastEd.text()).toBe('alpha')
-  answers[0](emptyOut())
+  answers[0](emptyOutput())
   await done
   expect(lastEd.text()).toBe('alphaxy')
   expect(typed.at(-1)).toEqual({ id: 1, text: 'alphaxy' })
@@ -169,7 +155,7 @@ test('keys typed during a lock are dropped when the editor is gone', async () =>
   const done = host.exec({ type: 'blocks.setState', ids: [1], keyword: 'TODO' })
   hooks.onLockedText!('x')
   host.leave()
-  answers[0](emptyOut())
+  answers[0](emptyOutput())
   await done
   expect(typed).toEqual([])
 })
@@ -187,14 +173,7 @@ test('a text output focusing a block that is not shown ends editing', async () =
   const merge: Command = { type: 'block.merge', id: 1 }
   void host.exec(merge)
   blocks = [block(2, 'beta')]
-  const out: Output = {
-    page: pageOf('j', [block(9, 'gammaalpha'), block(2, 'beta')]),
-    focus: { id: 9, at: 5 },
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  const out: Output = emptyOutput({ page: pageOf('j', [block(9, 'gammaalpha'), block(2, 'beta')]), focus: { id: 9, at: 5 } })
   host.apply(merge, out, true)
   await Promise.resolve()
   await new Promise((r) => setTimeout(r, 0))
@@ -210,14 +189,7 @@ test('a split whose new block is not shown sends the typed text there and trims 
   typed = []
   // Typed while the split runs, at the split caret.
   host.editor!.ed.insert('X')
-  const out: Output = {
-    page: pageOf('j', [block(1, 'al'), block(8, 'pha')]),
-    focus: { id: 8, at: 0 },
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  const out: Output = emptyOutput({ page: pageOf('j', [block(1, 'al'), block(8, 'pha')]), focus: { id: 8, at: 0 } })
   blocks = [block(1, 'al'), block(2, 'beta')]
   host.apply(split, out, true)
   await new Promise((r) => setTimeout(r, 0))
@@ -236,14 +208,7 @@ test('a split followed by leaving the page sends the text typed at the cursor to
   host.editor!.ed.insert('XY')
   host.leave()
   expect(host.editingId).toBeNull()
-  const out: Output = {
-    page: pageOf('p', [block(1, 'al'), block(8, 'pha')]),
-    focus: { id: 8, at: 0 },
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  const out: Output = emptyOutput({ page: pageOf('p', [block(1, 'al'), block(8, 'pha')]), focus: { id: 8, at: 0 } })
   blocks = [block(1, 'al'), block(8, 'pha'), block(2, 'beta')]
   host.apply(split, out, true)
   await new Promise((r) => setTimeout(r, 0))
@@ -265,14 +230,7 @@ test('Enter at the end of a reference root moves into the new block shown after 
   const split = sent.find((c) => c.type === 'block.split')!
   typed = []
   host.editor!.ed.insert('x') // typed while the split runs
-  const out: Output = {
-    page: pageOf('j', [block(0, 'top'), { ...block(1, 'see [[a]]'), depth: 1 }, { ...block(8, ''), depth: 1 }]),
-    focus: { id: 8, at: 0 },
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null, names: null, tree: null, changed: [], removed: [], dirty: null, feed: null, pages: [], board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  const out: Output = emptyOutput({ page: pageOf('j', [block(0, 'top'), { ...block(1, 'see [[a]]'), depth: 1 }, { ...block(8, ''), depth: 1 }]), focus: { id: 8, at: 0 } })
   // What App does with an output about a group page.
   kept.add(8)
   blocks = refBlocks(patchRefs(refs, out.page!, kept), new Set())
@@ -285,22 +243,7 @@ test('Enter at the end of a reference root moves into the new block shown after 
 })
 
 function out(page: PageView | null): Output {
-  return {
-    page,
-    focus: null,
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null,
-    names: null,
-    tree: null,
-    changed: [],
-    removed: [],
-    dirty: null,
-    feed: null,
-    pages: [],
-    board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-  }
+  return emptyOutput({ page })
 }
 
 const settle = () => new Promise((r) => setTimeout(r, 0))

@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { closeCheck, closePrompt } from './close'
 import type { Command, Output } from './types'
+import { emptyOutput } from './emptyOutput'
 
 test('closePrompt', () => {
   expect(closePrompt([])).toBeNull()
@@ -18,22 +19,7 @@ test('closePrompt names text shown in unsent notices', () => {
 })
 
 function output(dirty: Output['dirty']): Output {
-  return {
-    page: null,
-    focus: null,
-    notices: [],
-    folder: null,
-    config: null,
-    refs: null,
-    names: null,
-    tree: null,
-    changed: [],
-    feed: null,
-    pages: [],
-    board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-    removed: [],
-    dirty,
-  }
+  return emptyOutput({ dirty })
 }
 
 describe('closeCheck', () => {

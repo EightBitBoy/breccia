@@ -2,23 +2,9 @@ import { expect, test } from 'vitest'
 import { extendsTo, route, selectionPageOf, type ShownView } from './route'
 import type { Feed } from './feed'
 import type { Command, Output, PageView } from './types'
+import { emptyOutput } from './emptyOutput'
 
-const empty: Output = {
-  page: null,
-  focus: null,
-  notices: [],
-  folder: null,
-  config: null,
-  refs: null,
-  names: null,
-  tree: null,
-  changed: [],
-  removed: [],
-  dirty: null,
-  feed: null,
-  pages: [],
-  board: null, table: null, search: null, renamed: [], git: null, usage: null, usageSkipped: null, graph: null, saved: [],
-}
+const empty: Output = emptyOutput()
 
 const pg = (key: string, ids: number[]): PageView => ({
   key,
