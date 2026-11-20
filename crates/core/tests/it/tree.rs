@@ -348,7 +348,7 @@ fn the_all_pages_table_has_linked_only_rows() {
         )],
         clock(0),
     );
-    let table = ok(&mut s, json!({"type": "pages.table"})).table.unwrap();
+    let table = answer!(ok(&mut s, json!({"type": "pages.table"})), Table);
     let rows: Vec<_> = table
         .iter()
         .map(|r| {
@@ -433,7 +433,7 @@ fn the_tree_is_resent_when_the_tags_change() {
 fn the_all_pages_table_has_tag_only_rows() {
     let (_t, mut s) =
         support::folder_at(&[("pages/A.md", "- #urgent\n- [[Both]] #both\n")], clock(0));
-    let table = ok(&mut s, json!({"type": "pages.table"})).table.unwrap();
+    let table = answer!(ok(&mut s, json!({"type": "pages.table"})), Table);
     let rows: Vec<_> = table
         .iter()
         .map(|r| (r.key.as_str(), r.linked_only))

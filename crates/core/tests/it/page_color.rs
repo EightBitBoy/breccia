@@ -268,7 +268,7 @@ fn other_views_carry_no_block_colors() {
     let out = ok(&mut s, json!({"type": "page.get", "key": "plain"}), 0);
     assert!(pairs(&out.page.unwrap()).iter().all(Option::is_none));
     let out = ok(&mut s, json!({"type": "page.refs", "key": "project"}), 0);
-    let refs = serde_json::to_value(out.refs.unwrap()).unwrap();
+    let refs = serde_json::to_value(answer!(out, Refs)).unwrap();
     let text = refs.to_string();
     assert!(!text.contains("\"topic\""), "{text}");
     assert!(!text.contains("\"color\""), "{text}");

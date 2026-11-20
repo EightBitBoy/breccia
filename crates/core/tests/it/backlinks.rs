@@ -64,9 +64,7 @@ fn index_follows_edits() {
     let mut s = session(&t);
     cmd(&mut s, json!({"type": "page.open", "name": "A"}));
     let count = |s: &mut Session| {
-        cmd(s, json!({"type": "page.refs", "key": "a"}))
-            .refs
-            .unwrap()
+        answer!(cmd(s, json!({"type": "page.refs", "key": "a"})), Refs)
             .groups
             .len()
     };
@@ -126,7 +124,7 @@ fn page_refs_view() {
     ]);
     let mut s = session(&t);
     let out = cmd(&mut s, json!({"type": "page.refs", "key": "a"}));
-    let refs = out.refs.unwrap();
+    let refs = answer!(out, Refs);
     assert_eq!(refs.count, 1);
     let v = serde_json::to_value(&refs).unwrap();
     assert_eq!(v["groups"][0]["title"], "Thursday, 29 Oct 2026");
@@ -311,7 +309,7 @@ fn an_alias_listed_twice_counts_once() {
 }
 
 fn graph_keys(s: &mut Session) -> Vec<String> {
-    let g = cmd(s, json!({"type": "graph.get"})).graph.unwrap();
+    let g = answer!(cmd(s, json!({"type": "graph.get"})), Graph);
     g.nodes.iter().map(|n| n.key.clone()).collect()
 }
 

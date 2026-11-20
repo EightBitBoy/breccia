@@ -673,8 +673,10 @@
     }
     const usage = answerOf(out, 'usage')
     if (usage) settings.applyUsage(usage.states, usage.skipped)
-    if (out.graph) network.applyGraph(out.graph)
-    if (out.board) boards.applyBoard(out.board, cmd)
+    const graph = answerOf(out, 'graph')
+    if (graph) network.applyGraph(graph)
+    const board = answerOf(out, 'board')
+    if (board) boards.applyBoard(board, cmd)
     if (out.tree && isNewer(tree, out.tree)) tree = out.tree
     // Before the new notices, so a page that failed again keeps its fresh one.
     if (out.saved.length) notices.saved(out.saved)
@@ -684,8 +686,10 @@
     // The edited block's text in the view about to be replaced (a refresh compares it).
     const before = host.editingId === null ? null : (host.blockOf(host.editingId)?.text ?? null)
     // An applied feed answer is shown: the editor closes if it replaced the page or dropped the edited day.
-    const feedShown = out.feed !== null && journal.applyFeed(out.feed)
-    if (out.pages.length) journal.applyPages(out.pages)
+    const feed = answerOf(out, 'feed')
+    const feedShown = feed !== null && journal.applyFeed(feed)
+    const asked = answerOf(out, 'pages')
+    if (asked?.length) journal.applyPages(asked)
     const r = route(
       out,
       cmd,
@@ -719,10 +723,13 @@
     if (r.leaveGitLog) gitLog.close()
     if (r.leaveArchive) archiveView.close()
     if (r.leaveDailies) dailies.close()
-    if (out.table) allPages.applyTable(out.table)
-    if (out.archive) archiveView.applyArchive(out.archive)
+    const table = answerOf(out, 'table')
+    if (table) allPages.applyTable(table)
+    const archived = answerOf(out, 'archive')
+    if (archived) archiveView.applyArchive(archived)
     if (out.dailies) dailies.apply(out.dailies)
-    if (out.search) search.applySearch(out.search)
+    const found = answerOf(out, 'search')
+    if (found) search.applySearch(found)
     const names = answerOf(out, 'names')
     if (names) search.applyNames(names)
     if (r.leavePage) {
@@ -740,7 +747,7 @@
     if (r.days.length) journal.applyPages(r.days)
     if (out.removed.length) journal.removed(out.removed)
     if (r.applyRefs) {
-      refs = out.refs
+      refs = answerOf(out, 'refs')
       madeInRefs.clear()
       if (host.editingId !== null) host.reconcile(null).catch((e) => console.error('editor update failed', e))
     }

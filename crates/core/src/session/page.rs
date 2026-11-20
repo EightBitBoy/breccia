@@ -135,10 +135,7 @@ impl Session {
                 }
             }
         }
-        Ok(Output {
-            refs: Some(refs),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Refs(refs)))
     }
 
     pub(super) fn page_rename_reach(

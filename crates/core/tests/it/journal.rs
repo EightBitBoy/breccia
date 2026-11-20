@@ -29,9 +29,7 @@ fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
 }
 
 fn feed_on(s: &mut Session, date: (i32, u32, u32)) -> FeedView {
-    ok_on(s, json!({"type": "journal.feed"}), date)
-        .feed
-        .unwrap()
+    answer!(ok_on(s, json!({"type": "journal.feed"}), date), Feed)
 }
 
 fn feed_keys(s: &mut Session, date: (i32, u32, u32)) -> Vec<String> {
@@ -88,7 +86,7 @@ fn feed_keeps_yesterday_once_it_has_content() {
 #[test]
 fn today_is_first_even_when_a_page_has_its_name() {
     let (_t, mut s) = folder(&[("pages/2026-10-29.md", "- p\n")]);
-    let feed = ok(&mut s, json!({"type": "journal.feed"})).feed.unwrap();
+    let feed = answer!(ok(&mut s, json!({"type": "journal.feed"})), Feed);
     let keys: Vec<&str> = feed.days.iter().map(|d| d.key.as_str()).collect();
     assert_eq!(keys, ["2026-10-29"]);
     assert_eq!(feed.days[0].title, "Thursday, 29 Oct 2026");
@@ -104,7 +102,8 @@ fn pages_get_returns_known_pages_in_the_order_asked() {
         &mut s,
         json!({"type": "pages.get", "keys": ["2026-10-27", "nope", "2026-10-25"]}),
     );
-    let keys: Vec<&str> = out.pages.iter().map(|p| p.key.as_str()).collect();
+    let pages = answer!(out, Pages);
+    let keys: Vec<&str> = pages.iter().map(|p| p.key.as_str()).collect();
     assert_eq!(keys, ["2026-10-27", "2026-10-25"]);
     assert!(out.page.is_none());
     assert!(out.changed.is_empty());
@@ -117,7 +116,8 @@ fn pages_get_returns_each_key_once() {
         &mut s,
         json!({"type": "pages.get", "keys": ["2026-10-28", "nope", "2026-10-28"]}),
     );
-    let keys: Vec<&str> = out.pages.iter().map(|p| p.key.as_str()).collect();
+    let pages = answer!(out, Pages);
+    let keys: Vec<&str> = pages.iter().map(|p| p.key.as_str()).collect();
     assert_eq!(keys, ["2026-10-28"]);
 }
 
@@ -125,7 +125,7 @@ fn pages_get_returns_each_key_once() {
 fn pages_get_acknowledges_disk_changes() {
     let (t, mut s) = folder(&[("journals/2026-10-27.md", "- j\n")]);
     let first = ok(&mut s, json!({"type": "pages.get", "keys": ["2026-10-27"]}));
-    let id = first.pages[0].blocks[0].id;
+    let id = answer!(first, Pages)[0].blocks[0].id;
     put(t.path(), "journals/2026-10-27.md", "- J\n");
     ok(
         &mut s,

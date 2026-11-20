@@ -19,14 +19,14 @@ const view = (o: Partial<ShownView> = {}): ShownView => ({ page: null, days: nul
 const out = (o: Partial<Output>): Output => ({ ...empty, ...o })
 
 test('an applied feed answer is shown and leaves the page', () => {
-  const r = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ page: 'p' }), true)
+  const r = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ page: 'p' }), true)
   expect(r.leavePage).toBe(true)
   expect(r.clearSelection).toBe(true)
   expect(r.shown).toBe(true)
 })
 
 test('a feed answer that was not applied changes nothing', () => {
-  const r = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ page: 'p' }), false)
+  const r = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ page: 'p' }), false)
   expect(r.leavePage).toBe(false)
   expect(r.shown).toBe(false)
 })
@@ -64,9 +64,9 @@ test('an edit in the references patches its group and keeps the focused block', 
 
 test('references for the shown page wait while the editor is in them', () => {
   const refs = { key: 'a', count: 0, groups: [] }
-  const held = route(out({ refs }), { type: 'page.refs', key: 'a' }, view({ page: 'a', editingInRefs: true }), false)
+  const held = route(out({ answer: { kind: 'refs', value: refs } }), { type: 'page.refs', key: 'a' }, view({ page: 'a', editingInRefs: true }), false)
   expect([held.applyRefs, held.refreshRefs]).toEqual([false, true])
-  const now = route(out({ refs }), { type: 'page.refs', key: 'a' }, view({ page: 'a' }), false)
+  const now = route(out({ answer: { kind: 'refs', value: refs } }), { type: 'page.refs', key: 'a' }, view({ page: 'a' }), false)
   expect([now.applyRefs, now.refreshRefs]).toEqual([true, false])
 })
 
@@ -88,7 +88,7 @@ test('Shift-click extends within one feed day or within the page outline', () =>
 })
 
 test('a feed answer that leaves the page drops its reference groups too', () => {
-  const r = route(out({ feed: { today: 'd', days: [] }, changed: [pg('g', [1])] }), { type: 'journal.feed' }, view({ page: 'a', groups: new Set(['g']), editingInRefs: true }), true)
+  const r = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } }, changed: [pg('g', [1])] }), { type: 'journal.feed' }, view({ page: 'a', groups: new Set(['g']), editingInRefs: true }), true)
   expect(r.leavePage).toBe(true)
   expect(r.patch).toEqual([])
   expect(r.refreshRefs).toBe(false)
@@ -109,7 +109,7 @@ test('a state change on the board reloads it; a navigation leaves it', () => {
   expect(set.own.map((p) => p.key)).toEqual(['p'])
   const nav = route(out({ page: pg('p', [5]) }), { type: 'page.open', name: 'p' }, view({ board: true }), false)
   expect([nav.place, nav.leaveBoard]).toEqual(['navigate', true])
-  const feed = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ board: true }), true)
+  const feed = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ board: true }), true)
   expect(feed.leaveBoard).toBe(true)
 })
 test('journal.append on a board opens the new card', () => {
@@ -131,11 +131,11 @@ test('a rename from the tree while the table is shown stays and reloads it', () 
 test('opening a page or the feed leaves the table', () => {
   const r = route(out({ page: pg('b', [1]) }), { type: 'page.show', key: 'b' }, view({ allPages: true }), false)
   expect([r.place, r.leaveAllPages, r.refreshAllPages]).toEqual(['navigate', true, false])
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ allPages: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ allPages: true }), true)
   expect(f.leaveAllPages).toBe(true)
 })
 test('a pages.table answer alone does not reload the table', () => {
-  const r = route(out({ table: [] }), { type: 'pages.table' }, view({ allPages: true }), false)
+  const r = route(out({ answer: { kind: 'table', value: [] } }), { type: 'pages.table' }, view({ allPages: true }), false)
   expect(r.refreshAllPages).toBe(false)
 })
 test('cardPages is empty for a changed page that holds no card', () => {
@@ -148,7 +148,7 @@ test('a removed group reloads the references', () => {
 })
 test('refs and a changed group in one output: both apply', () => {
   const refs = { key: 'a', count: 1, groups: [] }
-  const r = route(out({ refs, changed: [pg('g', [3])] }), { type: 'page.rename', key: 'x', name: 'Y' }, view({ page: 'a', groups: new Set(['g']) }), false)
+  const r = route(out({ answer: { kind: 'refs', value: refs }, changed: [pg('g', [3])] }), { type: 'page.rename', key: 'x', name: 'Y' }, view({ page: 'a', groups: new Set(['g']) }), false)
   expect(r.applyRefs).toBe(true)
   expect(r.patch.map((p) => p.key)).toEqual(['g'])
   expect(r.refreshRefs).toBe(true)
@@ -175,7 +175,7 @@ test('the editor does not open on a stray added block, and one with a child stay
 test('Settings leaves like the table: on a page shown by navigation or a feed', () => {
   const r = route(out({ page: pg('b', [1]) }), { type: 'page.show', key: 'b' }, view({ settings: true }), false)
   expect(r.leaveSettings).toBe(true)
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ settings: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ settings: true }), true)
   expect(f.leaveSettings).toBe(true)
 })
 test('Settings stays for an answer without a page', () => {
@@ -197,7 +197,7 @@ test('a navigation leaves the graph; other answers keep it', () => {
   expect(r.leaveGraph).toBe(true)
   const t = route(out({ page: pg('d', [1]), focus: null }), { type: 'block.setText', id: 1, text: 'x' }, view({ graph: true }), false)
   expect([t.place, t.leaveGraph, t.show]).toEqual(['none', false, null])
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ graph: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ graph: true }), true)
   expect(f.leaveGraph).toBe(true)
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveGraph).toBe(false)
 })
@@ -207,7 +207,7 @@ test('a navigation leaves the Archive view; other answers keep it', () => {
   expect([r.leaveArchive, r.place]).toEqual([true, 'navigate'])
   const t = route(out({ changed: [pg('d', [1])] }), { type: 'archive.auto', editing: null }, view({ archive: true }), false)
   expect([t.place, t.leaveArchive, t.show]).toEqual(['none', false, null])
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ archive: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ archive: true }), true)
   expect(f.leaveArchive).toBe(true)
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveArchive).toBe(false)
 })
@@ -219,7 +219,7 @@ test('a navigation leaves the Dailies view; other answers keep it', () => {
   expect([t.place, t.leaveDailies, t.show]).toEqual(['none', false, null])
   const a = route(out({ changed: [pg('d', [1])] }), { type: 'archive.auto', editing: null }, view({ dailies: true }), false)
   expect([a.place, a.leaveDailies]).toEqual(['none', false])
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ dailies: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ dailies: true }), true)
   expect(f.leaveDailies).toBe(true)
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveDailies).toBe(false)
 })
@@ -229,7 +229,7 @@ test('a navigation leaves the Git history; other answers keep it', () => {
   expect(r.leaveGitLog).toBe(true)
   const t = route(out({ page: pg('d', [1]), focus: null }), { type: 'block.setText', id: 1, text: 'x' }, view({ gitLog: true }), false)
   expect([t.place, t.leaveGitLog, t.show]).toEqual(['none', false, null])
-  const f = route(out({ feed: { today: 'd', days: [] } }), { type: 'journal.feed' }, view({ gitLog: true }), true)
+  const f = route(out({ answer: { kind: 'feed', value: { today: 'd', days: [] } } }), { type: 'journal.feed' }, view({ gitLog: true }), true)
   expect(f.leaveGitLog).toBe(true)
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveGitLog).toBe(false)
 })

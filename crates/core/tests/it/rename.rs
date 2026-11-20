@@ -85,9 +85,7 @@ fn changed_keys(out: &Output) -> Vec<String> {
 }
 
 fn ref_groups(s: &mut Session, key: &str) -> usize {
-    ok(s, json!({"type": "page.refs", "key": key}))
-        .refs
-        .unwrap()
+    answer!(ok(s, json!({"type": "page.refs", "key": key})), Refs)
         .groups
         .len()
 }

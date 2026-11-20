@@ -1,8 +1,9 @@
 import { expect, test } from 'vitest'
 import { Archive } from './archive.svelte'
 import type { ArchivedView, Command, Notice, Output } from './types'
+import { emptyOutput } from './emptyOutput.testing'
 
-const answer = (rows: ArchivedView[]): Output => ({ archive: rows }) as unknown as Output
+const answer = (rows: ArchivedView[]): Output => emptyOutput({ answer: { kind: 'archive', value: rows } })
 const row = (id: number, text: string): ArchivedView => ({
   id, page: 'p', pageName: 'P', pageKind: 'page', source: 'P', text, state: 'DONE', color: 'green', done: null, archived: null, created: null, took: null,
 })

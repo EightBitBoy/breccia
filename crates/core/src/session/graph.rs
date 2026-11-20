@@ -15,7 +15,7 @@ use crate::workspace::Workspace;
 
 use super::Session;
 use super::error::{CommandError, ErrorCode};
-use super::view::{Output, PageViewKind, title_of};
+use super::view::{Answer, Output, PageViewKind, title_of};
 
 /// A dot of the network view.
 #[derive(Clone, Debug, Serialize)]
@@ -212,10 +212,7 @@ impl Session {
         if let Some(dir) = self.search.cache_dir() {
             graph.load_layout(&dir.join(layout_file_name(&ws.root)));
         }
-        Ok(Output {
-            graph: Some(graph),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Graph(graph)))
     }
 
     /// `graph.saveLayout`: the positions go to the cache, if there is one.

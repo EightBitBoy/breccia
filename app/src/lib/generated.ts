@@ -5,7 +5,7 @@
  * follows (the other fields of `Output`). On the wire `{ kind, value }`, because some answers are
  * lists or numbers.
  */
-export type Answer = { "kind": "folder", "value": FolderView } | { "kind": "dirty", "value": Array<DirtyView> } | { "kind": "reach", "value": number } | { "kind": "day", "value": DateView } | { "kind": "names", "value": Array<NameEntry> } | { "kind": "usage", "value": UsageView } | { "kind": "git", "value": GitView } | { "kind": "gitLog", "value": GitLogView };
+export type Answer = { "kind": "folder", "value": FolderView } | { "kind": "dirty", "value": Array<DirtyView> } | { "kind": "reach", "value": number } | { "kind": "day", "value": DateView } | { "kind": "names", "value": Array<NameEntry> } | { "kind": "usage", "value": UsageView } | { "kind": "git", "value": GitView } | { "kind": "gitLog", "value": GitLogView } | { "kind": "refs", "value": RefsView } | { "kind": "feed", "value": FeedView } | { "kind": "pages", "value": Array<PageView> } | { "kind": "board", "value": BoardView } | { "kind": "table", "value": Array<PageRowView> } | { "kind": "archive", "value": Array<ArchivedView> } | { "kind": "graph", "value": GraphView } | { "kind": "search", "value": SearchView };
 
 /**
  * A row of the Archive view (`archive.list`): an archived task.
@@ -354,7 +354,7 @@ export type Notice = { "kind": "loadWarning", message: string, } | { "kind": "sa
 /**
  * The result of a command. Only the parts a command produces are set.
  */
-export type Output = { page: PageView | null, focus: Focus | null, notices: Array<Notice>, config: ConfigView | null, refs: RefsView | null, tree: TreeView | null,
+export type Output = { page: PageView | null, focus: Focus | null, notices: Array<Notice>, config: ConfigView | null, tree: TreeView | null,
 /**
  * Pages other than `page` that the command changed.
  */
@@ -364,42 +364,14 @@ changed: Array<PageView>,
  */
 removed: Array<string>,
 /**
- * The journal feed; set by `journal.feed`.
- */
-feed: FeedView | null,
-/**
- * Pages a query returned without showing them (`pages.get`); not emitted as events.
- */
-pages: Array<PageView>,
-/**
- * The board built by `board.get`.
- */
-board: BoardView | null,
-/**
- * The rows of the All pages table; set by `pages.table`.
- */
-table: Array<PageRowView> | null,
-/**
- * The matches of `search.query`.
- */
-search: SearchView | null,
-/**
  * Pages whose key changed because the file was edited outside (`files.changed`).
  */
 renamed: Array<RenameView>,
-/**
- * The network view's pages and links; set by `graph.get`.
- */
-graph: GraphView | null,
 /**
  * Keys of pages whose earlier save failed and whose file now holds
  * Breccia's text, so their "could not be saved" notice can go.
  */
 saved: Array<string>,
-/**
- * The archived tasks (`archive.list`).
- */
-archive: Array<ArchivedView> | null,
 /**
  * The dailies in file order; set by every `dailies.*` command.
  */

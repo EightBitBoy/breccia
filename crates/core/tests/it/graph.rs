@@ -26,7 +26,7 @@ fn open(root: &Path) -> Session {
 }
 
 fn graph(s: &mut Session) -> GraphView {
-    ok(s, json!({"type": "graph.get"})).graph.unwrap()
+    answer!(ok(s, json!({"type": "graph.get"})), Graph)
 }
 
 fn node<'a>(g: &'a GraphView, key: &str) -> &'a GraphNode {
@@ -109,7 +109,7 @@ fn graph_lists_pages_targets_and_lines() {
             ("ben", "anna"),
         ]
     );
-    let rows = ok(&mut s, json!({"type": "pages.table"})).table.unwrap();
+    let rows = answer!(ok(&mut s, json!({"type": "pages.table"})), Table);
     for r in &rows {
         assert_eq!(node(&g, &r.key).linked_from, r.linked_from, "{}", r.key);
     }
@@ -345,7 +345,7 @@ fn a_broken_layout_file_is_ignored() {
     let all_none = |s: &mut Session| {
         let out = ok(s, json!({"type": "graph.get"}));
         assert!(out.notices.is_empty());
-        assert!(out.graph.unwrap().positions.iter().all(Option::is_none));
+        assert!(answer!(out, Graph).positions.iter().all(Option::is_none));
     };
     fs::write(&file, "not json").unwrap();
     all_none(&mut s);
@@ -358,7 +358,7 @@ fn a_broken_layout_file_is_ignored() {
     .unwrap();
     let out = ok(&mut s, json!({"type": "graph.get"}));
     assert!(out.notices.is_empty());
-    let g = out.graph.unwrap();
+    let g = answer!(out, Graph);
     assert_eq!(pos(&g, "anna"), None);
     assert_eq!(pos(&g, "ben"), None);
     assert_eq!(pos(&g, "lonely"), Some([5.0, 6.0]));

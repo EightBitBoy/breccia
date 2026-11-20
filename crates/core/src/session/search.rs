@@ -459,8 +459,8 @@ impl Session {
                 CommandError::new(ErrorCode::Search, "the search index is not available")
             })?;
         Ok(Output {
-            search: Some(SearchView::build(text, &q, hits, ws, today)),
             notices: search.warning.take().into_iter().collect(),
+            answer: Some(Answer::Search(SearchView::build(text, &q, hits, ws, today))),
             ..Output::default()
         })
     }

@@ -34,7 +34,7 @@ fn touch(root: &Path, rel: &str, (y, m, d, h): (i32, u32, u32, u32)) {
 }
 
 fn table(s: &mut Session) -> Vec<PageRowView> {
-    ok(s, json!({"type": "pages.table"})).table.unwrap()
+    answer!(ok(s, json!({"type": "pages.table"})), Table)
 }
 fn row<'a>(rows: &'a [PageRowView], key: &str) -> &'a PageRowView {
     rows.iter().find(|r| r.key == key).unwrap()

@@ -31,31 +31,16 @@ pub struct Output {
     pub focus: Option<Focus>,
     pub notices: Vec<Notice>,
     pub config: Option<ConfigView>,
-    pub refs: Option<RefsView>,
     pub tree: Option<TreeView>,
     /// Pages other than `page` that the command changed.
     pub changed: Vec<PageView>,
     /// Keys of pages that are gone.
     pub removed: Vec<String>,
-    /// The journal feed; set by `journal.feed`.
-    pub feed: Option<FeedView>,
-    /// Pages a query returned without showing them (`pages.get`); not emitted as events.
-    pub pages: Vec<PageView>,
-    /// The board built by `board.get`.
-    pub board: Option<BoardView>,
-    /// The rows of the All pages table; set by `pages.table`.
-    pub table: Option<Vec<PageRowView>>,
-    /// The matches of `search.query`.
-    pub search: Option<SearchView>,
     /// Pages whose key changed because the file was edited outside (`files.changed`).
     pub renamed: Vec<RenameView>,
-    /// The network view's pages and links; set by `graph.get`.
-    pub graph: Option<GraphView>,
     /// Keys of pages whose earlier save failed and whose file now holds
     /// Breccia's text, so their "could not be saved" notice can go.
     pub saved: Vec<String>,
-    /// The archived tasks (`archive.list`).
-    pub archive: Option<Vec<ArchivedView>>,
     /// The dailies in file order; set by every `dailies.*` command.
     pub dailies: Option<Vec<super::DailyView>>,
     /// What only the asker wants; empty when the command answers nothing beyond its changes.
@@ -85,6 +70,22 @@ pub enum Answer {
     Git(GitView),
     /// One page of the notes folder's commits: the shell's `git.log`.
     GitLog(GitLogView),
+    /// A page's references: `page.refs`.
+    Refs(RefsView),
+    /// The journal feed's days: `journal.feed`.
+    Feed(FeedView),
+    /// Pages read without showing them, in the order asked: `pages.get`.
+    Pages(Vec<PageView>),
+    /// One board as it is now: `board.get`.
+    Board(BoardView),
+    /// The rows of the All pages table: `pages.table`.
+    Table(Vec<PageRowView>),
+    /// The archived tasks: `archive.list`.
+    Archive(Vec<ArchivedView>),
+    /// The network view's pages and links: `graph.get`.
+    Graph(GraphView),
+    /// The matches of `search.query`.
+    Search(SearchView),
 }
 
 /// The answer of `states.usage`.

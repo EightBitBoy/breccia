@@ -41,9 +41,7 @@ fn open(root: &Path) -> Session {
     open_at(root, clock(DAY))
 }
 fn board(s: &mut Session, index: usize) -> BoardView {
-    ok(s, json!({"type": "board.get", "index": index}))
-        .board
-        .unwrap()
+    answer!(ok(s, json!({"type": "board.get", "index": index})), Board)
 }
 fn first_line(c: &CardView) -> &str {
     c.blocks[0].text.split('\n').next().unwrap()
@@ -274,7 +272,7 @@ fn the_archive_sorts_by_done_and_archived_time() {
         "- DONE a\n  done:: [[2026-09-01]] 09:00:00\n  archived:: 2026-10-01 10:00:00\n- DONE b\n  done:: [[2026-09-01]] 18:00:00\n  archived:: 2026-10-01\n- DONE c\n  done:: [[2026-09-01]] 09:00:00\n  archived:: 2026-10-01 11:00:00\n",
     );
     let mut s = open(t.path());
-    let rows = ok(&mut s, json!({"type": "archive.list"})).archive.unwrap();
+    let rows = answer!(ok(&mut s, json!({"type": "archive.list"})), Archive);
     let texts: Vec<&str> = rows.iter().map(|r| r.text.as_str()).collect();
     assert_eq!(texts, ["b", "c", "a"]);
     assert_eq!(rows[2].archived.as_deref(), Some("2026-10-01"));
@@ -490,7 +488,7 @@ fn the_archive_lists_archived_tasks_newest_done_first() {
 ",
     );
     let mut s = open(t.path());
-    let rows = ok(&mut s, json!({"type": "archive.list"})).archive.unwrap();
+    let rows = answer!(ok(&mut s, json!({"type": "archive.list"})), Archive);
     let texts: Vec<&str> = rows.iter().map(|r| r.text.as_str()).collect();
     assert_eq!(
         texts,
@@ -1016,7 +1014,7 @@ fn the_archive_lists_created_done_times_and_how_long_a_task_took() {
 ",
     );
     let mut s = open(t.path());
-    let rows = ok(&mut s, json!({"type": "archive.list"})).archive.unwrap();
+    let rows = answer!(ok(&mut s, json!({"type": "archive.list"})), Archive);
     let timed = serde_json::to_value(&rows[0]).unwrap();
     assert_eq!(timed["created"], "2026-08-29 09:00");
     assert_eq!(timed["done"], "2026-09-01 14:05");

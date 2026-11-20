@@ -10,7 +10,7 @@ use super::Session;
 use super::block::caret_at_end;
 use super::error::CommandError;
 use super::tree::JournalDay;
-use super::view::{FeedView, Focus, Output, PageView};
+use super::view::{Answer, FeedView, Focus, Output, PageView};
 use crate::workspace::PageKind;
 
 impl Session {
@@ -31,10 +31,10 @@ impl Session {
                 },
             })
             .collect();
-        Ok(Output {
-            feed: Some(FeedView { today: name, days }),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Feed(FeedView {
+            today: name,
+            days,
+        })))
     }
 
     /// Adds a top-level block with `text` at the end of today's journal. A text
@@ -76,9 +76,6 @@ impl Session {
         for p in &pages {
             self.acknowledge_page(&p.key);
         }
-        Ok(Output {
-            pages,
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Pages(pages)))
     }
 }

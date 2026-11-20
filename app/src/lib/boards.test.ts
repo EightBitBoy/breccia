@@ -27,7 +27,7 @@ function setup(
     run: async (cmd) => {
       sent.push(cmd)
       if (fail(cmd)) throw { code, message: 'boom' }
-      return cmd.type === 'board.get' ? { ...empty, board: bv(cmd.index) } : empty
+      return cmd.type === 'board.get' ? { ...empty, answer: { kind: 'board', value: bv(cmd.index) } } : empty
     },
     notify: (n) => notices.push(n),
     flush: () => flush(b),

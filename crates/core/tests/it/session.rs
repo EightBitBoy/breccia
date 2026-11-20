@@ -693,7 +693,9 @@ fn output_serializes_camel_case() {
     assert_eq!(v["config"]["states"][0]["keyword"], "TODO");
     assert_eq!(v["config"]["states"][0]["inCycle"], true);
     let v = serde_json::to_value(ok(&mut s, json!({"type":"folder.status"}), 0)).unwrap();
-    assert!(v.get("board").is_some(), "{v}");
+    // An unset change is sent as null; a board is an answer, never a field of its own.
+    assert!(v.get("tree").is_some_and(Value::is_null), "{v}");
+    assert!(v.get("board").is_none(), "{v}");
 
     // Opening reports the bad journal name as a notice.
     let mut s2 = Session::new();
@@ -1185,9 +1187,10 @@ fn refs_of_an_unknown_page_are_refused() {
     let e = cmd(&mut s, json!({"type": "page.refs", "key": "gone"}), 0).unwrap_err();
     assert_eq!(e.code, ErrorCode::UnknownPage);
     ok(&mut s, json!({"type": "page.open", "name": "Q"}), 0);
-    let refs = ok(&mut s, json!({"type": "page.refs", "key": "q"}), 0)
-        .refs
-        .unwrap();
+    let refs = answer!(
+        ok(&mut s, json!({"type": "page.refs", "key": "q"}), 0),
+        Refs
+    );
     assert_eq!(refs.groups.len(), 1);
 }
 
@@ -2113,9 +2116,10 @@ fn the_rename_question_counts_rewrites() {
         ("pages/C.md", "- [[k8s]] #k8s\n"),
         ("pages/D.md", "- [[kubernetes]]\n"),
     ]);
-    let refs = ok(&mut s, json!({"type": "page.refs", "key": "kubernetes"}), 0)
-        .refs
-        .unwrap();
+    let refs = answer!(
+        ok(&mut s, json!({"type": "page.refs", "key": "kubernetes"}), 0),
+        Refs
+    );
     assert_eq!(refs.groups.len(), 4);
     let reach = |s: &mut Session, name: &str| {
         let out = ok(
@@ -2137,7 +2141,8 @@ fn the_rename_question_counts_rewrites() {
         json!({"type": "page.renameReach", "key": "kubernetes", "name": "X"}),
         0,
     );
-    assert!(out.page.is_none() && out.refs.is_none());
+    assert!(out.page.is_none());
+    let _ = answer!(out, Reach);
     let e = cmd(
         &mut s,
         json!({"type": "page.renameReach", "key": "gone", "name": "X"}),
@@ -2995,4 +3000,31 @@ fn answers_have_kind_and_value() {
     let wire = serde_json::to_value(&out).unwrap();
     assert_eq!(wire["answer"], json!({"kind": "reach", "value": 0}));
     assert!(wire.get("reach").is_none(), "no top-level reach: {wire}");
+}
+
+// A page's references are an answer: no top-level `refs`, and nothing is changed.
+#[test]
+fn page_refs_answers_refs() {
+    let (_t, mut s) = folder(&[("pages/A.md", "- a\n"), ("pages/B.md", "- see [[A]]\n")]);
+    let out = ok(&mut s, json!({"type": "page.refs", "key": "a"}), 0);
+    let wire = serde_json::to_value(&out).unwrap();
+    assert!(wire.get("refs").is_none(), "no top-level refs: {wire}");
+    assert_eq!(wire["answer"]["kind"], "refs");
+    let refs = answer!(out, Refs);
+    let froms: Vec<&str> = refs.groups.iter().map(|g| g.page.as_str()).collect();
+    assert_eq!(froms, ["b"]);
+}
+
+// `pages.get` reads pages without changing them: they are its answer, not a change.
+#[test]
+fn pages_get_answers_pages_and_changes_nothing() {
+    let (_t, mut s) = folder(&[("pages/A.md", "- a\n"), ("pages/B.md", "- b\n")]);
+    let out = ok(&mut s, json!({"type": "pages.get", "keys": ["b"]}), 0);
+    assert!(out.page.is_none());
+    assert!(out.changed.is_empty());
+    let wire = serde_json::to_value(&out).unwrap();
+    assert!(wire.get("pages").is_none(), "no top-level pages: {wire}");
+    let pages = answer!(out, Pages);
+    let keys: Vec<&str> = pages.iter().map(|p| p.key.as_str()).collect();
+    assert_eq!(keys, ["b"]);
 }

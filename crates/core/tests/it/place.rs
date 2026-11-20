@@ -29,9 +29,7 @@ fn open(root: &Path) -> Session {
 
 /// The id of the card whose first line (keyword included) is `line`.
 fn id(s: &mut Session, line: &str) -> BlockId {
-    let b = ok(s, json!({"type": "board.get", "index": 0}))
-        .board
-        .unwrap();
+    let b = answer!(ok(s, json!({"type": "board.get", "index": 0})), Board);
     b.columns
         .iter()
         .flat_map(|c| &c.cards)
@@ -42,9 +40,7 @@ fn id(s: &mut Session, line: &str) -> BlockId {
 
 /// The first lines of column `kw`'s cards, top to bottom.
 fn column(s: &mut Session, kw: &str) -> Vec<String> {
-    let b = ok(s, json!({"type": "board.get", "index": 0}))
-        .board
-        .unwrap();
+    let b = answer!(ok(s, json!({"type": "board.get", "index": 0})), Board);
     b.columns
         .iter()
         .find(|c| c.keyword == kw)

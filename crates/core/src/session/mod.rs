@@ -334,20 +334,19 @@ impl Session {
             Command::PageGet { key } => self.page_get(&key),
             Command::JournalFeed => self.journal_feed(today),
             Command::PagesGet { keys } => self.pages_get(&keys),
-            Command::PagesTable => Ok(Output {
-                table: Some(PageRowView::all(self.ws()?, &self.git_created)),
-                ..Output::default()
-            }),
+            Command::PagesTable => Ok(Output::answering(Answer::Table(PageRowView::all(
+                self.ws()?,
+                &self.git_created,
+            )))),
             Command::GraphGet => self.graph_get(),
             Command::GraphSaveLayout { positions } => self.graph_save_layout(&positions),
             Command::PageReload { key } => self.page_reload(key),
             Command::PageRefs { key } => self.page_refs(&key),
             Command::PageRenameReach { key, name } => self.page_rename_reach(&key, &name),
             Command::BoardGet { index } => self.board_get(index),
-            Command::ArchiveList => Ok(Output {
-                archive: Some(board::archived_tasks(self.ws()?)),
-                ..Output::default()
-            }),
+            Command::ArchiveList => Ok(Output::answering(Answer::Archive(board::archived_tasks(
+                self.ws()?,
+            )))),
             Command::BoardPlace {
                 id,
                 keyword,

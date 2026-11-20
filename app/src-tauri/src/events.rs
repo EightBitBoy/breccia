@@ -76,7 +76,7 @@ pub(crate) fn emit_all(app: &AppHandle, output: &Output, from_watcher: bool) {
 mod tests {
     use super::*;
     use breccia_core::session::Notice;
-    use breccia_core::{Command, Request, Session};
+    use breccia_core::{Answer, Command, Request, Session};
 
     #[test]
     fn events_cover_pages_tree_and_removals() {
@@ -104,7 +104,7 @@ mod tests {
         let out = Output {
             page: Some(page.clone()),
             changed: vec![page.clone()],
-            pages: vec![page],
+            answer: Some(Answer::Pages(vec![page])),
             tree: Some(tree),
             removed: vec!["x".into()],
             notices: vec![Notice::Refused {
@@ -125,6 +125,35 @@ mod tests {
             ]
         );
         assert_eq!(names(true).last(), Some(&"notices:added"));
+    }
+
+    /// An answer is for the asker only: an output that holds nothing else sends no event.
+    #[test]
+    fn events_ignore_the_answer() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut session = Session::new();
+        let mut run = |command| {
+            let generation = session.generation();
+            session
+                .run(
+                    Request {
+                        generation,
+                        command,
+                    },
+                    crate::test_clock(),
+                )
+                .unwrap()
+        };
+        run(Command::FolderOpen {
+            path: dir.path().to_path_buf(),
+        });
+        let page = run(Command::PageToday).page.unwrap();
+        let out = Output {
+            answer: Some(Answer::Pages(vec![page])),
+            ..Output::default()
+        };
+        assert!(events(&out, false).is_empty());
+        assert!(events(&out, true).is_empty());
     }
 
     #[test]

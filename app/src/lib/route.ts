@@ -1,4 +1,5 @@
 // Where an output goes: the decisions `App.apply` makes, free of state so they can be tested.
+import { answerOf } from './answer'
 import { cardOf, isBareKeyword } from './board'
 import { dayOfBlock, sameDay, type Feed } from './feed'
 import { pageOfBlock } from './refs'
@@ -45,7 +46,7 @@ export interface Route {
   resetScroll: boolean
   /** Loaded feed days to replace (place 'day', and changed pages that are loaded days). */
   days: PageView[]
-  /** Apply `out.refs` now. */
+  /** Apply the `refs` answer now. */
   applyRefs: boolean
   /** Reference groups to patch with these pages. */
   patch: PageView[]
@@ -84,7 +85,7 @@ export interface Route {
   dropFocus: boolean
 }
 
-/** Call after `journal.applyFeed`; `feedShown` is its result (false when `out.feed` is null). */
+/** Call after `journal.applyFeed`; `feedShown` is its result (false when there is no `feed` answer). */
 export function route(out: Output, cmd: Command | undefined, view: ShownView, feedShown: boolean): Route {
   const leavePage = feedShown && view.page !== null
   const page = leavePage ? null : view.page
@@ -163,7 +164,8 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
   const groups = r.moved || leavePage ? new Set<string>() : view.groups
   const editingInRefs = r.moved || leavePage ? false : view.editingInRefs
   const shownKey = r.show ? r.show.key : page
-  const refsHere = out.refs !== null && out.refs.key === shownKey
+  const refs = answerOf(out, 'refs')
+  const refsHere = refs !== null && refs.key === shownKey
   const held = refsHere && editingInRefs
   r.applyRefs = refsHere && !held
 

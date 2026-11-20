@@ -5,7 +5,7 @@ import { RefsRefresh } from './refs'
 import type { ArchivedView, Command, Notice, Output } from './types'
 
 export interface ArchiveEnv {
-  /** Queues a command; its output reaches App.apply, which hands `out.archive` back. */
+  /** Queues a command; its output reaches App.apply, which hands the `archive` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }

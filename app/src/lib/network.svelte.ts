@@ -6,7 +6,7 @@ import { RefsRefresh } from './refs'
 import type { Command, GraphView, NodePosition, Notice, Output } from './types'
 
 export interface NetworkEnv {
-  /** Queues a command; its output reaches App.apply, which hands `out.graph` back. */
+  /** Queues a command; its output reaches App.apply, which hands the `graph` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }

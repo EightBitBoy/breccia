@@ -6,7 +6,7 @@ import { RefsRefresh } from './refs'
 import type { Command, Notice, Output, PageRowView } from './types'
 
 export interface AllPagesEnv {
-  /** Queues a command; its output reaches App.apply, which hands `out.table` back. */
+  /** Queues a command; its output reaches App.apply, which hands the `table` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }

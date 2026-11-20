@@ -21,7 +21,7 @@ use crate::workspace::{Page, PageKind, Workspace};
 
 use super::Session;
 use super::error::{CommandError, ErrorCode};
-use super::view::{BlockView, Notice, Output, PageView, PageViewKind, title_of};
+use super::view::{Answer, BlockView, Notice, Output, PageView, PageViewKind, title_of};
 
 #[derive(Clone, Debug, Serialize)]
 #[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
@@ -473,10 +473,7 @@ impl Session {
                 }
             }
         }
-        Ok(Output {
-            board: Some(board),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Board(board)))
     }
 
     /// `board.place`: card `id` goes into column `keyword` above

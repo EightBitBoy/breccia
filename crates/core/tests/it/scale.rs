@@ -107,9 +107,10 @@ fn dir_bytes(dir: &Path) -> u64 {
 
 /// Runs `search.query` and returns (blocks matched, more, has a date line).
 fn query(s: &mut Session, text: &str) -> (usize, bool, bool) {
-    let v = run(s, json!({"type": "search.query", "text": text}))
-        .search
-        .expect("search view");
+    let v = answer!(
+        run(s, json!({"type": "search.query", "text": text})),
+        Search
+    );
     let n = v.groups.iter().map(|g| g.hits.len()).sum();
     (n, v.more, v.date.is_some())
 }
@@ -200,7 +201,7 @@ fn scale_5000_pages() {
         let t0 = Instant::now();
         let out = run(&mut s, json!({"type": "journal.feed"}));
         let e = ms(t0);
-        feed_days = out.feed.unwrap().days.len();
+        feed_days = answer!(out, Feed).days.len();
         e
     });
 
@@ -217,7 +218,7 @@ fn scale_5000_pages() {
         let t0 = Instant::now();
         let out = run(&mut s, json!({"type": "pages.table"}));
         let e = ms(t0);
-        rows = out.table.unwrap();
+        rows = answer!(out, Table);
         e
     });
 
@@ -225,7 +226,7 @@ fn scale_5000_pages() {
         let t0 = Instant::now();
         let out = run(&mut s, json!({"type": "board.get", "index": 0}));
         let e = ms(t0);
-        assert!(out.board.is_some());
+        let _ = answer!(out, Board);
         e
     });
 
@@ -236,7 +237,7 @@ fn scale_5000_pages() {
         let t0 = Instant::now();
         let out = run(&mut s, json!({"type": "graph.get"}));
         let e = ms(t0);
-        graph = out.graph;
+        graph = Some(answer!(out, Graph));
         e
     });
     let graph = graph.expect("graph view");
@@ -265,7 +266,7 @@ fn scale_5000_pages() {
         let t0 = Instant::now();
         let out = run(&mut s, json!({"type": "graph.get"}));
         let e = ms(t0);
-        with_layout = out.graph.unwrap().positions.iter().flatten().count();
+        with_layout = answer!(out, Graph).positions.iter().flatten().count();
         e
     });
     assert_eq!(

@@ -26,9 +26,7 @@ fn folder(files: &[(&str, &str)]) -> (TempDir, Session) {
 }
 
 fn search(s: &mut Session, text: &str) -> SearchView {
-    ok(s, json!({"type": "search.query", "text": text}))
-        .search
-        .unwrap()
+    answer!(ok(s, json!({"type": "search.query", "text": text})), Search)
 }
 
 /// (page key, plain text of the hit) per hit, in order.
@@ -468,7 +466,7 @@ fn damage_found_by_a_query_rebuilds_once() {
 
     let out = query_out(&mut s, "zebra");
     assert!(out.notices.is_empty(), "{:?}", out.notices);
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
     // The rebuilt file is a stored one again.
     assert_eq!(hits(&search(&mut s, "zebra")).len(), 1);
 }
@@ -498,7 +496,7 @@ fn damage_found_by_the_background_build_rebuilds_once() {
     drain(&mut s);
     let out = query_out(&mut s, "zebra");
     assert!(out.notices.is_empty(), "{:?}", out.notices);
-    assert_eq!(hits(&out.search.unwrap()).len(), 2);
+    assert_eq!(hits(&answer!(out, Search)).len(), 2);
 }
 
 #[test]
@@ -516,11 +514,11 @@ fn a_second_damage_keeps_the_index_in_memory() {
     let warnings = load_warnings(&out);
     assert_eq!(warnings.len(), 1, "{:?}", out.notices);
     assert!(warnings[0].contains("cannot be stored"), "{}", warnings[0]);
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
 
     let out = query_out(&mut s, "zebra");
     assert!(out.notices.is_empty(), "{:?}", out.notices);
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
 }
 
 #[test]
@@ -624,7 +622,7 @@ fn damage_at_open_keeps_the_one_rebuild() {
     break_schema(&index_file(cache.path()));
     let out = query_out(&mut s, "zebra");
     assert!(out.notices.is_empty(), "{:?}", out.notices);
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
 }
 
 #[test]
@@ -648,7 +646,7 @@ fn damage_twice_moves_the_index_to_memory() {
     let warnings = load_warnings(&out);
     assert_eq!(warnings.len(), 1, "{:?}", out.notices);
     assert!(warnings[0].contains("cannot be stored"), "{}", warnings[0]);
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
     assert!(query_out(&mut s, "zebra").notices.is_empty());
 }
 
@@ -713,7 +711,7 @@ fn a_repair_that_cannot_delete_the_file_names_that_failure() {
         "{}",
         warnings[0]
     );
-    assert_eq!(hits(&out.search.unwrap()).len(), 1);
+    assert_eq!(hits(&answer!(out, Search)).len(), 1);
 }
 
 #[test]

@@ -410,7 +410,7 @@ fn dailies_are_not_pages() {
         json!({"type": "search.query", "text": "zebrafinch"}),
         clock(),
     );
-    assert!(q.search.unwrap().groups.is_empty());
+    assert!(answer!(q, Search).groups.is_empty());
     let names = answer!(
         support::ok(&mut s, json!({"type": "pages.list"}), clock()),
         Names

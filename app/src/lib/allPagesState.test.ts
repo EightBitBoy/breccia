@@ -18,8 +18,8 @@ function setup(fail = false) {
     run: (cmd) => {
       sent.push(cmd)
       if (fail) return Promise.reject({ code: 'internal', message: 'boom' })
-      if (!hold) return Promise.resolve({ ...empty, table: [] })
-      return new Promise((res) => pending.push(() => res({ ...empty, table: [] })))
+      if (!hold) return Promise.resolve({ ...empty, answer: { kind: 'table', value: [] } })
+      return new Promise((res) => pending.push(() => res({ ...empty, answer: { kind: 'table', value: [] } })))
     },
     notify: (n) => notices.push(n),
   })
@@ -99,7 +99,7 @@ test('a failed refresh is a notice too', async () => {
   let fail = false
   const notices: Notice[] = []
   const a = new AllPages({
-    run: () => (fail ? Promise.reject({ code: 'internal', message: 'boom' }) : Promise.resolve({ ...empty, table: [] })),
+    run: () => (fail ? Promise.reject({ code: 'internal', message: 'boom' }) : Promise.resolve({ ...empty, answer: { kind: 'table', value: [] } })),
     notify: (n) => notices.push(n),
   })
   await a.open()
