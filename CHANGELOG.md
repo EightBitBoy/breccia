@@ -2,6 +2,21 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.8.2] - 2026-11-20
+
+### Features
+
+- Dailies: emptying a daily's text asks to delete it
+- Dailies: a drag handle shows beside a daily while the pointer is over it
+- Links: a web address shows its full address on hover, and its menu can copy it
+
+### Fixes
+
+- Log: a Git password with an apostrophe no longer shows in the log
+- Dailies: a daily is not deleted when lines were added under it while asking
+- Dailies: right-clicking while editing a daily shows the text menu with Copy and Paste
+- Settings: typing the default into a number field fixes a wrong value in the settings file
+
 ## [1.8.1] - 2026-11-19
 
 ### Features
