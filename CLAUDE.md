@@ -35,12 +35,17 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - Code: Cargo workspace with `crates/core` (`breccia-core`: files, outline, edits, links, boards) and `app/src-tauri`
   (`breccia`, the Tauri 2 shell). The frontend is in `app/`: Svelte 5, TypeScript, Vite, Vitest and CodeMirror 6.
   Editor logic is in `app/src/editor/`, and logic with unit tests is in `app/src/lib/`.
+- The window's types for the core's commands, answers and events: `app/src/lib/generated.ts`, written from the core's
+  wire types by `just types` (ts-rs, feature `wire-types`, developer builds only) and checked by `cargo test`
+  (`crates/core/tests/it/wire_types.rs`). `app/src/lib/types.ts` re-exports it next to the shell's own types.
 
 ## Commands
 
 - `just test`: frontend build, Vitest, then `cargo test --workspace`; it prints a hint when `target/` is over 15 GB.
   The core's integration tests are one program (`crates/core/tests/it/main.rs`, each file a module): run one file with
   `cargo test -p breccia-core <file>::`.
+- `just types`: writes `app/src/lib/generated.ts` from the core after a change to a wire type; `cargo test` fails
+  while the file is out of date.
 - `just clean-stale [--dry-run]`: deletes build outputs in `target/` older than 7 days, keeping the newest of each
   (`app/scripts/clean-stale.mjs`).
 - `just lint`: `cargo fmt --check`, clippy with `-D warnings`, and `svelte-check`. Run `cargo fmt --all` if it fails
