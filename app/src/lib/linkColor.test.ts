@@ -88,3 +88,21 @@ test('a page the list no longer holds keeps the color it had when the picker ope
   expect(pickingColor([], targets[1])).toBe('teal')
   expect(pickingColor([], targets[2])).toBeNull()
 })
+
+test('a right-click on a web address opens the menu with its address to copy, even inside a selection', () => {
+  const web = { className: 'ext', dataPage: null, href: 'https://x.com/a?b=1&c=2' }
+  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: web }, targets)).toEqual({
+    kind: 'copy',
+    url: 'https://x.com/a?b=1&c=2',
+  })
+  const mail = { className: 'ext', dataPage: null, href: 'mailto:me@x.com' }
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: mail }, targets)).toEqual({
+    kind: 'copy',
+    url: 'me@x.com',
+  })
+})
+
+test('a web address in the block editor keeps the native menu', () => {
+  const web = { className: 'ext', dataPage: null, href: 'https://x.com/a' }
+  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor: web }, targets)).toEqual({ kind: 'native' })
+})

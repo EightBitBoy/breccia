@@ -153,3 +153,9 @@ are its questions for you; each answer decides what a later plan does.
 132. [ ] **Dailies: a drag handle:** move the pointer over a daily: a handle of six dots appears left of its checkbox
    (the row does not shift), and the pointer turns into a hand on it. Drag a daily by the handle within its group: it
    moves as before. The handle hides when the pointer leaves the row; dragging anywhere else on the row still works.
+
+133. [ ] **Web links: full address on hover, "Copy link" on right-click:** with "Shorten" on in Settings > Appearance,
+   rest the pointer on a long web address in a block: after a short pause its full address shows as a tooltip (also
+   on a named link and a card; a mail link shows the address without `mailto:`). Right-click the address in a journal
+   day or on a page: the menu holds "Copy link"; choose it and paste somewhere: the full address is pasted. Open
+   question: should board cards get the "Copy link" menu too (today only the tooltip)?

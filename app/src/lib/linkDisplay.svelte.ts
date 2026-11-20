@@ -1,5 +1,5 @@
 // The link-display choices, kept on this computer, shared by every rendered block.
-import { shortenLinks, type LinkDisplay } from './linkDisplay'
+import { shortenLinks, titleLinks, type LinkDisplay } from './linkDisplay'
 
 class LinkDisplayChoice implements LinkDisplay {
   hideScheme = $state(false)
@@ -12,9 +12,12 @@ class LinkDisplayChoice implements LinkDisplay {
     this.trimSlash = ui.trimLinkSlash === true
   }
 
-  /** `html` as the choices ask; reading it in a template makes the template follow the choices. */
+  /**
+   * `html` as the choices ask, each web link with its full address as its tooltip; reading it in a template makes the
+   * template follow the choices.
+   */
   apply(html: string): string {
-    return shortenLinks(html, this)
+    return titleLinks(shortenLinks(html, this))
   }
 }
 

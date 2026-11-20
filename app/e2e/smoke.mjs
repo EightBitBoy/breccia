@@ -4365,6 +4365,32 @@ try {
   await page.evaluate((eventId) => window.__TAURI_INTERNALS__.invoke('plugin:event|unlisten', { event: 'page:changed', eventId }), listen148)
   console.log('PASS 148 own edits send no page:changed event; a change made outside the window sends one')
 
+  // 149: a web address shows its full address as its tooltip, and its right-click menu holds "Copy link", which puts
+  // the address on the clipboard and writes nothing. The clipboard is stubbed, so the run leaves the owner's alone.
+  const url149 = 'https://example.com/a/rather/long/path?q=149&x=1'
+  const before149 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before149}- read ${url149} later\n`)
+  renameSync(`${journal}.tmp`, journal)
+  const link149 = page.locator(`[data-testid="day"][data-day="${today}"] .block a.ext`, { hasText: 'example.com' }).first()
+  await link149.waitFor()
+  const file149 = readAt(journal)
+  assert((await link149.getAttribute('title')) === url149, `149 tooltip: ${await link149.getAttribute('title')}`)
+  await page.evaluate(() => {
+    window.__e2eCopied149 = []
+    navigator.clipboard.writeText = (t) => (window.__e2eCopied149.push(t), Promise.resolve())
+  })
+  await link149.click({ button: 'right' })
+  const menu149 = page.locator('[data-testid="link-color-menu"]')
+  await menu149.waitFor()
+  const items149 = await menu149.locator('[role="menuitem"]').allInnerTexts()
+  assert(items149.length === 1 && items149[0].trim() === 'Copy link', `149 menu items: ${items149}`)
+  await page.locator('[data-testid="link-copy"]').click()
+  await menu149.waitFor({ state: 'detached' })
+  await waitFor('149 the address was copied', () => page.evaluate(() => window.__e2eCopied149), [url149])
+  await waitFor('149 nothing unsaved', () => page.locator('[data-testid="status-item"][data-id="save"]').innerText(), 'All changes saved')
+  assert(readAt(journal) === file149, '149 copying a link changed the journal file')
+  console.log('PASS 149 a web address shows its full address on hover; "Copy link" in its menu copies it')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

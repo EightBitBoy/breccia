@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { shortenLinks } from './linkDisplay'
+import { shortenLinks, titleLinks } from './linkDisplay'
 
 const a = (url: string, text = url) => `<a class="ext" href="${url}">${text}</a>`
 const both = { hideScheme: true, shorten: true, trimSlash: false }
@@ -55,5 +55,36 @@ describe('shortenLinks', () => {
       a('https://x.com/12345678/', 'x.com/12345678'),
     )
     expect(shortenLinks(a('https://x.com/12345678/'), both)).toBe(a('https://x.com/12345678/', 'x.com/12345678…'))
+  })
+})
+
+describe('titleLinks', () => {
+  it('gives a bare web address its full address as the tooltip', () => {
+    expect(titleLinks(`<p>${a('https://x.com/some/very/long/link')}</p>`)).toBe(
+      '<p><a class="ext" href="https://x.com/some/very/long/link" title="https://x.com/some/very/long/link">' +
+        'https://x.com/some/very/long/link</a></p>',
+    )
+  })
+
+  it('shows the full address over a shortened one', () => {
+    const html = shortenLinks(a('https://x.com/some/very/long/link'), both)
+    expect(titleLinks(html)).toContain('title="https://x.com/some/very/long/link">x.com/some/ver…</a>')
+  })
+
+  it('gives a named link its address, and a mail link the address without mailto:', () => {
+    expect(titleLinks(a('https://x.com/a', 'docs'))).toBe('<a class="ext" href="https://x.com/a" title="https://x.com/a">docs</a>')
+    expect(titleLinks(a('mailto:me@x.com', 'me@x.com'))).toBe(
+      '<a class="ext" href="mailto:me@x.com" title="me@x.com">me@x.com</a>',
+    )
+  })
+
+  it('keeps a title the text gave the link', () => {
+    const html = '<a class="ext" href="https://x.com/a" title="Home">docs</a>'
+    expect(titleLinks(html)).toBe(html)
+  })
+
+  it('leaves page links and tags alone', () => {
+    const html = '<a class="link" data-page="p" data-name="P">P</a><a class="tag" data-page="t" data-name="t">#t</a>'
+    expect(titleLinks(html)).toBe(html)
   })
 })

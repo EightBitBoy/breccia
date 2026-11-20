@@ -41,3 +41,19 @@ export function shortenLinks(html: string, opts: LinkDisplay): string {
     return `<a class="ext" href="${href}">${shown}</a>`
   })
 }
+
+// Every web or mail link the core writes starts so; one the text gave a title has ` title=` right after the href.
+const EXT = /<a class="ext" href="([^"]*)"(?! title=)/g
+
+/** The address a link stands for, as shown in its tooltip and copied: a mail link without its `mailto:`. */
+export function linkAddress(href: string): string {
+  return href.replace(/^mailto:/i, '')
+}
+
+/**
+ * `html` with each web and mail link's full address as its tooltip (the browser shows it after a short pause), so a
+ * shortened or named link can be read in full. A title the text gave the link stays.
+ */
+export function titleLinks(html: string): string {
+  return html.replace(EXT, (whole, href: string) => `${whole} title="${linkAddress(href)}"`)
+}

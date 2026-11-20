@@ -1,6 +1,6 @@
 <script lang="ts">
   // The right-click menu on a journal day's links and tags: "Color…" opens the page color grid at the link, for the
-  // page the link goes to. A right-click in the block editor or on selected text keeps the native menu; anywhere else
+  // page the link goes to. On a web or mail link it holds "Copy link", which puts the link's address on the clipboard. A right-click in the block editor or on selected text keeps the native menu; anywhere else
   // that is not a colorable link or tag, no menu opens (`linkMenuAction`). "On selected text" means the point lies in
   // the selection's own boxes, not merely in an element that holds a selection.
   //
@@ -38,6 +38,20 @@
 
   /** The link the menu was opened on, and its anchor. */
   let target = $state<TargetView | null>(null)
+  /** The address "Copy link" copies, when the menu was opened on a web or mail link. */
+  let copyUrl = $state<string | null>(null)
+
+  /** Puts `text` on the clipboard; where the clipboard API refuses, the older copy command does it. */
+  function copyText(text: string) {
+    navigator.clipboard.writeText(text).catch(() => {
+      const area = document.createElement('textarea')
+      area.value = text
+      document.body.append(area)
+      area.select()
+      document.execCommand('copy')
+      area.remove()
+    })
+  }
   let anchor = $state<HTMLElement | null>(null)
   /** The page the open picker colors. */
   let picking = $state<TargetView | null>(null)
@@ -151,14 +165,14 @@
     zone = node
     function oncontextmenu(e: MouseEvent) {
       const el = e.target instanceof Element ? e.target : null
-      const a = el?.closest<HTMLElement>('a.link, a.tag') ?? null
+      const a = el?.closest<HTMLElement>('a.link, a.tag, a.ext') ?? null
       const sel = window.getSelection()
       const onSelection = !!el && !!sel && !sel.isCollapsed && pointInBoxes(e.clientX, e.clientY, selectionBoxes(sel))
       const act = linkMenuAction(
         {
           inEditor: !!el?.closest('.editor-slot'),
           onSelection,
-          anchor: a && { className: a.className, dataPage: a.getAttribute('data-page') },
+          anchor: a && { className: a.className, dataPage: a.getAttribute('data-page'), href: a.getAttribute('href') },
         },
         targets,
       )
@@ -167,9 +181,10 @@
       } else if (act.kind === 'none') {
         e.preventDefault()
       } else {
-        target = act.target
+        target = act.kind === 'menu' ? act.target : null
+        copyUrl = act.kind === 'copy' ? act.url : null
         anchor = a
-        spot = a && spotOf(a)
+        spot = a && act.kind === 'menu' ? spotOf(a) : null
         if (a) lastBox = a.getBoundingClientRect()
       }
     }
@@ -207,9 +222,16 @@
         follow()
       }}
     >
-      <ContextMenu.Item class="menu-item" data-testid="link-color" onSelect={() => (pending = true)}>
-        Color…
-      </ContextMenu.Item>
+      {#if copyUrl !== null}
+        {@const url = copyUrl}
+        <ContextMenu.Item class="menu-item" data-testid="link-copy" onSelect={() => copyText(url)}>
+          Copy link
+        </ContextMenu.Item>
+      {:else}
+        <ContextMenu.Item class="menu-item" data-testid="link-color" onSelect={() => (pending = true)}>
+          Color…
+        </ContextMenu.Item>
+      {/if}
     </ContextMenu.Content>
   </ContextMenu.Portal>
 </ContextMenu.Root>

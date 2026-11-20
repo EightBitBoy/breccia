@@ -315,6 +315,11 @@ readable", in the normal text color and in italics.
   keep working; elsewhere no menu opens. When the menu or the picker closes (a pick, Esc, a click outside), the focus
   is on the link again, unless something else already holds it. If the day is drawn anew while the picker is open,
   the picker stays at its link; if the link is gone, it stays where it was, and a pick still colors the page.
+- **Web and mail links.** Wherever text is rendered (blocks, preambles, cards), the pointer resting on a web or mail
+  link shows its full address as a tooltip after the browser's short pause (a mail link's without `mailto:`), so a
+  shortened (§7.12) or named link can be read in full; a title the text gives the link stays instead. In a journal day
+  and on a page, a right-click on such a link opens the link menu with "Copy link", which puts the address on the
+  clipboard and changes no file.
 - **Jump to a date** through search (§7.8): typing a date (`12 Mar`, `12.3.`, `2026-03-12`, `yesterday`, …) offers "Go
   to ‹day›" first. A day with an entry (or today) opens the feed scrolled to that day. Any other day, past or future,
   opens as its day page with the "start writing…" placeholder; its file is created when the user types, and from then
