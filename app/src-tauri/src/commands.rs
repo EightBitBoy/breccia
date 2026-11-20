@@ -7,7 +7,8 @@ use std::time::{Duration, Instant};
 
 use breccia_core::git::{Discovered, Git, GitView, discover};
 use breccia_core::session::Notice;
-use breccia_core::{Command, CommandError, Output, Request};
+use breccia_core::{CommandError, Output, Request};
+use serde::Deserialize;
 use tauri::{AppHandle, Manager, State};
 
 use crate::events::emit_all;
@@ -66,57 +67,101 @@ pub(crate) fn send_git(app: &AppHandle, msg: GitMsg) {
     }
 }
 
-/// The commands the shell answers itself, with what to tell the Git thread.
-pub(crate) fn shell_answer(cmd: &Command, view: &GitView) -> Option<(Output, Option<GitMsg>)> {
+/// The commands the shell answers itself: the Git item and the Git history.
+/// The window sends them like any other command, but the core never sees them.
+#[derive(Clone, Debug, Deserialize)]
+#[serde(tag = "type", rename_all_fields = "camelCase")]
+#[allow(clippy::enum_variant_names)] // the variants mirror the wire names `git.*`
+pub(crate) enum ShellCommand {
+    /// The Git item's current state.
+    #[serde(rename = "git.status")]
+    GitStatus,
+    /// Commit and sync now (a click on the Git item).
+    #[serde(rename = "git.sync")]
+    GitSync,
+    /// `git init` in the notes folder, then the first commit.
+    #[serde(rename = "git.init")]
+    GitInit,
+    /// `limit` commits of the notes folder after the newest `skip`, newest
+    /// first (the Git history view); answers in `gitLog`.
+    #[serde(rename = "git.log")]
+    GitLog { skip: usize, limit: usize },
+}
+
+/// What a request from the window asks for: the shell's own commands, or a
+/// command for the session.
+#[derive(Debug)]
+pub(crate) enum Incoming {
+    Shell(ShellCommand),
+    Core(Request),
+}
+
+/// Reads a `{generation, command}` request. The command's type decides who
+/// answers: one of the four Git names is the shell's (its generation is
+/// ignored), any other is parsed as a core command.
+pub(crate) fn parse_request(v: serde_json::Value) -> Result<Incoming, CommandError> {
+    let is_shell = matches!(
+        v["command"]["type"].as_str(),
+        Some("git.status" | "git.sync" | "git.init" | "git.log")
+    );
+    if is_shell {
+        let command = serde_json::from_value(v["command"].clone())
+            .map_err(|e| error("badRequest", e.to_string()))?;
+        Ok(Incoming::Shell(command))
+    } else {
+        serde_json::from_value(v)
+            .map(Incoming::Core)
+            .map_err(|e| error("badRequest", e.to_string()))
+    }
+}
+
+/// The answer to a shell command that needs no history, with what to tell the
+/// Git thread.
+pub(crate) fn shell_answer(cmd: &ShellCommand, view: &GitView) -> (Output, Option<GitMsg>) {
     let msg = match cmd {
-        Command::GitStatus => None,
-        Command::GitSync => Some(GitMsg::SyncNow),
-        Command::GitInit => Some(GitMsg::Init),
-        _ => return None,
+        ShellCommand::GitStatus | ShellCommand::GitLog { .. } => None,
+        ShellCommand::GitSync => Some(GitMsg::SyncNow),
+        ShellCommand::GitInit => Some(GitMsg::Init),
     };
     let out = Output {
         git: Some(view.clone()),
         ..Output::default()
     };
-    Some((out, msg))
+    (out, msg)
 }
 
 /// `git.log`: one page of the notes folder's commits, read from `root`'s
-/// repository; `None` for any other command.
+/// repository.
 pub(crate) fn git_log_answer(
-    cmd: &Command,
+    skip: usize,
+    limit: usize,
     git: &Git,
     root: Option<&Path>,
-) -> Option<Result<Output, CommandError>> {
-    let Command::GitLog { skip, limit } = *cmd else {
-        return None;
-    };
+) -> Result<Output, CommandError> {
     let refused = |message: String| CommandError {
         code: "git".into(),
         message,
     };
     let Some(root) = root else {
-        return Some(Err(refused("No notes folder is open.".into())));
+        return Err(refused("No notes folder is open.".into()));
     };
     let page = match discover(git, root) {
         Ok(Discovered::Repo(repo)) => repo.log(skip, limit),
         Ok(Discovered::NotInstalled) => {
-            return Some(Err(refused("Git is not installed.".into())));
+            return Err(refused("Git is not installed.".into()));
         }
         Ok(Discovered::NotARepo) => {
-            return Some(Err(refused(
+            return Err(refused(
                 "The notes folder is not in a Git repository.".into(),
-            )));
+            ));
         }
         Err(e) => Err(e),
     };
-    Some(
-        page.map(|page| Output {
-            git_log: Some(page),
-            ..Output::default()
-        })
-        .map_err(|e| refused(format!("Git could not read the history: {e}"))),
-    )
+    page.map(|page| Output {
+        git_log: Some(page),
+        ..Output::default()
+    })
+    .map_err(|e| refused(format!("Git could not read the history: {e}")))
 }
 
 /// The close: ends a running fetch, then lets the last commit and push run for
@@ -178,32 +223,32 @@ fn run_blocking(app: &AppHandle, request: serde_json::Value) -> Result<Output, C
             .unwrap_or("?")
             .to_string()
     });
-    let request: Request =
-        serde_json::from_value(request).map_err(|e| error("badRequest", e.to_string()))?;
-    // On this blocking thread, outside the session lock and the Git thread,
-    // so a long sync does not hold the history up.
-    let root = state
-        .notes_root
-        .lock()
-        .ok()
-        .and_then(|r| r.as_ref().map(|(root, _)| root.clone()));
-    if let Some(answer) = git_log_answer(&request.command, &Git::new(), root.as_deref()) {
-        return answer;
-    }
-    let view = state.git_view.lock().map(|v| v.clone()).unwrap_or_default();
-    if let Some((out, msg)) = shell_answer(&request.command, &view) {
-        if let Some(msg) = msg {
-            send_git(app, msg);
+    let incoming = parse_request(request)?;
+    let request = match incoming {
+        Incoming::Shell(ShellCommand::GitLog { skip, limit }) => {
+            // On this blocking thread, outside the session lock and the Git
+            // thread, so a long sync does not hold the history up.
+            let root = state
+                .notes_root
+                .lock()
+                .ok()
+                .and_then(|r| r.as_ref().map(|(root, _)| root.clone()));
+            return git_log_answer(skip, limit, &Git::new(), root.as_deref());
         }
-        return Ok(out);
-    }
+        Incoming::Shell(cmd) => {
+            let view = state.git_view.lock().map(|v| v.clone()).unwrap_or_default();
+            let (out, msg) = shell_answer(&cmd, &view);
+            if let Some(msg) = msg {
+                send_git(app, msg);
+            }
+            return Ok(out);
+        }
+        Incoming::Core(request) => request,
+    };
     // These write `breccia/config.toml`, so the Git timer starts (a hand edit
     // starts it through the watcher).
     let writes_config = request.command.writes_config();
-    let opened = match &request.command {
-        Command::FolderOpen { path } | Command::FolderCreate { path } => Some(path.clone()),
-        _ => None,
-    };
+    let opened = request.command.opened_folder().map(Path::to_path_buf);
     let panic_for = take_test_panic(&state.test_panic, &request.command);
     let clock = state.clock();
     let asked = Instant::now();
@@ -472,19 +517,7 @@ mod tests {
         let g = test_git(t.path());
         let notes = t.path().join("notes");
         std::fs::create_dir_all(&notes).unwrap();
-        let log = |root: Option<&Path>| {
-            git_log_answer(
-                &Command::GitLog {
-                    skip: 0,
-                    limit: 200,
-                },
-                &g,
-                root,
-            )
-            .unwrap()
-        };
-        // Other commands are not this answer's.
-        assert!(git_log_answer(&Command::GitStatus, &g, Some(&notes)).is_none());
+        let log = |root: Option<&Path>| git_log_answer(0, 200, &g, root);
         // No folder, and a folder outside Git: refused with a message.
         assert_eq!(log(None).unwrap_err().code, "git");
         let not_repo = log(Some(&notes)).unwrap_err();
@@ -519,18 +552,51 @@ mod tests {
     #[test]
     fn git_commands_are_answered_by_the_shell() {
         let view = GitView::default();
-        let answer = |c: Command| shell_answer(&c, &view);
-        let (out, msg) = answer(Command::GitStatus).unwrap();
+        let answer = |c: ShellCommand| shell_answer(&c, &view);
+        let (out, msg) = answer(ShellCommand::GitStatus);
         assert_eq!(out.git, Some(view.clone()));
         assert!(msg.is_none());
         assert!(matches!(
-            answer(Command::GitSync),
-            Some((_, Some(GitMsg::SyncNow)))
+            answer(ShellCommand::GitSync),
+            (_, Some(GitMsg::SyncNow))
         ));
         assert!(matches!(
-            answer(Command::GitInit),
-            Some((_, Some(GitMsg::Init)))
+            answer(ShellCommand::GitInit),
+            (_, Some(GitMsg::Init))
         ));
-        assert!(answer(Command::FolderStatus).is_none());
+    }
+
+    fn request(command: serde_json::Value) -> serde_json::Value {
+        serde_json::json!({"generation": 0, "command": command})
+    }
+
+    #[test]
+    fn parse_request_sends_git_commands_to_the_shell() {
+        let log = parse_request(request(
+            serde_json::json!({"type": "git.log", "skip": 0, "limit": 50}),
+        ))
+        .unwrap();
+        assert!(matches!(
+            log,
+            Incoming::Shell(ShellCommand::GitLog { skip: 0, limit: 50 })
+        ));
+        let status = parse_request(request(serde_json::json!({"type": "git.status"}))).unwrap();
+        assert!(matches!(status, Incoming::Shell(ShellCommand::GitStatus)));
+    }
+
+    #[test]
+    fn parse_request_sends_the_rest_to_the_core() {
+        let page = parse_request(request(serde_json::json!({"type": "page.today"}))).unwrap();
+        assert!(matches!(page, Incoming::Core(_)));
+    }
+
+    #[test]
+    fn parse_request_refuses_an_unknown_command() {
+        let unknown = parse_request(request(serde_json::json!({"type": "nope"}))).unwrap_err();
+        assert_eq!(unknown.code, "badRequest");
+        let no_limit =
+            parse_request(request(serde_json::json!({"type": "git.log", "skip": 0}))).unwrap_err();
+        assert_eq!(no_limit.code, "badRequest");
+        assert!(no_limit.message.contains("limit"), "{}", no_limit.message);
     }
 }

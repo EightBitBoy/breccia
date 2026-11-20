@@ -438,12 +438,6 @@ impl Session {
             Command::FilesChanged { paths } => self.files_changed(&paths),
             Command::SearchQuery { text } => self.run_query(&text, clock.today),
             Command::JournalDay { key } => self.journal_day(&key, clock.today),
-            Command::GitStatus | Command::GitSync | Command::GitInit | Command::GitLog { .. } => {
-                Err(CommandError::new(
-                    "shellOnly",
-                    "git commands are answered by the app shell, not the session",
-                ))
-            }
             Command::SessionDirty => Ok(Output {
                 dirty: Some(
                     self.ws

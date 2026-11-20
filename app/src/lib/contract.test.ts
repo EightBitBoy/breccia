@@ -61,7 +61,8 @@ function tsSection(src: string, start: string): string {
 
 test('command_names_match', () => {
   const rust = new Set<string>()
-  for (const l of block(commandRs, 'pub enum Command {')) {
+  // The core's commands, and the four Git commands the shell parses itself.
+  for (const l of [...block(commandRs, 'pub enum Command {'), ...block(shellRs, 'pub(crate) enum ShellCommand {')]) {
     const m = /^\s+#\[serde\(rename = "([^"]+)"\)\]/.exec(l)
     if (m) rust.add(m[1])
   }

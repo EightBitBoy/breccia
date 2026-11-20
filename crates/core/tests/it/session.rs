@@ -1,6 +1,6 @@
 use crate::support::{self, DAY, clock_on, folder_at, ids, put, run};
 use breccia_core::session::Notice;
-use breccia_core::{BlockId, Clock, Command, CommandError, Output, Recovery, Session};
+use breccia_core::{BlockId, Clock, Command, CommandError, Output, Recovery, Request, Session};
 use serde_json::{Value, json};
 use std::fs;
 use tempfile::TempDir;
@@ -62,10 +62,6 @@ fn command_names_deserialize() {
         json!({"type": "pages.table"}),
         json!({"type": "graph.get"}),
         json!({"type": "graph.saveLayout", "positions": [{"key": "a", "x": 1.0, "y": 2.0}]}),
-        json!({"type": "git.status"}),
-        json!({"type": "git.sync"}),
-        json!({"type": "git.init"}),
-        json!({"type": "git.log", "skip": 200, "limit": 200}),
     ] {
         serde_json::from_value::<Command>(j.clone()).unwrap_or_else(|e| panic!("{j}: {e}"));
     }
@@ -251,14 +247,6 @@ fn every_command() -> Vec<(Value, bool, bool)> {
             false,
         ),
         (json!({"type": "session.dirty"}), false, false),
-        (json!({"type": "git.status"}), false, false),
-        (json!({"type": "git.sync"}), false, false),
-        (json!({"type": "git.init"}), false, false),
-        (
-            json!({"type": "git.log", "skip": 0, "limit": 200}),
-            false,
-            false,
-        ),
     ]
 }
 
@@ -298,24 +286,15 @@ fn commands_that_write_the_config() {
 }
 
 #[test]
-fn git_commands_belong_to_the_shell() {
-    let (_t, mut s) = folder(&[("pages/P.md", "- a\n")]);
-    for name in ["git.status", "git.sync", "git.init"] {
-        assert_eq!(
-            cmd(&mut s, json!({"type": name}), 0).unwrap_err().code,
-            "shellOnly"
-        );
+fn git_commands_are_not_core_commands() {
+    for j in [
+        json!({"generation": 0, "command": {"type": "git.status"}}),
+        json!({"generation": 0, "command": {"type": "git.sync"}}),
+        json!({"generation": 0, "command": {"type": "git.init"}}),
+        json!({"generation": 0, "command": {"type": "git.log", "skip": 0, "limit": 200}}),
+    ] {
+        assert!(serde_json::from_value::<Request>(j.clone()).is_err(), "{j}");
     }
-    assert_eq!(
-        cmd(
-            &mut s,
-            json!({"type": "git.log", "skip": 0, "limit": 200}),
-            0
-        )
-        .unwrap_err()
-        .code,
-        "shellOnly"
-    );
 }
 
 #[test]

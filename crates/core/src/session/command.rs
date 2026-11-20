@@ -293,19 +293,6 @@ pub enum Command {
     /// The pages with edits their files do not hold, e.g. before closing.
     #[serde(rename = "session.dirty")]
     SessionDirty,
-    /// The Git item's current state. Answered by the shell, never by the session.
-    #[serde(rename = "git.status")]
-    GitStatus,
-    /// Commit and sync now (a click on the Git item). Shell only.
-    #[serde(rename = "git.sync")]
-    GitSync,
-    /// `git init` in the notes folder, then the first commit. Shell only.
-    #[serde(rename = "git.init")]
-    GitInit,
-    /// `limit` commits of the notes folder after the newest `skip`, newest
-    /// first (the Git history view); answers in `gitLog`. Shell only.
-    #[serde(rename = "git.log")]
-    GitLog { skip: usize, limit: usize },
 }
 
 /// What a command does to the session, which decides how it treats the run
@@ -345,9 +332,7 @@ impl Command {
             | Command::GraphSaveLayout { .. }
             | Command::JournalFeed
             | Command::JournalDay { .. }
-            | Command::SearchQuery { .. }
-            | Command::GitStatus
-            | Command::GitLog { .. } => CommandKind::Query,
+            | Command::SearchQuery { .. } => CommandKind::Query,
             Command::ArchiveAuto { .. } | Command::FilesChanged { .. } => CommandKind::Background,
             Command::FolderOpen { .. }
             | Command::FolderCreate { .. }
@@ -395,9 +380,7 @@ impl Command {
             | Command::BlocksDelete { .. }
             | Command::BlockDelete { .. }
             | Command::HistoryUndo { .. }
-            | Command::HistoryRedo { .. }
-            | Command::GitSync
-            | Command::GitInit => CommandKind::Edit,
+            | Command::HistoryRedo { .. } => CommandKind::Edit,
         }
     }
 
@@ -412,6 +395,14 @@ impl Command {
                 | Command::FolderStatus
                 | Command::FolderTree
         )
+    }
+
+    /// The folder a command opens or creates, for the commands that switch the folder.
+    pub fn opened_folder(&self) -> Option<&std::path::Path> {
+        match self {
+            Command::FolderOpen { path } | Command::FolderCreate { path } => Some(path),
+            _ => None,
+        }
     }
 
     /// Whether the command writes `breccia/config.toml`.
@@ -430,6 +421,19 @@ impl Command {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn opened_folder_names_the_path() {
+        let open = Command::FolderOpen {
+            path: PathBuf::from("a"),
+        };
+        let create = Command::FolderCreate {
+            path: PathBuf::from("b"),
+        };
+        assert_eq!(open.opened_folder(), Some(std::path::Path::new("a")));
+        assert_eq!(create.opened_folder(), Some(std::path::Path::new("b")));
+        assert_eq!(Command::PagesList.opened_folder(), None);
+    }
 
     #[test]
     fn command_kinds() {
