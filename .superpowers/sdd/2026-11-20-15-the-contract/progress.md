@@ -67,3 +67,15 @@ Task 8: complete (commits 1a53e06..b9c52ec, review clean)
 Task 9: dispatched (sonnet), BASE 33cbd64
 Task 9: implementer DONE, commit 2f5617b (STATUS, reviewed.md item 66); review NOT yet dispatched — session paused at the usage limit.
 Next: Task 9 review (sonnet, BASE 33cbd64), then final review (opus) over 35534f0..HEAD with the deferred minors above, one fix wave, just lint/test/e2e (expect 219), write docs/plans/2026-11-20-15-the-contract-followups.md (STATUS links it), delete scratch files (keep progress.md, plan-path), report.
+Task 9: review dispatched (sonnet)
+Task 9: review — spec ✅, quality approved; 2 minor (STATUS note "plan 14's follow-ups were not touched" is a process note — final fix wave may drop it; follow-ups link is written at finishing).
+Task 9: complete (commits 33cbd64..2f5617b, review clean)
+
+## Final review
+Final review: dispatched (opus) over 35534f0..c17b590
+Final review (opus): ready; 0 Critical, 0 Important, 4 Minor (STATUS:144 says audit plans 3–5 wait and item 66 open; shell names listed by hand; contract test greps emits only in commands.rs; apply's trailing refreshes skipped if apply throws). Deferred minors: fix #14 with Minor 1; follow-up #1 #4 #6 #10 #11; close the rest.
+Ruling: fix wave = docs only (STATUS:144 and drop the "plan 14's follow-ups were not touched" note); Minors 2–4 and deferred #1 #4 #6 #10 #11 go to the follow-ups file — none changes behaviour today — cost if wrong: a later command or emit outside the guards slips past a test.
+Final fix wave: dispatched (haiku)
+Final fix wave: done (commit 6e774cd; STATUS:144 and the process note) — controller checked the 2-hunk docs diff instead of a re-review.
+Finishing: just lint clean; just test green (Vitest 1247, core integration 858 + 2 ignored, core lib 53, shell 95); just e2e 219 PASS, exit 0.
+Follow-ups: docs/plans/2026-11-20-15-the-contract-followups.md (7 items, commit bcde45c). Plan 15: finished.
