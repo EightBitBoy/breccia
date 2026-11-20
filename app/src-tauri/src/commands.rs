@@ -121,7 +121,7 @@ pub(crate) fn shell_answer(cmd: &ShellCommand, view: &GitView) -> (Output, Optio
     let msg = match cmd {
         ShellCommand::GitSync => Some(GitMsg::SyncNow),
         ShellCommand::GitInit => Some(GitMsg::Init),
-        _ => None,
+        ShellCommand::GitStatus | ShellCommand::GitLog { .. } => None,
     };
     let out = Output {
         git: Some(view.clone()),
