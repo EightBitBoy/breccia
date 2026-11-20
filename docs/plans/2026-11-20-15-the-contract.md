@@ -69,6 +69,56 @@ Plain words, recommendation first. "Cost if wrong" is what changes later.
   (it then still misses field types). Cost if wrong: one dependency in the developer build and one generated file of
   about 600 lines; with (b), Task 3 becomes a test change and later tasks edit the TypeScript by hand.
 
+## Pre-flight rulings
+
+Scan of 2026-11-20 at `e5388f4` (`.superpowers/sdd/2026-11-20-15-the-contract/preflight.md`, local). The tasks below
+are amended to match.
+
+- **F1. Task 1 leaves tests that name the git commands.** `it/session.rs:65-68` (`command_names_deserialize`),
+  `:254-259` (`every_command` rows, counted against command.rs by `every_command_lists_each_name_once`), `:300-319`
+  (`git_commands_belong_to_the_shell` expects `shellOnly`); shell `commands.rs:470-487` and `:521-534` call
+  `git_log_answer`/`shell_answer` with core `Command`s and assert `None` for others. *Ruling:* Task 1 drops the four
+  git rows from both tables, replaces `git_commands_belong_to_the_shell` with `git_commands_are_not_core_commands`,
+  and rewrites the two shell tests to `ShellCommand` without their "not a shell command" cases (now `parse_request`
+  tests). *Cost if wrong:* none.
+- **F2. Task 1: how `parse_request` decides "shell" is ambiguous.** Tried as "ShellCommand, else Request", a `git.log`
+  missing `limit` answers "unknown variant `git.log`". *Ruling:* decide by `command.type`: a shell name parses as
+  `ShellCommand` (its serde error is the badRequest message), anything else as `Request`; a test case: `git.log`
+  without `limit` → badRequest naming `limit`. *Cost if wrong:* a misleading developer message only.
+- **F3. Task 2 Step 1's grep misses 13 multi-line `CommandError::new(` calls** (e.g. `stale`, `configChanged`,
+  `boardChanged`, `dailiesSave`), so "the grep wins" would drop 8 real codes; the plan's 48-code list is exactly what
+  the code holds. The contract case "the recovered error code matches" reads `commands::error(…)`
+  (contract.test.ts:117-124), which Task 2 deletes. *Ruling:* grep with `-A2` (or let the compiler list the sites);
+  the list stands; the contract case reads `ErrorCode::(\w+)` in recovery.rs and compares its camelCase with
+  recovery.ts's code. *Cost if wrong:* low (a dropped code fails to compile).
+- **F4. folder.open answers only `folder` and `notices`** (session/folder.rs:99-103, 196-200; the tree is added only
+  when the generation is unchanged, session/mod.rs:252-262). Task 5's RED test expecting `page`, `tree`, `config`
+  could never pass, and Review Focus bullet 3 said the same. *Ruling:* the test becomes
+  `folder_open_answers_the_folder` (those three stay `None`; no top-level `folder` in the JSON); the Review Focus
+  bullet is reworded. *Cost if wrong:* none; as written an implementer might change folder.open.
+- **F5. Task 5 misses the shell's readers of `Output.folder`:** `run_blocking` (commands.rs:233-238, starts the
+  watcher and indexing) and `app/src-tauri/src/lib.rs:235, 368`. *Ruling:* added to Task 5's Files. *Cost if wrong:*
+  low.
+- **F6. Task 7's inventory equates "own echo" with "every page of the output".** `Echoes.isOwnPage` is true only for
+  pages `route` puts in `own` (route.ts:145-199). Other pages of an own command's output reach `page:changed` as not
+  own today and reload the shown page, refresh the references (refs.ts:112-120), the Archive view and the graph
+  (App.svelte:1600-1602). `archive.auto`, sent by the window, puts every page it touched in `out.changed` with
+  `out.page` null (session/board.rs:676-678): today the echo drops the archived block from the shown page and
+  refreshes an open Archive view; after Task 8 it would not. The same holds for a rename that rewrites links in the
+  shown page. *Ruling:* Task 7 adds `Route.others` (pages of the output not put in `own`), and `apply` runs for each
+  what the handler runs today for a page that is not own; three more RED tests. *Cost if wrong:* one route field;
+  without it, stale views after Task 8.
+- **F7. Task 8's step 148 checks "no `page:changed` arrived" at a racy moment:** the shell emits after `run` returns
+  (commands.rs:245), so the check can run before today's echo arrives and pass on today's code. *Ruling:* record
+  every `page:changed` from the step's start; after the outside append's event arrives (events keep their order),
+  the recording is exactly one entry, for the journal's key. The step goes before the tray-exit step, which ends the
+  app. *Cost if wrong:* none.
+- **F8. `app/src/lib/scale.bench.ts:53` cites `echo.bench.ts`.** *Ruling:* Task 8 rewords that comment. *Cost if
+  wrong:* none.
+- **F9. The generated `Request` holds only the core `Command`,** but the window sends `git.log` through
+  `invokeRun(request: Request)` (App.svelte:404). *Ruling:* `types.ts` keeps `Request` hand-written over the window's
+  `Command` union. *Cost if wrong:* low.
+
 ## Global Constraints
 
 - Nothing a user sees changes: no new or changed texts, notices, keys, settings or files. A task that finds it must
@@ -103,9 +153,10 @@ Plain words, recommendation first. "Cost if wrong" is what changes later.
 - **A request the shell answers itself refuses as before.** `git.log` with no notes folder answers code `git` with
   "No notes folder is open."; a request that is neither a shell nor a core command answers `badRequest`. Pinned in
   Task 1.
-- **A command that both changes and answers applies both.** `folder.open` changes the page, tree and settings and
-  answers with the folder; after the split the window must still apply all four. Pinned in Task 5 (core test) and by
-  e2e step 1 onwards (every run opens a folder).
+- **A command that both changes and answers applies both.** `folder.open` answers with the folder, and its notices
+  stay a change; the shell reads the answer to start the watcher and indexing, and the window still applies both
+  (pre-flight F4). Pinned in Task 5 (core test) and by e2e step 1 onwards (every run opens a folder) and the outside
+  edit steps (e.g. 23).
 - **After the window's own create, rename, move or delete of a page, the other views still follow.** Today the
   sidebar's names, an open search box, All pages and the graph refresh on the echo of the window's own change. Pinned
   in Task 7 (route tests, one per consumer).
@@ -120,16 +171,19 @@ Plain words, recommendation first. "Cost if wrong" is what changes later.
 
 **Files:** `crates/core/src/session/command.rs` (delete `GitStatus`, `GitSync`, `GitInit`, `GitLog` and their `kind()`
 arms; add `opened_folder`), `crates/core/src/session/mod.rs` (delete the `shellOnly` arm), `app/src-tauri/src/commands.rs`
-(the new enum, `parse_request`, `shell_answer` and `git_log_answer` take it, `run_blocking`), `crates/core/tests/it/session.rs`,
-`app/src/lib/contract.test.ts` (`command_names_match`).
+(the new enum, `parse_request`, `shell_answer` and `git_log_answer` take it, `run_blocking`, and its tests
+`git_log_is_answered_by_the_shell` and `git_commands_are_answered_by_the_shell`), `crates/core/tests/it/session.rs`
+(`command_names_deserialize`, `every_command`, `git_commands_belong_to_the_shell`), `app/src/lib/contract.test.ts`
+(`command_names_match`).
 
 **Interfaces:**
 - Produces in `commands.rs`:
   `#[derive(Clone, Debug, Deserialize)] #[serde(tag = "type", rename_all_fields = "camelCase")] pub(crate) enum ShellCommand { #[serde(rename = "git.status")] GitStatus, #[serde(rename = "git.sync")] GitSync, #[serde(rename = "git.init")] GitInit, #[serde(rename = "git.log")] GitLog { skip: usize, limit: usize } }`;
   `pub(crate) enum Incoming { Shell(ShellCommand), Core(Request) }`;
-  `pub(crate) fn parse_request(v: serde_json::Value) -> Result<Incoming, CommandError>` (a `{generation, command}`
-  whose command is a `ShellCommand` is `Shell`, the generation ignored as today; otherwise it is parsed as a core
-  `Request`, and that parse's error is the `badRequest` message).
+  `pub(crate) fn parse_request(v: serde_json::Value) -> Result<Incoming, CommandError>` (decided by
+  `command.type`: a `{generation, command}` whose type is one of the four shell names parses as `ShellCommand` and is
+  `Shell`, the generation ignored as today, its serde error being the `badRequest` message; any other type is parsed
+  as a core `Request`, and that parse's error is the `badRequest` message; pre-flight F2).
 - `shell_answer(cmd: &ShellCommand, view: &GitView) -> (Output, Option<GitMsg>)` and
   `git_log_answer(skip: usize, limit: usize, git: &Git, root: Option<&Path>) -> Result<Output, CommandError>` (no
   more `Option`: the caller has already decided).
@@ -138,9 +192,12 @@ arms; add `opened_folder`), `crates/core/src/session/mod.rs` (delete the `shellO
 - [ ] **Step 1: RED tests.** Shell, in `commands.rs` tests: `parse_request_sends_git_commands_to_the_shell` (`git.log`
   with `skip: 0, limit: 50` → `Incoming::Shell(GitLog { skip: 0, limit: 50 })`; `git.status` → `Shell(GitStatus)`);
   `parse_request_sends_the_rest_to_the_core` (`page.today` → `Incoming::Core(_)`);
-  `parse_request_refuses_an_unknown_command` (`{"type": "nope"}` → `Err` with code `badRequest`). Core, in
-  `it/session.rs`: `git_commands_are_not_core_commands` (the JSON `{"generation": 0, "command": {"type":
-  "git.status"}}` does not deserialize as `Request`); `opened_folder_names_the_path` (unit test in `command.rs`).
+  `parse_request_refuses_an_unknown_command` (`{"type": "nope"}` → `Err` with code `badRequest`; `git.log` without
+  `limit` → `badRequest` whose message names `limit`). Core, in `it/session.rs`: `git_commands_are_not_core_commands`
+  (the JSON `{"generation": 0, "command": {"type": "git.status"}}` does not deserialize as `Request`; it replaces
+  `git_commands_belong_to_the_shell`); `opened_folder_names_the_path` (unit test in `command.rs`). The four git rows
+  go from `command_names_deserialize` and `every_command`; the two shell tests take `ShellCommand` and lose their
+  "not a shell command" cases, which the `parse_request` tests now cover (pre-flight F1).
 - [ ] **Step 2:** `cargo test -p breccia --lib commands::` and `cargo test -p breccia-core session::` → fail (no
   `parse_request`; `git.status` still parses).
 - [ ] **Step 3:** implement. `run_blocking`: `match parse_request(request)?` → `Shell(GitLog{..})` answers
@@ -172,20 +229,23 @@ and helpers out of `view.rs`; add `ErrorCode`), `crates/core/src/session/mod.rs`
 - `pub struct CommandError { pub code: ErrorCode, pub message: String }`; `CommandError::new(code: ErrorCode, message: impl Display)`
   becomes `pub` (the shell uses it; `commands::error` is deleted).
 
-- [ ] **Step 1: list the codes.** `grep -rn 'CommandError::new\|error("\|code: "' crates/core/src app/src-tauri/src`
-  plus the two `From` impls. Expected set (after Task 1): badDate, badRequest, boardChanged, changedOnDisk, config,
-  configChanged, create, dailiesSave, dailiesUnreadable, folderExists, folderMissing, folderNotEmpty, git, insideFence,
-  internal, intoItself, invalidBoard, invalidDaily, invalidName, invalidOffset, invalidSetting, invalidState, io,
-  joinOntoProperties, journal, layout, noCycle, noFolder, noNextSibling, noParent, noPrevious, noPreviousSibling, notFinished,
-  open, pageExists, recovered, reload, search, stale, unknownBlock, unknownBoard, unknownColor, unknownDaily,
-  unknownFolder, unknownPage, unknownState, unsaved, wouldChangeStructure. Any difference from the grep is reported,
-  and the grep wins.
+- [ ] **Step 1: list the codes.** `grep -rn -A2 'CommandError::new\|error("\|code: "' crates/core/src
+  app/src-tauri/src` (13 calls put the code on the next line) plus the two `From` impls; the pre-flight checked the
+  list below against the code (F3). Expected set (after Task 1): badDate, badRequest, boardChanged, changedOnDisk,
+  config, configChanged, create, dailiesSave, dailiesUnreadable, folderExists, folderMissing, folderNotEmpty, git,
+  insideFence, internal, intoItself, invalidBoard, invalidDaily, invalidName, invalidOffset, invalidSetting,
+  invalidState, io, joinOntoProperties, journal, layout, noCycle, noFolder, noNextSibling, noParent, noPrevious,
+  noPreviousSibling, notFinished, open, pageExists, recovered, reload, search, stale, unknownBlock, unknownBoard,
+  unknownColor, unknownDaily, unknownFolder, unknownPage, unknownState, unsaved, wouldChangeStructure. Any difference
+  from the grep (with `-A2`) or from the compiler's list of sites is reported, and the code wins.
 - [ ] **Step 2: RED test** in `error.rs`: `error_codes_keep_their_wire_names`: for every `c` in `ErrorCode::ALL`,
   `serde_json::to_string(&c)` equals `format!("\"{}\"", c.as_str())`, and the sorted `as_str` list equals the list of
   Step 1 written out as string literals. `cargo test -p breccia-core --lib error::` → does not compile (no
   `ErrorCode`): that is the RED run.
 - [ ] **Step 3:** implement; replace every literal with its variant. The core's integration tests compare
-  `err.code == ErrorCode::Stale` (not strings). Wire unchanged: the e2e and the window are untouched.
+  `err.code == ErrorCode::Stale` (not strings). Wire unchanged: the e2e and the window are untouched. The contract
+  case "the recovered error code matches" reads `ErrorCode::(\w+)` in recovery.rs and compares its camelCase with
+  recovery.ts's code (F3).
 - [ ] **Step 4:** mutation check: rename `UnknownPage`'s wire name by a `#[serde(rename = "unknownpage")]` → the test
   fails; undo.
 - [ ] **Step 5:** `just test`, `just lint`, `just e2e` (218). Commit `refactor(core): error codes are one enum`.
@@ -218,7 +278,9 @@ every wire type in the core (`#[cfg_attr(feature = "wire-types", derive(ts_rs::T
 - `types.ts` keeps every name the window imports today: it re-exports the generated types, under today's name where the
   Rust name differs (for example `export type NameView = NameEntry`), and `export type Command = CoreCommand |
   ShellCommand`, where `ShellCommand` (the four `git.*` commands) stays hand-written next to the shell-only types
-  (`UiState`, `RecentFolder`, `RecoveredEvent`) and the window-only ones (`Item`, `NoticeAction`, …).
+  (`UiState`, `RecentFolder`, `RecoveredEvent`) and the window-only ones (`Item`, `NoticeAction`, …). `Request`
+  stays hand-written as `{ generation: number; command: Command }` over that union, because the window sends the
+  shell's commands through `invokeRun` too; the generated `Request` is not re-exported under that name (F9).
 - `errorCode(e: unknown): ErrorCode | null`.
 
 - [ ] **Step 1: spike.** Add `ts-rs` (the newest release; note the version in the commit body) with the feature; derive
@@ -290,10 +352,11 @@ adjacent tagging, because some answers are lists or numbers).
 
 **Files:** `crates/core/src/session/view.rs` (`Answer`, `UsageView`, `Output.answer`), the session files that set the
 fields of this part (`folder.rs`, `mod.rs`, `page.rs`, `search.rs`, `settings.rs`), the shell's `commands.rs`
-(`shell_answer`, `git_log_answer`), core tests (`it/support/mod.rs` gets the `answer!` macro; the test files that read
-these fields), shell tests, `app/src/lib/generated.ts` (by `just types`), create `app/src/lib/answer.ts` and
-`app/src/lib/answer.test.ts`, `app/src/App.svelte` (`apply` and the other readers), the `lib/` classes and tests that
-read these fields (find them with `npm run check` after regenerating).
+(`shell_answer`, `git_log_answer`, and `run_blocking`, which starts the watcher and indexing from the folder) and
+`app/src-tauri/src/lib.rs` (reads the folder at lines 235 and 368; F5), core tests (`it/support/mod.rs` gets the
+`answer!` macro; the test files that read these fields), shell tests, `app/src/lib/generated.ts` (by `just types`),
+create `app/src/lib/answer.ts` and `app/src/lib/answer.test.ts`, `app/src/App.svelte` (`apply` and the other readers),
+the `lib/` classes and tests that read these fields (find them with `npm run check` after regenerating).
 
 **Interfaces:**
 - `#[derive(Clone, Debug, Serialize)] #[serde(tag = "kind", content = "value", rename_all = "camelCase")] pub enum Answer`.
@@ -306,9 +369,10 @@ read these fields (find them with `npm run check` after regenerating).
 - Window: `export function answerOf<K extends Answer['kind']>(out: Output, kind: K): Extract<Answer, { kind: K }>['value'] | null`
   in `lib/answer.ts`.
 
-- [ ] **Step 1: RED tests.** Core, in `it/session.rs`: `folder_open_answers_the_folder_and_changes_the_rest` (open a
-  folder with one page: `answer!(out, Folder).generation` equals the session's, and `out.page`, `out.tree`,
-  `out.config` are set); `answers_have_kind_and_value` (`serde_json::to_value` of a `page.renameReach` reply has
+- [ ] **Step 1: RED tests.** Core, in `it/session.rs`: `folder_open_answers_the_folder` (open a folder with one
+  page: `answer!(out, Folder).generation` equals the session's; `out.page`, `out.tree` and `out.config` stay `None`,
+  as today, since folder.open sends only the folder and its notices; the JSON has no top-level `folder`; F4);
+  `answers_have_kind_and_value` (`serde_json::to_value` of a `page.renameReach` reply has
   `answer == {"kind": "reach", "value": 0}` and no top-level `reach`). Shell: `git_status_answers_git`
   (`shell_answer(&GitStatus, &view).0.answer` is `Some(Answer::Git(_))`). Window, `answer.test.ts`: `answerOf` gives
   the value for its kind and null for another kind and for no answer. Run → fail (no `Answer`).
@@ -356,6 +420,12 @@ at `42de232`):
 | `pageChanged` | `allPages`/`archiveView`/`network`.`changed(true)`, `boards.changed(p, true)`: nothing for own pages | nothing |
 | `treeChanged` | `search.refresh()`, `search.refreshNames()`, `allPages.refresh()`, `network.refresh()` (no echo check at all) | route fields, set when `out.tree` is set |
 | `pageRemoved` | `search.refresh()`, `network.refresh()`; `pageRemoved(key)` skips own removals | route fields, set when `out.removed` is not empty |
+| `pageChanged` | pages of the output that `route` does not put in `own` are not own echoes: All pages, Archive view and graph `changed(false)` refresh, the board's `changed(p, false)`, and `refs.pageChanged` reloads the shown page or refreshes the references (pre-flight F6) | `Route.others`, the same calls in `apply` |
+
+Pre-flight F6: `Echoes.isOwnPage` is true only for pages `route` puts in `own` (route.ts:145-199), not for every page
+of an own command's output. Example: `archive.auto`, sent by the window, puts every page it touched in `out.changed`
+with `out.page` null; today the echo drops the archived block from the shown page and refreshes an open Archive view.
+A rename that rewrites links in the shown page (in `out.changed`) is the same. The last row keeps that after Task 8.
 
 This task adds the answer side only; the echoes still arrive and are still skipped or acted on, so for one task some
 refreshes run twice (harmless: each is a query).
@@ -364,26 +434,31 @@ refreshes run twice (harmless: each is a query).
 `journal.changed` needs a form for several pages.
 
 **Interfaces:** `Route` gains `refreshSearch: boolean` (the output changed or removed a page, or carries a tree),
-`refreshNames: boolean`, `refreshAllPages` (exists; widened to "a tree came"), `refreshGraph: boolean`,
-`journalChanged: PageView[]` (`out.page` and `out.changed`). `apply` carries each out at the place the event handler
-does today.
+`refreshNames: boolean`, `refreshAllPages` (exists, and already set when a tree came, route.ts:198),
+`refreshGraph: boolean`, `journalChanged: PageView[]` (`out.page` and `out.changed`), `others: PageView[]` (the pages
+of `out.page` and `out.changed` that `route` did not put in `own`). `apply` carries each out at the place the event
+handler does today; for each page of `others` it runs what the `page:changed` handler runs for a page that is not
+own (All pages, Archive view and graph `changed(false)`, the board's `changed(p, false)`, then `refs.pageChanged`).
 
 - [ ] **Step 1: list again.** Before writing tests, re-read the handlers in `App.svelte` and confirm the table; any
   other consumer found gets a row and a test. Record the final table in the task report.
 - [ ] **Step 2: RED tests** in `route.test.ts`, one per row: `a page in the answer refreshes an open search`,
   `a tree in the answer refreshes the names, All pages and the graph`, `a removal in the answer refreshes search and
-  the graph`, `every page of the answer goes to the journal`, and the negatives (`a query answer refreshes nothing`:
-  `search.query`, `page.refs`). Run → fail.
+  the graph`, `every page of the answer goes to the journal`, `archive.auto on the shown page puts it in others`,
+  `archive.auto with the Archive view shown puts its pages in others`, `a rename that rewrites the shown page puts
+  it in others`, `a page route keeps as its own is not in others`, and the negatives (`a query answer refreshes
+  nothing`: `search.query`, `page.refs`). Run → fail.
 - [ ] **Step 3:** implement in `route` and `apply`.
 - [ ] **Step 4:** `just test`, `just lint`, `just e2e` (218). Commit `refactor(app): the window follows its own
   changes from the answer`.
 
 ### Task 8: The shell stops echoing a command's changes (M43, part 2; only with Q1 yes) (model: opus; UI integration)
 
-**Files:** `app/src-tauri/src/commands.rs` (`run_blocking` emits nothing), `app/src-tauri/src/events.rs` (`events`
-loses `from_watcher`: every caller is the watcher or the Git thread, so config, dailies, saved and notices always
-go; its tests), `watching.rs`, `git.rs` (callers); the window: delete `app/src/lib/echo.ts`, `echo.test.ts`,
-`echo.bench.ts`; `route.ts` (`own` goes), `allPages.svelte.ts`, `archive.svelte.ts`, `network.svelte.ts`,
+**Files:** `app/src-tauri/src/commands.rs` (`run_blocking` emits nothing), `app/src-tauri/src/events.rs` (`events` loses
+`from_watcher`: every caller is the watcher or the Git thread, so config, dailies, saved and notices always go; its
+tests), `watching.rs`, `git.rs` (callers); the window: delete `app/src/lib/echo.ts`, `echo.test.ts`, `echo.bench.ts`
+(and the comment in `scale.bench.ts:53` that cites it; F8); `route.ts` (`own` goes; `others` stays, computed as the
+pages of the output that `route` applies nowhere else), `allPages.svelte.ts`, `archive.svelte.ts`, `network.svelte.ts`,
 `boards.svelte.ts` (`changed` loses `own`), `pageChanged`'s `own` in its `lib/` module, their tests, `App.svelte`
 (`Echoes`, `ownRemovals`, `isOwnRemoval`, `isOwnPage`); `app/src/lib/contract.test.ts`; `app/e2e/smoke.mjs` (step 148);
 `docs/spec.md` (§6, §9); `CLAUDE.md` (lesson on field order).
@@ -398,9 +473,12 @@ could go after a change to `configChange.ts`.
   `commands.rs` contains no `emit_all(` and no `app.emit(`. `events.rs`: `outside_runs_send_every_change` (an `Output`
   with config, dailies, saved and notices gives `config:changed`, `dailies:changed`, `pages:saved`, `notices:added` in
   today's order, without a flag). e2e **step 148** (after step 147): the window listens for `page:changed` through
-  `window.__TAURI_INTERNALS__` (as steps 126 and the tray step reach it); type a word into today's journal and wait for
-  the bytes on disk: no `page:changed` arrived; then append a line to that journal file from outside: one
-  `page:changed` arrives for its key, and the line shows. Run → the contract test and step 148 fail.
+  `window.__TAURI_INTERNALS__` (as steps 126 and the tray step reach it) and records every payload from the step's
+  start; type a word into today's journal and wait for the bytes on disk; then append a line to that journal file
+  from outside and wait for its `page:changed` and for the line to show. Events keep their order, so the recording is
+  then exactly one entry, for the journal's key (checking for "no event" right after the bytes land would race
+  today's echo; pre-flight F7). The step goes after step 147 and before the tray-exit step, which ends the app. Run →
+  the contract test and step 148 fail.
 - [ ] **Step 2:** implement the shell side.
 - [ ] **Step 3:** remove the echo code in the window; `npm run check` and the tests guide the rest. `pageRemoved(key)`
   no longer asks whether the removal is its own.
