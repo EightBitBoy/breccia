@@ -50,3 +50,10 @@ Task 6: review (opus) — spec ✅ (feed deviation correct: route takes feedShow
 Ruling: carry minors (route.test.ts repeats the feed literal 10×, lines to 150 chars — a shared const; allPagesState.test.ts:338 148 chars) into Task 7 — cost if wrong: none.
 Task 6: minor (deferred): no unit test catches a broken feed-answer read (App.svelte has no harness; e2e covers it).
 Task 6: complete (commits 618c06c..26c23c0, review clean)
+Task 7: dispatched (opus), BASE 01868b9
+Task 7: implementer DONE, commits a200d8a, 4034853 (e2e 218; others by object identity; page:renamed row needs nothing; concern: e2e cannot tell others-handling from the echo until Task 8); review dispatched (opus)
+Task 7: review (opus) — spec ✅ (apply path in App.svelte not checkable from the diff; Task 8's e2e is its first real test), quality approved; 3 minor. No own-change gap after Task 8; others-by-identity sound (core keeps page's key out of changed, view.rs:35); doubled work during Task 7 harmless.
+Ruling: carry minor "Route.others doc should say why identity is sound, so Task 8 keeps that set" into Task 8 — cost if wrong: none.
+Task 7: minor (deferred): search.refresh and refreshNames run twice while the echo still arrives (gone after Task 8).
+Task 7: minor (deferred): refreshGraph negatives untested (network.refresh does nothing while the graph is hidden).
+Task 7: complete (commits 01868b9..4034853, review clean)
