@@ -57,3 +57,10 @@ Ruling: carry minor "Route.others doc should say why identity is sound, so Task 
 Task 7: minor (deferred): search.refresh and refreshNames run twice while the echo still arrives (gone after Task 8).
 Task 7: minor (deferred): refreshGraph negatives untested (network.refresh does nothing while the graph is hidden).
 Task 7: complete (commits 01868b9..4034853, review clean)
+Task 8: dispatched (opus), BASE 1a53e06
+Task 8: implementer DONE, commits 4392d26, 6739484, b9c52ec (e2e 219 PASS; step 148 RED on old code with the echoes listed); review dispatched (opus)
+Task 8: review (opus) — spec ✅, quality approved; 3 minor. Watcher and Git thread still send every event kind; recovery reloads from answers; step 148 fails on old code, no sleeps; spec §6/§9 match; Route.others unchanged.
+Task 8: minor (deferred): contract.test.ts:1003-1007 searches only commands.rs for emits; an emit from a helper elsewhere would pass.
+Task 8: minor (deferred): events.rs outside_runs_send_every_change overlaps two ordering tests.
+Task 8: minor (deferred): smoke.mjs step 148 typed148 expects the edited block on the file's first line.
+Task 8: complete (commits 1a53e06..b9c52ec, review clean)
