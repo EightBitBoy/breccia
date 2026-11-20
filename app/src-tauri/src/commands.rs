@@ -115,13 +115,13 @@ pub(crate) fn parse_request(v: serde_json::Value) -> Result<Incoming, CommandErr
     }
 }
 
-/// The answer to a shell command that needs no history, with what to tell the
-/// Git thread.
+/// The answer to a shell command that needs no history (`git.log` is answered
+/// by `git_log_answer`, never here), with what to tell the Git thread.
 pub(crate) fn shell_answer(cmd: &ShellCommand, view: &GitView) -> (Output, Option<GitMsg>) {
     let msg = match cmd {
-        ShellCommand::GitStatus | ShellCommand::GitLog { .. } => None,
         ShellCommand::GitSync => Some(GitMsg::SyncNow),
         ShellCommand::GitInit => Some(GitMsg::Init),
+        _ => None,
     };
     let out = Output {
         git: Some(view.clone()),
