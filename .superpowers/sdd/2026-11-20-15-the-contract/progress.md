@@ -23,3 +23,12 @@ Ruling: the fix round (test-file restore only) needs no fresh just test / just e
 Ruling: carry minor "shell_answer `_ => None` loses exhaustiveness; list GitLog explicitly" and minor "ErrorCode::ALL is hand-kept; add a guard" into Task 3 (generated types touch ErrorCode) — cost if wrong: none.
 Task 2: minor (deferred): RED for error_codes_keep_their_wire_names not captured (mutation check instead).
 Task 2: complete (commits f40afe9..231d996, 1 fix round, review clean)
+Task 3: dispatched (opus), BASE a1b3f18
+Task 3: implementer DONE_WITH_CONCERNS, commits 0556bb5, 12376ef, cb919b4, b8c4076 (e2e 218; IndexProgress not generated — index:changed payload is the shell's IndexEvent; no-serde-warnings on; Cargo.lock moved windows-sys/syn versions); review dispatched (opus)
+Task 3: review (opus) — spec ✅, quality approved; 5 minor. types.ts: no exported name lost (tsc old-vs-new: only stricter answer types matching Rust); ts-rs absent from the shell's normal dependency tree.
+Ruling: keep the IndexProgress, with_large_int and no-serde-warnings choices (reviewer agreed with IndexProgress) — cost if wrong: one hand-written type kept by a contract case; a hidden ts-rs note later.
+Ruling: keep the Cargo.lock churn (windows-sys 0.61, syn 3 for cssparser-macros) — both versions were already in the lock, the release build passed e2e, Dependabot moves them monthly anyway — cost if wrong: a dependency bump in 1.8.2's build without its own commit.
+Ruling: carry minors 3 (Cargo.toml comment on why no-serde-warnings is on) and 5 (emptyOutput.ts is test-only; name or place it so) into Task 4 — cost if wrong: none.
+Task 3: minor (deferred): ts(optional = nullable) on bool/Vec fields reads as "null accepted" though serde rejects null (output correct).
+Task 3: minor (deferred): report's generated.ts counts off by a little (630 lines, 56 types).
+Task 3: complete (commits a1b3f18..b8c4076, review clean)
