@@ -7,6 +7,7 @@ use unicode_normalization::char::is_combining_mark;
 
 /// A piece of a result line: a match (`hit`) or the text around it.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Segment {
     pub text: String,

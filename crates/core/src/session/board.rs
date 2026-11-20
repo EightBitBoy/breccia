@@ -24,6 +24,7 @@ use super::error::{CommandError, ErrorCode};
 use super::view::{BlockView, Notice, Output, PageView, PageViewKind, title_of};
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BoardView {
     pub index: usize,
@@ -35,6 +36,7 @@ pub struct BoardView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ColumnView {
     pub keyword: String,
@@ -44,6 +46,7 @@ pub struct ColumnView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CardView {
     pub id: BlockId,
@@ -69,6 +72,7 @@ pub struct CardView {
 
 /// A row of the Archive view (`archive.list`): an archived task.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ArchivedView {
     pub id: BlockId,

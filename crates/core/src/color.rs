@@ -32,6 +32,8 @@ pub const MAX_VIVID: u8 = 200;
 /// (0 to 359 degrees) with a vividness (50 to 200, 100 is the default),
 /// written `hue 212` or `hue 212 vivid 150`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
+#[cfg_attr(feature = "wire-types", ts(type = "string"))]
 pub enum PageColor {
     Named(&'static str),
     Hue { hue: u16, vivid: u8 },

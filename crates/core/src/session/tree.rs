@@ -8,6 +8,7 @@ use crate::naming::{journal_display, month_name};
 use crate::workspace::{PageKind, TagEntry, Workspace};
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TreeView {
     pub pages: Vec<TreeNode>,
@@ -40,6 +41,7 @@ impl LinkLists {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum TreeNode {
     Folder {
@@ -57,6 +59,7 @@ pub enum TreeNode {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct JournalYear {
     pub year: i32,
@@ -64,6 +67,7 @@ pub struct JournalYear {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct JournalMonth {
     pub month: u32,
@@ -73,6 +77,7 @@ pub struct JournalMonth {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct JournalDay {
     pub key: String,

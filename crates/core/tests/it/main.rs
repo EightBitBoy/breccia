@@ -42,4 +42,5 @@ mod table;
 mod task;
 mod tree;
 mod watch;
+mod wire_types;
 mod workspace;

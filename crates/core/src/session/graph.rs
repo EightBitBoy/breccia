@@ -19,6 +19,7 @@ use super::view::{Output, PageViewKind, title_of};
 
 /// A dot of the network view.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GraphNode {
     pub key: String,
@@ -43,6 +44,7 @@ pub struct GraphNode {
 }
 
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GraphView {
     /// Sorted by key.
@@ -60,6 +62,7 @@ pub fn layout_file_name(root: &Path) -> String {
 
 /// One saved dot position (`graph.saveLayout`).
 #[derive(Clone, Debug, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 pub struct NodePosition {
     pub key: String,
     pub x: f64,

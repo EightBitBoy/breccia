@@ -12,6 +12,7 @@ use super::view::{PageViewKind, title_of};
 
 /// A row of the All pages table.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PageRowView {
     pub key: String,

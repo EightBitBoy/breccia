@@ -37,6 +37,10 @@ test:
     cargo test --workspace; if ($LASTEXITCODE) { exit $LASTEXITCODE }
     node app/scripts/clean-stale.mjs hint
 
+# Write the window's types (app/src/lib/generated.ts) from the core's; `cargo test` fails while the file is out of date
+types:
+    $env:BRECCIA_WRITE_TYPES = '1'; cargo test -p breccia-core wire_types::; if ($LASTEXITCODE) { exit $LASTEXITCODE }
+
 # Delete build outputs in target/ older than 7 days (the newest of each stays; add --dry-run to only count)
 clean-stale *args:
     node app/scripts/clean-stale.mjs {{args}}

@@ -32,6 +32,7 @@ pub struct IndexProgress {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchView {
     /// The text sent.
@@ -47,6 +48,7 @@ pub struct SearchView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DateView {
     pub key: String,
@@ -55,6 +57,7 @@ pub struct DateView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchGroup {
     pub page: String,
@@ -65,6 +68,7 @@ pub struct SearchGroup {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct SearchHit {
     pub id: BlockId,

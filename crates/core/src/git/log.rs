@@ -7,6 +7,7 @@ use std::collections::HashSet;
 
 /// One commit of the history view.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct LogEntry {
     pub hash: String,
@@ -24,6 +25,7 @@ pub struct LogEntry {
 
 /// One page of the history: `git.log`'s answer.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GitLogView {
     pub entries: Vec<LogEntry>,

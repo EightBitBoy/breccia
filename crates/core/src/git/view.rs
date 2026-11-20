@@ -4,6 +4,7 @@ use super::sync::Problem;
 use serde::Serialize;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum GitState {
     /// No folder is open, or `[git] enabled = false`.
@@ -20,6 +21,7 @@ pub enum GitState {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ProblemView {
     /// The problem's tag: `conflict`, `identity`, `unreachable`, …
@@ -39,6 +41,7 @@ impl ProblemView {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GitView {
     pub state: GitState,

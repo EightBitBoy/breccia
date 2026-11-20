@@ -45,10 +45,12 @@ fn default_color() -> String {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 pub struct Board {
     pub name: String,
     /// State keywords; not validated here.
     #[serde(default)]
+    #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
     pub columns: Vec<String>,
 }
 

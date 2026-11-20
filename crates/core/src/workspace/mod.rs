@@ -126,6 +126,7 @@ pub struct Backlinks<'a> {
 
 /// A name used as `#tag`, for the sidebar's Tags section.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TagEntry {
     pub key: String,
@@ -139,6 +140,7 @@ pub struct TagEntry {
 
 /// A page name for completion: an existing page or a link target without one.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct NameEntry {
     pub key: String,

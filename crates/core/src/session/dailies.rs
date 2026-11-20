@@ -21,6 +21,7 @@ use super::view::Output;
 
 /// One daily as the Dailies view shows it.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DailyView {
     pub id: BlockId,

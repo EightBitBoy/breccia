@@ -20,12 +20,15 @@ rusqlite = { version = "0.41.1", features = ["bundled"] }
 unicode-normalization = "0.1.26"
 serde_json = "1"
 log = "0.4"
+ts-rs = { version = "12.0.1", optional = true, features = ["no-serde-warnings"] }
 
 [features]
 # Hooks the Git engine tests use to land a save at an exact moment.
 test-seams = []
+# The window's TypeScript types (`app/src/lib/generated.ts`), written by `just types`; tests only.
+wire-types = ["dep:ts-rs"]
 
 [dev-dependencies]
-breccia-core = { path = ".", features = ["test-seams"] }
+breccia-core = { path = ".", features = ["test-seams", "wire-types"] }
 tempfile = "3"
 proptest = "1"

@@ -10,6 +10,7 @@ use crate::workspace::PageError;
 /// Why a command did not run: the stable, camelCase code of a `CommandError`.
 /// The codes `Internal`, `BadRequest`, `Recovered` and `Git` are answered by the shell.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum ErrorCode {
     BadDate,
@@ -172,6 +173,7 @@ impl ErrorCode {
 /// A command that did not run. `code` is camelCase and stable; `message`
 /// is for people.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct CommandError {
     pub code: ErrorCode,

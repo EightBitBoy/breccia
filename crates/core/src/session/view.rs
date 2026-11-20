@@ -24,6 +24,7 @@ use super::tree::{JournalDay, TreeView};
 
 /// The result of a command. Only the parts a command produces are set.
 #[derive(Clone, Debug, Default, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Output {
     pub page: Option<PageView>,
@@ -86,6 +87,7 @@ impl Output {
 
 /// A page that other software re-keyed: `from` and `to` are page keys.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RenameView {
     pub from: String,
@@ -94,6 +96,7 @@ pub struct RenameView {
 
 /// The days of the journal feed.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FeedView {
     /// Today's key; also the first day.
@@ -104,6 +107,7 @@ pub struct FeedView {
 
 /// A page with edits its file does not hold.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct DirtyView {
     pub key: String,
@@ -121,6 +125,7 @@ impl DirtyView {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum PageViewKind {
     Journal,
@@ -128,6 +133,7 @@ pub enum PageViewKind {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct PageView {
     pub key: String,
@@ -141,15 +147,18 @@ pub struct PageView {
     pub has_file: bool,
     /// The page's own color; none for a journal.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wire-types", ts(optional))]
     pub color: Option<PageColor>,
     /// Journals only: the links and tags of its blocks that can be given a color.
     #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
     pub targets: Vec<TargetView>,
 }
 
 /// A link or tag in a journal whose page can be given a color: one that goes
 /// to an existing page that is not a journal, or a tag without a page yet.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct TargetView {
     /// The link's key as the rendered anchor's `data-page` holds it.
@@ -159,10 +168,12 @@ pub struct TargetView {
     pub key: String,
     pub name: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wire-types", ts(optional))]
     pub color: Option<PageColor>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum TargetKind {
     Link,
@@ -170,6 +181,7 @@ pub enum TargetKind {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BlockView {
     pub id: BlockId,
@@ -183,14 +195,17 @@ pub struct BlockView {
     pub has_children: bool,
     /// Journal blocks only: the page the block's first topic link goes to.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wire-types", ts(optional))]
     pub topic: Option<String>,
     /// Journal blocks only: that page's color, when it has one.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wire-types", ts(optional))]
     pub color: Option<PageColor>,
 }
 
 /// Where the caret goes: a block and a UTF-8 byte offset in its text.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct Focus {
     pub id: BlockId,
@@ -198,6 +213,7 @@ pub struct Focus {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct FolderView {
     /// The open notes folder; `None` while no folder is open.
@@ -206,6 +222,7 @@ pub struct FolderView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct ConfigView {
     pub states: Vec<StateView>,
@@ -225,6 +242,7 @@ pub struct ConfigView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct GitSettingsView {
     pub enabled: bool,
@@ -233,6 +251,7 @@ pub struct GitSettingsView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StateView {
     pub keyword: String,
@@ -243,6 +262,7 @@ pub struct StateView {
 
 /// Something the user should know about that did not fail the command.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(
     tag = "kind",
     rename_all = "camelCase",
@@ -277,6 +297,7 @@ pub enum Notice {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub enum SaveFailReason {
     ChangedOnDisk,
@@ -394,6 +415,7 @@ impl BlockView {
 
 /// The linked references to a page.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RefsView {
     pub key: String,
@@ -403,6 +425,7 @@ pub struct RefsView {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RefGroup {
     pub page: String,
@@ -412,6 +435,7 @@ pub struct RefGroup {
 }
 
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct RefView {
     /// The ancestors of the root, outermost first, as breadcrumbs.
@@ -620,6 +644,7 @@ impl Notice {
 
 /// A board's name and column keywords, as listed in `config.get`.
 #[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct BoardSummary {
     pub name: String,

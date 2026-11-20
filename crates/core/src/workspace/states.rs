@@ -8,6 +8,7 @@ use crate::task::{starts_with_keyword, task_state};
 
 /// How much of the notes uses a state.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StateUsage {
     pub keyword: String,

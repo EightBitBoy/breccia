@@ -8,6 +8,7 @@ use crate::error::EditError;
 
 /// In-memory identity of a block. Never written into a file.
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(transparent)]
 pub struct BlockId(pub u64);
 

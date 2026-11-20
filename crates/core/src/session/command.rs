@@ -31,6 +31,7 @@ impl Clock {
 
 /// One state of the list `states.set` writes.
 #[derive(Clone, Debug, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct StateInput {
     pub keyword: String,
@@ -41,12 +42,14 @@ pub struct StateInput {
 
 /// A state whose keyword changed: the blocks that start with `from` get `to`.
 #[derive(Clone, Debug, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 pub struct StateRename {
     pub from: String,
     pub to: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 pub struct Request {
     /// The session generation the command's block IDs belong to.
     pub generation: u64,
@@ -55,6 +58,7 @@ pub struct Request {
 
 /// The named commands. `type` holds the name, the other fields are camelCase.
 #[derive(Clone, Debug, Deserialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
 #[serde(tag = "type", rename_all_fields = "camelCase")]
 pub enum Command {
     #[serde(rename = "folder.open")]
@@ -77,6 +81,7 @@ pub enum Command {
         /// The name is a link target: `Page#Heading` opens `Page` when
         /// that page (or alias) exists.
         #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
         link: bool,
     },
     #[serde(rename = "page.create")]
@@ -129,6 +134,7 @@ pub enum Command {
         id: BlockId,
         keyword: String,
         #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
         before: Option<BlockId>,
     },
     /// Every archived task, for the Archive view; answers in `archive`.
@@ -169,6 +175,7 @@ pub enum Command {
     ConfigSetBoard {
         archive_after_days: u32,
         #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional))]
         auto_archive: Option<bool>,
         version: u64,
     },
@@ -210,6 +217,7 @@ pub enum Command {
     DailiesMove {
         id: BlockId,
         #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
         before: Option<BlockId>,
         shown: String,
     },
@@ -251,6 +259,7 @@ pub enum Command {
     #[serde(rename = "archive.auto")]
     ArchiveAuto {
         #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
         editing: Option<BlockId>,
     },
     /// Archives (`archived:: <today>`) or unarchives the blocks.
@@ -269,6 +278,7 @@ pub enum Command {
         ids: Vec<BlockId>,
         /// A user's selection delete: if every block would go, one empty block stays.
         #[serde(default, rename = "keepOne")]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
         keep_one: bool,
     },
     /// Deletes the block with its children in one undo step. The only block of
