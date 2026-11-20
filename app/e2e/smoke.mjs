@@ -4330,6 +4330,41 @@ try {
   await screen.waitFor({ state: 'detached' })
   console.log('PASS 147 typing the default into a Settings number field writes it over a refused value in config.toml')
 
+  // 148: the window's own edits come back in the command's answer, not as `page:changed` events (§9); a change made
+  // outside the window does come as one. Every `page:changed` from here on is recorded; events keep their order, so
+  // once the outside change's event has come the recording holds that one entry alone (no wait for "no event yet").
+  await waitFor('148 nothing unsaved', () => page.locator('[data-testid="status-item"][data-id="save"]').innerText(), 'All changes saved')
+  const listen148 = await page.evaluate(async () => {
+    window.__e2ePages148 = []
+    const t = window.__TAURI_INTERNALS__
+    return t.invoke('plugin:event|listen', {
+      event: 'page:changed',
+      target: { kind: 'Any' },
+      handler: t.transformCallback((e) =>
+        window.__e2ePages148.push(`${e.payload.key}${JSON.stringify(e.payload).includes('outside 148') ? ' outside' : ''}`),
+      ),
+    })
+  })
+  const before148 = readAt(journal)
+  const firstRow148 = page.locator(`[data-testid="day"][data-day="${today}"] .block[data-block-id]`).first()
+  await clickRow(firstRow148)
+  await page.locator('.cm-content').waitFor()
+  await kb.press('Control+Home') // F36a, as in step 49: the click may land on a property line
+  await kb.press('End')
+  await kb.type(' own148')
+  await kb.press('Escape')
+  const typed148 = before148.replace(/^[^\n]*/, (line) => line + ' own148')
+  await waitFor('148 the typed word is on disk', () => readAt(journal), typed148)
+  writeFileSync(`${journal}.tmp`, `${typed148}- outside 148\n`)
+  renameSync(`${journal}.tmp`, journal)
+  await page.locator(`[data-testid="day"][data-day="${today}"] .block`, { hasText: 'outside 148' }).first().waitFor()
+  const got148 = () => page.evaluate(() => window.__e2ePages148)
+  await waitFor('148 the outside change sent its event', async () => (await got148()).some((k) => k.endsWith(' outside')), true)
+  const sent148 = await got148()
+  assert(JSON.stringify(sent148) === JSON.stringify([`${today} outside`]), `148 page:changed events: ${JSON.stringify(sent148)}`)
+  await page.evaluate((eventId) => window.__TAURI_INTERNALS__.invoke('plugin:event|unlisten', { event: 'page:changed', eventId }), listen148)
+  console.log('PASS 148 own edits send no page:changed event; a change made outside the window sends one')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
