@@ -195,6 +195,7 @@ Items from `docs/review.md` that the owner ticked off, with their notes, under t
 66. [x] **Events for Breccia's own commands:** the audit proposes that the app no longer sends a command's own
    result back to the window as events (it already has the answer). Nothing changes on screen; it removes a fragile
    mechanism and changes how one sentence of the spec (§9) is met. Yes or no? (Audit Q3, move M43.)
+   - Owner, 2026-11-20: yes (after asking for the pros and cons). It is part of plan 15.
 
 67. [x] **Testing components:** keep the rule that logic lives outside the components and apply it to the six
    large ones, or add a setup for component tests? (Audit Q4, move M46.)
