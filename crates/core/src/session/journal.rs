@@ -8,8 +8,9 @@ use crate::task::task_state;
 
 use super::Session;
 use super::block::caret_at_end;
+use super::error::CommandError;
 use super::tree::JournalDay;
-use super::view::{CommandError, FeedView, Focus, Output, PageView};
+use super::view::{FeedView, Focus, Output, PageView};
 use crate::workspace::PageKind;
 
 impl Session {

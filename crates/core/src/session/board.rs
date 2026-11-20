@@ -20,7 +20,8 @@ use crate::task::{
 use crate::workspace::{Page, PageKind, Workspace};
 
 use super::Session;
-use super::view::{BlockView, CommandError, Notice, Output, PageView, PageViewKind, title_of};
+use super::error::{CommandError, ErrorCode};
+use super::view::{BlockView, Notice, Output, PageView, PageViewKind, title_of};
 
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -353,7 +354,7 @@ fn raises(slots: &[Slot], at: usize, value: Option<u32>) -> Vec<PriorityWrite> {
 
 fn board_changed() -> CommandError {
     CommandError::new(
-        "boardChanged",
+        ErrorCode::BoardChanged,
         "Nothing was moved: the board changed since it was shown. It shows the notes as they are now; drop the card again.",
     )
 }
@@ -456,7 +457,10 @@ impl Session {
     /// blocks are no longer marked as changed on disk.
     pub(super) fn board_get(&mut self, index: usize) -> Result<Output, CommandError> {
         let board = BoardView::of(self.ws()?, index).ok_or_else(|| {
-            CommandError::new("unknownBoard", format_args!("unknown board: {index}"))
+            CommandError::new(
+                ErrorCode::UnknownBoard,
+                format_args!("unknown board: {index}"),
+            )
         })?;
         for c in &board.columns {
             for card in &c.cards {
@@ -492,7 +496,10 @@ impl Session {
         let ws = self.ws()?;
         let cfg = &ws.config;
         let state = cfg.state(keyword).ok_or_else(|| {
-            CommandError::new("unknownState", format_args!("unknown state: {keyword}"))
+            CommandError::new(
+                ErrorCode::UnknownState,
+                format_args!("unknown state: {keyword}"),
+            )
         })?;
         let (page, i) = ws.locate(id).ok_or(EditError::UnknownBlock)?;
         let key = page.key.clone();
@@ -549,7 +556,7 @@ impl Session {
             if !fresh {
                 let title = ws.page(k).map_or_else(|| k.clone(), |p| title_of(p).1);
                 return Err(CommandError::new(
-                    "boardChanged",
+                    ErrorCode::BoardChanged,
                     format_args!(
                         "Nothing was moved: {title} changed on disk or holds changes that are not saved. The board shows the notes as they are now; drop the card again."
                     ),
@@ -699,13 +706,13 @@ impl Session {
         let cfg = &ws.config;
         let Some(state) = cfg.state(keyword) else {
             return Err(CommandError::new(
-                "unknownState",
+                ErrorCode::UnknownState,
                 format_args!("unknown state: {keyword}"),
             ));
         };
         if !state.finished {
             return Err(CommandError::new(
-                "notFinished",
+                ErrorCode::NotFinished,
                 format_args!("{keyword} is not a finished state"),
             ));
         }

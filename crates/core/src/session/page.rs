@@ -3,7 +3,8 @@
 
 use crate::workspace::ReloadError;
 
-use super::view::{CommandError, Notice, Output, PageView, RefsView};
+use super::error::{CommandError, ErrorCode};
+use super::view::{Notice, Output, PageView, RefsView};
 use super::{DiskMark, Session};
 
 impl Session {
@@ -109,7 +110,7 @@ impl Session {
     pub(super) fn page_reload(&mut self, key: String) -> Result<Output, CommandError> {
         let reloaded = self.ws_mut()?.reload(&key).map_err(|e| match e {
             ReloadError::UnknownPage(_) => CommandError::unknown_page(&key),
-            e => CommandError::new("reload", e),
+            e => CommandError::new(ErrorCode::Reload, e),
         })?;
         self.history.remove(&key);
         self.rekey_marks(&key, &reloaded.key);

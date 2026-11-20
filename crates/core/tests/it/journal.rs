@@ -1,6 +1,7 @@
 //! `journal.feed` and `pages.get`.
 
 use crate::support::{self, DAY, clock_on, folder_at, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::FeedView;
 use breccia_core::{Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -147,7 +148,7 @@ fn journal_commands_need_a_folder() {
     ] {
         assert_eq!(
             cmd_on(&mut s, c, (2026, 10, 29)).unwrap_err().code,
-            "noFolder"
+            ErrorCode::NoFolder
         );
     }
 }

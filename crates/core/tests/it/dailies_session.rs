@@ -1,4 +1,5 @@
 use crate::support::{self, DAY, clock_on};
+use breccia_core::ErrorCode;
 use breccia_core::session::Notice;
 use breccia_core::{BlockId, Clock, Session};
 use serde_json::{Value, json};
@@ -20,7 +21,7 @@ fn ok(s: &mut Session, cmd: Value) -> Vec<(BlockId, String, Option<String>)> {
         .collect()
 }
 
-fn err_code(s: &mut Session, cmd: Value) -> String {
+fn err_code(s: &mut Session, cmd: Value) -> ErrorCode {
     support::run(s, cmd, clock()).unwrap_err().code
 }
 
@@ -147,7 +148,7 @@ fn delete_is_refused_when_lines_were_added_under_the_daily() {
     fs::write(t.path().join(FILE), outside).unwrap();
     let cmd =
         |nested: bool| json!({"type": "dailies.delete", "id": a, "shown": "a", "nested": nested});
-    assert_eq!(err_code(&mut s, cmd(false)), "unknownDaily");
+    assert_eq!(err_code(&mut s, cmd(false)), ErrorCode::UnknownDaily);
     assert_eq!(read(&t), outside);
     ok(&mut s, cmd(true));
     assert_eq!(
@@ -184,25 +185,25 @@ fn invalid_text_and_unknown_ids_are_refused() {
     let l = list(&mut s);
     assert_eq!(
         err_code(&mut s, json!({"type": "dailies.add", "text": "  "})),
-        "invalidDaily"
+        ErrorCode::InvalidDaily
     );
     assert_eq!(
         err_code(&mut s, json!({"type": "dailies.add", "text": "x\ny"})),
-        "invalidDaily"
+        ErrorCode::InvalidDaily
     );
     assert_eq!(
         err_code(
             &mut s,
             json!({"type": "dailies.edit", "id": l[0].0, "text": "", "shown": "a"})
         ),
-        "invalidDaily"
+        ErrorCode::InvalidDaily
     );
     assert_eq!(
         err_code(
             &mut s,
             json!({"type": "dailies.check", "id": 9999, "shown": "a"})
         ),
-        "unknownDaily"
+        ErrorCode::UnknownDaily
     );
     // A nested block is no daily.
     assert_eq!(read(&t), "- a\n\t- under\n");
@@ -237,7 +238,7 @@ fn a_daily_gone_on_disk_is_refused() {
         clock(),
     )
     .unwrap_err();
-    assert_eq!(e.code, "unknownDaily");
+    assert_eq!(e.code, ErrorCode::UnknownDaily);
     assert_eq!(
         e.message,
         "This daily changed in another program; the list now shows the file as it is."
@@ -258,7 +259,7 @@ fn a_daily_renamed_on_disk_is_refused_not_ticked_wrong() {
             &mut s,
             json!({"type": "dailies.check", "id": l[1].0, "shown": "b"})
         ),
-        "unknownDaily"
+        ErrorCode::UnknownDaily
     );
     assert_eq!(read(&t), "- a\n- other\n");
 }
@@ -286,7 +287,11 @@ fn a_daily_replaced_on_disk_after_the_watcher_ran_is_refused() {
         json!({"type": "dailies.uncheck", "id": b, "shown": "b"}),
         json!({"type": "dailies.move", "id": b, "before": l[0].0, "shown": "b"}),
     ] {
-        assert_eq!(err_code(&mut s, cmd.clone()), "unknownDaily", "{cmd}");
+        assert_eq!(
+            err_code(&mut s, cmd.clone()),
+            ErrorCode::UnknownDaily,
+            "{cmd}"
+        );
         assert_eq!(read(&t), outside, "{cmd}");
     }
     // The text the window shows now is acted on.
@@ -368,7 +373,7 @@ fn an_unreadable_dailies_file_warns_and_refuses() {
         out.notices
     );
     let e = support::run(&mut s, json!({"type": "dailies.add", "text": "x"}), clock()).unwrap_err();
-    assert_eq!(e.code, "dailiesUnreadable");
+    assert_eq!(e.code, ErrorCode::DailiesUnreadable);
     assert_eq!(fs::read(t.path().join(FILE)).unwrap(), bad);
 }
 
@@ -392,7 +397,7 @@ fn load_dailies_reports_an_io_error() {
         out.notices
     );
     let e = support::run(&mut s, json!({"type": "dailies.add", "text": "x"}), clock()).unwrap_err();
-    assert_eq!(e.code, "dailiesUnreadable");
+    assert_eq!(e.code, ErrorCode::DailiesUnreadable);
     assert!(t.path().join(FILE).is_dir());
 }
 

@@ -6,7 +6,8 @@
 use crate::config::{Board, BoardSettings, Config, DailiesSettings, GitSettings, State};
 
 use super::command::{StateInput, StateRename};
-use super::view::{CommandError, ConfigView, Notice, Output, PageView};
+use super::error::{CommandError, ErrorCode};
+use super::view::{ConfigView, Notice, Output, PageView};
 use super::{DiskMark, Session};
 
 impl Session {
@@ -72,7 +73,7 @@ impl Session {
         self.ws()?
             .config
             .check_boards(boards)
-            .map_err(|e| CommandError::new("invalidBoard", e))?;
+            .map_err(|e| CommandError::new(ErrorCode::InvalidBoard, e))?;
         self.write_config(|root, expect| Config::write_boards(root, expect, boards))?;
         self.config_output()
     }
@@ -93,7 +94,7 @@ impl Session {
         version: u64,
     ) -> Result<Output, CommandError> {
         git.check()
-            .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
+            .map_err(|e| CommandError::new(ErrorCode::InvalidSetting, e.to_string()))?;
         self.config_guard(version)?;
         self.write_config(|root, expect| Config::write_git(root, expect, &git))?;
         self.config_output()
@@ -107,7 +108,7 @@ impl Session {
     ) -> Result<Output, CommandError> {
         dailies
             .check()
-            .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
+            .map_err(|e| CommandError::new(ErrorCode::InvalidSetting, e.to_string()))?;
         self.config_guard(version)?;
         self.write_config(|root, expect| Config::write_dailies(root, expect, &dailies))?;
         self.config_output()
@@ -127,7 +128,7 @@ impl Session {
             auto_archive: false,
         }
         .check()
-        .map_err(|e| CommandError::new("invalidSetting", e.to_string()))?;
+        .map_err(|e| CommandError::new(ErrorCode::InvalidSetting, e.to_string()))?;
         self.config_guard(version)?;
         let current = self.ws()?.config.board.auto_archive;
         let board = BoardSettings {
@@ -147,7 +148,7 @@ impl Session {
         version: u64,
     ) -> Result<Output, CommandError> {
         self.config_guard(version)?;
-        let invalid = |e: String| CommandError::new("invalidState", e);
+        let invalid = |e: String| CommandError::new(ErrorCode::InvalidState, e);
         let ws = self.ws()?;
         let new: Vec<State> = inputs
             .into_iter()

@@ -4,7 +4,7 @@ use std::time::Instant;
 
 use breccia_core::session::Notice;
 use breccia_core::watch::FolderWatcher;
-use breccia_core::{Command, Request};
+use breccia_core::{Command, ErrorCode, Request};
 use tauri::{AppHandle, Manager};
 
 use crate::App;
@@ -55,7 +55,7 @@ pub(crate) fn start_watcher(
                     emit_all(&handle, &output, true);
                     index_if_large(&handle, generation, &output);
                 }
-                Err(e) if e.code == "stale" => {}
+                Err(e) if e.code == ErrorCode::Stale => {}
                 Err(e) => log::warn!("watcher: {}", e.message),
             }
             send_git(&handle, GitMsg::Changed);

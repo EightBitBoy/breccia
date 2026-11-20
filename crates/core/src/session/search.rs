@@ -17,7 +17,8 @@ use crate::search::{
 use crate::workspace::{PageKind, Workspace};
 
 use super::Session;
-use super::view::{CommandError, Notice, Output, PageViewKind, title_of};
+use super::error::{CommandError, ErrorCode};
+use super::view::{Notice, Output, PageViewKind, title_of};
 
 /// At most this many hits are shown; one more is fetched to know about more.
 pub const SEARCH_LIMIT: usize = 200;
@@ -130,7 +131,7 @@ impl Session {
         today: NaiveDate,
     ) -> Result<Output, CommandError> {
         let d = parse_journal_name(key).ok_or_else(|| {
-            CommandError::new("badDate", format_args!("not a journal day: {key}"))
+            CommandError::new(ErrorCode::BadDate, format_args!("not a journal day: {key}"))
         })?;
         Ok(Output {
             day: Some(date_view(d, today, self.ws()?)),
@@ -367,7 +368,7 @@ fn cannot_store(e: &SearchError) -> Notice {
 }
 
 fn search_error(e: SearchError) -> CommandError {
-    CommandError::new("search", e)
+    CommandError::new(ErrorCode::Search, e)
 }
 
 impl Session {
@@ -449,7 +450,9 @@ impl Session {
                     .transpose()
             })
             .map_err(search_error)?
-            .ok_or_else(|| CommandError::new("search", "the search index is not available"))?;
+            .ok_or_else(|| {
+                CommandError::new(ErrorCode::Search, "the search index is not available")
+            })?;
         Ok(Output {
             search: Some(SearchView::build(text, &q, hits, ws, today)),
             notices: search.warning.take().into_iter().collect(),

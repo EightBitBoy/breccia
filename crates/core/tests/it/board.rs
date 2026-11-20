@@ -1,6 +1,7 @@
 //! `board.get` and the boards in `config.get`.
 
 use crate::support::{self, DAY, clock_on, open_at, put, request, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::{BoardView, CardView, Notice, SaveFailReason};
 use breccia_core::{Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -298,7 +299,7 @@ fn unknown_board_is_refused() {
     let t = tempfile::tempdir().unwrap();
     let mut s = open(t.path());
     let e = cmd_on(&mut s, json!({"type": "board.get", "index": 5}), DAY).unwrap_err();
-    assert_eq!(e.code, "unknownBoard");
+    assert_eq!(e.code, ErrorCode::UnknownBoard);
 }
 
 #[test]
@@ -429,7 +430,7 @@ fn archive_old_is_refused_for_open_states_only() {
         DAY,
     )
     .unwrap_err();
-    assert_eq!(e.code, "notFinished");
+    assert_eq!(e.code, ErrorCode::NotFinished);
 }
 
 #[test]
@@ -661,7 +662,7 @@ fn invalid_boards_are_refused_and_nothing_is_written() {
         json!([{"name": "A", "columns": ["TODO", "TODO"]}]),
     ] {
         let e = cmd_on(&mut s, json!({"type": "boards.set", "boards": boards}), DAY).unwrap_err();
-        assert_eq!(e.code, "invalidBoard", "{boards}");
+        assert_eq!(e.code, ErrorCode::InvalidBoard, "{boards}");
     }
     assert_eq!(
         fs::read_to_string(t.path().join("breccia/config.toml")).unwrap(),
@@ -850,7 +851,7 @@ fn a_board_with_an_unknown_column_does_not_block_other_edits() {
         DAY,
     )
     .unwrap_err();
-    assert_eq!(e.code, "invalidBoard");
+    assert_eq!(e.code, ErrorCode::InvalidBoard);
     assert_eq!(config_file(t.path()), before);
 }
 
@@ -930,7 +931,7 @@ fn boards_set_is_refused_when_the_config_changed_on_disk() {
         DAY,
     )
     .expect_err("the stale list must be refused");
-    assert_eq!(err.code, "configChanged");
+    assert_eq!(err.code, ErrorCode::ConfigChanged);
     let file = fs::read_to_string(t.path().join("breccia/config.toml")).unwrap();
     assert_eq!(file, theirs, "the file was not touched");
 
@@ -972,7 +973,7 @@ fn boards_set_is_refused_while_the_changed_config_does_not_parse() {
             DAY,
         )
         .expect_err("refused");
-        assert_eq!(err.code, "configChanged");
+        assert_eq!(err.code, ErrorCode::ConfigChanged);
     }
     let file = fs::read_to_string(t.path().join("breccia/config.toml")).unwrap();
     assert_eq!(file, "[[states]\nbroken");

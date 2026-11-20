@@ -16,7 +16,8 @@ use crate::outline::{BlockId, Document, IdGen, carry_ids, parse};
 use crate::workspace::Workspace;
 
 use super::Session;
-use super::view::{CommandError, Output};
+use super::error::{CommandError, ErrorCode};
+use super::view::Output;
 
 /// One daily as the Dailies view shows it.
 #[derive(Clone, Debug, Serialize)]
@@ -73,14 +74,14 @@ fn has_hidden_lines(text: &str) -> bool {
 
 fn changed_elsewhere() -> CommandError {
     CommandError::new(
-        "unknownDaily",
+        ErrorCode::UnknownDaily,
         "This daily changed in another program; the list now shows the file as it is.",
     )
 }
 
 fn unreadable(reason: &str) -> CommandError {
     CommandError::new(
-        "dailiesUnreadable",
+        ErrorCode::DailiesUnreadable,
         format_args!("{DAILIES_REL} cannot be read ({reason}), so this change was not saved."),
     )
 }
@@ -179,7 +180,7 @@ impl Session {
             if ws.dailies.on_disk.as_deref() != Some(text.as_str()) {
                 write_atomic(&dailies_path(&ws.root), &text).map_err(|e| {
                     CommandError::new(
-                        "dailiesSave",
+                        ErrorCode::DailiesSave,
                         format_args!("{DAILIES_REL} could not be saved: {e}"),
                     )
                 })?;

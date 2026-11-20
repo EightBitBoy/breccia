@@ -62,7 +62,10 @@ function tsSection(src: string, start: string): string {
 test('command_names_match', () => {
   const rust = new Set<string>()
   // The core's commands, and the four Git commands the shell parses itself.
-  for (const l of [...block(commandRs, 'pub enum Command {'), ...block(shellRs, 'pub(crate) enum ShellCommand {')]) {
+  for (const l of [
+    ...block(commandRs, 'pub enum Command {'),
+    ...block(shellRs, 'pub(crate) enum ShellCommand {'),
+  ]) {
     const m = /^\s+#\[serde\(rename = "([^"]+)"\)\]/.exec(l)
     if (m) rust.add(m[1])
   }
@@ -116,12 +119,14 @@ function recoveryConst(name: string): string {
 }
 
 test('the recovered error code matches', () => {
-  const rust = /commands::error\("([^"]+)", message\)/.exec(shellFile('recovery.rs'))
+  const rust = /ErrorCode::(\w+), message\)/.exec(shellFile('recovery.rs'))
   expect(rust, 'the recovered answer in recovery.rs').not.toBeNull()
+  // The variant's wire name is its camelCase spelling.
+  const wire = rust![1][0].toLowerCase() + rust![1].slice(1)
   const ts = /code === '([^']+)'\) return true/.exec(recoveryTs)
   expect(ts, 'the recovered code in recovery.ts').not.toBeNull()
-  expect(rust![1]).toBe('recovered')
-  expect(ts![1]).toBe(rust![1])
+  expect(wire).toBe('recovered')
+  expect(ts![1]).toBe(wire)
 })
 
 test('the stale refusal text starts as the window expects', () => {

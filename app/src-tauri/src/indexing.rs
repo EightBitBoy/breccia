@@ -149,7 +149,7 @@ pub(crate) fn index_loop(handle: &AppHandle, generation: u64) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::commands;
+    use breccia_core::ErrorCode;
 
     #[test]
     fn only_builds_of_more_than_one_chunk_report_progress() {
@@ -207,7 +207,7 @@ mod tests {
         let t = INDEX_CHUNK_PAGES * 3;
         let done = Some(progress(t, t));
         let err: Result<Option<IndexProgress>, CommandError> =
-            Err(commands::error("internal", "x".into()));
+            Err(CommandError::new(ErrorCode::Internal, "x"));
         assert_eq!(
             progress_event(Some(t), &Ok(Some(progress(t, t)))),
             (done, true)

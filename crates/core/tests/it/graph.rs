@@ -1,6 +1,7 @@
 //! `graph.get`: pages, link targets and the links between them.
 
 use crate::support::{self, DAY, clock_on, open_at, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::{GraphNode, GraphView, PageViewKind, layout_file_name};
 use breccia_core::{Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -212,7 +213,7 @@ fn graph_get_without_a_folder_fails() {
     let mut s = Session::new();
     assert_eq!(
         cmd(&mut s, json!({"type": "graph.get"})).unwrap_err().code,
-        "noFolder"
+        ErrorCode::NoFolder
     );
 }
 

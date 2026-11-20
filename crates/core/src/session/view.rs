@@ -1,14 +1,12 @@
 //! What the frontend gets back: views of pages and settings, notices, errors.
 
 use std::collections::HashSet;
-use std::fmt;
 use std::path::PathBuf;
 
 use serde::Serialize;
 
 use crate::color::PageColor;
 use crate::config::{Config, Replaced};
-use crate::error::EditError;
 use crate::git::{GitLogView, GitView};
 use crate::inline::{LinkKind, links};
 use crate::naming::{journal_display, parse_journal_name};
@@ -16,7 +14,7 @@ use crate::outline::{Block, BlockId};
 use crate::render::{block_html, crumb, preamble_html};
 use crate::task::task_state;
 pub use crate::workspace::StateUsage;
-use crate::workspace::{LoadWarning, NameEntry, Page, PageError, PageKind, SaveError, Workspace};
+use crate::workspace::{LoadWarning, NameEntry, Page, PageKind, SaveError, Workspace};
 
 use super::board::{ArchivedView, BoardView};
 use super::graph::GraphView;
@@ -284,82 +282,6 @@ pub enum SaveFailReason {
     ChangedOnDisk,
     PathTaken,
     Io,
-}
-
-/// A command that did not run. `code` is camelCase and stable; `message`
-/// is for people.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize)]
-#[serde(rename_all = "camelCase")]
-pub struct CommandError {
-    pub code: String,
-    pub message: String,
-}
-
-impl CommandError {
-    pub(crate) fn new(code: &str, message: impl fmt::Display) -> Self {
-        CommandError {
-            code: code.to_string(),
-            message: message.to_string(),
-        }
-    }
-
-    pub(crate) fn no_folder() -> Self {
-        CommandError::new("noFolder", "no notes folder is open")
-    }
-
-    pub(crate) fn unknown_page(key: &str) -> Self {
-        CommandError::new("unknownPage", format_args!("unknown page: {key}"))
-    }
-}
-
-impl fmt::Display for CommandError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}: {}", self.code, self.message)
-    }
-}
-
-impl std::error::Error for CommandError {}
-
-impl From<PageError> for CommandError {
-    fn from(e: PageError) -> Self {
-        let code = match e {
-            PageError::InvalidName(_) => "invalidName",
-            PageError::NotLinkable(_) => "invalidName",
-            PageError::Exists(_) => "pageExists",
-            PageError::IsAlias { .. } => "pageExists",
-            PageError::UnknownFolder(_) => "unknownFolder",
-            PageError::FolderExists(_) => "folderExists",
-            PageError::Journal(_) => "journal",
-            PageError::UnknownColor(_) => "unknownColor",
-            PageError::UnknownPage(_) => "unknownPage",
-            PageError::FolderNotEmpty(_) => "folderNotEmpty",
-            PageError::IntoItself(_) => "intoItself",
-            PageError::ChangedOnDisk(_) => "changedOnDisk",
-            PageError::Io(_) => "io",
-        };
-        CommandError::new(code, e)
-    }
-}
-
-impl From<EditError> for CommandError {
-    fn from(e: EditError) -> Self {
-        let code = match e {
-            EditError::UnknownBlock => "unknownBlock",
-            EditError::UnknownState(_) => "unknownState",
-            EditError::NoPreviousSibling => "noPreviousSibling",
-            EditError::NoNextSibling => "noNextSibling",
-            EditError::NoParent => "noParent",
-            EditError::NoPrevious => "noPrevious",
-            EditError::InvalidOffset => "invalidOffset",
-            EditError::InsideFence => "insideFence",
-            EditError::WouldChangeStructure => "wouldChangeStructure",
-            EditError::JoinOntoProperties => "joinOntoProperties",
-            EditError::NoCycle => "noCycle",
-            EditError::NotADaily => "unknownDaily",
-            EditError::EmptyDaily | EditError::MultiLineDaily => "invalidDaily",
-        };
-        CommandError::new(code, e)
-    }
 }
 
 impl PageView {

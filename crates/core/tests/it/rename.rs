@@ -1,4 +1,5 @@
 use crate::support::{self, DAY, clock_on, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::{Notice, SaveFailReason, TreeNode};
 use breccia_core::{Clock, CommandError, LoadWarning, Output, Session, Workspace};
 use serde_json::{Value, json};
@@ -19,7 +20,7 @@ fn ok(s: &mut Session, json: Value) -> Output {
     support::ok(s, json, clock(0))
 }
 
-fn code(s: &mut Session, json: Value) -> String {
+fn code(s: &mut Session, json: Value) -> ErrorCode {
     let j = json.clone();
     match cmd(s, json) {
         Ok(_) => panic!("{j} succeeded"),
@@ -137,7 +138,7 @@ fn rename_rewrites_links_and_moves_file() {
     assert!(out.notices.is_empty(), "{:?}", out.notices);
     assert_eq!(ref_groups(&mut s, "new name"), 2);
     let e = cmd(&mut s, json!({"type": "page.refs", "key": "old"})).unwrap_err();
-    assert_eq!(e.code, "unknownPage");
+    assert_eq!(e.code, ErrorCode::UnknownPage);
 
     // A fresh read of the folder agrees.
     let (ws, warnings) = Workspace::open(t.path()).unwrap();
@@ -262,27 +263,27 @@ fn rename_refuses_existing_name_journal_and_date() {
     for (j, want) in [
         (
             json!({"type": "page.rename", "key": "old", "name": "b"}),
-            "pageExists",
+            ErrorCode::PageExists,
         ),
         (
             json!({"type": "page.rename", "key": "old", "name": "B"}),
-            "pageExists",
+            ErrorCode::PageExists,
         ),
         (
             json!({"type": "page.rename", "key": "2026-10-29", "name": "x"}),
-            "journal",
+            ErrorCode::Journal,
         ),
         (
             json!({"type": "page.rename", "key": "old", "name": "2026-01-01"}),
-            "invalidName",
+            ErrorCode::InvalidName,
         ),
         (
             json!({"type": "page.rename", "key": "old", "name": " "}),
-            "invalidName",
+            ErrorCode::InvalidName,
         ),
         (
             json!({"type": "page.rename", "key": "nope", "name": "x"}),
-            "unknownPage",
+            ErrorCode::UnknownPage,
         ),
     ] {
         assert_eq!(code(&mut s, j.clone()), want, "{j}");
@@ -300,7 +301,7 @@ fn rename_refuses_when_file_changed_on_disk() {
             &mut s,
             json!({"type": "page.rename", "key": "old", "name": "New"})
         ),
-        "changedOnDisk"
+        ErrorCode::ChangedOnDisk
     );
     assert_eq!(snapshot(&t), before);
     // Gone from disk counts as changed too.
@@ -310,7 +311,7 @@ fn rename_refuses_when_file_changed_on_disk() {
             &mut s,
             json!({"type": "page.rename", "key": "old", "name": "New"})
         ),
-        "changedOnDisk"
+        ErrorCode::ChangedOnDisk
     );
     assert!(!exists(&t, "pages/New.md"));
 }
@@ -417,7 +418,7 @@ fn rename_of_a_locked_file_changes_nothing() {
             &mut s,
             json!({"type": "page.rename", "key": "old", "name": "New"})
         ),
-        "io"
+        ErrorCode::Io
     );
     drop(lock);
     assert_eq!(snapshot(&t), before);
@@ -498,14 +499,14 @@ fn move_page_between_folders() {
             &mut s,
             json!({"type": "page.move", "key": "a", "folder": "Nope"})
         ),
-        "unknownFolder"
+        ErrorCode::UnknownFolder
     );
     assert_eq!(
         code(
             &mut s,
             json!({"type": "page.move", "key": "2026-10-29", "folder": "Projects"})
         ),
-        "journal"
+        ErrorCode::Journal
     );
     // Back to the top level.
     ok(
@@ -561,7 +562,7 @@ fn move_refuses_when_file_changed_on_disk() {
             &mut s,
             json!({"type": "page.move", "key": "a", "folder": "X"})
         ),
-        "changedOnDisk"
+        ErrorCode::ChangedOnDisk
     );
     assert_eq!(read(&t, "pages/A.md"), "- theirs\n");
     assert!(!exists(&t, "pages/X/A.md"));
@@ -583,14 +584,14 @@ fn delete_page_removes_file_and_keeps_links() {
     assert!(!a.exists);
     assert_eq!(
         code(&mut s, json!({"type": "page.get", "key": "a"})),
-        "unknownPage"
+        ErrorCode::UnknownPage
     );
     // Journals may be deleted.
     ok(&mut s, json!({"type": "page.delete", "key": "2026-10-29"}));
     assert!(!exists(&t, J.0));
     assert_eq!(
         code(&mut s, json!({"type": "page.delete", "key": "a"})),
-        "unknownPage"
+        ErrorCode::UnknownPage
     );
 }
 
@@ -653,7 +654,7 @@ fn delete_refuses_when_file_changed_on_disk() {
     put(t.path(), "pages/A.md", "- theirs\n");
     assert_eq!(
         code(&mut s, json!({"type": "page.delete", "key": "a"})),
-        "changedOnDisk"
+        ErrorCode::ChangedOnDisk
     );
     assert_eq!(read(&t, "pages/A.md"), "- theirs\n");
 }
@@ -694,31 +695,31 @@ fn folder_rename_moves_pages() {
     for (j, want) in [
         (
             json!({"type": "dir.rename", "path": "Work", "to": "Work/Sub"}),
-            "intoItself",
+            ErrorCode::IntoItself,
         ),
         (
             json!({"type": "dir.rename", "path": "Work", "to": "work/projects/z"}),
-            "intoItself",
+            ErrorCode::IntoItself,
         ),
         (
             json!({"type": "dir.rename", "path": "Work", "to": "Work"}),
-            "intoItself",
+            ErrorCode::IntoItself,
         ),
         (
             json!({"type": "dir.rename", "path": "Nope", "to": "X"}),
-            "unknownFolder",
+            ErrorCode::UnknownFolder,
         ),
         (
             json!({"type": "dir.rename", "path": "Work", "to": "Nope/X"}),
-            "unknownFolder",
+            ErrorCode::UnknownFolder,
         ),
         (
             json!({"type": "dir.rename", "path": "Work/Projects/Sub", "to": "work"}),
-            "folderExists",
+            ErrorCode::FolderExists,
         ),
         (
             json!({"type": "dir.rename", "path": "Work", "to": "a:b"}),
-            "invalidName",
+            ErrorCode::InvalidName,
         ),
     ] {
         assert_eq!(code(&mut s, j.clone()), want, "{j}");
@@ -748,7 +749,7 @@ fn folder_rename_refuses_a_name_a_file_holds() {
             &mut s,
             json!({"type": "dir.rename", "path": "A", "to": "Notes"})
         ),
-        "folderExists"
+        ErrorCode::FolderExists
     );
     assert_eq!(read(&t, "pages/notes"), "plain");
     assert_eq!(read(&t, "pages/A/X.md"), "- x\n");
@@ -765,15 +766,15 @@ fn folder_delete_only_when_empty() {
     );
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Projects"})),
-        "folderNotEmpty"
+        ErrorCode::FolderNotEmpty
     );
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Img"})),
-        "folderNotEmpty"
+        ErrorCode::FolderNotEmpty
     );
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Nope"})),
-        "unknownFolder"
+        ErrorCode::UnknownFolder
     );
     let out = ok(&mut s, json!({"type": "dir.delete", "path": "empty"}));
     assert!(!exists(&t, "pages/Empty"));
@@ -814,7 +815,7 @@ fn folder_delete_takes_untouched_new_pages_with_it() {
     assert!(!exists(&t, "pages/Empty"));
     assert_eq!(
         code(&mut s, json!({"type": "page.show", "key": "n"})),
-        "unknownPage"
+        ErrorCode::UnknownPage
     );
 }
 
@@ -827,7 +828,7 @@ fn refused_folder_delete_keeps_untouched_new_pages() {
     );
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Dir"})),
-        "folderNotEmpty"
+        ErrorCode::FolderNotEmpty
     );
     assert!(exists(&t, "pages/Dir/x.txt"));
     ok(&mut s, json!({"type": "page.show", "key": "n"}));
@@ -838,7 +839,7 @@ fn folder_delete_refuses_a_folder_with_a_page_with_content() {
     let (t, mut s) = support::folder_at(&[("pages/Dir/P.md", "- a\n")], clock(0));
     assert_eq!(
         code(&mut s, json!({"type": "dir.delete", "path": "Dir"})),
-        "folderNotEmpty"
+        ErrorCode::FolderNotEmpty
     );
     assert!(exists(&t, "pages/Dir/P.md"));
 }
@@ -852,14 +853,14 @@ fn names_with_brackets_are_refused_on_create_and_rename() {
             &mut s,
             json!({"type": "page.create", "name": "a]b", "folder": ""})
         ),
-        "invalidName"
+        ErrorCode::InvalidName
     );
     assert_eq!(
         code(
             &mut s,
             json!({"type": "page.rename", "key": "p", "name": "x[y"})
         ),
-        "invalidName"
+        ErrorCode::InvalidName
     );
     let e = cmd(
         &mut s,
@@ -965,14 +966,14 @@ fn a_name_listed_as_an_alias_is_refused() {
             &mut s,
             json!({"type": "page.create", "name": "K8S", "folder": ""})
         ),
-        "pageExists"
+        ErrorCode::PageExists
     );
     assert_eq!(
         code(
             &mut s,
             json!({"type": "page.rename", "key": "ops", "name": "k8s"})
         ),
-        "pageExists"
+        ErrorCode::PageExists
     );
     assert_eq!(snapshot(&t), before);
     // Its own alias is allowed.
@@ -1314,14 +1315,14 @@ fn move_linked_only_refusals() {
             &mut s,
             json!({"type": "page.move", "key": "idea", "folder": "Nope"})
         ),
-        "unknownFolder"
+        ErrorCode::UnknownFolder
     );
     assert_eq!(
         code(
             &mut s,
             json!({"type": "page.move", "key": "nobody", "folder": "X"})
         ),
-        "unknownPage"
+        ErrorCode::UnknownPage
     );
     assert_eq!(snapshot(&t), before);
 }

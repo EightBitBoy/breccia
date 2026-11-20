@@ -2,6 +2,7 @@
 //! card's new place.
 
 use crate::support::{self, clock_on, open_at, put, read, run};
+use breccia_core::ErrorCode;
 use breccia_core::outline::BlockId;
 use breccia_core::{Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -308,7 +309,7 @@ fn a_stale_board_is_refused_and_nothing_is_written() {
     let mut s = open(t.path());
     // `before` is in another column now.
     let e = place(&mut s, "TODO a", "TODO", Some("DOING c")).unwrap_err();
-    assert_eq!(e.code, "boardChanged");
+    assert_eq!(e.code, ErrorCode::BoardChanged);
     assert_eq!(read(t.path(), DAY), src);
     // A page to be written changed on disk since Breccia read it.
     put(t.path(), "pages/P.md", "- TODO p\n  priority:: 1\n");
@@ -326,7 +327,7 @@ fn a_stale_board_is_refused_and_nothing_is_written() {
         json!({"type": "board.place", "id": a, "keyword": "TODO", "before": b}),
     )
     .unwrap_err();
-    assert_eq!(e.code, "boardChanged", "{e:?}");
+    assert_eq!(e.code, ErrorCode::BoardChanged, "{e:?}");
     assert_eq!(read(t.path(), DAY), src);
     assert_eq!(
         read(t.path(), "pages/P.md"),

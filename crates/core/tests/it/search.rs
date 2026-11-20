@@ -1,4 +1,5 @@
 use crate::support::{self, clock_on, folder_at, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::inline::LinkKind;
 use breccia_core::search::parse_query;
 use breccia_core::session::{IndexProgress, Notice, SearchView};
@@ -603,7 +604,7 @@ fn journal_day_answers_like_a_typed_date_and_writes_nothing() {
     );
     assert_eq!(snapshot(t.path()), before, "asking writes nothing");
     let e = cmd(&mut s, json!({"type": "journal.day", "key": "12 Mar"})).unwrap_err();
-    assert_eq!(e.code, "badDate");
+    assert_eq!(e.code, ErrorCode::BadDate);
 }
 
 #[test]

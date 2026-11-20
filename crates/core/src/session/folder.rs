@@ -6,8 +6,9 @@ use std::path::{Path, PathBuf};
 use crate::layout;
 use crate::workspace::{SaveError, Workspace};
 
+use super::error::{CommandError, ErrorCode};
 use super::search::IndexState;
-use super::view::{CommandError, FolderView, Notice, Output, PageView, RenameView};
+use super::view::{FolderView, Notice, Output, PageView, RenameView};
 use super::{DiskMark, Session};
 
 /// What [`Session::recover`] did.
@@ -28,7 +29,7 @@ impl Session {
         // A folder deleted (or a file) never opens as an empty phantom folder.
         if !path.is_dir() {
             return Err(CommandError::new(
-                "folderMissing",
+                ErrorCode::FolderMissing,
                 format_args!("This folder no longer exists: {}", path.display()),
             ));
         }
@@ -37,7 +38,7 @@ impl Session {
 
     pub(super) fn folder_create(&mut self, path: &Path) -> Result<Output, CommandError> {
         self.refuse_unsaved_switch()?;
-        let ws = Workspace::create(path).map_err(|e| CommandError::new("create", e))?;
+        let ws = Workspace::create(path).map_err(|e| CommandError::new(ErrorCode::Create, e))?;
         Ok(self.replace_folder(ws, Vec::new()))
     }
 
@@ -81,7 +82,7 @@ impl Session {
             return Ok(());
         }
         Err(CommandError::new(
-            "unsaved",
+            ErrorCode::Unsaved,
             format_args!(
                 "Breccia did not switch folders: changes to {} could not be saved. Resolve the notices first (Reload from disk or Keep mine), or copy the text.",
                 titles.join(", ")
@@ -97,7 +98,8 @@ impl Session {
     }
 
     fn open_folder(&mut self, path: &Path) -> Result<Output, CommandError> {
-        let (ws, warnings) = Workspace::open(path).map_err(|e| CommandError::new("open", e))?;
+        let (ws, warnings) =
+            Workspace::open(path).map_err(|e| CommandError::new(ErrorCode::Open, e))?;
         let notices = warnings.iter().map(Notice::load_warning).collect();
         Ok(self.replace_folder(ws, notices))
     }

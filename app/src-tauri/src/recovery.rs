@@ -5,11 +5,11 @@ use std::ffi::OsString;
 use std::sync::Mutex;
 
 use breccia_core::session::Notice;
-use breccia_core::{Command, CommandError, Recovery};
+use breccia_core::{Command, CommandError, ErrorCode, Recovery};
 use tauri::{AppHandle, Emitter, Manager};
 
 use crate::App;
-use crate::commands::{self, send_git};
+use crate::commands::send_git;
 use crate::events::SESSION_RECOVERED;
 use crate::git::GitMsg;
 use crate::guard::{Guarded, recovery_notice, with_session};
@@ -43,7 +43,7 @@ pub(crate) fn recovered_error(r: &Recovery) -> CommandError {
         Notice::Refused { message } => message,
         other => format!("{other:?}"),
     };
-    commands::error("recovered", message)
+    CommandError::new(ErrorCode::Recovered, message)
 }
 
 /// `BRECCIA_TEST_PANIC` (the e2e hook): a `search.query` for exactly this
@@ -244,7 +244,7 @@ mod tests {
     #[test]
     fn a_recovered_command_answers_with_the_notice_text() {
         let err = recovered_error(&Recovery::Kept);
-        assert_eq!(err.code, "recovered");
+        assert_eq!(err.code, ErrorCode::Recovered);
         assert_eq!(
             Notice::Refused {
                 message: err.message

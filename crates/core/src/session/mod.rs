@@ -11,6 +11,7 @@ mod block;
 mod board;
 mod command;
 mod dailies;
+mod error;
 mod folder;
 mod graph;
 mod history;
@@ -29,6 +30,7 @@ pub use crate::workspace::TagEntry;
 pub use board::{ArchivedView, BoardView, CardView, ColumnView};
 pub use command::{Clock, Command, CommandKind, Request, StateInput, StateRename};
 pub use dailies::DailyView;
+pub use error::{CommandError, ErrorCode};
 pub use folder::Recovery;
 pub use graph::{GraphNode, GraphView, NodePosition, layout_file_name};
 pub use search::{DateView, IndexProgress, SEARCH_LIMIT, SearchGroup, SearchHit, SearchView};
@@ -36,9 +38,9 @@ pub use table::PageRowView;
 use tree::LinkLists;
 pub use tree::{JournalDay, JournalMonth, JournalYear, TreeNode, TreeView};
 pub use view::{
-    BlockView, BoardSummary, CommandError, ConfigView, DirtyView, FeedView, Focus, FolderView,
-    GitSettingsView, Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView,
-    RenameView, SaveFailReason, StateUsage, StateView,
+    BlockView, BoardSummary, ConfigView, DirtyView, FeedView, Focus, FolderView, GitSettingsView,
+    Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView, RenameView,
+    SaveFailReason, StateUsage, StateView,
 };
 
 use crate::config::{Config, ConfigError, DailiesSettings, Expect, GitSettings};
@@ -87,7 +89,7 @@ pub struct Session {
 
 fn config_changed() -> CommandError {
     CommandError::new(
-        "configChanged",
+        ErrorCode::ConfigChanged,
         "breccia/config.toml changed on disk, so this change was not saved. Breccia has read the new file; make the change again.",
     )
 }
@@ -183,7 +185,7 @@ impl Session {
             Ok(Some(_)) => return Err(config_changed()),
             Err(message) => {
                 return Err(CommandError::new(
-                    "configChanged",
+                    ErrorCode::ConfigChanged,
                     format_args!(
                         "breccia/config.toml changed on disk and cannot be read ({message}), so this change was not saved. Fix the file, then try again."
                     ),
@@ -214,11 +216,11 @@ impl Session {
                 let _ = self.reload_config();
                 return Err(config_changed());
             }
-            Err(e) => return Err(CommandError::new("config", e)),
+            Err(e) => return Err(CommandError::new(ErrorCode::Config, e)),
         };
         self.config_version += 1;
         let ws = self.ws_mut()?;
-        ws.config = Config::parse(&written).map_err(|e| CommandError::new("config", e))?;
+        ws.config = Config::parse(&written).map_err(|e| CommandError::new(ErrorCode::Config, e))?;
         ws.config_text = Some(written);
         Ok(())
     }
@@ -300,7 +302,7 @@ impl Session {
         let typing = self.typing.take();
         if !req.command.ignores_generation() && req.generation != self.generation {
             return Err(CommandError::new(
-                "stale",
+                ErrorCode::Stale,
                 format_args!(
                     "request is for generation {}, the session is at {}",
                     req.generation, self.generation

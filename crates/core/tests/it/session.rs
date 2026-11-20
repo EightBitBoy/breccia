@@ -1,4 +1,5 @@
 use crate::support::{self, DAY, clock_on, folder_at, ids, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::Notice;
 use breccia_core::{BlockId, Clock, Command, CommandError, Output, Recovery, Request, Session};
 use serde_json::{Value, json};
@@ -334,7 +335,7 @@ fn stale_generation_is_refused() {
         .unwrap(),
         clock(0),
     );
-    assert_eq!(r.unwrap_err().code, "stale");
+    assert_eq!(r.unwrap_err().code, ErrorCode::Stale);
 }
 
 #[test]
@@ -469,7 +470,7 @@ fn a_task_joined_onto_a_task_is_refused_with_a_plain_notice() {
     let (t, mut s) = folder(&[("pages/P.md", original)]);
     let b = ids(&mut s, "p")[1];
     let err = cmd(&mut s, json!({"type":"block.merge","id":b}), 0).unwrap_err();
-    assert_eq!(err.code, "joinOntoProperties");
+    assert_eq!(err.code, ErrorCode::JoinOntoProperties);
     assert_eq!(
         err.message,
         "This block can't be joined onto the one above: its own lines would end up          after the created:: and other property lines there"
@@ -555,7 +556,7 @@ fn batch_is_all_or_nothing() {
     let [a, b]: [BlockId; 2] = ids(&mut s, "p").try_into().unwrap();
     // Listed out of order: the roots still run in document order.
     let err = cmd(&mut s, json!({"type":"blocks.indent","ids":[b, a]}), 0).unwrap_err();
-    assert_eq!(err.code, "noPreviousSibling");
+    assert_eq!(err.code, ErrorCode::NoPreviousSibling);
     assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
     let out = ok(&mut s, json!({"type":"page.get","key":"p"}), 0);
     assert!(out.page.unwrap().blocks.iter().all(|b| b.depth == 0));
@@ -622,7 +623,7 @@ fn set_state_on_selection_and_cycle() {
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "unknownState");
+    assert_eq!(err.code, ErrorCode::UnknownState);
 }
 
 #[test]
@@ -632,7 +633,7 @@ fn refusals_surface_as_error_codes() {
     let a = ids(&mut s, "p")[0];
     // Byte 4 is the start of `one`, inside the fence.
     let err = cmd(&mut s, json!({"type":"block.split","id":a,"at":4}), 0).unwrap_err();
-    assert_eq!(err.code, "insideFence");
+    assert_eq!(err.code, ErrorCode::InsideFence);
     assert!(!err.message.is_empty());
     assert_eq!(read(&t, "pages/P.md"), text);
     // A refused command leaves no undo step behind.
@@ -709,23 +710,23 @@ fn output_serializes_camel_case() {
 fn no_folder_and_unknown_page() {
     let mut s = Session::new();
     let err = cmd(&mut s, json!({"type":"page.get","key":"p"}), 0).unwrap_err();
-    assert_eq!(err.code, "noFolder");
+    assert_eq!(err.code, ErrorCode::NoFolder);
     let v = serde_json::to_value(ok(&mut s, json!({"type":"folder.status"}), 0)).unwrap();
     assert!(v["folder"]["path"].is_null());
     assert_eq!(v["folder"]["generation"], 0);
 
     let (_t, mut s) = folder(&[]);
     let err = cmd(&mut s, json!({"type":"page.get","key":"nope"}), 0).unwrap_err();
-    assert_eq!(err.code, "unknownPage");
+    assert_eq!(err.code, ErrorCode::UnknownPage);
     let err = cmd(&mut s, json!({"type":"page.open","name":"a]]b"}), 0).unwrap_err();
-    assert_eq!(err.code, "invalidName");
+    assert_eq!(err.code, ErrorCode::InvalidName);
     let err = cmd(
         &mut s,
         json!({"type":"block.setText","id":999,"text":"x"}),
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "unknownBlock");
+    assert_eq!(err.code, ErrorCode::UnknownBlock);
 }
 
 fn depths(s: &mut Session, key: &str) -> Vec<usize> {
@@ -807,7 +808,7 @@ fn failed_batch_step_rolls_back_earlier_steps() {
     );
     // b outdents, then c has no parent: b goes back too.
     let err = cmd(&mut s, json!({"type":"blocks.outdent","ids":[b, c]}), 5000).unwrap_err();
-    assert_eq!(err.code, "noParent");
+    assert_eq!(err.code, ErrorCode::NoParent);
     assert_eq!(read(&t, "pages/P.md"), "- a1\n\t- b\n- c\n");
     assert_eq!(depths(&mut s, "p"), [0, 1, 0]);
     // The batch pushed no undo step: undo goes back past the setText.
@@ -902,7 +903,7 @@ fn reopening_makes_old_requests_stale() {
         "command": {"type":"block.setText","id":a,"text":"y"}
     }))
     .unwrap();
-    assert_eq!(s.run(req, clock(0)).unwrap_err().code, "stale");
+    assert_eq!(s.run(req, clock(0)).unwrap_err().code, ErrorCode::Stale);
     assert_eq!(read(&other, "pages/P.md"), "- x\n");
 }
 
@@ -912,7 +913,7 @@ fn batch_with_a_block_of_another_page_is_refused() {
     let b = ids(&mut s, "p")[1];
     let q = ids(&mut s, "q")[0];
     let err = cmd(&mut s, json!({"type":"blocks.indent","ids":[b, q]}), 0).unwrap_err();
-    assert_eq!(err.code, "unknownBlock");
+    assert_eq!(err.code, ErrorCode::UnknownBlock);
     assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
     assert_eq!(read(&t, "pages/Q.md"), "- q\n");
     assert_eq!(depths(&mut s, "p"), [0, 0]);
@@ -1040,7 +1041,7 @@ fn block_delete_of_an_unknown_block_is_refused() {
     let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
     let b = ids(&mut s, "p")[1];
     let err = cmd(&mut s, json!({"type":"block.delete","id":999_999}), 0).unwrap_err();
-    assert_eq!(err.code, "unknownBlock");
+    assert_eq!(err.code, ErrorCode::UnknownBlock);
     assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n");
     // No undo step was recorded: undo changes nothing.
     ok(&mut s, json!({"type":"history.undo","page":"p"}), 10);
@@ -1172,7 +1173,7 @@ fn page_show_opens_an_existing_page_and_never_creates_one() {
     for _ in 0..2 {
         // A second refusal proves the first created nothing.
         let e = cmd(&mut s, json!({"type": "page.show", "key": "gone"}), 0).unwrap_err();
-        assert_eq!(e.code, "unknownPage");
+        assert_eq!(e.code, ErrorCode::UnknownPage);
     }
 }
 
@@ -1181,7 +1182,7 @@ fn refs_of_an_unknown_page_are_refused() {
     let (_t, mut s) = folder(&[("pages/P.md", "- [[Q]]\n")]);
     // A link target without a file is a page once opened; before that, it is unknown.
     let e = cmd(&mut s, json!({"type": "page.refs", "key": "gone"}), 0).unwrap_err();
-    assert_eq!(e.code, "unknownPage");
+    assert_eq!(e.code, ErrorCode::UnknownPage);
     ok(&mut s, json!({"type": "page.open", "name": "Q"}), 0);
     let refs = ok(&mut s, json!({"type": "page.refs", "key": "q"}), 0)
         .refs
@@ -1351,7 +1352,7 @@ fn states_set_refuses_bad_lists_and_changes_nothing() {
     ];
     for (states, renames) in bad {
         let err = states_set(&mut s, states.clone(), renames.clone(), v).unwrap_err();
-        assert_eq!(err.code, "invalidState", "{states:?} {renames}");
+        assert_eq!(err.code, ErrorCode::InvalidState, "{states:?} {renames}");
     }
     assert_eq!(read(&t, CONFIG), breccia_core::Config::default_toml());
     assert_eq!(read(&t, "journals/2026-10-01.md"), "- WAITING Call Ben\n");
@@ -1370,7 +1371,7 @@ fn a_hand_written_colour_does_not_block_state_changes() {
     let v = version(&mut s);
     states.push(json!({"keyword": "NEW", "color": "pink", "finished": false, "inCycle": false}));
     let err = states_set(&mut s, states, json!([]), v).unwrap_err();
-    assert_eq!(err.code, "invalidState");
+    assert_eq!(err.code, ErrorCode::InvalidState);
 }
 
 #[test]
@@ -1449,7 +1450,7 @@ fn config_set_git_and_board_write_and_answer() {
     ] {
         assert_eq!(
             cmd(&mut s, bad.clone(), 0).unwrap_err().code,
-            "invalidSetting",
+            ErrorCode::InvalidSetting,
             "{bad}"
         );
     }
@@ -1498,7 +1499,7 @@ fn a_change_made_from_a_stale_version_is_refused() {
         assert!(new > old);
         let (name, stale) = all_writes(old, states.clone()).remove(which);
         let err = cmd(&mut s, stale, 0).unwrap_err();
-        assert_eq!(err.code, "configChanged", "{name}");
+        assert_eq!(err.code, ErrorCode::ConfigChanged, "{name}");
         assert_eq!(read(&t, CONFIG), theirs, "{name}");
         let (_, fresh) = all_writes(new, states).remove(which);
         ok(&mut s, fresh, 0);
@@ -1516,7 +1517,7 @@ fn every_config_write_is_refused_after_an_outside_change() {
         put(t.path(), CONFIG, &theirs);
         let (name, write) = all_writes(v, states.clone()).remove(which);
         let err = cmd(&mut s, write, 0).unwrap_err();
-        assert_eq!(err.code, "configChanged", "{name}");
+        assert_eq!(err.code, ErrorCode::ConfigChanged, "{name}");
         assert_eq!(read(&t, CONFIG), theirs, "{name}");
         let v2 = version(&mut s);
         assert!(v2 > v, "{name}: config.get carries the raised version");
@@ -1598,7 +1599,7 @@ fn a_broken_config_keeps_the_old_one_and_refuses_writes() {
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "configChanged");
+    assert_eq!(err.code, ErrorCode::ConfigChanged);
     assert_eq!(read(&t, CONFIG), "states = 1");
 }
 
@@ -1620,7 +1621,7 @@ fn folder_open_is_refused_while_a_page_is_unsaved() {
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "unsaved");
+    assert_eq!(err.code, ErrorCode::Unsaved);
     assert!(err.message.contains('P'), "{}", err.message);
     let status = ok(&mut s, json!({"type": "folder.status"}), 0);
     assert_eq!(status.folder.unwrap().path.as_deref(), Some(t.path()));
@@ -1628,7 +1629,7 @@ fn folder_open_is_refused_while_a_page_is_unsaved() {
     assert_eq!(dirty.dirty.unwrap().len(), 1);
     let fresh = other.path().join("new-notes");
     let err = cmd(&mut s, json!({"type": "folder.create", "path": fresh}), 0).unwrap_err();
-    assert_eq!(err.code, "unsaved");
+    assert_eq!(err.code, ErrorCode::Unsaved);
     assert!(!fresh.exists(), "nothing was created");
     ok(&mut s, json!({"type": "page.reload", "key": "p"}), 0);
     ok(
@@ -1654,7 +1655,7 @@ fn a_config_write_from_another_folders_version_is_refused() {
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "configChanged");
+    assert_eq!(err.code, ErrorCode::ConfigChanged);
     assert!(!b.path().join(CONFIG).exists());
 }
 
@@ -1666,7 +1667,7 @@ fn config_limits_are_checked_before_the_folder() {
         json!({"type": "config.setBoard", "archiveAfterDays": 0, "version": 0}),
     ] {
         let err = cmd(&mut s, bad.clone(), 0).unwrap_err();
-        assert_eq!(err.code, "invalidSetting", "{bad}");
+        assert_eq!(err.code, ErrorCode::InvalidSetting, "{bad}");
     }
 }
 
@@ -1675,7 +1676,7 @@ fn config_writes_without_a_folder_say_no_folder() {
     let mut s = Session::new();
     for (name, write) in all_writes(5, vec![]) {
         let err = cmd(&mut s, write, 0).unwrap_err();
-        assert_eq!(err.code, "noFolder", "{name}");
+        assert_eq!(err.code, ErrorCode::NoFolder, "{name}");
     }
 }
 
@@ -1686,7 +1687,7 @@ fn folder_open_refuses_a_folder_that_does_not_exist_or_is_a_file() {
     let gone = t.path().join("gone");
     let mut s = Session::new();
     let err = cmd(&mut s, json!({"type": "folder.open", "path": gone}), 0).unwrap_err();
-    assert_eq!(err.code, "folderMissing");
+    assert_eq!(err.code, ErrorCode::FolderMissing);
     assert!(err.message.contains("no longer exists"), "{}", err.message);
     assert!(err.message.contains("gone"), "{}", err.message);
     assert!(!gone.exists(), "nothing was created");
@@ -1699,13 +1700,13 @@ fn folder_open_refuses_a_folder_that_does_not_exist_or_is_a_file() {
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "folderMissing");
+    assert_eq!(err.code, ErrorCode::FolderMissing);
 
     // With a folder open: it stays open.
     let (open, mut s) = folder(&[("pages/P.md", "- a\n")]);
     let generation = s.generation();
     let err = cmd(&mut s, json!({"type": "folder.open", "path": gone}), 0).unwrap_err();
-    assert_eq!(err.code, "folderMissing");
+    assert_eq!(err.code, ErrorCode::FolderMissing);
     assert_eq!(s.generation(), generation);
     let status = ok(&mut s, json!({"type": "folder.status"}), 0);
     assert_eq!(status.folder.unwrap().path.as_deref(), Some(open.path()));
@@ -2006,7 +2007,7 @@ fn a_link_click_opens_the_heading_page() {
     );
     assert_eq!(out.page.unwrap().key, "page");
     let e = cmd(&mut s, json!({"type": "page.get", "key": "page#setup"}), 0).unwrap_err();
-    assert_eq!(e.code, "unknownPage");
+    assert_eq!(e.code, ErrorCode::UnknownPage);
     // Through an alias.
     let out = ok(
         &mut s,
@@ -2141,7 +2142,7 @@ fn the_rename_question_counts_rewrites() {
         0,
     )
     .unwrap_err();
-    assert_eq!(e.code, "unknownPage");
+    assert_eq!(e.code, ErrorCode::UnknownPage);
 }
 
 // A keyword typed by hand gets the state's lines when the editor closes (`block.settle`).
@@ -2277,7 +2278,7 @@ fn settle_changes_nothing_for_the_same_state_or_a_state_that_is_gone() {
         300,
     )
     .unwrap_err();
-    assert_eq!(e.code, "unknownBlock");
+    assert_eq!(e.code, ErrorCode::UnknownBlock);
 }
 
 #[test]
@@ -2379,7 +2380,7 @@ fn cycling_with_no_state_in_the_cycle_is_refused() {
         json!({"type":"block.stepState","id":a}),
     ] {
         let err = cmd(&mut s, c, 0).unwrap_err();
-        assert_eq!(err.code, "noCycle");
+        assert_eq!(err.code, ErrorCode::NoCycle);
         assert_eq!(err.message, "No state is in the cycle (Settings → States)");
     }
     assert_eq!(read(&t, "pages/P.md"), "- TODO a\n- b\n");
@@ -2401,13 +2402,13 @@ fn page_show_finds_a_page_opened_without_a_file() {
     assert_eq!(again.page.unwrap().key, nowhere);
     ok(&mut s, json!({"type": "page.delete", "key": anna}), 0);
     let err = cmd(&mut s, json!({"type": "page.show", "key": anna}), 0).unwrap_err();
-    assert_eq!(err.code, "unknownPage");
+    assert_eq!(err.code, ErrorCode::UnknownPage);
 }
 
 /// `a`, typed to `ab` at ms 0, then `step` at ms 100, then `abc` at ms 500,
 /// then one undo: the page text the undo leaves, and the error code `step`
 /// was answered with (none when it succeeded).
-fn keystrokes_around(step: Value) -> (String, Option<String>) {
+fn keystrokes_around(step: Value) -> (String, Option<ErrorCode>) {
     keystrokes_around_in(&[("pages/P.md", "- a\n")], step).1
 }
 
@@ -2416,7 +2417,7 @@ fn keystrokes_around(step: Value) -> (String, Option<String>) {
 fn keystrokes_around_in(
     files: &[(&str, &str)],
     step: Value,
-) -> (TempDir, (String, Option<String>)) {
+) -> (TempDir, (String, Option<ErrorCode>)) {
     let (t, mut s) = folder(files);
     let id = ids(&mut s, "p")[0];
     ok(
@@ -2424,7 +2425,7 @@ fn keystrokes_around_in(
         json!({"type": "block.setText", "id": id, "text": "ab"}),
         0,
     );
-    let answer = cmd(&mut s, step, 100).err().map(|e| e.code.to_string());
+    let answer = cmd(&mut s, step, 100).err().map(|e| e.code);
     ok(
         &mut s,
         json!({"type": "block.setText", "id": id, "text": "abc"}),
@@ -2471,7 +2472,7 @@ fn a_query_between_two_keystrokes_keeps_one_undo_step() {
             failures.push(format!("{q}: undo left {text:?}"));
         }
         if let Some(code) = answer {
-            failures.push(format!("{q}: answered with the error {code}"));
+            failures.push(format!("{q}: answered with the error {code:?}"));
         }
     }
     assert!(failures.is_empty(), "{}", failures.join("\n"));
@@ -2724,7 +2725,7 @@ fn a_settings_write_elsewhere_keeps_the_bad_value() {
 #[test]
 fn a_refused_command_between_two_edits_ends_the_typing_run() {
     // Pinned behaviour: the edits before and after a refused command are two undo steps, not one.
-    for refused in ["unknownState", "unknownBlock"] {
+    for refused in [ErrorCode::UnknownState, ErrorCode::UnknownBlock] {
         let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
         let [a, _]: [BlockId; 2] = ids(&mut s, "p").try_into().unwrap();
         ok(
@@ -2733,7 +2734,7 @@ fn a_refused_command_between_two_edits_ends_the_typing_run() {
             0,
         );
         let bad = match refused {
-            "unknownState" => json!({"type":"blocks.setState","ids":[a],"keyword":"NOPE"}),
+            ErrorCode::UnknownState => json!({"type":"blocks.setState","ids":[a],"keyword":"NOPE"}),
             _ => json!({"type":"block.setText","id":99999,"text":"zzz"}),
         };
         assert_eq!(cmd(&mut s, bad, 300).unwrap_err().code, refused);
@@ -2744,9 +2745,9 @@ fn a_refused_command_between_two_edits_ends_the_typing_run() {
         );
         let undo = json!({"type":"history.undo","page":"p"});
         ok(&mut s, undo.clone(), 700);
-        assert_eq!(read(&t, "pages/P.md"), "- a1\n- b\n", "{refused}");
+        assert_eq!(read(&t, "pages/P.md"), "- a1\n- b\n", "{refused:?}");
         ok(&mut s, undo, 800);
-        assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n", "{refused}");
+        assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n", "{refused:?}");
     }
 }
 
@@ -2813,14 +2814,14 @@ reset = \"04:00\"
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "invalidSetting");
+    assert_eq!(err.code, ErrorCode::InvalidSetting);
     let err = cmd(
         &mut s,
         json!({"type": "config.setDailies", "reset": "05:00", "version": v}),
         0,
     )
     .unwrap_err();
-    assert_eq!(err.code, "configChanged");
+    assert_eq!(err.code, ErrorCode::ConfigChanged);
     assert_eq!(read(&t, CONFIG), before);
 }
 
@@ -2949,7 +2950,7 @@ fn an_unreadable_dailies_file_keeps_the_list_and_warns_once() {
     );
     assert!(again.notices.is_empty());
     let e = cmd(&mut s, json!({"type": "dailies.add", "text": "x"}), 0).unwrap_err();
-    assert_eq!(e.code, "dailiesUnreadable");
+    assert_eq!(e.code, ErrorCode::DailiesUnreadable);
     // Readable again: the list follows.
     put(t.path(), DAILIES, "- z\n");
     let back = ok(

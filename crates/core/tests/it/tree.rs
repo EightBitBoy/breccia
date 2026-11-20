@@ -1,4 +1,5 @@
 use crate::support::{self, DAY, clock_on, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::{JournalDay, TagEntry, TreeNode};
 use breccia_core::{Clock, Command, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -17,7 +18,7 @@ fn ok(s: &mut Session, json: Value) -> Output {
     support::ok(s, json, clock(0))
 }
 
-fn code(s: &mut Session, json: Value) -> String {
+fn code(s: &mut Session, json: Value) -> ErrorCode {
     cmd(s, json).unwrap_err().code
 }
 
@@ -199,9 +200,9 @@ fn create_page_refusals() {
     let (t, mut s) = support::folder_at(&[("pages/people/Anna.md", "- x\n")], clock(0));
     let c =
         |name: &str, folder: &str| json!({"type": "page.create", "name": name, "folder": folder});
-    assert_eq!(code(&mut s, c("anna", "")), "pageExists");
-    assert_eq!(code(&mut s, c("2026-10-29", "")), "invalidName");
-    assert_eq!(code(&mut s, c("New", "Nope")), "unknownFolder");
+    assert_eq!(code(&mut s, c("anna", "")), ErrorCode::PageExists);
+    assert_eq!(code(&mut s, c("2026-10-29", "")), ErrorCode::InvalidName);
+    assert_eq!(code(&mut s, c("New", "Nope")), ErrorCode::UnknownFolder);
     assert!(!t.path().join("pages/Nope").exists());
     assert!(!t.path().join("pages/New.md").exists());
     assert!(!t.path().join("journals").exists());
@@ -228,11 +229,11 @@ fn create_folder() {
             &mut s,
             json!({"type": "dir.create", "path": "projects/2027"})
         ),
-        "folderExists"
+        ErrorCode::FolderExists
     );
     assert_eq!(
         code(&mut s, json!({"type": "dir.create", "path": "a:b"})),
-        "invalidName"
+        ErrorCode::InvalidName
     );
     // A new folder under an existing one keeps its spelling.
     ok(
@@ -481,7 +482,7 @@ fn a_blank_page_name_makes_no_page_and_no_file() {
             &mut s,
             json!({"type": "page.create", "name": name, "folder": ""}),
         );
-        assert_eq!(c, "invalidName", "{name:?}");
+        assert_eq!(c, ErrorCode::InvalidName, "{name:?}");
     }
     // Nothing was made: no pages folder entry at all.
     assert_eq!(

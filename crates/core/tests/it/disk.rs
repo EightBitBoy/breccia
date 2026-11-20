@@ -2,6 +2,7 @@
 //! and `session.dirty`.
 
 use crate::support::{self, DAY, clock_on, folder_at, put, run};
+use breccia_core::ErrorCode;
 use breccia_core::session::{Notice, TreeNode};
 use breccia_core::{BlockId, Clock, CommandError, Output, Session};
 use serde_json::{Value, json};
@@ -301,7 +302,7 @@ fn typing_into_a_block_deleted_on_disk_keeps_the_text() {
         &mut s,
         json!({"type": "block.setText", "id": b, "text": "again"}),
     );
-    assert_eq!(e.unwrap_err().code, "unknownBlock");
+    assert_eq!(e.unwrap_err().code, ErrorCode::UnknownBlock);
 }
 
 #[test]
@@ -400,7 +401,7 @@ fn new_and_removed_files_update_the_tree() {
         cmd(&mut s, json!({"type": "page.get", "key": "new"}))
             .unwrap_err()
             .code,
-        "unknownPage"
+        ErrorCode::UnknownPage
     );
 
     fs::create_dir(t.path().join("pages/Dir")).unwrap();
@@ -597,7 +598,7 @@ fn keep_mine_never_replaces_another_case_of_the_name() {
         cmd(&mut s, json!({"type": "page.reload", "key": "q"}))
             .unwrap_err()
             .code,
-        "reload"
+        ErrorCode::Reload
     );
     assert_eq!(texts(&page(&mut s, "q")), ["mine"]);
 }
@@ -708,7 +709,7 @@ fn stale_files_changed_is_refused() {
         .unwrap(),
         clock(0),
     );
-    assert_eq!(r.unwrap_err().code, "stale");
+    assert_eq!(r.unwrap_err().code, ErrorCode::Stale);
 }
 
 #[test]

@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 
 use breccia_core::git::{Discovered, Git, GitView, discover};
 use breccia_core::session::Notice;
-use breccia_core::{CommandError, Output, Request};
+use breccia_core::{CommandError, ErrorCode, Output, Request};
 use serde::Deserialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -106,12 +106,12 @@ pub(crate) fn parse_request(v: serde_json::Value) -> Result<Incoming, CommandErr
     );
     if is_shell {
         let command = serde_json::from_value(v["command"].clone())
-            .map_err(|e| error("badRequest", e.to_string()))?;
+            .map_err(|e| CommandError::new(ErrorCode::BadRequest, e))?;
         Ok(Incoming::Shell(command))
     } else {
         serde_json::from_value(v)
             .map(Incoming::Core)
-            .map_err(|e| error("badRequest", e.to_string()))
+            .map_err(|e| CommandError::new(ErrorCode::BadRequest, e))
     }
 }
 
@@ -138,10 +138,7 @@ pub(crate) fn git_log_answer(
     git: &Git,
     root: Option<&Path>,
 ) -> Result<Output, CommandError> {
-    let refused = |message: String| CommandError {
-        code: "git".into(),
-        message,
-    };
+    let refused = |message: String| CommandError::new(ErrorCode::Git, message);
     let Some(root) = root else {
         return Err(refused("No notes folder is open.".into()));
     };
@@ -198,13 +195,6 @@ pub(crate) fn trace_line(kind: &str, name: &str, wait: Duration, run: Duration) 
     )
 }
 
-pub(crate) fn error(code: &str, message: String) -> CommandError {
-    CommandError {
-        code: code.into(),
-        message,
-    }
-}
-
 /// Runs one named command. The frontend sends everything through here.
 /// It runs off the main thread, so a slow save never freezes the window;
 /// the client sends one command at a time and the session is behind a lock.
@@ -212,7 +202,7 @@ pub(crate) fn error(code: &str, message: String) -> CommandError {
 pub async fn run(app: AppHandle, request: serde_json::Value) -> Result<Output, CommandError> {
     tauri::async_runtime::spawn_blocking(move || run_blocking(&app, request))
         .await
-        .map_err(|e| error("internal", e.to_string()))?
+        .map_err(|e| CommandError::new(ErrorCode::Internal, e))?
 }
 
 fn run_blocking(app: &AppHandle, request: serde_json::Value) -> Result<Output, CommandError> {
@@ -519,9 +509,9 @@ mod tests {
         std::fs::create_dir_all(&notes).unwrap();
         let log = |root: Option<&Path>| git_log_answer(0, 200, &g, root);
         // No folder, and a folder outside Git: refused with a message.
-        assert_eq!(log(None).unwrap_err().code, "git");
+        assert_eq!(log(None).unwrap_err().code, ErrorCode::Git);
         let not_repo = log(Some(&notes)).unwrap_err();
-        assert_eq!(not_repo.code, "git");
+        assert_eq!(not_repo.code, ErrorCode::Git);
         assert!(
             not_repo.message.contains("not in a Git repository"),
             "{}",
@@ -593,10 +583,10 @@ mod tests {
     #[test]
     fn parse_request_refuses_an_unknown_command() {
         let unknown = parse_request(request(serde_json::json!({"type": "nope"}))).unwrap_err();
-        assert_eq!(unknown.code, "badRequest");
+        assert_eq!(unknown.code, ErrorCode::BadRequest);
         let no_limit =
             parse_request(request(serde_json::json!({"type": "git.log", "skip": 0}))).unwrap_err();
-        assert_eq!(no_limit.code, "badRequest");
+        assert_eq!(no_limit.code, ErrorCode::BadRequest);
         assert!(no_limit.message.contains("limit"), "{}", no_limit.message);
     }
 }

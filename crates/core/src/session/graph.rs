@@ -14,7 +14,8 @@ use crate::search::folder_hash;
 use crate::workspace::Workspace;
 
 use super::Session;
-use super::view::{CommandError, Output, PageViewKind, title_of};
+use super::error::{CommandError, ErrorCode};
+use super::view::{Output, PageViewKind, title_of};
 
 /// A dot of the network view.
 #[derive(Clone, Debug, Serialize)]
@@ -73,7 +74,7 @@ pub(super) fn save_layout(file: &Path, positions: &[NodePosition]) -> Result<(),
         .map(|p| (p.key.as_str(), [p.x, p.y]))
         .collect();
     let text = serde_json::json!({"version": 1, "positions": map}).to_string();
-    crate::fsio::write_atomic(file, &text).map_err(|e| CommandError::new("layout", e))
+    crate::fsio::write_atomic(file, &text).map_err(|e| CommandError::new(ErrorCode::Layout, e))
 }
 
 impl GraphView {

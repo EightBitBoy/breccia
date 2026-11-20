@@ -7,8 +7,9 @@ use crate::error::EditError;
 use crate::outline::{BlockId, Document};
 
 use super::batch;
+use super::error::{CommandError, ErrorCode};
 use super::history::Typing;
-use super::view::{CommandError, Focus, Notice, Output, PageView};
+use super::view::{Focus, Notice, Output, PageView};
 use super::{DiskMark, Session, TypedStep};
 
 impl Session {
@@ -319,7 +320,10 @@ impl Session {
     fn page_of_selection(&self, ids: &[BlockId]) -> Result<String, CommandError> {
         match ids.first() {
             Some(&id) => self.page_of(id),
-            None => Err(CommandError::new("unknownBlock", "no blocks selected")),
+            None => Err(CommandError::new(
+                ErrorCode::UnknownBlock,
+                "no blocks selected",
+            )),
         }
     }
 
