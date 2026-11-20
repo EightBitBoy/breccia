@@ -32,3 +32,10 @@ Ruling: carry minors 3 (Cargo.toml comment on why no-serde-warnings is on) and 5
 Task 3: minor (deferred): ts(optional = nullable) on bool/Vec fields reads as "null accepted" though serde rejects null (output correct).
 Task 3: minor (deferred): report's generated.ts counts off by a little (630 lines, 56 types).
 Task 3: complete (commits a1b3f18..b8c4076, review clean)
+Task 4: dispatched (sonnet), BASE d7c6e08
+Task 4: implementer DONE, commits 6ee608b, b790a11 (controller pushed them; e2e 218; Vitest 1235); review dispatched (sonnet)
+Task 4: review — spec ✅ (all 72 rows checked against old kindOf/countsInFlight by script), quality approved; 3 minor.
+Ruling: carry minor "commands.ts / commands.test.ts end with a stray `},]` / `},} as const`, git rows out of order" into Task 5 — cheap formatting — cost if wrong: none.
+Task 4: minor (deferred): commands.test.ts "row for every command" test compares lengths only, redundant with test 1.
+Task 4: minor (deferred): holdsEvents comment lost the list of commands that do not hold events (the false rows are the record).
+Task 4: complete (commits d7c6e08..b790a11, review clean)
