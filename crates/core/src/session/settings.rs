@@ -7,7 +7,7 @@ use crate::config::{Board, BoardSettings, Config, DailiesSettings, GitSettings, 
 
 use super::command::{StateInput, StateRename};
 use super::error::{CommandError, ErrorCode};
-use super::view::{ConfigView, Notice, Output, PageView};
+use super::view::{Answer, ConfigView, Notice, Output, PageView, UsageView};
 use super::{DiskMark, Session};
 
 impl Session {
@@ -80,11 +80,10 @@ impl Session {
 
     pub(super) fn states_usage(&self) -> Result<Output, CommandError> {
         let ws = self.ws()?;
-        Ok(Output {
-            usage: Some(ws.state_usage()),
-            usage_skipped: Some(ws.skipped_count()),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Usage(UsageView {
+            states: ws.state_usage(),
+            skipped: ws.skipped_count(),
+        })))
     }
 
     /// `config.setGit`: the limits are checked first, before the guard.

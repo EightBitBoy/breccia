@@ -1,4 +1,5 @@
 // Switching the notes folder: nothing typed may be lost, so the switch is refused while anything is unsaved.
+import { answerOf } from './answer'
 import { flushBeforeClose, type Client } from './api'
 import type { RecentFolder } from './types'
 
@@ -49,7 +50,7 @@ export async function switchCheck(
       return COULD_NOT
     }
     const h = held()
-    return switchPrompt(out.dirty ?? [], h.unsent, h.unresolved)
+    return switchPrompt(answerOf(out, 'dirty') ?? [], h.unsent, h.unresolved)
   } catch (e) {
     console.error('session.dirty failed', e)
     return COULD_NOT

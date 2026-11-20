@@ -583,9 +583,7 @@ fn journal_day_answers_like_a_typed_date_and_writes_nothing() {
     ]);
     let before = snapshot(t.path());
     let day = |s: &mut Session, key: &str| {
-        let d = ok(s, json!({"type": "journal.day", "key": key}))
-            .day
-            .unwrap();
+        let d = answer!(ok(s, json!({"type": "journal.day", "key": key})), Day);
         (d.key, d.title, d.in_feed)
     };
     assert_eq!(

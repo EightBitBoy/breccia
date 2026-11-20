@@ -1,5 +1,6 @@
 // The state of the Git history view: the loaded commits, "Show more", and reloads while it is open.
 import { errorMessage } from '../api'
+import { answerOf } from './answer'
 import { PAGE_SIZE } from './gitLog'
 import type { LogEntry, Output } from './types'
 
@@ -59,7 +60,7 @@ export class GitLog {
     const skip = this.entries.length
     this.loadingMore = true
     try {
-      const page = (await this.env.log(skip, PAGE_SIZE)).gitLog
+      const page = answerOf(await this.env.log(skip, PAGE_SIZE), 'gitLog')
       if (epoch !== this.#epoch || !page || this.entries === null || page.skip !== this.entries.length) return
       const have = new Set(this.entries.map((e) => e.hash))
       this.entries = [...this.entries, ...page.entries.filter((e) => !have.has(e.hash))]
@@ -78,7 +79,7 @@ export class GitLog {
     this.loadingMore = false
     this.#reloading++
     try {
-      const page = (await this.env.log(0, limit)).gitLog
+      const page = answerOf(await this.env.log(0, limit), 'gitLog')
       if (epoch !== this.#epoch || !page) return
       this.entries = page.entries
       this.more = page.more

@@ -54,7 +54,7 @@ function renameSetup(reach: number) {
   const flows = new PageFlows({
     run: async (cmd: Command) => {
       ran.push(cmd)
-      return cmd.type === 'page.renameReach' ? { ...out(), reach } : out()
+      return cmd.type === 'page.renameReach' ? { ...out(), answer: { kind: 'reach', value: reach } } : out()
     },
     tree: () => null,
     shown: () => null,

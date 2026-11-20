@@ -38,9 +38,9 @@ pub use table::PageRowView;
 use tree::LinkLists;
 pub use tree::{JournalDay, JournalMonth, JournalYear, TreeNode, TreeView};
 pub use view::{
-    BlockView, BoardSummary, ConfigView, DirtyView, FeedView, Focus, FolderView, GitSettingsView,
-    Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView, RenameView,
-    SaveFailReason, StateUsage, StateView,
+    Answer, BlockView, BoardSummary, ConfigView, DirtyView, FeedView, Focus, FolderView,
+    GitSettingsView, Notice, Output, PageView, PageViewKind, RefGroup, RefView, RefsView,
+    RenameView, SaveFailReason, StateUsage, StateView, UsageView,
 };
 
 use crate::config::{Config, ConfigError, DailiesSettings, Expect, GitSettings};
@@ -314,10 +314,7 @@ impl Session {
         match req.command {
             Command::FolderOpen { path } => self.folder_open(&path),
             Command::FolderCreate { path } => self.folder_create(&path),
-            Command::FolderStatus => Ok(Output {
-                folder: Some(self.folder_view()),
-                ..Output::default()
-            }),
+            Command::FolderStatus => Ok(Output::answering(Answer::Folder(self.folder_view()))),
             Command::FolderTree => Ok(Output {
                 tree: Some(TreeView::of(self.ws()?)),
                 ..Output::default()
@@ -387,10 +384,7 @@ impl Session {
             Command::ConfigSetDailies { reset, version } => {
                 self.config_set_dailies(DailiesSettings { reset }, version)
             }
-            Command::PagesList => Ok(Output {
-                names: Some(self.ws()?.page_names()),
-                ..Output::default()
-            }),
+            Command::PagesList => Ok(Output::answering(Answer::Names(self.ws()?.page_names()))),
             Command::DailiesList => self.dailies_list(),
             Command::DailiesAdd { text } => {
                 self.dailies_change(None, |d, ids| d.add_daily(&text, ids).map(|_| ()))
@@ -440,15 +434,12 @@ impl Session {
             Command::FilesChanged { paths } => self.files_changed(&paths),
             Command::SearchQuery { text } => self.run_query(&text, clock.today),
             Command::JournalDay { key } => self.journal_day(&key, clock.today),
-            Command::SessionDirty => Ok(Output {
-                dirty: Some(
-                    self.ws
-                        .as_ref()
-                        .map(|ws| ws.unsaved().into_iter().map(DirtyView::of).collect())
-                        .unwrap_or_default(),
-                ),
-                ..Output::default()
-            }),
+            Command::SessionDirty => Ok(Output::answering(Answer::Dirty(
+                self.ws
+                    .as_ref()
+                    .map(|ws| ws.unsaved().into_iter().map(DirtyView::of).collect())
+                    .unwrap_or_default(),
+            ))),
         }
     }
 

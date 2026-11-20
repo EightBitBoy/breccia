@@ -579,7 +579,7 @@ fn delete_page_removes_file_and_keeps_links() {
     assert_eq!(out.removed, ["a"]);
     assert!(out.tree.is_some());
     assert_eq!(read(&t, "pages/B.md"), "- [[a]]\n");
-    let names = ok(&mut s, json!({"type": "pages.list"})).names.unwrap();
+    let names = answer!(ok(&mut s, json!({"type": "pages.list"})), Names);
     let a = names.iter().find(|n| n.key == "a").unwrap();
     assert!(!a.exists);
     assert_eq!(

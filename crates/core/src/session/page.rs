@@ -4,7 +4,7 @@
 use crate::workspace::ReloadError;
 
 use super::error::{CommandError, ErrorCode};
-use super::view::{Notice, Output, PageView, RefsView};
+use super::view::{Answer, Notice, Output, PageView, RefsView};
 use super::{DiskMark, Session};
 
 impl Session {
@@ -150,10 +150,7 @@ impl Session {
         let ws = self.ws()?;
         ws.page(key)
             .ok_or_else(|| CommandError::unknown_page(key))?;
-        Ok(Output {
-            reach: Some(ws.rename_reach(key, name)),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Reach(ws.rename_reach(key, name))))
     }
 
     pub(super) fn page_overwrite(&mut self, key: &str) -> Result<Output, CommandError> {

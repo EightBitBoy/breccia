@@ -73,3 +73,14 @@ pub fn ids(s: &mut Session, key: &str) -> Vec<BlockId> {
     let out = ok(s, json!({"type": "page.get", "key": key}), clock_on(DAY, 0));
     out.page.unwrap().blocks.iter().map(|b| b.id).collect()
 }
+
+/// The answer of a command's output, which must be the variant `$v`: `answer!(out, Folder)` is the
+/// `FolderView`. Any other answer, or none, panics with what came.
+macro_rules! answer {
+    ($out:expr, $v:ident) => {
+        match $out.answer {
+            Some(::breccia_core::Answer::$v(x)) => x,
+            other => panic!("expected {} answer, got {other:?}", stringify!($v)),
+        }
+    };
+}

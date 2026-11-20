@@ -685,7 +685,8 @@ fn output_serializes_camel_case() {
     assert!(page["blocks"][0]["id"].is_u64());
 
     let v = serde_json::to_value(ok(&mut s, json!({"type":"folder.status"}), 0)).unwrap();
-    assert_eq!(v["folder"]["generation"], 1);
+    assert_eq!(v["answer"]["kind"], "folder");
+    assert_eq!(v["answer"]["value"]["generation"], 1);
     assert!(v["page"].is_null() && v["config"].is_null());
 
     let v = serde_json::to_value(ok(&mut s, json!({"type":"config.get"}), 0)).unwrap();
@@ -712,8 +713,8 @@ fn no_folder_and_unknown_page() {
     let err = cmd(&mut s, json!({"type":"page.get","key":"p"}), 0).unwrap_err();
     assert_eq!(err.code, ErrorCode::NoFolder);
     let v = serde_json::to_value(ok(&mut s, json!({"type":"folder.status"}), 0)).unwrap();
-    assert!(v["folder"]["path"].is_null());
-    assert_eq!(v["folder"]["generation"], 0);
+    assert!(v["answer"]["value"]["path"].is_null());
+    assert_eq!(v["answer"]["value"]["generation"], 0);
 
     let (_t, mut s) = folder(&[]);
     let err = cmd(&mut s, json!({"type":"page.get","key":"nope"}), 0).unwrap_err();
@@ -1378,9 +1379,10 @@ fn a_hand_written_colour_does_not_block_state_changes() {
 fn states_usage_answers_counts() {
     let (_t, mut s) = folder(&[("journals/2026-10-01.md", "- WAITING Call Ben\n")]);
     let out = ok(&mut s, json!({"type": "states.usage"}), 0);
-    let usage = serde_json::to_value(out.usage.unwrap()).unwrap();
+    let usage = answer!(out, Usage);
+    let states = serde_json::to_value(&usage.states).unwrap();
     assert_eq!(
-        usage,
+        states,
         json!([
             {"keyword": "TODO", "blocks": 0, "pages": 0},
             {"keyword": "DOING", "blocks": 0, "pages": 0},
@@ -1388,7 +1390,7 @@ fn states_usage_answers_counts() {
             {"keyword": "DONE", "blocks": 0, "pages": 0},
         ])
     );
-    assert_eq!(out.usage_skipped, Some(0));
+    assert_eq!(usage.skipped, 0);
 }
 
 #[test]
@@ -1399,7 +1401,7 @@ fn states_usage_counts_the_pages_that_did_not_load() {
     let mut s = Session::new();
     ok(&mut s, json!({"type": "folder.open", "path": t.path()}), 0);
     let out = ok(&mut s, json!({"type": "states.usage"}), 0);
-    assert_eq!(out.usage_skipped, Some(1));
+    assert_eq!(answer!(out, Usage).skipped, 1);
 }
 
 #[test]
@@ -1624,9 +1626,9 @@ fn folder_open_is_refused_while_a_page_is_unsaved() {
     assert_eq!(err.code, ErrorCode::Unsaved);
     assert!(err.message.contains('P'), "{}", err.message);
     let status = ok(&mut s, json!({"type": "folder.status"}), 0);
-    assert_eq!(status.folder.unwrap().path.as_deref(), Some(t.path()));
+    assert_eq!(answer!(status, Folder).path.as_deref(), Some(t.path()));
     let dirty = ok(&mut s, json!({"type": "session.dirty"}), 0);
-    assert_eq!(dirty.dirty.unwrap().len(), 1);
+    assert_eq!(answer!(dirty, Dirty).len(), 1);
     let fresh = other.path().join("new-notes");
     let err = cmd(&mut s, json!({"type": "folder.create", "path": fresh}), 0).unwrap_err();
     assert_eq!(err.code, ErrorCode::Unsaved);
@@ -1692,7 +1694,7 @@ fn folder_open_refuses_a_folder_that_does_not_exist_or_is_a_file() {
     assert!(err.message.contains("gone"), "{}", err.message);
     assert!(!gone.exists(), "nothing was created");
     let status = ok(&mut s, json!({"type": "folder.status"}), 0);
-    assert_eq!(status.folder.unwrap().path, None);
+    assert_eq!(answer!(status, Folder).path, None);
     put(t.path(), "a-file.md", "- x\n");
     let err = cmd(
         &mut s,
@@ -1709,7 +1711,7 @@ fn folder_open_refuses_a_folder_that_does_not_exist_or_is_a_file() {
     assert_eq!(err.code, ErrorCode::FolderMissing);
     assert_eq!(s.generation(), generation);
     let status = ok(&mut s, json!({"type": "folder.status"}), 0);
-    assert_eq!(status.folder.unwrap().path.as_deref(), Some(open.path()));
+    assert_eq!(answer!(status, Folder).path.as_deref(), Some(open.path()));
 
     // folder.create still makes a new folder.
     let fresh = t.path().join("fresh");
@@ -2116,19 +2118,19 @@ fn the_rename_question_counts_rewrites() {
         .unwrap();
     assert_eq!(refs.groups.len(), 4);
     let reach = |s: &mut Session, name: &str| {
-        ok(
+        let out = ok(
             s,
             json!({"type": "page.renameReach", "key": "kubernetes", "name": name}),
             0,
-        )
-        .reach
+        );
+        answer!(out, Reach)
     };
-    assert_eq!(reach(&mut s, "Cluster"), Some(3));
+    assert_eq!(reach(&mut s, "Cluster"), 3);
     // Counted from the real new name: D's link is already spelled that way.
-    assert_eq!(reach(&mut s, "kubernetes"), Some(2));
-    assert_eq!(reach(&mut s, "Kubernetes"), Some(0));
+    assert_eq!(reach(&mut s, "kubernetes"), 2);
+    assert_eq!(reach(&mut s, "Kubernetes"), 0);
     // A name links cannot hold changes nothing.
-    assert_eq!(reach(&mut s, "a]b"), Some(0));
+    assert_eq!(reach(&mut s, "a]b"), 0);
     // The query writes nothing and is no page output.
     let out = ok(
         &mut s,
@@ -2583,7 +2585,7 @@ fn recover_without_a_folder() {
     assert!(!root.exists());
     assert_eq!(s.recover(), Recovery::NoFolder { generation: g + 1 });
     let status = ok(&mut s, json!({"type":"folder.status"}), 0);
-    let folder = status.folder.unwrap();
+    let folder = answer!(status, Folder);
     assert_eq!(folder.path, None);
     assert!(folder.generation > g, "old block ids are stale");
 }
@@ -2959,4 +2961,38 @@ fn an_unreadable_dailies_file_keeps_the_list_and_warns_once() {
         0,
     );
     assert_eq!(dailies_ids(&back).len(), 1);
+}
+
+// A reply holds what changed (page, notices, ...) and at most one answer for the asker. folder.open
+// answers the folder; its notices stay a change, and it sends no page, tree or settings (F4).
+#[test]
+fn folder_open_answers_the_folder() {
+    let t = tempfile::tempdir().unwrap();
+    put(t.path(), "pages/P.md", "- one\n");
+    let mut s = Session::new();
+    let out = support::ok(
+        &mut s,
+        json!({"type": "folder.open", "path": t.path()}),
+        clock(0),
+    );
+    let wire = serde_json::to_value(&out).unwrap();
+    assert!(wire.get("folder").is_none(), "no top-level folder: {wire}");
+    assert!(out.page.is_none() && out.tree.is_none() && out.config.is_none());
+    let folder = answer!(out, Folder);
+    assert_eq!(folder.generation, s.generation());
+    assert_eq!(folder.path.as_deref(), Some(t.path()));
+}
+
+// The answer goes over the wire as `{kind, value}`, so a number or a list is an answer too.
+#[test]
+fn answers_have_kind_and_value() {
+    let (_t, mut s) = folder(&[("pages/P.md", "- one\n")]);
+    let out = ok(
+        &mut s,
+        json!({"type": "page.renameReach", "key": "p", "name": "Q"}),
+        0,
+    );
+    let wire = serde_json::to_value(&out).unwrap();
+    assert_eq!(wire["answer"], json!({"kind": "reach", "value": 0}));
+    assert!(wire.get("reach").is_none(), "no top-level reach: {wire}");
 }

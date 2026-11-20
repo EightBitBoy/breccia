@@ -10,7 +10,7 @@ export class SettingsScreen {
   /** Whether the changelog overlay is shown over the Settings screen. */
   changelog = $state(false)
   usage = $state.raw<StateUsage[]>([])
-  /** Pages that did not load, so are neither counted nor renamed (`Output.usageSkipped`). */
+  /** Pages that did not load, so are neither counted nor renamed (the `usage` answer's `skipped`). */
   skipped = $state(0)
 
   open(section?: SettingsSection): void {

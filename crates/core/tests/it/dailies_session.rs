@@ -411,9 +411,10 @@ fn dailies_are_not_pages() {
         clock(),
     );
     assert!(q.search.unwrap().groups.is_empty());
-    let names = support::ok(&mut s, json!({"type": "pages.list"}), clock())
-        .names
-        .unwrap();
+    let names = answer!(
+        support::ok(&mut s, json!({"type": "pages.list"}), clock()),
+        Names
+    );
     assert!(
         names
             .iter()

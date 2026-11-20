@@ -4,6 +4,7 @@
 // does to the editor. App.svelte owns the page; this owns the editor.
 import { tick } from 'svelte'
 import { errorCode, errorMessage } from '../api'
+import { answerOf } from '../lib/answer'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
 import { deleteFocus, ownTextEnd } from '../lib/deleteBlock'
@@ -485,7 +486,7 @@ export class EditorHost {
   /** The page names for link completion; a failure is shown and offers none. */
   private pageNames(): Promise<NameView[]> {
     return this.env.client.run({ type: 'pages.list' }).then(
-      (out) => out.names ?? [],
+      (out) => answerOf(out, 'names') ?? [],
       (e) => {
         this.refuse(e)
         return []

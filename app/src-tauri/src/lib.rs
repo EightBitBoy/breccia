@@ -22,7 +22,7 @@ use std::time::Instant;
 use breccia_core::git::GitView;
 use breccia_core::session::Notice;
 use breccia_core::watch::FolderWatcher;
-use breccia_core::{Clock, Command, Request, Session};
+use breccia_core::{Answer, Clock, Command, Request, Session};
 use chrono::NaiveDate;
 use commands::{close_git, trace_enabled};
 use git::GitMsg;
@@ -232,7 +232,7 @@ pub fn run() {
                     }
                 };
                 if let Some(out) = status
-                    && let Some(folder) = out.folder
+                    && let Some(Answer::Folder(folder)) = out.answer
                     && let Some(root) = folder.path
                 {
                     watch = Some((root, folder.generation));
@@ -365,7 +365,10 @@ mod tests {
                 test_clock(),
             )
             .unwrap();
-        assert_eq!(status.folder.unwrap().path, None);
+        let Some(Answer::Folder(folder)) = status.answer else {
+            panic!("expected a folder answer, got {:?}", status.answer);
+        };
+        assert_eq!(folder.path, None);
         assert!(!gone.exists());
     }
 

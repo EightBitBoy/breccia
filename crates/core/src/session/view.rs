@@ -30,17 +30,13 @@ pub struct Output {
     pub page: Option<PageView>,
     pub focus: Option<Focus>,
     pub notices: Vec<Notice>,
-    pub folder: Option<FolderView>,
     pub config: Option<ConfigView>,
     pub refs: Option<RefsView>,
-    pub names: Option<Vec<NameEntry>>,
     pub tree: Option<TreeView>,
     /// Pages other than `page` that the command changed.
     pub changed: Vec<PageView>,
     /// Keys of pages that are gone.
     pub removed: Vec<String>,
-    /// The pages with unsaved edits; set by `session.dirty`.
-    pub dirty: Option<Vec<DirtyView>>,
     /// The journal feed; set by `journal.feed`.
     pub feed: Option<FeedView>,
     /// Pages a query returned without showing them (`pages.get`); not emitted as events.
@@ -51,32 +47,66 @@ pub struct Output {
     pub table: Option<Vec<PageRowView>>,
     /// The matches of `search.query`.
     pub search: Option<SearchView>,
-    /// One journal day for the date picker; set by `journal.day`.
-    pub day: Option<DateView>,
     /// Pages whose key changed because the file was edited outside (`files.changed`).
     pub renamed: Vec<RenameView>,
-    /// The Git item's state; set by the shell's `git.*` answers, never by the session.
-    pub git: Option<GitView>,
-    /// How much of the notes each state covers; set by `states.usage`.
-    pub usage: Option<Vec<StateUsage>>,
-    /// Pages that did not load (and are neither counted nor renamed); set with `usage`.
-    pub usage_skipped: Option<usize>,
     /// The network view's pages and links; set by `graph.get`.
     pub graph: Option<GraphView>,
     /// Keys of pages whose earlier save failed and whose file now holds
     /// Breccia's text, so their "could not be saved" notice can go.
     pub saved: Vec<String>,
-    /// How many other pages a rename would rewrite; set by `page.renameReach`.
-    pub reach: Option<usize>,
-    /// One page of the notes folder's commits; set by the shell's `git.log`.
-    pub git_log: Option<GitLogView>,
     /// The archived tasks (`archive.list`).
     pub archive: Option<Vec<ArchivedView>>,
     /// The dailies in file order; set by every `dailies.*` command.
     pub dailies: Option<Vec<super::DailyView>>,
+    /// What only the asker wants; empty when the command answers nothing beyond its changes.
+    pub answer: Option<Answer>,
+}
+
+/// A command's answer: what only the window that sent it wants, apart from the changes every view
+/// follows (the other fields of `Output`). On the wire `{ kind, value }`, because some answers are
+/// lists or numbers.
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
+#[serde(tag = "kind", content = "value", rename_all = "camelCase")]
+pub enum Answer {
+    /// The open notes folder: `folder.open`, `folder.create`, `folder.status`.
+    Folder(FolderView),
+    /// The pages with unsaved edits: `session.dirty`.
+    Dirty(Vec<DirtyView>),
+    /// How many other pages a rename would rewrite: `page.renameReach`.
+    Reach(usize),
+    /// One journal day for the date picker: `journal.day`.
+    Day(DateView),
+    /// The names the page picker offers: `pages.list`.
+    Names(Vec<NameEntry>),
+    /// How much of the notes each state covers: `states.usage`.
+    Usage(UsageView),
+    /// The Git item's state: the shell's `git.status`, `git.sync`, `git.init`.
+    Git(GitView),
+    /// One page of the notes folder's commits: the shell's `git.log`.
+    GitLog(GitLogView),
+}
+
+/// The answer of `states.usage`.
+#[derive(Clone, Debug, Serialize)]
+#[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct UsageView {
+    /// How much of the notes each state covers.
+    pub states: Vec<StateUsage>,
+    /// Pages that did not load (and are neither counted nor renamed).
+    pub skipped: usize,
 }
 
 impl Output {
+    /// An output that changes nothing and holds `answer`.
+    pub fn answering(answer: Answer) -> Self {
+        Output {
+            answer: Some(answer),
+            ..Output::default()
+        }
+    }
+
     /// Whether the command produced nothing: every field is as in
     /// `Output::default()`. Compared through serde, so a field added later is
     /// never forgotten here.

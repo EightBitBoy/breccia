@@ -67,7 +67,7 @@ const client: Client = {
   run(cmd) {
     sent.push(cmd)
     // Link completion asks for the page names; everything else is answered by the test.
-    if (cmd.type === 'pages.list') return Promise.resolve({ ...out(pageOf('p', [])), names: linkNames })
+    if (cmd.type === 'pages.list') return Promise.resolve({ ...out(pageOf('p', [])), answer: { kind: 'names', value: linkNames } })
     return new Promise<Output>((res) => answers.push(res))
   },
   setTextDebounced(id, text) {

@@ -27,8 +27,8 @@ pub use outline::{
     Block, BlockId, Carried, Document, IdGen, LineEnding, carry_ids, front_matter_len, parse,
 };
 pub use session::{
-    Clock, Command, CommandError, CommandKind, ErrorCode, IndexProgress, Output, Recovery, Request,
-    SearchView, Session,
+    Answer, Clock, Command, CommandError, CommandKind, ErrorCode, IndexProgress, Output, Recovery,
+    Request, SearchView, Session,
 };
 pub use workspace::{
     Backlinks, DiskReport, LoadWarning, NameEntry, OpenError, Page, PageError, PageKind,

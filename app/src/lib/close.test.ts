@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { closeCheck, closePrompt } from './close'
-import type { Command, Output } from './types'
+import type { Command, DirtyView, Output } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
 test('closePrompt', () => {
@@ -18,8 +18,8 @@ test('closePrompt names text shown in unsent notices', () => {
   )
 })
 
-function output(dirty: Output['dirty']): Output {
-  return emptyOutput({ dirty })
+function output(dirty: DirtyView[]): Output {
+  return emptyOutput({ answer: { kind: 'dirty', value: dirty } })
 }
 
 describe('closeCheck', () => {

@@ -8,7 +8,7 @@ use crate::workspace::{SaveError, Workspace};
 
 use super::error::{CommandError, ErrorCode};
 use super::search::IndexState;
-use super::view::{FolderView, Notice, Output, PageView, RenameView};
+use super::view::{Answer, FolderView, Notice, Output, PageView, RenameView};
 use super::{DiskMark, Session};
 
 /// What [`Session::recover`] did.
@@ -196,8 +196,8 @@ impl Session {
         self.saved_now.clear();
         notices.extend(self.open_index());
         Output {
-            folder: Some(self.folder_view()),
             notices,
+            answer: Some(Answer::Folder(self.folder_view())),
             ..Output::default()
         }
     }

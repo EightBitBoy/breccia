@@ -444,12 +444,14 @@ fn the_all_pages_table_has_tag_only_rows() {
 #[test]
 fn a_tag_without_a_page_can_be_renamed() {
     let (t, mut s) = support::folder_at(&[("pages/A.md", "- #urgent and [[Topic]]\n")], clock(0));
-    let reach = ok(
-        &mut s,
-        json!({"type": "page.renameReach", "key": "urgent", "name": "Important"}),
-    )
-    .reach;
-    assert_eq!(reach, Some(1));
+    let reach = answer!(
+        ok(
+            &mut s,
+            json!({"type": "page.renameReach", "key": "urgent", "name": "Important"}),
+        ),
+        Reach
+    );
+    assert_eq!(reach, 1);
     ok(
         &mut s,
         json!({"type": "page.rename", "key": "urgent", "name": "Important"}),

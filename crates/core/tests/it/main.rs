@@ -1,6 +1,10 @@
 //! The one integration-test program of breccia-core: every test file is a module here,
 //! so the core is linked once, not once per file. Run one file's tests with `cargo test -p breccia-core <file>::`.
 
+// First, so its macros (`answer!`) are in scope in every module below.
+#[macro_use]
+mod support;
+
 mod aliases;
 mod auto_archive;
 mod backlinks;
@@ -37,7 +41,6 @@ mod search;
 mod search_store;
 mod session;
 mod states;
-mod support;
 mod table;
 mod task;
 mod tree;

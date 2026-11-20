@@ -146,7 +146,7 @@ fn pages_list_command() {
     let t = dir(&[("pages/A.md", "- [[New thing]]\n")]);
     let mut s = session(&t);
     let out = cmd(&mut s, json!({"type": "pages.list"}));
-    let v = serde_json::to_value(out.names.unwrap()).unwrap();
+    let v = serde_json::to_value(answer!(out, Names)).unwrap();
     assert_eq!(
         v,
         json!([

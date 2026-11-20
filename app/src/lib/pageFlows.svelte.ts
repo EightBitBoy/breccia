@@ -1,5 +1,6 @@
 // The flows behind the page operations: which dialog is open and what each answer runs.
 import { errorMessage } from '../api'
+import { answerOf } from './answer'
 import { baseName, deleteConfirm, folderOf, joinPath, moveTargets, parentOf, renameConfirm, type Op } from './pageOps'
 import { dropCommand } from './treeDrop'
 import type { Row } from './treeRows'
@@ -61,7 +62,7 @@ export class PageFlows {
   async rename(key: string, old: string, name: string) {
     if (name === old) return
     try {
-      const reach = (await this.env.run({ type: 'page.renameReach', key, name })).reach
+      const reach = answerOf(await this.env.run({ type: 'page.renameReach', key, name }), 'reach')
       const message = renameConfirm(old, name, reach ?? 0)
       const go = () => void this.go({ type: 'page.rename', key, name })
       if (message === null) go()

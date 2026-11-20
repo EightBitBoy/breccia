@@ -26,6 +26,7 @@
     hiddenColumns,
     setHiddenColumns,
   } from './api'
+  import { answerOf } from './lib/answer'
   import { createClient, flushBeforeClose } from './lib/api'
   import { closeCheck } from './lib/close'
   import { autoHideScrollbar } from './lib/scrollFade'
@@ -632,9 +633,10 @@
 
   let lastGeneration: number | null = null
   function apply(out: Output, cmd: Command) {
-    if (out.folder) {
+    const folderAnswer = answerOf(out, 'folder')
+    if (folderAnswer) {
       // A new notes folder: no old tree while the new one is on its way, no old "show more".
-      if (isNewFolder(lastGeneration, out.folder.generation)) {
+      if (isNewFolder(lastGeneration, folderAnswer.generation)) {
         tree = null
         boards.newFolder()
         status.clear('index') // the old folder's build; its final emit clears it too
@@ -657,18 +659,20 @@
         justRenamed.clear()
         noticeTitles.clear()
       }
-      lastGeneration = out.folder.generation
-      if (out.folder.path !== folder) void hiddenCols.open(out.folder.path)
-      folder = out.folder.path
-      client.setGeneration(out.folder.generation)
+      lastGeneration = folderAnswer.generation
+      if (folderAnswer.path !== folder) void hiddenCols.open(folderAnswer.path)
+      folder = folderAnswer.path
+      client.setGeneration(folderAnswer.generation)
     }
     if (out.config) applyConfig(out.config)
-    if (out.git) {
+    const gitView = answerOf(out, 'git')
+    if (gitView) {
       // An answer can carry a view newer than the last `git:changed` (the shell stores it before emitting).
-      if (gitLog.shown && historyStale(git.view, out.git)) gitLog.refresh()
-      git.set(out.git)
+      if (gitLog.shown && historyStale(git.view, gitView)) gitLog.refresh()
+      git.set(gitView)
     }
-    if (out.usage) settings.applyUsage(out.usage, out.usageSkipped ?? 0)
+    const usage = answerOf(out, 'usage')
+    if (usage) settings.applyUsage(usage.states, usage.skipped)
     if (out.graph) network.applyGraph(out.graph)
     if (out.board) boards.applyBoard(out.board, cmd)
     if (out.tree && isNewer(tree, out.tree)) tree = out.tree
@@ -719,7 +723,8 @@
     if (out.archive) archiveView.applyArchive(out.archive)
     if (out.dailies) dailies.apply(out.dailies)
     if (out.search) search.applySearch(out.search)
-    if (out.names) search.applyNames(out.names)
+    const names = answerOf(out, 'names')
+    if (names) search.applyNames(names)
     if (r.leavePage) {
       page = null
       refs = null
@@ -902,7 +907,7 @@
     host.leave()
     sel.clear()
     try {
-      const d = (await client.run({ type: 'journal.day', key })).day
+      const d = answerOf(await client.run({ type: 'journal.day', key }), 'day')
       if (d) await goToDay(d)
     } catch (e) {
       refuse(e)

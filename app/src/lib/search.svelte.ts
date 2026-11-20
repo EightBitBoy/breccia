@@ -4,7 +4,7 @@ import { firstSelectable, moveSelection, rowKey, searchRows, selectable, type Se
 import type { BlockId, Command, NameView, Notice, Output, SearchView } from './types'
 
 export interface SearchEnv {
-  /** Queues a command; its output reaches App.apply, which hands `out.search` and `out.names` back. */
+  /** Queues a command; its output reaches App.apply, which hands `out.search` and the `names` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
   /** A row was chosen with Enter; the box is still open. */

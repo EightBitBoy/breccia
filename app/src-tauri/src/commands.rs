@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 
 use breccia_core::git::{Discovered, Git, GitView, discover};
 use breccia_core::session::Notice;
-use breccia_core::{CommandError, ErrorCode, Output, Request};
+use breccia_core::{Answer, CommandError, ErrorCode, Output, Request};
 use serde::Deserialize;
 use tauri::{AppHandle, Manager, State};
 
@@ -83,7 +83,7 @@ pub(crate) enum ShellCommand {
     #[serde(rename = "git.init")]
     GitInit,
     /// `limit` commits of the notes folder after the newest `skip`, newest
-    /// first (the Git history view); answers in `gitLog`.
+    /// first (the Git history view); the answer is `gitLog`.
     #[serde(rename = "git.log")]
     GitLog { skip: usize, limit: usize },
 }
@@ -123,11 +123,7 @@ pub(crate) fn shell_answer(cmd: &ShellCommand, view: &GitView) -> (Output, Optio
         ShellCommand::GitInit => Some(GitMsg::Init),
         ShellCommand::GitStatus | ShellCommand::GitLog { .. } => None,
     };
-    let out = Output {
-        git: Some(view.clone()),
-        ..Output::default()
-    };
-    (out, msg)
+    (Output::answering(Answer::Git(view.clone())), msg)
 }
 
 /// `git.log`: one page of the notes folder's commits, read from `root`'s
@@ -154,11 +150,8 @@ pub(crate) fn git_log_answer(
         }
         Err(e) => Err(e),
     };
-    page.map(|page| Output {
-        git_log: Some(page),
-        ..Output::default()
-    })
-    .map_err(|e| refused(format!("Git could not read the history: {e}")))
+    page.map(|page| Output::answering(Answer::GitLog(page)))
+        .map_err(|e| refused(format!("Git could not read the history: {e}")))
 }
 
 /// The close: ends a running fetch, then lets the last commit and push run for
@@ -267,7 +260,7 @@ fn run_blocking(app: &AppHandle, request: serde_json::Value) -> Result<Output, C
         state.remember_folder(path.clone());
     }
     if opened.is_some()
-        && let Some(folder) = &output.folder
+        && let Some(Answer::Folder(folder)) = &output.answer
         && let Some(root) = &folder.path
     {
         let notice = start_watcher(app, root, folder.generation);
@@ -520,7 +513,11 @@ mod tests {
         let run = |args: &[&str]| g.ok(&notes, args, LOCAL_LIMIT).unwrap();
         run(&["init", "-q"]);
         // No commits yet: an empty page, not an error.
-        let empty = log(Some(&notes)).unwrap().git_log.unwrap();
+        let page_of = |out: Output| match out.answer {
+            Some(Answer::GitLog(page)) => page,
+            other => panic!("expected a gitLog answer, got {other:?}"),
+        };
+        let empty = page_of(log(Some(&notes)).unwrap());
         assert!(empty.entries.is_empty() && !empty.more);
         std::fs::write(
             notes.join("a.md"),
@@ -530,13 +527,11 @@ mod tests {
         .unwrap();
         run(&["add", "-A"]);
         run(&["commit", "-q", "-m", "notes: hello"]);
-        let out = log(Some(&notes)).unwrap();
-        let page = out.git_log.unwrap();
+        let page = page_of(log(Some(&notes)).unwrap());
         assert_eq!(page.entries.len(), 1);
         assert_eq!(page.entries[0].subject, "notes: hello");
         assert_eq!(page.entries[0].author, "Shell Test");
         assert_eq!(page.skip, 0);
-        assert!(out.git.is_none());
     }
 
     #[test]
@@ -544,7 +539,7 @@ mod tests {
         let view = GitView::default();
         let answer = |c: ShellCommand| shell_answer(&c, &view);
         let (out, msg) = answer(ShellCommand::GitStatus);
-        assert_eq!(out.git, Some(view.clone()));
+        assert!(matches!(out.answer, Some(Answer::Git(v)) if v == view));
         assert!(msg.is_none());
         assert!(matches!(
             answer(ShellCommand::GitSync),
@@ -554,6 +549,17 @@ mod tests {
             answer(ShellCommand::GitInit),
             (_, Some(GitMsg::Init))
         ));
+    }
+
+    #[test]
+    fn git_status_answers_git() {
+        let view = GitView::default();
+        let (out, _) = shell_answer(&ShellCommand::GitStatus, &view);
+        assert!(
+            matches!(out.answer, Some(breccia_core::Answer::Git(_))),
+            "{:?}",
+            out.answer
+        );
     }
 
     fn request(command: serde_json::Value) -> serde_json::Value {

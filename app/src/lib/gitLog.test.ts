@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { PAGE_SIZE, formatWhen, formatWhenFull, historyItem, historyStale } from './gitLog'
 import { GitLog } from './gitLog.svelte'
 import type { GitLogView, GitView, LogEntry, Output } from './types'
+import { emptyOutput } from './emptyOutput.testing'
 
 const v = (o: Partial<GitView> = {}): GitView => ({
   state: 'ready', top: 'C:/notes', remote: null, ahead: 0, lastCommit: null, lastSync: null, head: 'h1', problem: null, ...o,
@@ -14,7 +15,7 @@ const entry = (n: number, pushed = true): LogEntry => ({
 /** `count` entries numbered from `from` down. */
 const run = (from: number, count: number) => Array.from({ length: Math.max(0, count) }, (_, i) => entry(from - i))
 
-const answer = (page: GitLogView): Output => ({ gitLog: page }) as unknown as Output
+const answer = (page: GitLogView): Output => emptyOutput({ answer: { kind: 'gitLog', value: page } })
 
 /** A fake shell over a history of `total` commits, newest first, numbered total..1; answers when `release` is called. */
 function shell(total: number) {

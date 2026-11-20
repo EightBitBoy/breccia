@@ -1,5 +1,6 @@
 // Closing the window: what was typed is sent first, and pages that could not be
 // saved (and text shown in unsent notices) are named before they are given up.
+import { answerOf } from './answer'
 import { flushBeforeClose, type Client } from './api'
 
 /**
@@ -34,7 +35,7 @@ export async function closeCheck(
   try {
     const out = await Promise.race([client.run({ type: 'session.dirty' }), late])
     if (out === null) console.error('session.dirty did not answer in time')
-    else dirty = out.dirty ?? []
+    else dirty = answerOf(out, 'dirty') ?? []
   } catch (e) {
     console.error('session.dirty failed', e)
   } finally {

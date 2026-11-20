@@ -18,7 +18,7 @@ use crate::workspace::{PageKind, Workspace};
 
 use super::Session;
 use super::error::{CommandError, ErrorCode};
-use super::view::{Notice, Output, PageViewKind, title_of};
+use super::view::{Answer, Notice, Output, PageViewKind, title_of};
 
 /// At most this many hits are shown; one more is fetched to know about more.
 pub const SEARCH_LIMIT: usize = 200;
@@ -137,10 +137,11 @@ impl Session {
         let d = parse_journal_name(key).ok_or_else(|| {
             CommandError::new(ErrorCode::BadDate, format_args!("not a journal day: {key}"))
         })?;
-        Ok(Output {
-            day: Some(date_view(d, today, self.ws()?)),
-            ..Output::default()
-        })
+        Ok(Output::answering(Answer::Day(date_view(
+            d,
+            today,
+            self.ws()?,
+        ))))
     }
 }
 

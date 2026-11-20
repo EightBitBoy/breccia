@@ -107,7 +107,7 @@ fn tree_names(out: &Output) -> Vec<String> {
 
 fn dirty(s: &mut Session) -> Value {
     let out = ok(s, json!({"type": "session.dirty"}));
-    serde_json::to_value(&out).unwrap()["dirty"].clone()
+    serde_json::to_value(answer!(out, Dirty)).unwrap()
 }
 
 #[test]

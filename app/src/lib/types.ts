@@ -5,6 +5,7 @@
 import type { Command as CoreCommand, GitSettingsView, NameEntry, Notice, TagEntry } from './generated'
 
 export type {
+  Answer,
   ArchivedView,
   BlockId,
   BlockView,
@@ -56,6 +57,7 @@ export type {
   TargetView,
   TreeNode,
   TreeView,
+  UsageView,
 } from './generated'
 
 /** A name the page picker offers (`pages.list`). */

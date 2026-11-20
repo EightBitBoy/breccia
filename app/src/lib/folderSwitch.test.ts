@@ -27,7 +27,7 @@ describe('switchPrompt', () => {
 })
 
 describe('switchCheck', () => {
-  const dirtyOut = (dirty: { title: string }[]) => ({ dirty }) as unknown as Output
+  const dirtyOut = (dirty: { title: string }[]) => ({ answer: { kind: 'dirty', value: dirty } }) as unknown as Output
   const couldNot = 'Breccia could not check for unsaved changes, so it did not switch folders. Try again.'
   it('flushes before asking, and is null when clean', async () => {
     const calls: string[] = []
