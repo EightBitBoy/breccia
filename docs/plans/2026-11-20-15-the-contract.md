@@ -23,7 +23,8 @@ its safety rules in `notes.md`, and this plan's "Owner decisions" once answered.
 
 ## State
 
-Written 2026-11-20 at commit `42de232`. Waiting for the owner's review and answers to Q1 and Q2.
+Written 2026-11-20 at commit `42de232`. Owner answers 2026-11-20: Q1 yes (after asking for the advantages and
+disadvantages), Q2 yes (`ts-rs`). All nine tasks are in.
 
 Already done by earlier plans, so not planned again:
 
@@ -41,7 +42,10 @@ Already done by earlier plans, so not planned again:
 Not in this plan: M34 (one command for machine settings) is in the audit's theme T12 but in none of its plans; it stays
 open. The follow-ups of plan 14 touch none of these moves and stay for a later plan.
 
-## Owner decisions (open)
+## Owner decisions
+
+Answered 2026-11-20: **Q1 yes** (the shell stops echoing; Tasks 7 and 8 stay), **Q2 yes** (`ts-rs`, developer
+build only).
 
 Plain words, recommendation first. "Cost if wrong" is what changes later.
 
