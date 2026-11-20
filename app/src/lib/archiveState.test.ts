@@ -53,16 +53,15 @@ test('a failed load is a notice', async () => {
   expect(notices).toEqual([{ kind: 'refused', message: 'boom' }])
 })
 
-test("another program's change reloads it, once at a time; our own echo does not; hidden, it takes nothing", async () => {
+test("another program's change reloads it, once at a time; hidden, it takes nothing", async () => {
   const { a, sent, pending, holdAnswers } = setup()
-  expect(a.changed(false)).toBe(false)
+  expect(a.changed()).toBe(false)
   await a.open()
-  expect(a.changed(true)).toBe(true)
   expect(sent.length).toBe(1)
   holdAnswers()
-  a.changed(false)
-  a.changed(false)
-  a.changed(false)
+  expect(a.changed()).toBe(true)
+  a.changed()
+  a.changed()
   await tick()
   expect(sent.length).toBe(2)
   pending.shift()!()

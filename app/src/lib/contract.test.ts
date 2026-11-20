@@ -98,6 +98,13 @@ test('the recovered error code matches', () => {
   expect(ts![1]).toBe(wire)
 })
 
+// §6, §9: the window's own commands get their changes in the answer; only changes made outside the window are events.
+test("the window's own commands send no events", () => {
+  const commands = shellFile('commands.rs')
+  expect(commands).not.toContain('emit_all(')
+  expect(commands).not.toContain('app.emit(')
+})
+
 test('the stale refusal text starts as the window expects', () => {
   const m = /"(request is for generation) \{\}/.exec(sessionRs)
   expect(m, 'the stale text in session/mod.rs').not.toBeNull()

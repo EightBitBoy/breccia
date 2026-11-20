@@ -71,15 +71,14 @@ test('a vanished limit resets to everything', async () => {
   expect(n.filters.limit).toBeNull()
 })
 
-test('changed refreshes for news, not for own echoes, and only while shown', async () => {
+test('changed refreshes, only while shown', async () => {
   const { n, sent } = setup()
-  expect(n.changed(false)).toBe(false)
+  expect(n.changed()).toBe(false)
   expect(sent.length).toBe(0)
   await n.open()
-  expect(n.changed(true)).toBe(true)
   await tick()
   expect(sent.length).toBe(1)
-  expect(n.changed(false)).toBe(true)
+  expect(n.changed()).toBe(true)
   await tick()
   expect(sent.length).toBe(2)
 })

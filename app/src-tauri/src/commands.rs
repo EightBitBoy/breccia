@@ -11,7 +11,6 @@ use breccia_core::{Answer, CommandError, ErrorCode, Output, Request};
 use serde::Deserialize;
 use tauri::{AppHandle, Manager, State};
 
-use crate::events::emit_all;
 use crate::git::{CLOSE_LIMIT, GitMsg, finish_close};
 use crate::guard::{Guarded, with_session};
 use crate::indexing::index_in_background;
@@ -270,7 +269,7 @@ fn run_blocking(app: &AppHandle, request: serde_json::Value) -> Result<Output, C
     if opened.is_some() || writes_config {
         send_git(app, GitMsg::Changed);
     }
-    emit_all(app, &output, false);
+    // No events: the window takes its own command's changes from this answer (§9).
     Ok(output)
 }
 

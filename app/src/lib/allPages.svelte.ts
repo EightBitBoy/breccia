@@ -60,13 +60,12 @@ export class AllPages {
   }
 
   /**
-   * A `page:changed` event. While shown, the table takes it (no other view does): another
-   * program's change reloads it (§6); our own echo does not, the table has it already.
-   * Returns whether the table took the event.
+   * A page changed outside the table (§6). While shown, the table takes it (no other view does) and
+   * reloads. Returns whether the table took it.
    */
-  changed(own: boolean): boolean {
+  changed(): boolean {
     if (!this.shown) return false
-    if (!own) this.refresh()
+    this.refresh()
     return true
   }
 

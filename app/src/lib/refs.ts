@@ -91,8 +91,6 @@ export interface PageChangedHost {
   shows(key: string): boolean
   /** Whether a page or the feed is shown. */
   active(): boolean
-  /** Whether `p` is an echo of our own command's output. */
-  own(p: PageView): boolean
   isGroup(key: string): boolean
   /** Queues `page.get` for the shown page: it runs after the commands queued before it. */
   reload(key: string): void
@@ -105,12 +103,12 @@ export interface PageChangedHost {
 }
 
 /**
- * Another view changed page `p` (§9): the shown page is loaded again through
+ * Page `p` changed outside the window, or beside what a command applied (§9): the shown page is loaded again through
  * the command queue, a references group is patched with it, and since a link
  * may have come or gone, a page that is not shown makes the references load again.
  */
 export function pageChanged(h: PageChangedHost, p: PageView) {
-  if (!h.active() || h.own(p)) return
+  if (!h.active()) return
   if (h.shows(p.key)) return h.reload(p.key)
   if (h.isGroup(p.key)) {
     h.patch(p)

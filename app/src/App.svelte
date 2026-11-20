@@ -31,7 +31,6 @@
   import { closeCheck } from './lib/close'
   import { autoHideScrollbar } from './lib/scrollFade'
   import { saveItem } from './lib/saveStatus'
-  import { Echoes } from './lib/echo'
   import { InFlight, Refreshes } from './lib/external'
   import { NoticeCenter } from './lib/noticeCenter.svelte'
   import { listenShell } from './lib/shellEvents'
@@ -220,10 +219,8 @@
 
   // ---- the command client -------------------------------------------------
 
-  /** Shell events wait while a command runs: they may be its own echoes, told apart once it is applied. */
+  /** Shell events of outside changes wait while a command runs, so its answer never overwrites a newer view. */
   const inFlight = new InFlight()
-  /** What our own commands returned: their `page:changed` and `page:removed` echoes carry nothing new. */
-  const echoes = new Echoes()
 
   const client = createClient(inFlight.wrap(invokeRun), {
     onOutput: apply,
@@ -681,8 +678,6 @@
     // Before the new notices, so a page that failed again keeps its fresh one.
     if (out.saved.length) notices.saved(out.saved)
     out.notices.forEach(notify)
-    // A page that is back (in an output) makes a later removal of it news again.
-    echoes.ownRemovals(out.removed, out.page?.key ?? null)
     // The edited block's text in the view about to be replaced (a refresh compares it).
     const before = host.editingId === null ? null : (host.blockOf(host.editingId)?.text ?? null)
     // An applied feed answer is shown: the editor closes if it replaced the page or dropped the edited day.
@@ -753,9 +748,8 @@
     }
     if (r.madeInRefs !== null) madeInRefs.add(r.madeInRefs)
     for (const p of r.patch) refs = patchRefs(refs!, p, madeInRefs)
-    r.own.forEach((p) => echoes.ownPage(p))
     if (r.refreshRefs) refreshRefs.request()
-    // The open card follows its own edits (Boards.changed skips our echoes).
+    // The open card follows its own edits.
     for (const p of r.cardPages) boards.patchCard(p, out.focus?.id ?? null)
     // Opened first, so the board holds its reload until the new card closes.
     if (r.openAdded && out.page && out.focus && cmd.type === 'journal.append') openAdded(out.page, out.focus.id, cmd.text)
@@ -767,13 +761,13 @@
       else boards.refresh()
     }
     host.apply(cmd, r.dropFocus ? { ...out, focus: null } : out, r.shown, before)
-    // What the shell's events of our own changes did, now from the answer (as their handlers below do).
+    // What the shell's events do for a change made outside the window, done from the answer (as their handlers below do).
     if (r.refreshSearch) search.refresh() // an open search box asks again
     if (r.refreshNames) search.refreshNames()
     if (r.refreshGraph) network.refresh()
     r.journalChanged.forEach((p) => journal.changed(p))
     // A page changed beside what was applied (an archived block, a rewritten link) is news for the views.
-    r.others.forEach((p) => viewsTake(p, false))
+    r.others.forEach((p) => viewsTake(p))
   }
 
   /** "+ Add" was answered: its new block opens as a card, the caret after `KEYWORD `. */
@@ -1308,26 +1302,24 @@
   }
 
   /**
-   * Page `p` changed: the shown view takes it. `own` when the window already applied it (an echo of its own command);
-   * a page changed elsewhere, or one an own command changed beside what it applied (`Route.others`), is news.
+   * Page `p` changed outside the window, or beside what a command applied (`Route.others`): the shown view takes it.
    */
-  function viewsTake(p: Page, own: boolean) {
-    // The table reloads for another program's change (§6); our own echoes it has already.
-    if (allPages.changed(own)) return
+  function viewsTake(p: Page) {
+    // The table reloads for another program's change (§6).
+    if (allPages.changed()) return
     // The Archive view too: an automatic archive or another program's change shows.
-    if (archiveView.changed(own)) return
+    if (archiveView.changed()) return
     // The graph reloads the same way (§6).
-    if (network.changed(own)) return
+    if (network.changed()) return
     if (boards.index !== null) {
       // The board reloads (held while a card is open); the open card follows its page.
-      if (boards.changed(p, own)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
+      if (boards.changed(p)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
       return
     }
     pageChanged(
       {
         shows: (key) => key === page?.key || (days?.has(key) ?? false),
         active: () => page !== null || journal.feed !== null,
-        own: () => own,
         isGroup,
         reload: (key) => reloads.request(key),
         patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
@@ -1338,10 +1330,9 @@
     )
   }
 
-  /** Another program removed page `key`; our own commands' removals are handled where they run. */
+  /** Another program removed page `key`; the window's own removals are handled where its commands are applied. */
   function pageRemoved(key: string) {
     nav.removed(key) // skipped from now on
-    if (echoes.isOwnRemoval(key)) return
     allPages.refresh()
     archiveView.refresh()
     journal.removed([key])
@@ -1638,13 +1629,13 @@
       if (dir) void zoom.step(dir)
     }
     document.addEventListener('wheel', onWheel, { capture: true, passive: false })
-    // Other views and programs change pages too (§9). Our own commands' echoes are skipped.
+    // Other programs and Git change pages too (§9); the window's own commands send no events.
     const shell = listenShell({
       pageChanged: (p) =>
         inFlight.idle.run(() => {
           search.refresh() // an open search box asks again
           journal.changed(p)
-          viewsTake(p, echoes.isOwnPage(p))
+          viewsTake(p)
         }),
       treeChanged: (t) => {
         if (isNewer(tree, t)) tree = t

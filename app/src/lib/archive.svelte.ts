@@ -57,12 +57,12 @@ export class Archive {
   }
 
   /**
-   * A `page:changed` event. While shown, the view takes it: a change made elsewhere (another program, an automatic
-   * archive) reloads it; our own echo does not. Returns whether the view took the event.
+   * A page changed elsewhere (another program, an automatic archive). While shown, the view takes it and reloads.
+   * Returns whether the view took it.
    */
-  changed(own: boolean): boolean {
+  changed(): boolean {
     if (!this.shown) return false
-    if (!own) this.refresh()
+    this.refresh()
     return true
   }
 

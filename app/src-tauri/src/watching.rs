@@ -52,7 +52,7 @@ pub(crate) fn start_watcher(
             // The session lock is released before anything is emitted.
             match result {
                 Ok(output) => {
-                    emit_all(&handle, &output, true);
+                    emit_all(&handle, &output);
                     index_if_large(&handle, generation, &output);
                 }
                 Err(e) if e.code == ErrorCode::Stale => {}

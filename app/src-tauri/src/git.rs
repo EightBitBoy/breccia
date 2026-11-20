@@ -126,7 +126,7 @@ fn run_step(
         log::trace!(target: "trace", "trace git state={:?}", view.state);
     }
     for (generation, output) in &step.outputs {
-        emit_all(handle, output, true);
+        emit_all(handle, output);
         index_if_large(handle, *generation, output);
     }
 }

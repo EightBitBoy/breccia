@@ -53,8 +53,6 @@ export interface Route {
   /** A block an edit in the references focused: it stays shown there. */
   madeInRefs: BlockId | null
   refreshRefs: boolean
-  /** Pages to record as our own echoes. */
-  own: PageView[]
   /** For `EditorHost.apply`: whether the output's view is shown. */
   shown: boolean
   /** A navigation or an applied feed answer leaves the board. */
@@ -91,7 +89,12 @@ export interface Route {
   refreshGraph: boolean
   /** Every page of the output (`out.page`, then `out.changed`), for `journal.changed`. */
   journalChanged: PageView[]
-  /** Pages of the output that `own` does not hold: App treats each as a page changed elsewhere (§9). */
+  /**
+   * Pages of the output (`out.page`, then `out.changed`) that the route applies nowhere else (as a page, a loaded
+   * day, a references group, the board or the table): App treats each as a page changed elsewhere (§9), for one that
+   * `archive.auto` or a rename rewrote. Told apart by object identity, which is sound because the core keeps the
+   * page's key out of `changed` (crates/core/src/session/view.rs), so no page arrives twice as two objects.
+   */
   others: PageView[]
 }
 
@@ -137,7 +140,6 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     patch: [],
     madeInRefs: null,
     refreshRefs: false,
-    own: [],
     shown: false,
     leaveBoard,
     leaveAllPages,
@@ -158,9 +160,11 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     journalChanged: [],
     others: [],
   }
+  /** Pages applied somewhere above: the rest of the output's pages are `others`. */
+  const applied: PageView[] = []
   if (out.page && place === 'day') {
     r.days.push(out.page)
-    r.own.push(out.page)
+    applied.push(out.page)
   } else if (out.page && place !== 'none') {
     r.show = out.page
     r.moved = out.page.key !== page
@@ -168,12 +172,12 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     r.closeFeed = place === 'navigate'
     // Another page starts at its top, not at the feed's scroll position.
     r.resetScroll = place === 'navigate' && r.moved
-    r.own.push(out.page)
+    applied.push(out.page)
   }
   // A rename can rewrite links in a loaded day.
   const changedDays = view.days ? out.changed.filter((p) => view.days!.has(p.key)) : []
   r.days.push(...changedDays)
-  r.own.push(...changedDays)
+  applied.push(...changedDays)
 
   // App drops the references when it leaves the page, as when it moves to another.
   const groups = r.moved || leavePage ? new Set<string>() : view.groups
@@ -188,14 +192,14 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
   const inGroup = place === 'none' && out.page !== null && groups.has(out.page.key)
   if (inGroup && out.focus) r.madeInRefs = out.focus.id
   r.patch = [inGroup ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null && groups.has(p.key))
-  r.own.push(...r.patch)
+  applied.push(...r.patch)
   // A link may have come or gone: load them again (once the editor leaves them).
   r.refreshRefs =
     r.moved || held || r.patch.length > 0 || cmd?.type === 'page.rename' || out.removed.some((k) => groups.has(k))
-  // On the board: its outputs' pages are our own echoes, the open card follows its page, the board reloads.
+  // On the board: it takes its outputs' pages (it reloads), the open card follows its page.
   if (view.board && !leaveBoard) {
     const touched = [place === 'none' ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null)
-    r.own.push(...touched)
+    applied.push(...touched)
     r.cardPages = touched.filter((p) => p.key === view.card)
     r.refreshBoard = out.page !== null || out.changed.length > 0 || out.removed.length > 0
     r.openAdded = cmd?.type === 'journal.append' && out.page !== null && out.focus !== null
@@ -209,21 +213,21 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
       r.dropFocus = true
     }
   }
-  // On the table: its outputs' pages are our own echoes too; it reloads on any page or tree change.
+  // On the table: it takes its outputs' pages too; it reloads on any page or tree change.
   if (view.allPages && !leaveAllPages) {
-    r.own.push(...[place === 'none' ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null))
+    applied.push(...[place === 'none' ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null))
     r.refreshAllPages = out.page !== null || out.changed.length > 0 || out.removed.length > 0 || out.tree !== null
   }
   r.shown = place !== 'none' || inGroup || feedShown || r.cardPages.length > 0
-  // What the shell's events of our own changes did, taken from the answer.
+  // What a change made outside the window would do through its events, done from the answer.
   const pages = [out.page, ...out.changed].filter((p): p is PageView => p !== null)
   r.refreshSearch = pages.length > 0 || out.removed.length > 0 || out.tree !== null
   r.refreshNames = out.tree !== null
   r.refreshGraph = view.graph && !leaveGraph && (out.tree !== null || out.removed.length > 0)
   r.journalChanged = pages
   // A page applied nowhere above (one `archive.auto` or a rename rewrote) is news, as if changed elsewhere.
-  const own = new Set(r.own)
-  r.others = pages.filter((p) => !own.has(p))
+  const taken = new Set(applied)
+  r.others = pages.filter((p) => !taken.has(p))
   return r
 }
 

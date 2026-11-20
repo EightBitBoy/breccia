@@ -3,7 +3,7 @@
 use breccia_core::Output;
 use tauri::{AppHandle, Emitter};
 
-/// Emitted with the `PageView` whenever a command returns a page. Tauri event
+/// Emitted with the `PageView` of a page changed outside the window. Tauri event
 /// names allow no `.`, so this is the `page:changed` spelling of `page.changed`.
 pub(crate) const PAGE_CHANGED: &str = "page:changed";
 pub(crate) const TREE_CHANGED: &str = "tree:changed";
@@ -23,24 +23,19 @@ pub(crate) const INDEX_CHANGED: &str = "index:changed";
 /// The session was recovered after an internal error (see `RecoveredEvent`).
 pub(crate) const SESSION_RECOVERED: &str = "session:recovered";
 
-/// The events one command or watcher run gives rise to, in emit order.
-/// Notices only travel as an event for watcher runs; a command's caller
-/// finds them in its `Output`.
-pub(crate) fn events(
-    output: &Output,
-    from_watcher: bool,
-) -> Vec<(&'static str, serde_json::Value)> {
+/// The events one watcher run or Git step gives rise to, in emit order. Only changes made outside
+/// the window are sent: a command's own changes reach the window in its answer (§9).
+pub(crate) fn events(output: &Output) -> Vec<(&'static str, serde_json::Value)> {
     fn json<T: serde::Serialize>(v: &T) -> serde_json::Value {
         serde_json::to_value(v).unwrap_or(serde_json::Value::Null)
     }
     let mut out = Vec::new();
-    // First, so the pages after it show with the new states. A command's
-    // own answer carries its config itself.
-    if from_watcher && let Some(config) = &output.config {
+    // First, so the pages after it show with the new states.
+    if let Some(config) = &output.config {
         out.push((CONFIG_CHANGED, json(config)));
     }
-    // After the settings (the reset time) and before the pages. A command's own answer carries its list.
-    if from_watcher && let Some(dailies) = &output.dailies {
+    // After the settings (the reset time) and before the pages.
+    if let Some(dailies) = &output.dailies {
         out.push((DAILIES_CHANGED, json(dailies)));
     }
     for page in output.page.iter().chain(&output.changed) {
@@ -57,17 +52,17 @@ pub(crate) fn events(
     }
     // Saved before notices, as `apply` does for a command: a page saved and
     // then failing again in one run keeps its new notice.
-    if from_watcher && !output.saved.is_empty() {
+    if !output.saved.is_empty() {
         out.push((PAGES_SAVED, json(&output.saved)));
     }
-    if from_watcher && !output.notices.is_empty() {
+    if !output.notices.is_empty() {
         out.push((NOTICES_ADDED, json(&output.notices)));
     }
     out
 }
 
-pub(crate) fn emit_all(app: &AppHandle, output: &Output, from_watcher: bool) {
-    for (name, payload) in events(output, from_watcher) {
+pub(crate) fn emit_all(app: &AppHandle, output: &Output) {
+    for (name, payload) in events(output) {
         let _ = app.emit(name, payload);
     }
 }
@@ -112,19 +107,17 @@ mod tests {
             }],
             ..Output::default()
         };
-        let names = |from_watcher| -> Vec<&str> {
-            events(&out, from_watcher).iter().map(|e| e.0).collect()
-        };
+        let names: Vec<&str> = events(&out).iter().map(|e| e.0).collect();
         assert_eq!(
-            names(false),
+            names,
             [
                 "page:changed",
                 "page:changed",
                 "tree:changed",
-                "page:removed"
+                "page:removed",
+                "notices:added"
             ]
         );
-        assert_eq!(names(true).last(), Some(&"notices:added"));
     }
 
     /// An answer is for the asker only: an output that holds nothing else sends no event.
@@ -152,12 +145,11 @@ mod tests {
             answer: Some(Answer::Pages(vec![page])),
             ..Output::default()
         };
-        assert!(events(&out, false).is_empty());
-        assert!(events(&out, true).is_empty());
+        assert!(events(&out).is_empty());
     }
 
     #[test]
-    fn dailies_changed_follows_config_changed_for_watcher_runs_only() {
+    fn dailies_changed_follows_config_changed() {
         let dir = tempfile::tempdir().unwrap();
         let mut session = Session::new();
         let mut run = |command| {
@@ -181,16 +173,13 @@ mod tests {
             dailies: Some(Vec::new()),
             ..Output::default()
         };
-        let names = |from_watcher| -> Vec<&str> {
-            events(&out, from_watcher).iter().map(|e| e.0).collect()
-        };
-        assert_eq!(names(true), ["config:changed", "dailies:changed"]);
-        assert!(names(false).is_empty());
+        let names: Vec<&str> = events(&out).iter().map(|e| e.0).collect();
+        assert_eq!(names, ["config:changed", "dailies:changed"]);
     }
 
-    /// The frontend tells an own command's `page:changed` echo from news by
-    /// comparing JSON strings, so the event payload must keep the field order
-    /// of the command answer (`serde_json::to_string(&page)`).
+    /// An event payload goes through `serde_json::Value`, which keeps the struct's field order only
+    /// with `preserve_order`: `lib/configChange.ts` compares a `ConfigView` from an answer with one
+    /// from `config:changed` as JSON text, and a `PageView` keeps the same order as an answer's.
     #[test]
     fn page_changed_payload_keeps_the_answer_field_order() {
         let dir = tempfile::tempdir().unwrap();
@@ -232,7 +221,7 @@ mod tests {
             ..Output::default()
         };
         assert!(!page.blocks.is_empty());
-        let events = events(&out, false);
+        let events = events(&out);
         assert_eq!(events[0].0, PAGE_CHANGED);
         assert_eq!(
             serde_json::to_string(&events[0].1).unwrap(),
@@ -241,7 +230,7 @@ mod tests {
     }
 
     /// A pull that brought new settings sends them first, so the pages after
-    /// them show with the new states. A command's own answer carries them.
+    /// them show with the new states.
     #[test]
     fn events_send_a_pulled_config_first() {
         let dir = tempfile::tempdir().unwrap();
@@ -275,15 +264,58 @@ mod tests {
             removed: vec!["x".into()],
             ..Output::default()
         };
-        let sent = events(&out, true);
+        let sent = events(&out);
         assert_eq!(sent[0].0, "config:changed");
         assert_eq!(
             serde_json::to_string(&sent[0].1).unwrap(),
             serde_json::to_string(&config).unwrap(),
             "field order kept"
         );
-        let names: Vec<&str> = events(&out, false).iter().map(|e| e.0).collect();
-        assert_eq!(names, ["page:removed"]);
+        let names: Vec<&str> = sent.iter().map(|e| e.0).collect();
+        assert_eq!(names, ["config:changed", "page:removed"]);
+    }
+
+    /// Only the watcher and the Git thread send events, so every change goes: the window learns of an
+    /// outside change only this way.
+    #[test]
+    fn outside_runs_send_every_change() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut session = Session::new();
+        let mut run = |command| {
+            let generation = session.generation();
+            session
+                .run(
+                    Request {
+                        generation,
+                        command,
+                    },
+                    crate::test_clock(),
+                )
+                .unwrap()
+        };
+        run(Command::FolderOpen {
+            path: dir.path().to_path_buf(),
+        });
+        let config = run(Command::ConfigGet).config.unwrap();
+        let out = Output {
+            config: Some(config),
+            dailies: Some(Vec::new()),
+            saved: vec!["a".into()],
+            notices: vec![Notice::Refused {
+                message: "n".into(),
+            }],
+            ..Output::default()
+        };
+        let names: Vec<&str> = events(&out).iter().map(|e| e.0).collect();
+        assert_eq!(
+            names,
+            [
+                "config:changed",
+                "dailies:changed",
+                "pages:saved",
+                "notices:added"
+            ]
+        );
     }
 
     #[test]
@@ -296,7 +328,7 @@ mod tests {
             removed: vec!["old".into()],
             ..Output::default()
         };
-        let names: Vec<&str> = events(&out, false).iter().map(|e| e.0).collect();
+        let names: Vec<&str> = events(&out).iter().map(|e| e.0).collect();
         assert_eq!(names, ["page:renamed", "page:removed"]);
     }
 
@@ -309,12 +341,11 @@ mod tests {
             saved: vec!["a".into()],
             ..Output::default()
         };
-        let all = |from_watcher| events(&out, from_watcher);
-        let names: Vec<&str> = all(true).iter().map(|e| e.0).collect();
+        let all = events(&out);
+        let names: Vec<&str> = all.iter().map(|e| e.0).collect();
         // Saved first, then the notices, the order `apply` uses for a command:
         // a page saved and then failing again keeps its new notice.
         assert_eq!(names, ["pages:saved", "notices:added"]);
-        assert!(all(true).contains(&("pages:saved", serde_json::json!(["a"]))));
-        assert!(all(false).iter().all(|e| e.0 != "pages:saved"));
+        assert!(all.contains(&("pages:saved", serde_json::json!(["a"]))));
     }
 }

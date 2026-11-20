@@ -4,10 +4,10 @@ import type { Invoke } from './api'
 import { countsInFlight } from './sync'
 
 /**
- * Runs event handlers once no command is running. The shell emits a command's
- * events before the command answers, so an event that arrives meanwhile may be
- * our own echo: it is held, never dropped, and replayed after the output is
- * applied (when it can be told apart from news).
+ * Runs event handlers once no command is running. An event of a change made
+ * outside the window that arrives meanwhile is held, never dropped, and
+ * replayed after the command's output is applied, so that answer, made before
+ * the change, never overwrites the newer view the event brings.
  */
 export class WhenIdle {
   private held: (() => void)[] = []

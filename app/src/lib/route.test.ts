@@ -40,7 +40,7 @@ test('navigating to another page resets the scroll and reloads the references', 
   expect(r.place).toBe('navigate')
   expect(r.show?.key).toBe('b')
   expect([r.moved, r.resetScroll, r.closeFeed, r.refreshRefs, r.clearSelection]).toEqual([true, true, true, true, true])
-  expect(r.own.map((p) => p.key)).toEqual(['b'])
+  expect(r.others).toEqual([])
 })
 
 test('opening the shown page again keeps the scroll', () => {
@@ -53,7 +53,7 @@ test('an edit in a loaded day goes to that day', () => {
   const r = route(out({ page: pg('d', [1]) }), { type: 'block.setText', id: 1, text: 'x' }, view({ days: new Set(['d']) }), false)
   expect(r.place).toBe('day')
   expect(r.days.map((p) => p.key)).toEqual(['d'])
-  expect(r.own.map((p) => p.key)).toEqual(['d'])
+  expect(r.others).toEqual([])
   expect(r.shown).toBe(true)
 })
 
@@ -102,15 +102,15 @@ test('an edit in the open card patches it and reloads nothing yet', () => {
   const r = route(out({ page: pg('p', [5]) }), { type: 'block.setText', id: 5, text: 'x' }, view({ board: true, card: 'p' }), false)
   expect(r.place).toBe('none')
   expect(r.cardPages.map((p) => p.key)).toEqual(['p'])
-  expect(r.own.map((p) => p.key)).toEqual(['p'])
+  expect(r.others).toEqual([])
   expect(r.shown).toBe(true)
   expect(r.refreshBoard).toBe(true) // held by Boards while the card is open
 })
 test('a state change on the board reloads it; a navigation leaves it', () => {
   const set = route(out({ page: pg('p', [5]) }), { type: 'blocks.setState', ids: [5], keyword: 'DONE' }, view({ board: true }), false)
   expect([set.refreshBoard, set.leaveBoard, set.shown]).toEqual([true, false, false])
-  // The board's own outputs are echoes, so their page:changed does not load the board a second time.
-  expect(set.own.map((p) => p.key)).toEqual(['p'])
+  // The board takes its own outputs, so they do not load it a second time as pages changed elsewhere.
+  expect(set.others).toEqual([])
   const nav = route(out({ page: pg('p', [5]) }), { type: 'page.open', name: 'p' }, view({ board: true }), false)
   expect([nav.place, nav.leaveBoard]).toEqual(['navigate', true])
   const feed = route(out(feedAnswer), { type: 'journal.feed' }, view({ board: true }), true)
@@ -130,7 +130,7 @@ test('archiving reloads the board through its changed pages', () => {
 test('a rename from the tree while the table is shown stays and reloads it', () => {
   const r = route(out({ page: pg('b', [1]), changed: [pg('c', [2])] }), { type: 'page.rename', key: 'a', name: 'B' }, view({ allPages: true }), false)
   expect([r.place, r.leaveAllPages, r.refreshAllPages]).toEqual(['none', false, true])
-  expect(r.own.map((p) => p.key)).toEqual(['b', 'c'])
+  expect(r.others).toEqual([])
 })
 test('opening a page or the feed leaves the table', () => {
   const r = route(out({ page: pg('b', [1]) }), { type: 'page.show', key: 'b' }, view({ allPages: true }), false)
@@ -238,7 +238,7 @@ test('a navigation leaves the Git history; other answers keep it', () => {
   expect(route(out({ page: pg('b', [1]) }), { type: 'page.open', name: 'b' }, view({}), false).leaveGitLog).toBe(false)
 })
 
-// What the shell's events did for our own changes, now taken from the answer.
+// What the shell's events would do for a change made outside the window, done from the answer.
 const setText = (id: number): Command => ({ type: 'block.setText', id, text: 'x' })
 const rename = (key: string): Command => ({ type: 'page.rename', key, name: 'B' })
 const autoArchive: Command = { type: 'archive.auto', editing: null }
@@ -266,7 +266,6 @@ test('every page of the answer goes to the journal', () => {
 test('archive.auto on the shown page puts it in others', () => {
   const r = route(out({ changed: [pg('a', [1]), pg('x', [2])] }), autoArchive, view({ page: 'a' }), false)
   expect(keys(r.others)).toEqual(['a', 'x'])
-  expect(r.own).toEqual([])
 })
 test('archive.auto with the Archive view shown puts its pages in others', () => {
   const r = route(out({ changed: [pg('d', [1])] }), autoArchive, view({ archive: true }), false)
@@ -277,11 +276,11 @@ test('a rename that rewrites the shown page puts it in others', () => {
   expect(r.place).toBe('none')
   expect(keys(r.others)).toEqual(['b', 'a'])
 })
-test('a page route keeps as its own is not in others', () => {
+test('a page the route applies is not in others', () => {
   const shown = route(out({ page: pg('a', [1]) }), setText(1), view({ page: 'a' }), false)
-  expect([keys(shown.own), keys(shown.others)]).toEqual([['a'], []])
+  expect(shown.others).toEqual([])
   const day = route(out({ changed: [pg('d', [1]), pg('x', [2])] }), rename('a'), view({ days: new Set(['d']) }), false)
-  expect([keys(day.own), keys(day.others)]).toEqual([['d'], ['x']])
+  expect(keys(day.others)).toEqual(['x'])
   const group = route(out({ page: pg('g', [7]) }), setText(7), view({ page: 'a', groups: new Set(['g']) }), false)
   expect(group.others).toEqual([])
   const board = route(out({ changed: [pg('p', [1])] }), { type: 'board.archive', keyword: 'DONE' }, view({ board: true }), false)

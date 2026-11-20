@@ -59,10 +59,10 @@ export class Network {
     if (this.shown) this.reloads.request()
   }
 
-  /** A `page:changed` event: while shown the view takes it, and reloads unless it is our own echo. */
-  changed(own: boolean): boolean {
+  /** A page changed elsewhere: while shown the view takes it and reloads. */
+  changed(): boolean {
     if (!this.shown) return false
-    if (!own) this.refresh()
+    this.refresh()
     return true
   }
 

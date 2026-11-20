@@ -50,7 +50,7 @@ const rows: PageRowView[] = Array.from({ length: ROWS }, (_, i) => {
   } as PageRowView
 })
 
-// Vitest 5 hands `bench` to a test through its context (as echo.bench.ts does).
+// Vitest 5 hands `bench` to a test through its context.
 test('feed and table at scale', async ({ bench }) => {
   await bench
     .compare(

@@ -112,15 +112,14 @@ test('a failed refresh is a notice too', async () => {
   expect(notices).toEqual([{ kind: 'refused', message: 'boom' }])
 })
 
-test('a page change from another program reloads the shown table; our own echo does not (§6)', async () => {
+test('a page change from another program reloads the shown table (§6)', async () => {
   const { a, sent } = setup()
-  expect(a.changed(false)).toBe(false) // hidden: nothing happens, the other views take it
+  expect(a.changed()).toBe(false) // hidden: nothing happens, the other views take it
   expect(sent).toEqual([])
   await a.open()
-  expect(a.changed(true)).toBe(true)
   await tick()
   expect(sent.length).toBe(1)
-  expect(a.changed(false)).toBe(true)
+  expect(a.changed()).toBe(true)
   await tick()
   expect(sent).toEqual([{ type: 'pages.table' }, { type: 'pages.table' }])
 })

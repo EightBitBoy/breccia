@@ -156,7 +156,6 @@ function changedHost(over: Partial<PageChangedHost> = {}) {
   const h: PageChangedHost = {
     shows: (k) => k === 'a',
     active: () => true,
-    own: () => false,
     isGroup: (k) => k === 'p',
     reload: (k) => log.push(`reload ${k}`),
     patch: (p) => log.push(`patch ${p.key}`),
@@ -180,12 +179,10 @@ test('a change to a references group patches it; any other page reloads the refe
   expect(log).toEqual(['patch p', 'reconcile', 'refresh', 'refresh'])
 })
 
-test('our own echoes and events without a shown page change nothing', () => {
-  const own = changedHost({ own: () => true })
-  pageChanged(own.h, pageOf('a', []))
+test('events without a shown page change nothing', () => {
   const none = changedHost({ active: () => false, shows: () => false })
   pageChanged(none.h, pageOf('a', []))
-  expect([...own.log, ...none.log]).toEqual([])
+  expect(none.log).toEqual([])
 })
 
 test('a refs reload started by one event never hides the next event for the shown page', () => {
@@ -201,7 +198,4 @@ test('pageChanged reloads a loaded feed day', () => {
   const { h, log } = changedHost({ shows: (k) => k === 'd1' })
   pageChanged(h, pageOf('d1', []))
   expect(log).toEqual(['reload d1'])
-  const own = changedHost({ shows: (k) => k === 'd1', own: () => true })
-  pageChanged(own.h, pageOf('d1', []))
-  expect(own.log).toEqual([])
 })

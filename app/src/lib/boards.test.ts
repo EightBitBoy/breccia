@@ -140,14 +140,13 @@ test('an added card whose block is gone sends no delete', async () => {
 test("another view's change reloads the board, or patches the open card", async () => {
   const { b, sent } = setup()
   await b.open(0)
-  expect(b.changed(pg('q', [blk(1, 'y', 0)]), true)).toBe(false)
   await tick()
   expect(gets(sent)).toHaveLength(1)
-  b.changed(pg('q', [blk(1, 'y', 0)]), false)
+  expect(b.changed(pg('q', [blk(1, 'y', 0)]))).toBe(false)
   await tick()
   expect(gets(sent)).toHaveLength(2)
   b.openCard(cardOf(pg('p', [blk(5, 'TODO x', 0, 'TODO')]), 5)!, 'TODO')
-  expect(b.changed(pg('p', [blk(5, 'TODO x!', 0, 'TODO')]), false)).toBe(true)
+  expect(b.changed(pg('p', [blk(5, 'TODO x!', 0, 'TODO')]))).toBe(true)
   expect(b.card!.groups[0].refs[0].blocks[0].text).toBe('TODO x!')
 })
 test('close forgets the board and its card', async () => {

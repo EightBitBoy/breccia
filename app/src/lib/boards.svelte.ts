@@ -192,9 +192,8 @@ export class Boards {
     if (this.index !== null) this.reloads.request()
   }
 
-  /** Another view changed `p`; `own` if it is our own echo. Returns whether the open card was patched (App reconciles the editor). */
-  changed(p: PageView, own: boolean): boolean {
-    if (own) return false
+  /** `p` changed elsewhere. Returns whether the open card was patched (App reconciles the editor). */
+  changed(p: PageView): boolean {
     if (this.card && this.card.key === p.key) return this.patchCard(p, null)
     this.refresh()
     return false
