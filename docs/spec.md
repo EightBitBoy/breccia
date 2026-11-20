@@ -174,8 +174,9 @@ properties). The frontend gets parsed structure from the core and only adds synt
   (§7.13).
 - **The frontend never writes files.** It sends intents to the core: "set this block's text", "set this block's state to
   DOING", "insert block after", "indent", "move", "create page", "rename page", and so on. The core applies the intent to
-  its model, writes the file (atomically: write a temporary file, then rename), updates the index and emits a change
-  event. Every open view (page, journal, board, All pages, graph, search) updates from those events.
+  its model, writes the file (atomically: write a temporary file, then rename), updates the index and answers with what
+  changed. Every open view (page, journal, board, All pages, graph, search) updates from that answer; changes made
+  outside the window (another program, a Git pull) come as named events.
 - **External changes** (another editor, a Git pull) are picked up by the file watcher; Breccia's own writes are recognised
   and ignored by the watcher. If a file changes on disk while the user is editing a block in it, the edit in progress
   is kept, the rest of the file is reloaded, and if the block itself changed on disk the user gets a notice with both
@@ -578,7 +579,9 @@ few hundred milliseconds of a change.
 ## 9. Room for plugins later
 
 No plugin API in the first version, but: every user action goes through a named **command** (e.g. `block.setState`,
-`page.rename`) and every change emits a named **event**. Views register with the shell rather than being hard-wired.
+`page.rename`), and every change made outside the window emits a named **event**; the window's own commands get their
+changes in the answer. A later plugin API or second window would get events that name who caused them. Views register
+with the shell rather than being hard-wired.
 A later plugin API can expose those commands and events plus a plain DOM container to render into, so plugins never
 depend on Svelte internals.
 

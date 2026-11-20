@@ -152,8 +152,8 @@ Subagents write their reports to files and return short summaries.
   `breccia/config.toml`, which must keep its comments and unknown keys.
 - Tauri event names are `noun:verb` on the wire (`page:changed`, not the spec's `page.changed`). Command names keep
   their dots (`block.setState`).
-- Event payloads keep struct field order (serde_json `preserve_order`), because the frontend's echo check compares
-  `JSON.stringify` output.
+- Event payloads keep struct field order (serde_json `preserve_order`), because `lib/configChange.ts` compares a
+  `ConfigView` from an answer with one from `config:changed` as JSON text.
 - Unit tests under Node miss WebView-only failures, for example calling `setTimeout` as a method. Run `just e2e`
   whenever app wiring changes.
 - `App.svelte` has no unit-test harness. Put logic that needs tests in `app/src/lib/`.
