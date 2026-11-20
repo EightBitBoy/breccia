@@ -44,3 +44,9 @@ Task 5: implementer DONE, commits 0f8db3e, e16f460 (e2e 218; added Output::answe
 Task 5: review (opus) — spec ✅ (F4, F5), quality approved; 2 minor. No old-field readers left (typed + grep); App.svelte rename is one local constant, e2e result stands.
 Ruling: carry both minors (answer.ts `answer === null` check misses undefined; host.test.ts:532 ~140 chars) into Task 6, which edits the same files — cost if wrong: none.
 Task 5: complete (commits 39ffe03..e16f460, review clean)
+Task 6: dispatched (opus), BASE 618c06c
+Task 6: implementer DONE, commits 301b0cd, 26c23c0 (e2e 218; route never read the feed — App.svelte reads the feed answer, route only refs; two core assertions rewritten); review dispatched (opus)
+Task 6: review (opus) — spec ✅ (feed deviation correct: route takes feedShown, App.svelte reads the feed answer), quality approved; 3 minor. No reader of a removed field left (grep); rewritten core assertions still pin the same.
+Ruling: carry minors (route.test.ts repeats the feed literal 10×, lines to 150 chars — a shared const; allPagesState.test.ts:338 148 chars) into Task 7 — cost if wrong: none.
+Task 6: minor (deferred): no unit test catches a broken feed-answer read (App.svelte has no harness; e2e covers it).
+Task 6: complete (commits 618c06c..26c23c0, review clean)
