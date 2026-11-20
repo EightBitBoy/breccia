@@ -39,3 +39,8 @@ Ruling: carry minor "commands.ts / commands.test.ts end with a stray `},]` / `},
 Task 4: minor (deferred): commands.test.ts "row for every command" test compares lengths only, redundant with test 1.
 Task 4: minor (deferred): holdsEvents comment lost the list of commands that do not hold events (the false rows are the record).
 Task 4: complete (commits d7c6e08..b790a11, review clean)
+Task 5: dispatched (opus), BASE 39ffe03
+Task 5: implementer DONE, commits 0f8db3e, e16f460 (e2e 218; added Output::answering helper; a local rename in App.svelte during the e2e build — final e2e at finish covers it); review dispatched (opus)
+Task 5: review (opus) — spec ✅ (F4, F5), quality approved; 2 minor. No old-field readers left (typed + grep); App.svelte rename is one local constant, e2e result stands.
+Ruling: carry both minors (answer.ts `answer === null` check misses undefined; host.test.ts:532 ~140 chars) into Task 6, which edits the same files — cost if wrong: none.
+Task 5: complete (commits 39ffe03..e16f460, review clean)
