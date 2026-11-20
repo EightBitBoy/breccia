@@ -1,6 +1,9 @@
 // Keeping the one block editor in step with the core. Pure decisions only;
 // App.svelte carries them out.
+import { COMMANDS, type Kind } from './commands'
 import type { BlockId, Command } from './types'
+
+export type { Kind }
 
 /** The commands of the outline keys that move blocks; editor and selection share them. */
 export const blockCommand = {
@@ -26,60 +29,13 @@ export function heldDelete(key: string, at: number, c: number): Held | null {
   return null
 }
 
-/** How a command's output may touch the editor. */
-export type Kind =
-  /** `block.setText`: typing. The editor is ahead of the core, unless the core reshaped the text. */
-  | 'typing'
-  /** `block.split`: handled with `carryOver`. */
-  | 'split'
-  /** Moves blocks without changing their text: the editor keeps its text. */
-  | 'structure'
-  /** Changes text: the editor is locked while it runs and then shows the output. */
-  | 'text'
-  /** Not from the editor (open a page, insert a block, ...). */
-  | 'other'
-  /** `page.get`: the shown page again after another program changed it; see `afterRefresh`. */
-  | 'refresh'
-
-/**
- * Whether a running command holds back `page:changed` events (its own output
- * wins). Commands that never answer with a page do not: the queries `page.refs`, `page.renameReach`, `pages.list`, `board.get`,
- * `pages.table`, `archive.list`, `search.query`, `journal.day` and `graph.get`, and `graph.saveLayout`, which writes only to the cache folder.
- */
+/** Whether a running command holds back `page:changed` events (its own output wins); see `COMMANDS`. */
 export function countsInFlight(type: Command['type']): boolean {
-  return type !== 'page.refs' && type !== 'page.renameReach' && type !== 'pages.list' && type !== 'board.get' && type !== 'pages.table' && type !== 'archive.list' && type !== 'search.query' && type !== 'journal.day' && type !== 'graph.get' && type !== 'graph.saveLayout'
+  return COMMANDS[type].holdsEvents
 }
 
 export function kindOf(type: Command['type']): Kind {
-  switch (type) {
-    case 'block.setText':
-      return 'typing'
-    case 'block.split':
-      return 'split'
-    case 'blocks.indent':
-    case 'blocks.outdent':
-    case 'blocks.moveUp':
-    case 'blocks.moveDown':
-      return 'structure'
-    case 'block.merge':
-    case 'block.cycleState':
-    case 'block.stepState':
-    case 'block.paste':
-    case 'blocks.setState':
-    case 'board.place':
-    case 'blocks.setArchived':
-    case 'blocks.delete':
-    case 'block.delete':
-    case 'history.undo':
-    case 'history.redo':
-    case 'page.reload':
-    case 'page.overwrite':
-      return 'text'
-    case 'page.get':
-      return 'refresh'
-    default:
-      return 'other'
-  }
+  return COMMANDS[type].editor
 }
 
 export interface OutputState {
