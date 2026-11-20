@@ -767,6 +767,13 @@
       else boards.refresh()
     }
     host.apply(cmd, r.dropFocus ? { ...out, focus: null } : out, r.shown, before)
+    // What the shell's events of our own changes did, now from the answer (as their handlers below do).
+    if (r.refreshSearch) search.refresh() // an open search box asks again
+    if (r.refreshNames) search.refreshNames()
+    if (r.refreshGraph) network.refresh()
+    r.journalChanged.forEach((p) => journal.changed(p))
+    // A page changed beside what was applied (an archived block, a rewritten link) is news for the views.
+    r.others.forEach((p) => viewsTake(p, false))
   }
 
   /** "+ Add" was answered: its new block opens as a card, the caret after `KEYWORD `. */
@@ -1300,6 +1307,37 @@
     setTheme(storedTheme(c)).catch(refuse)
   }
 
+  /**
+   * Page `p` changed: the shown view takes it. `own` when the window already applied it (an echo of its own command);
+   * a page changed elsewhere, or one an own command changed beside what it applied (`Route.others`), is news.
+   */
+  function viewsTake(p: Page, own: boolean) {
+    // The table reloads for another program's change (§6); our own echoes it has already.
+    if (allPages.changed(own)) return
+    // The Archive view too: an automatic archive or another program's change shows.
+    if (archiveView.changed(own)) return
+    // The graph reloads the same way (§6).
+    if (network.changed(own)) return
+    if (boards.index !== null) {
+      // The board reloads (held while a card is open); the open card follows its page.
+      if (boards.changed(p, own)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
+      return
+    }
+    pageChanged(
+      {
+        shows: (key) => key === page?.key || (days?.has(key) ?? false),
+        active: () => page !== null || journal.feed !== null,
+        own: () => own,
+        isGroup,
+        reload: (key) => reloads.request(key),
+        patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
+        refresh: () => refreshRefs.request(),
+        reconcile: () => host.reconcile(null).catch((err) => console.error('editor update failed', err)),
+      },
+      p,
+    )
+  }
+
   /** Another program removed page `key`; our own commands' removals are handled where they run. */
   function pageRemoved(key: string) {
     nav.removed(key) // skipped from now on
@@ -1606,32 +1644,7 @@
         inFlight.idle.run(() => {
           search.refresh() // an open search box asks again
           journal.changed(p)
-          // The table reloads for another program's change (§6); our own echoes it has already.
-          if (allPages.changed(echoes.isOwnPage(p))) return
-          // The Archive view too: an automatic archive or another program's change shows.
-          if (archiveView.changed(echoes.isOwnPage(p))) return
-          // The graph reloads the same way (§6).
-          if (network.changed(echoes.isOwnPage(p))) return
-          if (boards.index !== null) {
-            // The board reloads (held while a card is open); the open card follows its page.
-            if (boards.changed(p, echoes.isOwnPage(p))) {
-              host.reconcile(null).catch((err) => console.error('editor update failed', err))
-            }
-            return
-          }
-          pageChanged(
-            {
-              shows: (key) => key === page?.key || (days?.has(key) ?? false),
-              active: () => page !== null || journal.feed !== null,
-              own: (q) => echoes.isOwnPage(q),
-              isGroup,
-              reload: (key) => reloads.request(key),
-              patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
-              refresh: () => refreshRefs.request(),
-              reconcile: () => host.reconcile(null).catch((err) => console.error('editor update failed', err)),
-            },
-            p,
-          )
+          viewsTake(p, echoes.isOwnPage(p))
         }),
       treeChanged: (t) => {
         if (isNewer(tree, t)) tree = t

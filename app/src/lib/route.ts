@@ -83,6 +83,16 @@ export interface Route {
   strayAdded: BlockId | null
   /** Hand the editor the output without its focus: it must not open on the stray block being deleted. */
   dropFocus: boolean
+  /** An open search asks again: the output changed or removed a page, or carries a tree. */
+  refreshSearch: boolean
+  /** An open search loads the page names again: the output carries a tree. */
+  refreshNames: boolean
+  /** The Graph screen stays shown and the output carries a tree or removals: reload it. */
+  refreshGraph: boolean
+  /** Every page of the output (`out.page`, then `out.changed`), for `journal.changed`. */
+  journalChanged: PageView[]
+  /** Pages of the output that `own` does not hold: App treats each as a page changed elsewhere (§9). */
+  others: PageView[]
 }
 
 /** Call after `journal.applyFeed`; `feedShown` is its result (false when there is no `feed` answer). */
@@ -142,6 +152,11 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     openAdded: false,
     strayAdded: null,
     dropFocus: false,
+    refreshSearch: false,
+    refreshNames: false,
+    refreshGraph: false,
+    journalChanged: [],
+    others: [],
   }
   if (out.page && place === 'day') {
     r.days.push(out.page)
@@ -200,6 +215,15 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     r.refreshAllPages = out.page !== null || out.changed.length > 0 || out.removed.length > 0 || out.tree !== null
   }
   r.shown = place !== 'none' || inGroup || feedShown || r.cardPages.length > 0
+  // What the shell's events of our own changes did, taken from the answer.
+  const pages = [out.page, ...out.changed].filter((p): p is PageView => p !== null)
+  r.refreshSearch = pages.length > 0 || out.removed.length > 0 || out.tree !== null
+  r.refreshNames = out.tree !== null
+  r.refreshGraph = view.graph && !leaveGraph && (out.tree !== null || out.removed.length > 0)
+  r.journalChanged = pages
+  // A page applied nowhere above (one `archive.auto` or a rename rewrote) is news, as if changed elsewhere.
+  const own = new Set(r.own)
+  r.others = pages.filter((p) => !own.has(p))
   return r
 }
 
