@@ -64,3 +64,6 @@ Task 8: minor (deferred): contract.test.ts:1003-1007 searches only commands.rs f
 Task 8: minor (deferred): events.rs outside_runs_send_every_change overlaps two ordering tests.
 Task 8: minor (deferred): smoke.mjs step 148 typed148 expects the edited block on the file's first line.
 Task 8: complete (commits 1a53e06..b9c52ec, review clean)
+Task 9: dispatched (sonnet), BASE 33cbd64
+Task 9: implementer DONE, commit 2f5617b (STATUS, reviewed.md item 66); review NOT yet dispatched — session paused at the usage limit.
+Next: Task 9 review (sonnet, BASE 33cbd64), then final review (opus) over 35534f0..HEAD with the deferred minors above, one fix wave, just lint/test/e2e (expect 219), write docs/plans/2026-11-20-15-the-contract-followups.md (STATUS links it), delete scratch files (keep progress.md, plan-path), report.
