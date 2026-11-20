@@ -70,6 +70,10 @@ export const COMMANDS = {
   'folder.open': { editor: 'other', holdsEvents: true },
   'folder.status': { editor: 'other', holdsEvents: true },
   'folder.tree': { editor: 'other', holdsEvents: true },
+  'git.init': { editor: 'other', holdsEvents: true },
+  'git.log': { editor: 'other', holdsEvents: true },
+  'git.status': { editor: 'other', holdsEvents: true },
+  'git.sync': { editor: 'other', holdsEvents: true },
   'graph.get': { editor: 'other', holdsEvents: false },
   'graph.saveLayout': { editor: 'other', holdsEvents: false },
   'history.redo': { editor: 'text', holdsEvents: true },
@@ -97,7 +101,4 @@ export const COMMANDS = {
   'session.dirty': { editor: 'other', holdsEvents: true },
   'states.set': { editor: 'other', holdsEvents: true },
   'states.usage': { editor: 'other', holdsEvents: true },
-  'git.status': { editor: 'other', holdsEvents: true },
-  'git.sync': { editor: 'other', holdsEvents: true },
-  'git.init': { editor: 'other', holdsEvents: true },
-  'git.log': { editor: 'other', holdsEvents: true },} as const satisfies Record<Command['type'], CommandInfo>
+} as const satisfies Record<Command['type'], CommandInfo>

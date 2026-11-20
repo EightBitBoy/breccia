@@ -48,6 +48,10 @@ const EXPECTED: [Command['type'], Kind, boolean][] = [
   ['folder.open', 'other', true],
   ['folder.status', 'other', true],
   ['folder.tree', 'other', true],
+  ['git.init', 'other', true],
+  ['git.log', 'other', true],
+  ['git.status', 'other', true],
+  ['git.sync', 'other', true],
   ['graph.get', 'other', false],
   ['graph.saveLayout', 'other', false],
   ['history.redo', 'text', true],
@@ -75,10 +79,7 @@ const EXPECTED: [Command['type'], Kind, boolean][] = [
   ['session.dirty', 'other', true],
   ['states.set', 'other', true],
   ['states.usage', 'other', true],
-  ['git.status', 'other', true],
-  ['git.sync', 'other', true],
-  ['git.init', 'other', true],
-  ['git.log', 'other', true],]
+]
 
 test('every command keeps its editor kind and its event hold', () => {
   const actual = Object.keys(COMMANDS)
