@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { closeCheck, closePrompt } from './close'
 import type { Command, Output } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 test('closePrompt', () => {
   expect(closePrompt([])).toBeNull()

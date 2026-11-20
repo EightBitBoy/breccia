@@ -3,7 +3,7 @@ import { cardOf } from './board'
 import { Boards } from './boards.svelte'
 import { refBlocks } from './refs'
 import type { BlockView, BoardView, Command, Notice, Output, PageView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const empty: Output = emptyOutput()
 const blk = (id: number, text: string, depth: number, state: string | null = null): BlockView => ({

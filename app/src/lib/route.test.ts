@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { extendsTo, route, selectionPageOf, type ShownView } from './route'
 import type { Feed } from './feed'
 import type { Command, Output, PageView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const empty: Output = emptyOutput()
 

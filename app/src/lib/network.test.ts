@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { Network } from './network.svelte'
 import { DEFAULT_FILTERS } from './graph'
 import type { Command, GraphView, Notice, Output } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const empty: Output = emptyOutput()
 const view = (o: Partial<GraphView> = {}): GraphView => ({ nodes: [], links: [], ...o }) as unknown as GraphView

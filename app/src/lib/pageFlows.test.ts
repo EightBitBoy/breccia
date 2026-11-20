@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { PageFlows } from './pageFlows.svelte'
 import type { Command, Notice, Output, TreeView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const out = (removed: string[] = []): Output => emptyOutput({ removed })
 

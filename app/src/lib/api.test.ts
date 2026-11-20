@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, expect, test, vi } from 'vitest'
 import { createClient, flushBeforeClose } from './api'
 import type { Command, Output } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 beforeEach(() => {
   vi.useFakeTimers()

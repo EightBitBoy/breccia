@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { AllPages } from './allPages.svelte'
 import type { Command, Notice, Output, PageRowView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const empty: Output = emptyOutput()
 const row = (o: Partial<PageRowView>): PageRowView => ({

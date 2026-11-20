@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { Journal } from './journal.svelte'
 import type { Command, FeedView, Notice, Output, PageView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 const empty: Output = emptyOutput()
 

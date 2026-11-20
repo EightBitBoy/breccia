@@ -20,6 +20,8 @@ rusqlite = { version = "0.41.1", features = ["bundled"] }
 unicode-normalization = "0.1.26"
 serde_json = "1"
 log = "0.4"
+# `no-serde-warnings` silences a harmless note about `transparent` on `BlockId`. It also hides any later
+# note of that kind, so read ts-rs output when a serde attribute changes.
 ts-rs = { version = "12.0.1", optional = true, features = ["no-serde-warnings"] }
 
 [features]

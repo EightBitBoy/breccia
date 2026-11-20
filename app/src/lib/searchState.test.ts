@@ -3,7 +3,7 @@ import { Search } from './search.svelte'
 import * as rowsModule from './search'
 import type { SearchRow } from './search'
 import type { Command, NameView, Notice, Output, SearchView } from './types'
-import { emptyOutput } from './emptyOutput'
+import { emptyOutput } from './emptyOutput.testing'
 
 vi.mock('./search', async (importOriginal) => {
   const orig = await importOriginal<typeof import('./search')>()
