@@ -99,7 +99,10 @@ test('a failed refresh is a notice too', async () => {
   let fail = false
   const notices: Notice[] = []
   const a = new AllPages({
-    run: () => (fail ? Promise.reject({ code: 'internal', message: 'boom' }) : Promise.resolve({ ...empty, answer: { kind: 'table', value: [] } })),
+    run: () =>
+      fail
+        ? Promise.reject({ code: 'internal', message: 'boom' })
+        : Promise.resolve({ ...empty, answer: { kind: 'table', value: [] } }),
     notify: (n) => notices.push(n),
   })
   await a.open()
