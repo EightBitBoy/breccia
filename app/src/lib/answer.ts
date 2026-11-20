@@ -10,7 +10,8 @@ export type AnswerValue<K extends Answer['kind']> = Values[K]
 
 /** The value of `out`'s answer when it is of `kind`; null for another kind or no answer. */
 export function answerOf<K extends Answer['kind']>(out: Output, kind: K): AnswerValue<K> | null {
-  const answer: Answer | null = out.answer
-  if (answer === null || answer.kind !== kind) return null
+  // A fake reply in a test may leave the field out: undefined is no answer too.
+  const answer: Answer | null | undefined = out.answer
+  if (answer === null || answer === undefined || answer.kind !== kind) return null
   return answer.value as AnswerValue<K>
 }

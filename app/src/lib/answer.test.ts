@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { answerOf } from './answer'
 import { emptyOutput } from './emptyOutput.testing'
-import type { UsageView } from './types'
+import type { Output, UsageView } from './types'
 
 test('answerOf gives the value of an answer of its kind', () => {
   const out = emptyOutput({ answer: { kind: 'reach', value: 3 } })
@@ -20,6 +20,11 @@ test('answerOf gives null for an answer of another kind', () => {
 
 test('answerOf gives null when the command answers nothing', () => {
   expect(answerOf(emptyOutput(), 'reach')).toBeNull()
+})
+
+test('answerOf gives null for a reply without the answer field', () => {
+  const { answer: _, ...rest } = emptyOutput()
+  expect(answerOf(rest as Output, 'reach')).toBeNull()
 })
 
 test('answerOf types the value by its kind', () => {
