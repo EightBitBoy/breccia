@@ -29,3 +29,8 @@ Task 3: dispatched (sonnet, base dffce9d)
 Task 3: implementer DONE 32e5b47 (F9 done here; Task 8 skips it); review dispatched (sonnet)
 Task 3: review clean (spec ✅, approved). minor (deferred): no session test that setting the same date twice is a no-op; notATask test checks only the code; bad date on an unknown id answers badDate first (harmless).
 Task 3: complete (commits dffce9d..32e5b47, review clean)
+Task 4: dispatched (sonnet, base 95f0349)
+Task 4: implementer DONE 31ebc33 (RED captured after writing code, by moving files away); review dispatched (sonnet)
+Task 4: review clean (spec ✅, approved). Cannot-verify item (fillDueChips regex vs the core span) checked by controller: due.ts:48 matches render.rs:456 exactly.
+Task 4: minor (deferred): NOT_A_TASK "matches the core" test compares the constant with its own literal; real focus/visibility wiring untested and start() has no double-call guard; no finished-other-year or leap-day case; --due-* token lines sit mid --c-* run.
+Task 4: complete (commits 95f0349..31ebc33, review clean)
