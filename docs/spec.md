@@ -149,11 +149,18 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
 - **Task state.** A block is a task when its text starts with a configured state keyword followed by a space
   (`TODO …`). Only the keyword at the very start counts.
 - **Properties.** `key:: value` lines directly after the block's first line. Breccia itself writes only `created::`,
-  `done::`, `archived::` and `priority::` on blocks (`docs/format.md` §8), and `title::` and `color::` on pages (§4, §8); any other
+  `done::`, `archived::`, `priority::` and `due::` on blocks (`docs/format.md` §8), and `title::` and `color::` on pages (§4, §8); any other
   properties are kept as they are and shown dimmed.
 - **Done date.** When a block enters a *finished* state (DONE or any state marked finished), Breccia adds
   `done:: [[YYYY-MM-DD]]` (today) if it is not there yet. When it leaves the finished states, Breccia removes the
   property. Because the value is a page link, the task also appears in the linked references of the day it was finished.
+- **Due date.** A task can have a due date: a `due:: [[YYYY-MM-DD]]` line, whose value is a link to a journal day
+  (`docs/format.md` §8). Breccia writes it only when the user sets or removes the date: setting replaces the first
+  `due::` line where it stands, or adds one after the last property line; removing deletes every `due::` line. A
+  value that is no link to a day (`due:: soon`) gives no date and is kept as it is. Only a task has a due date; setting
+  one on a block that is not a task changes nothing. Changing the task's state, also to a finished one, and archiving
+  it leave the line alone, so a finished task keeps it. Because the value is a page link, the task also appears in the
+  linked references of its due day.
 - **Everything else** (headings, emphasis, code, quotes, tables, plain URLs, Logseq syntax Breccia does not know such as
   `SCHEDULED:` or `:LOGBOOK:` drawers) is preserved verbatim and rendered as Markdown where possible.
   A quote (`> …`, also on continuation lines) shows with a thin bar on its left and muted text, without the window's
@@ -241,7 +248,19 @@ second click on the Git history button is Back.
   page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and
   `Delete` do, and if that would leave the page (or journal day) without a block, one empty block stays with the caret
   in it; one `Ctrl Z` brings it back; `Ctrl Z` / `Ctrl Y` undo / redo, also across block boundaries (splits, merges,
-  moves).
+  moves). `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due-date
+  picker (below), and replaces the editor's own `Ctrl D` (select the next occurrence). On a block
+  that is not a task a note says "Only a task can have a due date." and nothing is written. `Ctrl Shift D` still opens
+  the go-to-a-day calendar.
+- **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line,
+  which stays in the file but is not shown. In a journal day, on a page, in linked references and in an open card the
+  right-click menu of a task has "Set due date…", which opens the due-date picker: the month calendar of the date
+  picker, with the day of a set date marked; a pick saves at once, and "Remove due date" (shown only when the task has a
+  date) removes it. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to "due in 5
+  days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says "overdue 22 Nov".
+  A finished task always shows the date ("due 22 Nov"). A chip in words (today to 5 days) has the date as its tooltip
+  ("1 Dec 2026"). The chip's tone: muted more than 2 days away, amber from today to 2 days away, red when overdue,
+  muted again on a finished task. It changes at midnight and after the computer wakes, with the app open.
 - Blocks with children have a fold arrow; folding is remembered per block for the session. *(my call: Logseq writes
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
 - **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` lists only the existing
@@ -314,7 +333,9 @@ readable", in the normal text color and in italics.
   same picker for the page the link goes to (aliases followed, tag-only pages included). Links to journal days and to
   pages that do not exist get no "Color…" entry. Inside an open block editor, and on selected text that is not a link
   to a colorable page (including a link to a day or a missing page), the normal browser menu stays, so copy and paste
-  keep working; elsewhere no menu opens. When the menu or the picker closes (a pick, Esc, a click outside), the focus
+  keep working; elsewhere no menu opens. The same holds on a page: outside an open block editor and off selected text
+  the browser's own menu no longer opens, and the right-click of a task gives its menu (above). On a page the
+  links get "Copy link" (web and mail links) and the task menu, but no "Color…", which only journal days list. When the menu or the picker closes (a pick, Esc, a click outside), the focus
   is on the link again, unless something else already holds it. If the day is drawn anew while the picker is open,
   the picker stays at its link; if the link is gone, it stays where it was, and a pick still colors the page.
 - **Web and mail links.** Wherever text is rendered (blocks, preambles, cards), the pointer resting on a web or mail
@@ -364,7 +385,8 @@ a **finished** flag and an **in cycle** flag. Defaults:
   every page and journal. Boards are stored in `breccia/config.toml`. The default board "Tasks" has TODO, DOING, WAITING,
   DONE. The user mostly uses one board, but can create more with other columns (e.g. "Focus": DOING, WAITING).
 - **Card**: the block's first line rendered (links and tags visible), its **description**, the source page (journal date
-  or page name), and the done date for finished tasks.
+  or page name), the done date for finished tasks, and the due chip of a task with a due date (§7.2). A card's menu has
+  "Set due date…", which opens the same picker as the task menu.
 - **Nested blocks** (decided):
   - **Children without a state are the task's description.** They are displayed on the card, rendered, below the task
     line, with their own nesting (and their children, as long as those have no state either). Long descriptions are

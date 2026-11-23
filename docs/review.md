@@ -174,3 +174,35 @@ are its questions for you; each answer decides what a later plan does.
    open card, Shift Tab on a line directly under the task, Alt ↑ on the first of them, Alt ↓ on the last, and Backspace
    at the start of the task's line do nothing; deeper lines still outdent, and every key in the journal and on pages
    works as before.
+
+## Due dates (plan 16)
+
+136. [ ] **Due dates on tasks:** by hand, in a journal day or on a page:
+   - Type `TODO Send the offer`, press Shift Enter and type `due:: [[2026-12-01]]` (a day 6 or more days away). When you
+     leave the block, the `due::` line is hidden and a chip "due 1 Dec" shows after the task.
+   - Right-click the task (not on a link): the menu has "Set due date…". It opens a month calendar at the task. Pick a
+     day: the chip changes and the file has one `due:: [[YYYY-MM-DD]]` line after the task's other property lines.
+     Open the calendar again: it says "Remove due date"; choose it and the chip and the line are gone.
+   - While editing a task press `Ctrl D` (`Cmd D` on a Mac): the same calendar opens. This key replaces the editor's own
+     `Ctrl D` (select the next occurrence); `Ctrl Shift D` still opens the go-to-a-day calendar. On a line that is not a
+     task, `Ctrl D` shows "Only a task can have a due date." and writes nothing. Is losing the old `Ctrl D` all right?
+   - On a board, hover a card, open its menu and choose "Set due date…": the same calendar; the card shows the chip.
+   - The chip's words (unfinished task) and tones: 6 or more days: "due 29 Nov" (with the year when it is not this
+     year), muted; 3 to 5 days: "due in 3 days", muted; 2 days: "due in 2 days", amber; tomorrow: "due tomorrow",
+     amber; today: "due today", amber; yesterday or earlier: "overdue 22 Nov", red. A chip in words ("today" to "in 5
+     days", and "overdue") shows the date as its tooltip, such as "1 Dec 2026".
+   - Finish the task (`Ctrl Enter` to DONE): the `due::` line stays and the chip says "due 22 Nov", muted. Make it
+     open again: the words and the colour come back.
+   - Open the page of the due day (click the date in a link, or search it): the task is in its linked references.
+   - Keep the app open over midnight, or let the PC sleep over it: the chip's words and colour follow the new day.
+   - A `due:: soon` line, or a `DEADLINE: <2026-12-01 Tue>` line, shows as ordinary dimmed text and gives no chip.
+   Things you may want to object to:
+   - Chips also show in linked references and in an open card, wherever the task is drawn, not only in the journal, on
+     pages and on board cards.
+   - On ordinary pages the right-click zone is new: outside an open editor and off selected text the browser's own
+     right-click menu no longer opens (as in journal days). Links on pages get "Copy link" and the task menu, but no
+     "Color…" (only journal days list colorable links).
+   - A board card's menu button shows only on hover, so "Set due date…" (and Archive) on a card has no way in by
+     keyboard. This was so before; backlog #99 holds it. Should a card have a key, as a task in the journal has `Ctrl D`?
+   - Boards cannot sort by due date yet (backlog #98). Which order do you want: a column setting, or due dates first
+     after `priority::`?

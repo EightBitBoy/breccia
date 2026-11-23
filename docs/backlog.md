@@ -293,3 +293,14 @@ discussed: (1) `Shift Enter` on a quote line and a multi-line paste into one add
 first line starts with `>` shows wholly as a quote (no typing, but other apps show it differently); (3) a Quote command
 that adds or removes `>` on every line of the selection. Recommended: 1 with 3, which keeps the file standard Markdown.
 The owner is thinking about it; decide before building.
+
+## 98. Sort board columns by due date (Boards)
+
+From plan 16, owner 2026-11-23: not in the first version of due dates. Options: a column setting, or due dates first
+after `priority::` (soonest first, cards without a due date after them). Decide before building.
+
+## 99. A keyboard path to a card's menu (Boards)
+
+From plan 16. The button of a card's menu shows only on hover, so the card menu (with Archive and "Set due date…") cannot
+be reached by keyboard. This was so before due dates. A task in a journal day or on a page has the key `Ctrl D` while
+editing; a card has none. Options: show the button when the card has the focus, or a key on the focused card.

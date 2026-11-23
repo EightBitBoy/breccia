@@ -14,7 +14,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 | **journal day** | The page of one day, `journals/YYYY-MM-DD.md`. | "Journal" in the sidebar (the feed of days), the date picker, "Journals" in the page tree |
 | **folder** | A folder inside `pages/`, shown in the page tree. It is not part of the page name. The root is called the notes folder, not a folder. | Sidebar "Pages" |
 | **block** | One bullet of the outline with its children; the unit you edit, move and link to. | Page view, journal feed |
-| **property** | A `key:: value` line under a block (`created::`, `done::`, `archived::`, `priority::`), or in a page's first lines (`title::`, `color::`). | The editor; `docs/format.md` §8 |
+| **property** | A `key:: value` line under a block (`created::`, `done::`, `archived::`, `priority::`, `due::`), or in a page's first lines (`title::`, `color::`). | The editor; `docs/format.md` §8 |
 | **link** | `[[Page]]`, to a page or a journal day. A link through an alias or with `#Heading` counts for the page it goes to. | The editor, linked references, search |
 | **tag** | `#tag` or `#[[two words]]`; it links to the page of that name. | Sidebar "Tags", the editor |
 | **linked references** | The blocks in other pages that link to this page, listed under the page. | Page view, "Linked from" counts |
@@ -27,6 +27,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 | Word | Meaning | Where |
 |---|---|---|
 | **task** | A block that starts with a state keyword. | Page view, boards, Archive |
+| **due date** | The day a task should be finished by: a `due::` line with a link to that day. Shown as a chip. | Task right-click menu, the due chip, `docs/format.md` §8 |
 | **state** | The keyword a task starts with (`TODO`, `DOING`, `WAITING`, `DONE` by default). A state can be *finished* and *in the cycle* (what `Ctrl Enter` steps through). | Settings > Task states, the slash menu |
 | **board** | A view of the tasks of the whole folder in columns. Boards are listed in `breccia/config.toml`. | Sidebar "Boards" |
 | **column** | One state of a board: it lists the tasks in that state. A column can be hidden. | A board |

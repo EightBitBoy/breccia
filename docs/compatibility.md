@@ -3,7 +3,7 @@
 Breccia keeps notes as Markdown files in a folder, and so do Obsidian and Logseq. This page says how far the three
 agree, how to set Obsidian or Logseq up to open a Breccia folder, and what does not carry over.
 
-Breccia's side is described exactly in [the notes format](format.md) (format version 9); this page links to its sections
+Breccia's side is described exactly in [the notes format](format.md) (format version 10); this page links to its sections
 instead of repeating them. For the other two apps:
 
 - Statements about Obsidian were checked against Obsidian's help pages (obsidian.md/help) on 2026-10-31. The ones about
@@ -113,6 +113,14 @@ Page colors use the same syntax: a `color:: <name>` line in the page's preamble 
 
 **Decision:** Breccia keeps `done::`; it is ordinary text to the other apps.
 
+### Due dates
+
+| Breccia | Obsidian | Logseq | What carries over |
+|---|---|---|---|
+| A task's `due:: [[YYYY-MM-DD]]` line gives it a due date, shown as a chip; Breccia writes it only when you set or remove the date ([§8](format.md#8-properties)). | Nothing built in; the Tasks plugin writes `📅 YYYY-MM-DD` in the task's line instead (not verified). | A task's own deadline is `DEADLINE: <2026-12-01 Tue>` (not verified). | In Obsidian a `due::` line is text; in Logseq a property with a link to the journal (not verified). Breccia keeps Logseq's `DEADLINE:` lines as text and does not read them as due dates. |
+
+**Decision:** Breccia has its own `due::` line; it is ordinary text to the other apps.
+
 ### Attachments and images
 
 | Breccia | Obsidian | Logseq | What carries over |
@@ -141,7 +149,7 @@ What to expect:
 
 - Pages, journals and `[[links]]` work, including `[[x|y]]`, `[[x#heading]]` and links to days (`[[2026-10-29]]`).
 - Task keywords (`TODO`, `DONE`, …) are plain words; Obsidian's task features do not see them.
-- `done::`, `created::`, `priority::`, `archived::`, `title::`, `color::` and other `key:: value` lines are text (not verified).
+- `done::`, `due::`, `created::`, `priority::`, `archived::`, `title::`, `color::` and other `key:: value` lines are text (not verified).
 - `#[[two words]]` is no tag, and a page named by `title::` shows its file name. For pages Breccia creates, the
   alias block lets Obsidian resolve a link such as `[[Q&A: hiring]]` to that page (not verified for a typed link).
   Pages without an alias block (made by another app, or before format version 2) have none; a link to them by their
