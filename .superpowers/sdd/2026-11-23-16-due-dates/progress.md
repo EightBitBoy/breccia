@@ -21,3 +21,7 @@ Task 1: review: spec ✅, 1 Important (no F13 mutation evidence for the pin test
 Task 1: minor (deferred): replacement fence test is only a pin; test strings are multi-line literals unlike neighbours; set_due/set_priority re-indent a fence-swallowed sibling on replace (pre-existing) → follow-ups.
 Task 1: fix round 1/5 (1 addressed, 0 open — F13 mutation evidence in report; no commits). Ruling: no scoped re-review — the round changed no code (empty diff); controller checked the report holds both mutations, the command and the outputs — cost: none.
 Task 1: complete (commits 02ee65a..60aa1ee, review clean)
+Task 2: dispatched (sonnet, base db7a057)
+Task 2: implementer DONE 4844450; review dispatched (sonnet)
+Task 2: review clean (spec ✅, approved). minor (deferred): render.rs task_state computed three times; redundant `finished` alias; no test for a task whose due:: line has no journal link.
+Task 2: complete (commits db7a057..4844450, review clean)
