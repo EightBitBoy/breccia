@@ -383,3 +383,13 @@ fn second_due_line_stays_visible() {
     assert_eq!(html.matches("class=\"prop\"").count(), 1, "{html}");
     assert!(html.contains("2026-12-09"), "{html}");
 }
+
+#[test]
+fn due_line_without_a_day_stays_a_property() {
+    for text in ["TODO a\ndue:: soon", "TODO a\ndue:: [[soon]]"] {
+        let html = h(text);
+        assert!(!html.contains("chip due"), "{html}");
+        assert_eq!(html.matches("class=\"prop\"").count(), 1, "{html}");
+        assert!(html.contains("prop-key\">due<"), "{html}");
+    }
+}
