@@ -38,3 +38,7 @@ Task 5: dispatched (opus, base 7e08d4f)
 Task 5: implementer DONE_WITH_CONCERNS ceea0cc (no by-eye check in just dev; e2e 226 green); review dispatched (opus). Ruling: the by-eye check moves to Task 10's e2e step 152 and review item 136 — the implementer cannot see the window — cost: a visual flaw found later by the owner.
 Task 5: review clean (opus; spec ✅, approved). minor (deferred): commit subject 95 chars (brief's wording); cardDue restates dueChip's return type; card chip lacks data-due (Task 10 may want it).
 Task 5: complete (commits 7e08d4f..ceea0cc, review clean)
+Task 6: dispatched (opus, base 386e683)
+Task 6: implementer DONE_WITH_CONCERNS 0b2c0a6 (checked by hand over DevTools; card chip gets data-due; pressing inside the due calendar keeps the block editing). Implementer rulings: calendar remembers prior focus until next open (bits-ui calls close-focus on open); focus returns to the card, not its hover-only menu button. Concern (pre-existing): card's hidden buttons are not Tab-reachable, so the card menu has no keyboard path → follow-ups/backlog. Review dispatched (opus).
+Task 6: review clean (opus; spec ✅, approved). minor (deferred): outside click returns focus, may fight the click's own focus (R7, check in e2e); "Remove due date" uses class dp-today; today outline hidden under chosen fill; no test for menuClosed focus fallback; Board.svelte import order. Card menu has no keyboard path (pre-existing) → follow-ups.
+Task 6: complete (commits 386e683..0b2c0a6, review clean)
