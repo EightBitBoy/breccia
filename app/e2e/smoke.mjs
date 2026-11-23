@@ -4479,6 +4479,132 @@ try {
   await page.locator(`[data-testid="day"][data-day="${today}"]`).waitFor()
   console.log('PASS 151 an open card keeps its text inside the task (Enter at the task line, at its start, Shift Tab, paste)')
 
+  // 152: a task's due date, set from its right-click menu, with Ctrl D while editing and from the card menu, is a
+  // `due::` line under the task; its chip says how near it is in words (the date as the tooltip) and turns amber,
+  // red, and muted when the task is finished. A plain block gets a note instead of the calendar.
+  const MONTHS152 = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+  /** `29 Nov`, with the year when `key` is not in this year (or always, for a tooltip). */
+  const short152 = (key, always = false) => {
+    const [y, m, dd] = key.split('-').map(Number)
+    return `${dd} ${MONTHS152[m - 1]}${always || y !== d.getFullYear() ? ` ${y}` : ''}`
+  }
+  const plus7 = dayKey(-7)
+  const plus3 = dayKey(-3)
+  const minus1 = dayKey(1)
+  const day152 = page.locator(`[data-testid="day"][data-day="${today}"]`)
+  const row152 = day152.locator('.block[data-block-id]', { hasText: 'due 152' }).first()
+  const chip152 = row152.locator('.chip.due')
+  const picker152 = page.locator('[data-testid="due-picker"][role="dialog"]')
+  const look152 = async () => ({
+    text: (await chip152.innerText()).trim(),
+    tone: await chip152.getAttribute('data-tone'),
+    title: await chip152.getAttribute('title'),
+  })
+  const rewrite152 = (from, to) => {
+    const text = readAt(journal)
+    assert(text.includes(from), `152 the journal lacks ${JSON.stringify(from)}`)
+    writeFileSync(`${journal}.tmp`, text.replace(from, to))
+    renameSync(`${journal}.tmp`, journal)
+  }
+  // 1. The task's right-click menu: "Set due date…" opens the calendar; a day a week ahead is picked.
+  const before152 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before152}- TODO due 152\n`)
+  renameSync(`${journal}.tmp`, journal)
+  await row152.waitFor()
+  const box152 = await row152.locator('.content').boundingBox()
+  await row152.locator('.content').click({ button: 'right', position: { x: box152.width - 4, y: box152.height / 2 } })
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  assert((await picker152.locator('[data-testid="due-picker-remove"]').count()) === 0, '152 a task with no due date is offered "Remove due date"')
+  if (plus7.slice(0, 7) !== today.slice(0, 7)) await picker152.locator('[data-testid="due-picker-next"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${plus7}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('152 a day picked from the task menu writes the due line', `${before152}- TODO due 152\n  due:: [[${plus7}]]\n`, journal)
+  await chip152.and(page.locator(`[data-due="${plus7}"]`)).waitFor()
+  const later152 = await look152()
+  assert(later152.text === `due ${short152(plus7)}` && later152.tone === 'later' && later152.title === null, `152 a week ahead: ${JSON.stringify(later152)}`)
+  rewrite152(`  due:: [[${plus7}]]\n`, `  due:: [[${plus3}]]\n`)
+  await chip152.and(page.locator(`[data-due="${plus3}"]`)).waitFor()
+  const in3 = await look152()
+  assert(in3.text === 'due in 3 days' && in3.tone === 'later' && in3.title === short152(plus3, true), `152 three days ahead: ${JSON.stringify(in3)}`)
+  console.log('PASS 152 the chip shows the date a week ahead, and "due in 3 days" with the date as its tooltip')
+  // 2. Ctrl D while editing: Esc closes the calendar and the editor keeps the focus; a second Ctrl D picks today.
+  await clickRow(row152)
+  await page.locator('.cm-content').waitFor()
+  await kb.press('Control+Home') // F12: the editor holds the due:: line too; the words go at the end of the first line
+  await kb.press('End')
+  await kb.type(' now')
+  await kb.press('Control+d')
+  await picker152.waitFor()
+  assert((await picker152.locator(`[data-key="${plus3}"]`).getAttribute('data-chosen')) === '', '152 the calendar does not mark the due date')
+  await kb.press('Escape')
+  await picker152.waitFor({ state: 'detached' })
+  await waitFor('152 Esc gives the focus back to the editor', () => page.evaluate(() => !!document.activeElement?.closest('.cm-content')), true)
+  await kb.press('Control+d')
+  await picker152.waitFor()
+  await picker152.locator('[data-testid="due-picker-today"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${today}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('152 Ctrl D and a day write the due line under the typed words', `${before152}- TODO due 152 now\n  due:: [[${today}]]\n`, journal)
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await chip152.and(page.locator(`[data-due="${today}"]`)).waitFor()
+  const today152 = await look152()
+  assert(today152.text === 'due today' && today152.tone === 'soon' && today152.title === short152(today, true), `152 due today: ${JSON.stringify(today152)}`)
+  console.log('PASS 152 Ctrl D sets the due date while editing; the chip reads "due today" in amber')
+  // 3. The card shows the chip too; "Set due date…" in its menu, then "Remove due date", takes the line away.
+  await page.locator('[data-testid="nav-board"][data-board="0"]').click()
+  await page.locator('[data-testid="board-title"]').filter({ hasText: 'Tasks' }).waitFor()
+  const card152 = cardTitled('due 152 now')
+  await card152.waitFor()
+  const cardDue152 = card152.locator('[data-testid="card-due"]')
+  assert((await cardDue152.innerText()).trim() === 'due today', `152 card chip: ${await cardDue152.innerText()}`)
+  assert((await cardDue152.getAttribute('data-tone')) === 'soon', `152 card chip tone: ${await cardDue152.getAttribute('data-tone')}`)
+  await cardMenuOf('due 152 now')
+  await page.locator('[data-testid="menu-due"]').click()
+  await picker152.waitFor()
+  await picker152.locator('[data-testid="due-picker-remove"]').click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('152 "Remove due date" from the card menu takes the due line away', `${before152}- TODO due 152 now\n`, journal)
+  await cardDue152.waitFor({ state: 'detached' })
+  await page.locator('[data-testid="nav-journal"]').click()
+  await day152.waitFor()
+  // 4. A due date in the past is overdue; finishing the task keeps the due line and mutes the chip.
+  rewrite152('- TODO due 152 now\n', `- TODO due 152 now\n  due:: [[${minus1}]]\n`)
+  await chip152.and(page.locator(`[data-due="${minus1}"]`)).waitFor()
+  const over152 = await look152()
+  assert(over152.text === `overdue ${short152(minus1)}` && over152.tone === 'overdue' && over152.title === null, `152 overdue: ${JSON.stringify(over152)}`)
+  await clickRow(row152)
+  await page.locator('.cm-content').waitFor()
+  await kb.press('Control+Enter')
+  await expectFile('152 a due task to DOING keeps its due line', `${before152}- DOING due 152 now\n  due:: [[${minus1}]]\n`, journal)
+  await kb.press('Control+Enter')
+  await expectFileLike(
+    '152 a finished task keeps its due line under the done line',
+    `${before152}- DONE due 152 now\n  due:: [[${minus1}]]\n  done:: [[${today}]] ${TIME}\n`,
+    journal,
+  )
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await chip152.and(page.locator('[data-tone="finished"]')).waitFor()
+  assert((await chip152.innerText()).trim() === `due ${short152(minus1)}`, `152 finished chip: ${await chip152.innerText()}`)
+  console.log('PASS 152 an overdue chip is red with its date; a finished task keeps the line and the chip turns muted')
+  // 5. Ctrl D on a plain block: a note, no calendar, no change.
+  const plain152 = `${readAt(journal)}- plain 152\n`
+  writeFileSync(`${journal}.tmp`, plain152)
+  renameSync(`${journal}.tmp`, journal)
+  const plainRow152 = day152.locator('.block[data-block-id]', { hasText: 'plain 152' }).first()
+  await plainRow152.waitFor()
+  await clickRow(plainRow152)
+  await page.locator('.cm-content').waitFor()
+  await kb.press('Control+d')
+  await page.locator('.notice', { hasText: 'Only a task can have a due date.' }).waitFor()
+  assert((await picker152.count()) === 0, '152 Ctrl D on a plain block opened the calendar')
+  await kb.press('Escape')
+  await page.locator('.cm-content').waitFor({ state: 'detached' })
+  await expectFile('152 Ctrl D on a plain block changes nothing', plain152, journal)
+  console.log('PASS 152 Ctrl D on a plain block shows "Only a task can have a due date." and writes nothing')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
