@@ -26,3 +26,6 @@ Task 2: implementer DONE 4844450; review dispatched (sonnet)
 Task 2: review clean (spec ✅, approved). minor (deferred): render.rs task_state computed three times; redundant `finished` alias; no test for a task whose due:: line has no journal link.
 Task 2: complete (commits db7a057..4844450, review clean)
 Task 3: dispatched (sonnet, base dffce9d)
+Task 3: implementer DONE 32e5b47 (F9 done here; Task 8 skips it); review dispatched (sonnet)
+Task 3: review clean (spec ✅, approved). minor (deferred): no session test that setting the same date twice is a no-op; notATask test checks only the code; bad date on an unknown id answers badDate first (harmless).
+Task 3: complete (commits dffce9d..32e5b47, review clean)
