@@ -421,6 +421,7 @@ impl Session {
                 text,
                 under,
             } => self.block_paste(id, at, text, under),
+            Command::BlockSetDue { id, due } => self.block_set_due(id, due),
             Command::BlockCycleState { id } => self.block_cycle_state(id, now),
             Command::BlockStepState { id } => self.block_step_state(id, now),
             Command::BlocksSetState { ids, keyword } => self.blocks_set_state(ids, keyword, now),

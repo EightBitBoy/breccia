@@ -416,6 +416,7 @@ for (const cmd of [
   { type: 'blocks.setState', ids: [1], keyword: 'TODO' },
   { type: 'block.cycleState', id: 1 },
   { type: 'block.stepState', id: 1 },
+  { type: 'block.setDue', id: 1, due: '2026-12-01' },
 ] as Command[]) {
   test(`Keep mine does not resend typing that ${cmd.type} has replaced`, async () => {
     await host.edit(1, 5)

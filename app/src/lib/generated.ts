@@ -135,7 +135,7 @@ under?: boolean, } | { "type": "block.merge", id: BlockId, } | { "type": "block.
  * Bullet lines go under the block, which keeps its whole text (a
  * paste into the task of an open card, §7.6).
  */
-under?: boolean, } | { "type": "block.cycleState", id: BlockId, } | { "type": "block.stepState", id: BlockId, } | { "type": "block.settle", id: BlockId, before: string | null, } | { "type": "blocks.setState", ids: Array<BlockId>, keyword: string | null, } | { "type": "archive.auto", editing?: BlockId | null, } | { "type": "blocks.setArchived", ids: Array<BlockId>, archived: boolean, } | { "type": "blocks.indent", ids: Array<BlockId>, } | { "type": "blocks.outdent", ids: Array<BlockId>, } | { "type": "blocks.moveUp", ids: Array<BlockId>, } | { "type": "blocks.moveDown", ids: Array<BlockId>, } | { "type": "blocks.delete", ids: Array<BlockId>,
+under?: boolean, } | { "type": "block.cycleState", id: BlockId, } | { "type": "block.setDue", id: BlockId, due: string | null, } | { "type": "block.stepState", id: BlockId, } | { "type": "block.settle", id: BlockId, before: string | null, } | { "type": "blocks.setState", ids: Array<BlockId>, keyword: string | null, } | { "type": "archive.auto", editing?: BlockId | null, } | { "type": "blocks.setArchived", ids: Array<BlockId>, archived: boolean, } | { "type": "blocks.indent", ids: Array<BlockId>, } | { "type": "blocks.outdent", ids: Array<BlockId>, } | { "type": "blocks.moveUp", ids: Array<BlockId>, } | { "type": "blocks.moveDown", ids: Array<BlockId>, } | { "type": "blocks.delete", ids: Array<BlockId>,
 /**
  * A user's selection delete: if every block would go, one empty block stays.
  */

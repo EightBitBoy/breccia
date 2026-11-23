@@ -4,6 +4,7 @@
 use chrono::NaiveDateTime;
 
 use crate::error::EditError;
+use crate::naming::parse_journal_name;
 use crate::outline::{BlockId, Document};
 
 use super::batch;
@@ -169,6 +170,25 @@ impl Session {
             &key,
             false,
             Box::new(move |d, _, cfg| d.cycle_state(id, cfg, now).map(|_| None)),
+        )
+    }
+
+    pub(super) fn block_set_due(
+        &mut self,
+        id: BlockId,
+        due: Option<String>,
+    ) -> Result<Output, CommandError> {
+        let day = match due {
+            None => None,
+            Some(s) => Some(parse_journal_name(&s).ok_or_else(|| {
+                CommandError::new(ErrorCode::BadDate, format_args!("not a date: {s}"))
+            })?),
+        };
+        let key = self.page_of(id)?;
+        self.mutate(
+            &key,
+            false,
+            Box::new(move |d, _, cfg| d.set_due(id, day, cfg).map(|_| None)),
         )
     }
 

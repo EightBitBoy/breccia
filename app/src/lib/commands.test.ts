@@ -10,6 +10,7 @@ const EXPECTED: [Command['type'], Kind, boolean][] = [
   ['archive.auto', 'other', true],
   ['archive.list', 'other', false],
   ['block.cycleState', 'text', true],
+  ['block.setDue', 'text', true],
   ['block.delete', 'text', true],
   ['block.insert', 'other', true],
   ['block.merge', 'text', true],

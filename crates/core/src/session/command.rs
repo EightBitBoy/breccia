@@ -254,6 +254,10 @@ pub enum Command {
     },
     #[serde(rename = "block.cycleState")]
     BlockCycleState { id: BlockId },
+    /// Sets a task's due date (`YYYY-MM-DD`) or removes it (`null`). A block
+    /// without a state is refused with `notATask`, a malformed date with `badDate`.
+    #[serde(rename = "block.setDue")]
+    BlockSetDue { id: BlockId, due: Option<String> },
     #[serde(rename = "block.stepState")]
     BlockStepState { id: BlockId },
     /// The block's editor closed; `before` is the state it had when the editor
@@ -392,6 +396,7 @@ impl Command {
             | Command::BlockMerge { .. }
             | Command::BlockPaste { .. }
             | Command::BlockCycleState { .. }
+            | Command::BlockSetDue { .. }
             | Command::BlockStepState { .. }
             | Command::BlockSettle { .. }
             | Command::BlocksSetState { .. }

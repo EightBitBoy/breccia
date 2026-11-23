@@ -161,6 +161,7 @@ export class EditorHost {
         break
       case 'block.cycleState':
       case 'block.stepState':
+      case 'block.setDue':
         this.typed.delete(cmd.id)
         break
     }

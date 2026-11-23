@@ -217,6 +217,11 @@ fn every_command() -> Vec<(Value, bool, bool)> {
         (json!({"type": "block.cycleState", "id": 1}), false, false),
         (json!({"type": "block.stepState", "id": 1}), false, false),
         (
+            json!({"type": "block.setDue", "id": 1, "due": null}),
+            false,
+            false,
+        ),
+        (
             json!({"type": "block.settle", "id": 1, "before": null}),
             false,
             false,
@@ -662,6 +667,85 @@ fn set_state_on_selection_and_cycle() {
     )
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::UnknownState);
+}
+
+#[test]
+fn set_due_writes_the_line_in_one_undo_step() {
+    let original = "- TODO a
+  created:: 2026-10-29 14:05:09
+";
+    let (t, mut s) = folder(&[("journals/2026-10-28.md", original)]);
+    let a = ids(&mut s, "2026-10-28")[0];
+    let out = ok(
+        &mut s,
+        json!({"type":"block.setDue","id":a,"due":"2026-12-01"}),
+        0,
+    );
+    let text = read(&t, "journals/2026-10-28.md");
+    assert!(
+        text.ends_with(
+            "
+  due:: [[2026-12-01]]
+"
+        ),
+        "{text}"
+    );
+    assert_eq!(
+        out.page.unwrap().blocks[0].due.as_deref(),
+        Some("2026-12-01")
+    );
+    ok(
+        &mut s,
+        json!({"type":"history.undo","page":"2026-10-28"}),
+        10,
+    );
+    assert_eq!(read(&t, "journals/2026-10-28.md"), original);
+}
+
+#[test]
+fn set_due_null_removes_it() {
+    let original = "- TODO a
+  created:: 2026-10-29 14:05:09
+  due:: [[2026-12-01]]
+";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let a = ids(&mut s, "p")[0];
+    ok(&mut s, json!({"type":"block.setDue","id":a,"due":null}), 0);
+    assert_eq!(
+        read(&t, "pages/P.md"),
+        "- TODO a
+  created:: 2026-10-29 14:05:09
+"
+    );
+}
+
+#[test]
+fn set_due_on_a_plain_block_answers_not_a_task() {
+    let original = "- a
+";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let a = ids(&mut s, "p")[0];
+    let err = cmd(
+        &mut s,
+        json!({"type":"block.setDue","id":a,"due":"2026-12-01"}),
+        0,
+    )
+    .unwrap_err();
+    assert_eq!(err.code, ErrorCode::NotATask);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
+fn set_due_with_a_bad_date_answers_bad_date() {
+    let original = "- TODO a
+";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let a = ids(&mut s, "p")[0];
+    for bad in ["2026-13-01", "1.12.", "", "2026-1-1", " 2026-12-01"] {
+        let err = cmd(&mut s, json!({"type":"block.setDue","id":a,"due":bad}), 0).unwrap_err();
+        assert_eq!(err.code, ErrorCode::BadDate, "{bad:?}");
+    }
+    assert_eq!(read(&t, "pages/P.md"), original);
 }
 
 #[test]

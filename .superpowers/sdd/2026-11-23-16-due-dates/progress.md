@@ -25,3 +25,4 @@ Task 2: dispatched (sonnet, base db7a057)
 Task 2: implementer DONE 4844450; review dispatched (sonnet)
 Task 2: review clean (spec ✅, approved). minor (deferred): render.rs task_state computed three times; redundant `finished` alias; no test for a task whose due:: line has no journal link.
 Task 2: complete (commits db7a057..4844450, review clean)
+Task 3: dispatched (sonnet, base dffce9d)

@@ -37,6 +37,7 @@ export const COMMANDS = {
   'block.merge': { editor: 'text', holdsEvents: true },
   'block.paste': { editor: 'text', holdsEvents: true },
   'block.setText': { editor: 'typing', holdsEvents: true },
+  'block.setDue': { editor: 'text', holdsEvents: true },
   'block.settle': { editor: 'other', holdsEvents: true },
   'block.split': { editor: 'split', holdsEvents: true },
   'block.stepState': { editor: 'text', holdsEvents: true },
