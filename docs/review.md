@@ -159,3 +159,7 @@ are its questions for you; each answer decides what a later plan does.
    on a named link and a card; a mail link shows the address without `mailto:`). Right-click the address in a journal
    day or on a page: the menu holds "Copy link"; choose it and paste somewhere: the full address is pasted. Open
    question: should board cards get the "Copy link" menu too (today only the tooltip)?
+
+134. [ ] **Quotes look like quotes:** write a block `> Some quote` (or add a second line `  > more` under it) and leave
+   the editor: the quote shows with a thin bar on its left and muted text, flush with the row, without the big indent
+   and extra space it had before. The same in a page's preamble and on a board card.

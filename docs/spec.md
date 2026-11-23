@@ -156,6 +156,8 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
   property. Because the value is a page link, the task also appears in the linked references of the day it was finished.
 - **Everything else** (headings, emphasis, code, quotes, tables, plain URLs, Logseq syntax Breccia does not know such as
   `SCHEDULED:` or `:LOGBOOK:` drawers) is preserved verbatim and rendered as Markdown where possible.
+  A quote (`> …`, also on continuation lines) shows with a thin bar on its left and muted text, without the window's
+  default indent and spacing, in blocks, preambles and cards.
 - **Round trip.** The parser keeps the original text of every block. Writing a file re-emits unchanged blocks exactly as
   they were read; only blocks the user changed are regenerated. This is how the "never mangle text" anti-goal is met,
   and it needs thorough tests (parse → write must give back the identical file for a large set of sample files).

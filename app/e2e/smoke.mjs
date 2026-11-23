@@ -4391,6 +4391,34 @@ try {
   assert(readAt(journal) === file149, '149 copying a link changed the journal file')
   console.log('PASS 149 a web address shows its full address on hover; "Copy link" in its menu copies it')
 
+  // 150: a quote (`> …`) in a block shows as a quote that fits the row: a bar on its left, muted text, no indent on
+  // the right and no extra space above or below (the window's own default indents it 40 px on both sides).
+  const before150 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before150}- > quoted 150\n  > second line\n`)
+  renameSync(`${journal}.tmp`, journal)
+  const quote150 = page.locator(`[data-testid="day"][data-day="${today}"] .block blockquote`, { hasText: 'quoted 150' })
+  await quote150.waitFor()
+  const look150 = await quote150.evaluate((q) => {
+    const s = getComputedStyle(q)
+    const probe = document.createElement('span')
+    probe.style.color = 'var(--muted)'
+    document.body.append(probe)
+    const muted = getComputedStyle(probe).color
+    probe.remove()
+    return {
+      bar: `${s.borderLeftStyle} ${s.borderLeftWidth}`,
+      margin: [s.marginTop, s.marginRight, s.marginBottom, s.marginLeft].join(' '),
+      muted: s.color === muted,
+      lines: q.innerText.trim(),
+    }
+  })
+  assert(look150.bar === 'solid 3px', `150 quote bar: ${look150.bar}`)
+  assert(look150.margin === '0px 0px 0px 0px', `150 quote margins: ${look150.margin}`)
+  assert(look150.muted, '150 the quote text is not muted')
+  assert(look150.lines === 'quoted 150\nsecond line', `150 quote text: ${JSON.stringify(look150.lines)}`)
+  assert(readAt(journal) === `${before150}- > quoted 150\n  > second line\n`, '150 showing a quote changed the file')
+  console.log('PASS 150 a quote in a block shows with a bar on its left, muted, without the default indent')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

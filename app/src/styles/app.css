@@ -118,6 +118,9 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .content code, .preamble code { background: var(--edit); border-radius: 4px; padding: 0 4px; }
 .content pre, .preamble pre { background: var(--edit); border-radius: 6px; padding: 6px 10px; margin: 4px 0; overflow: auto; }
 .content img { max-width: 100%; }
+/* A quote (`> …`) fits its row: a bar on its left, muted text, none of the window's default indent and spacing. */
+.content blockquote, .preamble blockquote, .card-title blockquote { margin: 0; padding-left: 10px; border-left: 3px solid var(--line); color: var(--muted); }
+.content blockquote p, .preamble blockquote p, .card-title blockquote p { margin: 0; }
 
 /* ---------- the block editor (CodeMirror) ---------- */
 .editor-slot .cm-editor {

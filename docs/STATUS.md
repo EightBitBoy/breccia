@@ -196,9 +196,9 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1254 tests) and cargo tests (core: lib 53, integration 858 with 2 ignored; shell 95) pass
+- `just test`: Vitest (1254 tests) and cargo tests (core: lib 53, integration 859 with 2 ignored; shell 95) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 220 PASS lines, the last step is 149 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 221 PASS lines, the last step is 150 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.

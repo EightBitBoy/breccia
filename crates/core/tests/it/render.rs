@@ -339,3 +339,11 @@ fn preamble_html_shows_an_invalid_vividness() {
     assert!(!preamble_html("color:: hue 212 vivid 150\nnote\n").contains("color::"));
     assert!(preamble_html("color:: hue 212 vivid 300\n").contains("vivid 300"));
 }
+
+#[test]
+fn a_quote_renders_as_a_quote_with_its_links() {
+    assert_eq!(
+        h("> Said [[Anna]]\n> on two lines"),
+        "<blockquote>\n<p>Said <a class=\"link\" data-page=\"anna\" data-name=\"Anna\">Anna</a><br />\non two lines</p>\n</blockquote>\n"
+    );
+}
