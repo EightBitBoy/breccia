@@ -1991,6 +1991,7 @@
                 onopen={(key) => void exec({ type: 'page.open', name: key })}
                 onstart={(key) => void exec({ type: 'block.insert', page: key, after: null, text: '' })}
                 onsetcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
+                onsetdue={(id, due) => void exec({ type: 'block.setDue', id, due })}
               />
             {:else if page}
               <PageView
@@ -2007,6 +2008,7 @@
                 onopen={(name) => void exec({ type: 'page.open', name })}
                 onsetcolor={(color) => void exec({ type: 'page.setColor', key: page!.key, color })}
                 onlinkcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
+                onsetdue={(id, due) => void exec({ type: 'block.setDue', id, due })}
                 onhistory={(redo) => void exec({ type: redo ? 'history.redo' : 'history.undo', page: page!.key })}
               />
             {/if}

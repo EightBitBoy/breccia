@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { colorTarget, linkMenuAction, pickingColor, pointInBoxes } from './linkColor'
-import type { TargetView } from './types'
+import { colorTarget, linkMenuAction, pickingColor, pointInBoxes, taskOf } from './linkColor'
+import type { BlockView, TargetView } from './types'
 
 const targets: TargetView[] = [
   { raw: 'hiring', kind: 'link', key: 'hiring', name: 'Hiring', color: 'blue' },
@@ -30,25 +30,25 @@ test('external links, unknown keys and anchors without a key give nothing', () =
 
 test('a right-click in the block editor keeps the native menu', () => {
   const anchor = { className: 'link', dataPage: 'hiring' }
-  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor }, targets)).toEqual({ kind: 'native' })
+  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor, task: null }, targets)).toEqual({ kind: 'native' })
 })
 
 test('a right-click on a colorable link opens the menu, even inside a selection', () => {
   const anchor = { className: 'tag', dataPage: 'garden' }
-  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor }, targets)).toEqual({
+  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor, task: null }, targets)).toEqual({
     kind: 'menu',
     target: targets[2],
   })
 })
 
 test('a right-click on selected text keeps the native menu', () => {
-  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: null }, targets)).toEqual({ kind: 'native' })
+  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: null, task: null }, targets)).toEqual({ kind: 'native' })
 })
 
 test('a right-click elsewhere shows no menu at all', () => {
-  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null }, targets)).toEqual({ kind: 'none' })
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null, task: null }, targets)).toEqual({ kind: 'none' })
   const missing = { className: 'link', dataPage: 'missing' }
-  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: missing }, targets)).toEqual({ kind: 'none' })
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: missing, task: null }, targets)).toEqual({ kind: 'none' })
 })
 
 test('a point inside a box is in the boxes', () => {
@@ -91,12 +91,12 @@ test('a page the list no longer holds keeps the color it had when the picker ope
 
 test('a right-click on a web address opens the menu with its address to copy, even inside a selection', () => {
   const web = { className: 'ext', dataPage: null, href: 'https://x.com/a?b=1&c=2' }
-  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: web }, targets)).toEqual({
+  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: web, task: null }, targets)).toEqual({
     kind: 'copy',
     url: 'https://x.com/a?b=1&c=2',
   })
   const mail = { className: 'ext', dataPage: null, href: 'mailto:me@x.com' }
-  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: mail }, targets)).toEqual({
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: mail, task: null }, targets)).toEqual({
     kind: 'copy',
     url: 'me@x.com',
   })
@@ -104,5 +104,57 @@ test('a right-click on a web address opens the menu with its address to copy, ev
 
 test('a web address in the block editor keeps the native menu', () => {
   const web = { className: 'ext', dataPage: null, href: 'https://x.com/a' }
-  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor: web }, targets)).toEqual({ kind: 'native' })
+  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor: web, task: null }, targets)).toEqual({ kind: 'native' })
+})
+
+const task = { id: 7, due: '2026-11-30' }
+
+test('a right-click on a task row away from its links opens the task menu', () => {
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null, task }, targets)).toEqual({
+    kind: 'task',
+    id: 7,
+    due: '2026-11-30',
+  })
+  const none = { id: 8, due: null }
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: null, task: none }, targets)).toEqual({
+    kind: 'task',
+    id: 8,
+    due: null,
+  })
+})
+
+test('a link or tag in a task row keeps its own menu', () => {
+  const tag = { className: 'tag', dataPage: 'garden' }
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: tag, task }, targets)).toEqual({
+    kind: 'menu',
+    target: targets[2],
+  })
+  const web = { className: 'ext', dataPage: null, href: 'https://x.com/a' }
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: web, task }, targets)).toEqual({
+    kind: 'copy',
+    url: 'https://x.com/a',
+  })
+  const missing = { className: 'link', dataPage: 'missing' }
+  expect(linkMenuAction({ inEditor: false, onSelection: false, anchor: missing, task }, targets)).toEqual({ kind: 'none' })
+})
+
+test('a task row in the block editor or on selected text keeps the native menu', () => {
+  expect(linkMenuAction({ inEditor: true, onSelection: false, anchor: null, task }, targets)).toEqual({ kind: 'native' })
+  expect(linkMenuAction({ inEditor: false, onSelection: true, anchor: null, task }, targets)).toEqual({ kind: 'native' })
+})
+
+function row(id: number, state: string | null, due?: string): BlockView {
+  return { id, depth: 0, text: '', html: '', state, finished: false, due, hasChildren: false } as BlockView
+}
+
+test('a row is a task when its block has a state, with its due date or none', () => {
+  const blocks = [row(1, null), row(2, 'TODO', '2026-12-01'), row(3, 'DONE')]
+  expect(taskOf(2, blocks)).toEqual({ id: 2, due: '2026-12-01' })
+  expect(taskOf(3, blocks)).toEqual({ id: 3, due: null })
+})
+
+test('a row that is not a task, or not among the blocks, gives no task', () => {
+  const blocks = [row(1, null), row(2, 'TODO')]
+  expect(taskOf(1, blocks)).toBeNull()
+  expect(taskOf(9, blocks)).toBeNull()
 })

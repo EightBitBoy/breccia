@@ -1,6 +1,6 @@
-// Which link or tag a right-click in a journal day gives a color to, and what that right-click does.
+// Which link or tag a right-click in a page's outline gives a color to, and what that right-click does.
 import { linkAddress } from './linkDisplay'
-import type { TargetView } from './types'
+import type { BlockId, BlockView, TargetView } from './types'
 
 /** The parts of a rendered anchor that name its target. */
 export interface LinkAnchor {
@@ -23,20 +23,34 @@ export function colorTarget(a: LinkAnchor, targets: readonly TargetView[]): Targ
   return targets.find((t) => t.kind === kind && t.raw === a.dataPage) ?? null
 }
 
-/** What a right-click in a journal day's outline does. */
+/** A task row under the pointer: its block and its due date (a day key), or none. */
+export interface TaskSpot {
+  id: BlockId
+  due: string | null
+}
+
+/** The task of the row `id` among `blocks`: a block with a state is a task. Other rows, and ids not there, give null. */
+export function taskOf(id: BlockId, blocks: readonly BlockView[]): TaskSpot | null {
+  const b = blocks.find((v) => v.id === id)
+  return b && b.state !== null ? { id: b.id, due: b.due ?? null } : null
+}
+
+/** What a right-click in a page's outline does. */
 export type LinkMenuAction =
   | { kind: 'native' }
   | { kind: 'none' }
   | { kind: 'menu'; target: TargetView }
   | { kind: 'copy'; url: string }
+  | { kind: 'task'; id: BlockId; due: string | null }
 
 /**
  * In the block editor, the native menu stays (cut, copy, paste). On a web or mail link, the link menu opens with
  * "Copy link" for its address. On a colorable link or tag, the link menu opens with "Color…". On selected text, the
- * native menu stays (copy). Anywhere else, no menu opens.
+ * native menu stays (copy). A link or tag keeps its own menu, or none, even in a task row. Elsewhere in a task row
+ * (`task`), the task menu opens with "Set due date…". Anywhere else, no menu opens.
  */
 export function linkMenuAction(
-  e: { inEditor: boolean; onSelection: boolean; anchor: LinkAnchor | null },
+  e: { inEditor: boolean; onSelection: boolean; anchor: LinkAnchor | null; task: TaskSpot | null },
   targets: readonly TargetView[],
 ): LinkMenuAction {
   if (e.inEditor) return { kind: 'native' }
@@ -45,7 +59,9 @@ export function linkMenuAction(
   }
   const target = e.anchor ? colorTarget(e.anchor, targets) : null
   if (target) return { kind: 'menu', target }
-  return e.onSelection ? { kind: 'native' } : { kind: 'none' }
+  if (e.onSelection) return { kind: 'native' }
+  if (e.task && !e.anchor) return { kind: 'task', id: e.task.id, due: e.task.due }
+  return { kind: 'none' }
 }
 
 /** A rectangle in viewport pixels, as `DOMRect` gives it. */

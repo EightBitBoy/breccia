@@ -1,7 +1,7 @@
 <script lang="ts">
   import { linkDisplay } from '../lib/linkDisplay.svelte'
   import type { Action } from 'svelte/action'
-  import type { JournalDay, PageView } from '../lib/types'
+  import type { BlockId, JournalDay, PageView } from '../lib/types'
   import Outline from './Outline.svelte'
   import LinkColorMenu from './LinkColorMenu.svelte'
 
@@ -16,6 +16,7 @@
     onopen,
     onstart,
     onsetcolor,
+    onsetdue,
     index,
     style,
     measure,
@@ -32,6 +33,8 @@
     onstart: (key: string) => void
     /** Give the page `key` a color, or remove it with null (from a right-click on a link or tag). */
     onsetcolor: (key: string, color: string | null) => void
+    /** Set the task `id`'s due date, or remove it with null (from a right-click on a task row). */
+    onsetdue: (id: BlockId, due: string | null) => void
     /** The feed's row, position and size registration (set by `JournalFeed`). */
     index?: number
     style?: string
@@ -49,7 +52,7 @@
     {#if page.preambleHtml}
       <div class="preamble">{@html linkDisplay.apply(page.preambleHtml)}</div>
     {/if}
-    <LinkColorMenu targets={page.targets ?? []} {onsetcolor}>
+    <LinkColorMenu targets={page.targets ?? []} blocks={page.blocks} {onsetcolor} {onsetdue}>
       <Outline
         blocks={page.blocks}
         {folded}

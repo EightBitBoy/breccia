@@ -10,6 +10,7 @@
   } from '@tanstack/virtual-core'
   import { dayIndex, dayOfBlock, pinRange, type Feed } from '../lib/feed'
   import DaySection from './DaySection.svelte'
+  import type { BlockId } from '../lib/types'
 
   let {
     feed,
@@ -22,6 +23,7 @@
     onopen,
     onstart,
     onsetcolor,
+    onsetdue,
     onrange,
     target,
     ontarget,
@@ -38,6 +40,8 @@
     onstart: (key: string) => void
     /** Give the page `key` a color, or remove it with null (from a right-click on a link or tag). */
     onsetcolor: (key: string, color: string | null) => void
+    /** Set the task `id`'s due date, or remove it with null (a right-click on a task row). */
+    onsetdue: (id: BlockId, due: string | null) => void
     /** The virtualizer's own rows (with overscan, without the pinned day); called when they change. */
     onrange: (from: number, to: number) => void
     /** A day to scroll to once (jump to a date), or null. */
@@ -156,6 +160,7 @@
         {onopen}
         {onstart}
         {onsetcolor}
+        {onsetdue}
         index={it.index}
         style="transform: translateY({it.start - margin}px)"
         {measure}

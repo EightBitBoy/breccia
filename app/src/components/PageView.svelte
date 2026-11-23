@@ -1,6 +1,6 @@
 <script lang="ts">
   import { linkDisplay } from '../lib/linkDisplay.svelte'
-  import type { PageView, RefsView } from '../lib/types'
+  import type { BlockId, PageView, RefsView } from '../lib/types'
   import Outline from './Outline.svelte'
   import LinkedRefs from './LinkedRefs.svelte'
   import PageColorPicker from './PageColorPicker.svelte'
@@ -20,6 +20,7 @@
     onopen,
     onsetcolor,
     onlinkcolor,
+    onsetdue,
     onhistory,
   }: {
     page: PageView
@@ -42,6 +43,8 @@
     onsetcolor: (color: string | null) => void
     /** Give the page `key` a color, or remove it with null (journal days: a right-click on a link or tag). */
     onlinkcolor: (key: string, color: string | null) => void
+    /** Set the task `id`'s due date, or remove it with null (a right-click on a task row). */
+    onsetdue: (id: BlockId, due: string | null) => void
     /** Undo (false) or redo (true) on the page, from the color swatch. */
     onhistory: (redo: boolean) => void
   } = $props()
@@ -93,13 +96,11 @@
   {#if page.preambleHtml}
     <div class="preamble">{@html linkDisplay.apply(page.preambleHtml)}</div>
   {/if}
-  {#if page.kind === 'journal'}
-    <LinkColorMenu targets={page.targets ?? []} onsetcolor={onlinkcolor}>
-      <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
-    </LinkColorMenu>
-  {:else}
+  <!-- Journal days and pages alike: links and tags have their menu, and task rows "Set due date…". Only journals
+       list colorable targets, so a page's links offer "Copy link" alone. -->
+  <LinkColorMenu targets={page.targets ?? []} blocks={page.blocks} onsetcolor={onlinkcolor} {onsetdue}>
     <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
-  {/if}
+  </LinkColorMenu>
   {#if refs}
     <LinkedRefs {refs} {folded} {editingId} {onedit} {ontoggle} {onopen} />
   {/if}
