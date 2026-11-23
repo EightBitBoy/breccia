@@ -180,12 +180,12 @@ are its questions for you; each answer decides what a later plan does.
 136. [ ] **Due dates on tasks:** by hand, in a journal day or on a page:
    - Type `TODO Send the offer`, press Shift Enter and type `due:: [[2026-12-01]]` (a day 6 or more days away). When you
      leave the block, the `due::` line is hidden and a chip "due 1 Dec" shows after the task.
-   - Right-click the task (not on a link): the menu has "Set due date…". It opens a month calendar at the task. Pick a
-     day: the chip changes and the file has one `due:: [[YYYY-MM-DD]]` line after the task's other property lines.
+   - Right-click the task (not on a link): the menu has "Set due date…". It opens the due date calendar at the task.
+     Pick a day: the chip changes and the file has one `due:: [[YYYY-MM-DD]]` line after the task's other property lines.
      Open the calendar again: it says "Remove due date"; choose it and the chip and the line are gone.
-   - While editing a task press `Ctrl D` (`Cmd D` on a Mac): the same calendar opens. This key replaces the editor's own
-     `Ctrl D` (select the next occurrence); `Ctrl Shift D` still opens the go-to-a-day calendar. On a line that is not a
-     task, `Ctrl D` shows "Only a task can have a due date." and writes nothing. Is losing the old `Ctrl D` all right?
+   - While editing a task press `Ctrl D` (`Cmd D` on a Mac): the same calendar opens. `Ctrl D` was free in Breccia's
+     editor; `Ctrl Shift D` still opens the go-to-a-day calendar. On a line that is not a task, `Ctrl D` shows "Only a
+     task can have a due date." and writes nothing.
    - On a board, hover a card, open its menu and choose "Set due date…": the same calendar; the card shows the chip.
    - The chip's words (unfinished task) and tones: 6 or more days: "due 29 Nov" (with the year when it is not this
      year), muted; 3 to 5 days: "due in 3 days", muted; 2 days: "due in 2 days", amber; tomorrow: "due tomorrow",
@@ -196,8 +196,11 @@ are its questions for you; each answer decides what a later plan does.
      open again: the words and the colour come back.
    - Open the page of the due day (click the date in a link, or search it): the task is in its linked references.
    - Keep the app open over midnight, or let the PC sleep over it: the chip's words and colour follow the new day.
-   - A `due:: soon` line, or a `DEADLINE: <2026-12-01 Tue>` line, shows as ordinary dimmed text and gives no chip.
+   - A `due:: soon` line shows as an ordinary dimmed property and a `DEADLINE: <2026-12-01 Tue>` line as ordinary
+     text; neither gives a chip.
    Things you may want to object to:
+   - Setting a date rewrites the first `due::` line even when it holds words (`due:: ask Ben`), and "Remove due date"
+     deletes every `due::` line, including dimmed ones. Should Breccia leave lines without a date alone?
    - Chips also show in linked references and in an open card, wherever the task is drawn, not only in the journal, on
      pages and on board cards. There they have no task right-click menu (only journal days and pages have one).
    - On ordinary pages the right-click zone is new: outside an open editor and off selected text the browser's own

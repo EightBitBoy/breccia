@@ -157,10 +157,11 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
 - **Due date.** A task can have a due date: a `due:: [[YYYY-MM-DD]]` line, whose value is a link to a journal day
   (`docs/format.md` §8). Breccia writes it only when the user sets or removes the date: setting replaces the first
   `due::` line where it stands, or adds one after the last property line; removing deletes every `due::` line. A
-  value that is no link to a day (`due:: soon`) gives no date and is kept as it is. Only a task has a due date; setting
-  one on a block that is not a task changes nothing. Changing the task's state, also to a finished one, and archiving
-  it leave the line alone, so a finished task keeps it. Because the value is a page link, the task also appears in the
-  linked references of its due day.
+  value that is no link to a day (`due:: soon`) gives no date and stays as it is until the user sets or removes the
+  task's due date: setting rewrites the first `due::` line even when it holds words, and removing deletes it with the
+  others. Only a task has a due date; setting one on a block that is not a task changes nothing. Changing the task's
+  state, also to a finished one, and archiving it leave the line alone, so a finished task keeps it. Because the value
+  is a page link, the task also appears in the linked references of its due day.
 - **Everything else** (headings, emphasis, code, quotes, tables, plain URLs, Logseq syntax Breccia does not know such as
   `SCHEDULED:` or `:LOGBOOK:` drawers) is preserved verbatim and rendered as Markdown where possible.
   A quote (`> …`, also on continuation lines) shows with a thin bar on its left and muted text, without the window's
@@ -248,13 +249,12 @@ second click on the Git history button is Back.
   page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and
   `Delete` do, and if that would leave the page (or journal day) without a block, one empty block stays with the caret
   in it; one `Ctrl Z` brings it back; `Ctrl Z` / `Ctrl Y` undo / redo, also across block boundaries (splits, merges,
-  moves). `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due-date
-  picker (below), and replaces the editor's own `Ctrl D` (select the next occurrence). On a block
-  that is not a task a note says "Only a task can have a due date." and nothing is written. `Ctrl Shift D` still opens
-  the go-to-a-day calendar.
+  moves). `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due date
+  calendar (below). On a block that is not a task a note says "Only a task can have a due date." and nothing is
+  written. `Ctrl Shift D` still opens the go-to-a-day calendar.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line,
   which stays in the file but is not shown. In a journal day and on a page the right-click menu of a task has "Set due
-  date…", which opens the due-date picker: the month calendar of the date picker, with the day of a set date marked; a
+  date…", which opens the due date calendar: the month calendar of the date picker, with the day of a set date marked; a
   pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and an
   open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows dimmed
   like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to
@@ -389,7 +389,7 @@ a **finished** flag and an **in cycle** flag. Defaults:
   DONE. The user mostly uses one board, but can create more with other columns (e.g. "Focus": DOING, WAITING).
 - **Card**: the block's first line rendered (links and tags visible), its **description**, the source page (journal date
   or page name), the done date for finished tasks, and the due chip of a task with a due date (§7.2). A card's menu has
-  "Set due date…", which opens the same picker as the task menu.
+  "Set due date…", which opens the same due date calendar as the task menu.
 - **Nested blocks** (decided):
   - **Children without a state are the task's description.** They are displayed on the card, rendered, below the task
     line, with their own nesting (and their children, as long as those have no state either). Long descriptions are

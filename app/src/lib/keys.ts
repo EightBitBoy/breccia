@@ -41,7 +41,7 @@ export function decide(e: KeyInput, ctx: Ctx): Action | null {
     if (key === 'y' && !e.shift) return 'redo'
     // Replaces CodeMirror's own `Ctrl Shift K`, which deletes one line of the block's text.
     if (key === 'k' && e.shift) return 'deleteBlock'
-    // Replaces CodeMirror's own `Ctrl D` (select the next occurrence); `Ctrl Shift D` stays the date picker.
+    // `Ctrl D` was free in the editor; `Ctrl Shift D` stays the date picker.
     if (key === 'd' && !e.shift) return 'setDue'
     return null
   }
