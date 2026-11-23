@@ -55,3 +55,6 @@ Task 8: complete (commits 2d9d05b..26dd796, review clean)
 Task 9: dispatched (sonnet, base 523eea9) with the facts for item 136 (Ctrl D replaces select-next-occurrence; pages' new right-click zone; no Color… on pages; chips in linked refs/open card; card menu no keyboard path)
 Task 9: implementer DONE d0185c0 (backlog #98 sort, #99 card menu keyboard path); review dispatched (sonnet)
 Task 9: review: 1 Important (spec §7.2 claims a task menu in linked refs/open card — false, R9); minors: long lines §7.4/§5, chip/picker not in vocabulary (deferred), item 136 lacks one-undo-step (R8), spec lacks 'further due:: lines dimmed'. Fix round 1 sent (Important + 3 minors).
+Task 9: fix round 1/5 (4 addressed, 0 open — spec §7.2 task-menu places, re-wrap, undo step in item 136, further due:: dimmed; commits d0185c0..b011679)
+Task 9: minor (deferred): "chip" and "picker" are not in docs/vocabulary.md.
+Task 9: complete (commits 523eea9..b011679, review clean after 1 round)
