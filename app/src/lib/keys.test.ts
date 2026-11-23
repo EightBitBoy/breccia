@@ -143,3 +143,14 @@ test('Ctrl K, Ctrl Alt Shift K and Cmd Shift K on Windows do not delete the bloc
   expect(decide(k('K', { ctrl: true, alt: true, shift: true }), ctx)).toBeNull()
   expect(decide(k('K', { meta: true, shift: true }), ctx)).toBeNull()
 })
+
+test('Ctrl D (Cmd D on a Mac) sets or removes a task due date; Ctrl Shift D stays the date picker', () => {
+  const mac = { ...ctx, mac: true }
+  expect(decide(k('d', { ctrl: true }), ctx)).toBe('setDue')
+  expect(decide(k('D', { ctrl: true }), ctx)).toBe('setDue')
+  expect(decide(k('D', { ctrl: true, shift: true }), ctx)).not.toBe('setDue')
+  expect(decide(k('d', { meta: true }), mac)).toBe('setDue')
+  expect(decide(k('d', { ctrl: true }), mac)).toBeNull()
+  expect(decide(k('d', { meta: true }), ctx)).toBeNull()
+  expect(decide(k('d', { ctrl: true, alt: true }), ctx)).toBeNull()
+})

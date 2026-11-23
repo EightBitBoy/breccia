@@ -21,6 +21,7 @@ export const SHORTCUTS: Shortcut[] = [
   { group: 'Editing', keys: '↑ / ↓, Enter', mac: '↑ / ↓, Enter', what: 'In a menu (slash, link, tag): choose, then accept (Esc closes it)' },
   { group: 'Blocks and tasks', keys: 'Ctrl Enter', mac: 'Cmd Enter', what: 'Cycle the task state (after the last, back to the first)' },
   { group: 'Blocks and tasks', keys: 'Ctrl Shift Enter', mac: 'Cmd Shift Enter', what: 'Remove the task state' },
+  { group: 'Blocks and tasks', keys: 'Ctrl D', mac: 'Cmd D', what: 'On a task: set or remove its due date' },
   { group: 'Blocks and tasks', keys: 'Shift ↑ / Shift ↓', mac: 'Shift ↑ / Shift ↓', what: 'Select blocks (Shift-click too)' },
   { group: 'Blocks and tasks', keys: 'Backspace / Delete', mac: 'Backspace / Delete', what: 'With blocks selected: delete them' },
   { group: 'Navigation', keys: 'Ctrl K', mac: 'Cmd K', what: 'Search, or jump to a date' },

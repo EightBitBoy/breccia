@@ -107,6 +107,13 @@ describe('the task state keys', () => {
     const mac = shortcutGroups(true, 'shift+enter').flatMap((g) => g.rows)
     expect(mac.map((r) => r.keys)).toContain('Cmd Shift Enter')
   })
+  it('lists the due date key with the task keys, on both platforms', () => {
+    const what = 'On a task: set or remove its due date'
+    expect(SHORTCUTS).toContainEqual({ group: 'Blocks and tasks', keys: 'Ctrl D', mac: 'Cmd D', what })
+    const tasks = shortcutGroups(false, '').find((g) => g.name === 'Blocks and tasks')!.rows
+    expect(tasks).toContainEqual({ keys: 'Ctrl D', what })
+    expect(shortcutRows(true)).toContainEqual({ keys: 'Cmd D', what })
+  })
 })
 
 describe('back and forward', () => {

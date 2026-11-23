@@ -129,6 +129,8 @@
   import DailiesView from './components/DailiesView.svelte'
   import Notices from './components/Notices.svelte'
   import DuePicker from './components/DuePicker.svelte'
+  import { NOT_A_TASK } from './lib/due'
+  import { duePick } from './lib/duePick.svelte'
   import CaretMenu from './components/CaretMenu.svelte'
   import FlowDialog from './components/FlowDialog.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -250,6 +252,14 @@
         pickerInsert = onpick
         pickerOpen = true
       },
+      // Ctrl D: the due calendar at the caret, on a task only (a plain block gets the note and keeps editing). Esc or a
+      // click outside writes nothing; the calendar gives the focus back to the editor, the caret where it was.
+      pickDue: (id, caret) => {
+        const b = host.blockOf(id)
+        if (!b) return
+        if (b.state === null) return notify({ kind: 'refused', message: NOT_A_TASK })
+        duePick.show(b.due ?? null, caret, (due) => void host.setDue(id, due))
+      },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
       card: () => (boards.index !== null ? cardBlocks(boards.card) : null),
       quiet: (code, cmd) => recovery.quiet(code, cmd),
@@ -323,6 +333,7 @@
       dailies.forget() // its ids are the old session's; the reload lists them again
       journal.close()
       pickerOpen = false // a pick after the reload would name a block of the old session
+      duePick.close() // likewise
       page = null
       refs = null
       madeInRefs.clear()

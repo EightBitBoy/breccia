@@ -33,6 +33,8 @@ let order: ((id: number) => BlockView[]) | undefined
 let linkNames: { key: string; name: string; exists: boolean }[]
 /** The open card's blocks (`EditorEnv.card`); null = no card open (the journal or a page). */
 let cardBlocks: BlockView[] | null
+/** The due calendars asked for (`EditorEnv.pickDue`), in order. */
+let dues: { id: number; caret: { left: number; top: number; right: number; bottom: number } }[]
 
 /** An in-memory editor: the text and a caret, no selection. */
 const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
@@ -59,7 +61,9 @@ const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
     // A view holding the text now, with the editor's extensions (the caret menus).
     run(f) {
       const state = EditorState.create({ doc: t, selection: EditorSelection.cursor(c), extensions: opts.extensions ?? [] })
-      f({ state, requestMeasure() {} } as unknown as EditorView)
+      // The caret's box: the caret offset as its left edge, one line high.
+      const coordsAtPos = (pos: number) => ({ left: pos, right: pos, top: 10, bottom: 20 })
+      f({ state, requestMeasure() {}, coordsAtPos } as unknown as EditorView)
     },
   })
 }
@@ -96,6 +100,7 @@ beforeEach(() => {
   order = undefined
   cardBlocks = null
   typed = []
+  dues = []
   host = new EditorHost(
     {
       client,
@@ -107,6 +112,7 @@ beforeEach(() => {
       showMenu: (which, m) => void shown.push([which, m]),
       selectWithNeighbour() {},
       card: () => cardBlocks,
+      pickDue: (id, caret) => void dues.push({ id, caret }),
       mount,
       slot: () => ({}) as HTMLElement,
     },
@@ -846,4 +852,81 @@ test('in an open card, lines pasted into a block under the task are pasted as us
   await host.edit(2, 3)
   hooks.onOutlinePaste!('- a\n- b')
   expect(sent.find((c) => c.type === 'block.paste')).toEqual({ type: 'block.paste', id: 2, at: 3, text: '- a\n- b' })
+})
+
+// ---- Ctrl D: the due date of a task -------------------------------------------------
+
+test('Ctrl D while editing opens the due calendar for the block, at the caret', async () => {
+  blocks = [{ ...block(1, 'TODO alpha'), state: 'TODO' }, block(2, 'beta')]
+  await host.edit(1, 3)
+  hooks.onAction('setDue', { cursor16: 3 })
+  await settle()
+  expect(dues).toEqual([{ id: 1, caret: { left: 3, right: 3, top: 10, bottom: 20 } }])
+  // Opening the calendar writes nothing.
+  expect(sent).toEqual([])
+})
+
+test('Ctrl D sends the typed text first, then opens the due calendar (the keyword just typed counts)', async () => {
+  const events: string[] = []
+  const real = createClient((req) => {
+    events.push(req.command.type)
+    return Promise.resolve(out(null))
+  })
+  const h = new EditorHost(
+    {
+      client: real,
+      blocks: () => blocks,
+      pageOf: () => 'p',
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      pickDue: (id) => void events.push(`pickDue ${id}`),
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await h.edit(2, 0)
+  h.editor!.ed.insert('TODO ') // still in the typing pause when the key is pressed
+  hooks.onAction('setDue', { cursor16: 5 })
+  await real.flush()
+  await settle()
+  expect(events).toEqual(['block.setText', 'pickDue 2'])
+})
+
+test('setDue sends the typed text first, then block.setDue', async () => {
+  const invoked: Command[] = []
+  const real = createClient((req) => (invoked.push(req.command), Promise.resolve(out(null))))
+  const h = new EditorHost(
+    {
+      client: real,
+      blocks: () => blocks,
+      pageOf: () => 'p',
+      states: () => [],
+      notify: (n) => notices.push(n),
+      showMenu() {},
+      selectWithNeighbour() {},
+      mount,
+      slot: () => ({}) as HTMLElement,
+    },
+    new Set(),
+  )
+  await h.edit(2, 4)
+  h.editor!.ed.insert('!') // typed while the calendar was open, still in the typing pause
+  await h.setDue(2, '2026-12-01')
+  expect(invoked).toEqual([
+    { type: 'block.setText', id: 2, text: 'beta!' },
+    { type: 'block.setDue', id: 2, due: '2026-12-01' },
+  ])
+  await h.setDue(2, null)
+  expect(invoked.at(-1)).toEqual({ type: 'block.setDue', id: 2, due: null })
+})
+
+test('Ctrl D does not open the calendar once the block was left', async () => {
+  await host.edit(1, 0)
+  host.act(1, 'setDue')
+  host.leave()
+  await settle()
+  expect(dues).toEqual([])
 })

@@ -8,6 +8,7 @@ import { answerOf } from '../lib/answer'
 import { cardKey, isCardTask, taskSplitAt } from '../lib/cardKeys'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
+import type { Box } from '../lib/linkColor'
 import { deleteFocus, ownTextEnd } from '../lib/deleteBlock'
 import { UNSENT } from '../lib/notices'
 import { restoreRemoved } from '../lib/paste'
@@ -38,6 +39,11 @@ export interface EditorEnv {
   showMenu(which: CaretMenuKind, m: MenuView | null): void
   /** Opens the date picker; a pick calls `onpick` with the day's key, closing it calls nothing. */
   pickDate?(onpick: (key: string) => void): void
+  /**
+   * `Ctrl D` in block `id`: opens the due calendar at the caret's box (viewport pixels), or tells why not (no task).
+   * Its pick goes back through `setDue`.
+   */
+  pickDue?(id: BlockId, caret: Box): void
   selectWithNeighbour(id: BlockId, dir: -1 | 1): void
   /**
    * The open card's blocks on a board (its task first, depths relative to it, folded ones too), or null when no card
@@ -580,6 +586,27 @@ export class EditorHost {
 
   // ---- actions ------------------------------------------------------------------
 
+  /** Sets (or with null removes) block `id`'s due date; pending typing goes first, and the editor shows the core's text. */
+  setDue(id: BlockId, due: string | null): Promise<void> {
+    return this.exec({ type: 'block.setDue', id, due })
+  }
+
+  /**
+   * `Ctrl D` in block `id`: the typed text goes to the core first, so whether the block is a task is decided on the
+   * text as typed (a keyword typed a moment ago counts), then the due calendar opens at the caret.
+   */
+  private async pickDue(id: BlockId) {
+    await this.env.client.flush()
+    const ed = this.mounted?.id === id ? this.mounted.ed : null
+    if (!ed || this.editingId !== id) return
+    const at: { caret?: Box } = {}
+    ed.run((v) => {
+      const r = v.coordsAtPos(v.state.selection.main.head) ?? v.contentDOM.getBoundingClientRect()
+      at.caret = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+    })
+    if (at.caret) this.env.pickDue?.(id, at.caret)
+  }
+
   /**
    * Starts a split of block `id` at the caret; one split at a time. With `under` (an open card's task) the new block
    * is its first child, and at the start or inside the state keyword the task line stays whole (`taskSplitAt`).
@@ -653,6 +680,9 @@ export class EditorHost {
         void this.exec(cmd)
         return
       }
+      case 'setDue':
+        void this.pickDue(id)
+        return
     }
   }
 }

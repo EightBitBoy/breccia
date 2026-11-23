@@ -23,6 +23,7 @@ export type Action =
   | 'extendUp'
   | 'extendDown'
   | 'deleteBlock'
+  | 'setDue'
 
 export type KeyInput = { key: string; shift: boolean; alt: boolean; ctrl: boolean; meta: boolean }
 
@@ -40,6 +41,8 @@ export function decide(e: KeyInput, ctx: Ctx): Action | null {
     if (key === 'y' && !e.shift) return 'redo'
     // Replaces CodeMirror's own `Ctrl Shift K`, which deletes one line of the block's text.
     if (key === 'k' && e.shift) return 'deleteBlock'
+    // Replaces CodeMirror's own `Ctrl D` (select the next occurrence); `Ctrl Shift D` stays the date picker.
+    if (key === 'd' && !e.shift) return 'setDue'
     return null
   }
   if (!plain) {
