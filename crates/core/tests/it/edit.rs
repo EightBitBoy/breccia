@@ -153,6 +153,40 @@ fn split_under_makes_the_first_child() {
 }
 
 #[test]
+fn paste_under_puts_the_pasted_blocks_under_the_block() {
+    // the block keeps its whole text; every pasted block goes one level deeper, first under the block, keeping its
+    // nesting; the block's children follow them
+    assert_eq!(
+        with("- task\n\t- old\n- next\n", |d, b, ids| {
+            d.paste_under(b[0], 4, "- x\n- a\n\t- a1\n- b", ids)
+                .unwrap();
+        }),
+        "- task\n\t- x\n\t- a\n\t\t- a1\n\t- b\n\t- old\n- next\n"
+    );
+    // no children yet, and a paste at the start: the text after the cursor stays in the block
+    assert_eq!(
+        with("- task\n- next\n", |d, b, ids| {
+            d.paste_under(b[0], 0, "- x\n- a", ids).unwrap();
+        }),
+        "- task\n\t- x\n\t- a\n- next\n"
+    );
+    // a text before the first bullet line goes in at the cursor
+    assert_eq!(
+        with("- task\n", |d, b, ids| {
+            d.paste_under(b[0], 2, "pre\n- x", ids).unwrap();
+        }),
+        "- tapresk\n\t- x\n"
+    );
+    // a paste without bullet lines stays in the line
+    assert_eq!(
+        with("- task\n", |d, b, ids| {
+            d.paste_under(b[0], 4, "word", ids).unwrap();
+        }),
+        "- taskword\n"
+    );
+}
+
+#[test]
 fn merge_reparents_children_deeper() {
     let out = with("- a\n\t- x\n- b\n\t- c\n", |d, b, ids| {
         assert_eq!(d.merge_into_previous(b[2], ids).unwrap(), (b[1], 1));

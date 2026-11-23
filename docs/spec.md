@@ -390,7 +390,10 @@ a **finished** flag and an **in cycle** flag. Defaults:
 - **Click a card to edit it right there** with the same block editor; the change goes straight into the source block.
   While the card is open, all its children (description and subtasks) are shown and editable, as in the file.
   An open card keeps its text inside the task: `Enter` on the task's own line makes the new block one level deeper,
-  first under the task (the text after the cursor moves into it); `Shift Tab` on a block directly under the task,
+  first under the task (the text after the cursor moves into it; at the start of the line or inside the state keyword,
+  up to and including the space after it, the task line stays whole and the new block is empty); bullet lines pasted
+  into the task's line go first under the task, one level deeper, keeping their nesting, and the task line keeps its
+  text; `Shift Tab` on a block directly under the task,
   `Alt ↑` on the first of them, `Alt ↓` on the last, and `Backspace` at the start of the task's line do nothing.
   Every other key works as in the journal, also deeper inside the task.
 - **Hovering a card shows a small jump icon**; clicking it opens the source page and scrolls to the block, highlighted

@@ -415,7 +415,12 @@ impl Session {
             Command::BlockSettle { id, before } => self.block_settle(id, before, now),
             Command::BlockSplit { id, at, under } => self.block_split(id, at, under),
             Command::BlockMerge { id } => self.block_merge(id),
-            Command::BlockPaste { id, at, text } => self.block_paste(id, at, text),
+            Command::BlockPaste {
+                id,
+                at,
+                text,
+                under,
+            } => self.block_paste(id, at, text, under),
             Command::BlockCycleState { id } => self.block_cycle_state(id, now),
             Command::BlockStepState { id } => self.block_step_state(id, now),
             Command::BlocksSetState { ids, keyword } => self.blocks_set_state(ids, keyword, now),

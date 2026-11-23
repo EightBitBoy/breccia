@@ -1,6 +1,7 @@
 // An open card on a board keeps its text inside the task (§7.6): the outline keys that would take a block out of
 // the task do nothing there, and Enter on the task makes the new block under it.
 import type { Action } from './keys'
+import { typedState } from './settle'
 import type { BlockId, BlockView } from './types'
 
 /** What an outline key does in an open card: as in the journal, nothing, or a split whose new block goes under the task. */
@@ -31,4 +32,20 @@ export function cardKey(a: Action, id: BlockId, card: readonly BlockView[] | nul
   if (a === 'moveUp' && direct[0].id === id) return 'none'
   if (a === 'moveDown' && direct[direct.length - 1].id === id) return 'none'
   return 'asIs'
+}
+
+/** Whether block `id` is the task of the open card `card` (null when no card is open). */
+export function isCardTask(id: BlockId, card: readonly BlockView[] | null): boolean {
+  return card?.[0]?.id === id
+}
+
+/**
+ * Where Enter on an open card's task splits its text `text` (UTF-16) with the caret at `caret`: at the caret, except
+ * at the very start or inside the state keyword (up to and including the space after it), where the task line stays
+ * whole and the new block under it starts empty (the split is at the end of the text).
+ */
+export function taskSplitAt(text: string, caret: number, keywords: readonly string[]): number {
+  const k = typedState(text, keywords)
+  const prefix = k === null ? 0 : k.length + (text[k.length] === ' ' ? 1 : 0)
+  return caret <= prefix ? text.length : caret
 }

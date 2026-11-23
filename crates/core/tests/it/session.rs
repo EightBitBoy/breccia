@@ -404,6 +404,22 @@ fn split_under_puts_the_new_block_first_under_the_block() {
 }
 
 #[test]
+fn paste_under_puts_the_pasted_blocks_under_the_block() {
+    // A paste into an open card's task (§7.6): the pasted lines go under the task.
+    let (t, mut s) = folder(&[("pages/P.md", "- TODO task\n- next\n")]);
+    let a = ids(&mut s, "p")[0];
+    ok(
+        &mut s,
+        json!({"type":"block.paste","id":a,"at":9,"text":"\n- one\n- two","under":true}),
+        0,
+    );
+    assert_eq!(
+        read(&t, "pages/P.md"),
+        "- TODO task\n\t- one\n\t- two\n- next\n"
+    );
+}
+
+#[test]
 fn today_creates_journal_without_file() {
     let (t, mut s) = folder(&[]);
     let out = ok(&mut s, json!({"type":"page.today"}), 0);

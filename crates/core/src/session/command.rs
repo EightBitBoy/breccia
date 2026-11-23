@@ -246,6 +246,11 @@ pub enum Command {
         id: BlockId,
         at: usize,
         text: String,
+        /// Bullet lines go under the block, which keeps its whole text (a
+        /// paste into the task of an open card, §7.6).
+        #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
+        under: bool,
     },
     #[serde(rename = "block.cycleState")]
     BlockCycleState { id: BlockId },

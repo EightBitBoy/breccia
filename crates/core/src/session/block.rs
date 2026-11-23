@@ -139,13 +139,18 @@ impl Session {
         id: BlockId,
         at: usize,
         text: String,
+        under: bool,
     ) -> Result<Output, CommandError> {
         let key = self.page_of(id)?;
         self.mutate(
             &key,
             false,
             Box::new(move |d, ids, _| {
-                let r = d.paste(id, at, &text, ids)?;
+                let r = if under {
+                    d.paste_under(id, at, &text, ids)?
+                } else {
+                    d.paste(id, at, &text, ids)?
+                };
                 Ok(Some(Focus {
                     id: r.last,
                     at: r.at,

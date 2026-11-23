@@ -5,7 +5,7 @@
 import { tick } from 'svelte'
 import { errorCode, errorMessage } from '../api'
 import { answerOf } from '../lib/answer'
-import { cardKey } from '../lib/cardKeys'
+import { cardKey, isCardTask, taskSplitAt } from '../lib/cardKeys'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
 import { deleteFocus, ownTextEnd } from '../lib/deleteBlock'
@@ -555,7 +555,11 @@ export class EditorHost {
         const { from, to } = ed.selection()
         const removed = ed.text().slice(from, to)
         ed.insert('')
-        void this.exec({ type: 'block.paste', id, at: utf16ToUtf8(ed.text(), ed.cursor16()), text }, () => {
+        const at = utf16ToUtf8(ed.text(), ed.cursor16())
+        // In an open card, pasted lines go under the task (§7.6).
+        const under = isCardTask(id, this.env.card?.() ?? null)
+        const cmd: Command = under ? { type: 'block.paste', id, at, text, under } : { type: 'block.paste', id, at, text }
+        void this.exec(cmd, () => {
           if (removed) this.putBack(id, from, removed)
           return false // The refusal is still shown.
         })
@@ -575,12 +579,16 @@ export class EditorHost {
 
   // ---- actions ------------------------------------------------------------------
 
-  /** Starts a split of block `id` at the caret; one split at a time. With `under` the new block is its first child. */
+  /**
+   * Starts a split of block `id` at the caret; one split at a time. With `under` (an open card's task) the new block
+   * is its first child, and at the start or inside the state keyword the task line stays whole (`taskSplitAt`).
+   */
   private split(id: BlockId, ed: BlockEditor, under: boolean) {
     // A second one would orphan what was typed during the first.
     if (this.splitting) return
     ed.insert('') // A selection goes first.
-    const s: Splitting = { id, t0: ed.text(), c: ed.cursor16(), queued: [] }
+    const t0 = ed.text()
+    const s: Splitting = { id, t0, c: under ? taskSplitAt(t0, ed.cursor16(), this.keywords) : ed.cursor16(), queued: [] }
     const at = utf16ToUtf8(s.t0, s.c)
     const cmd: Command = under ? { type: 'block.split', id, at, under } : { type: 'block.split', id, at }
     void this.exec(cmd, (code) => splitFailed(this.splitHost, s, code))

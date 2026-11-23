@@ -314,6 +314,32 @@ impl Document {
         text: &str,
         ids: &mut IdGen,
     ) -> Result<PasteResult, EditError> {
+        self.paste_into(id, at, text, false, ids)
+    }
+
+    /// Pastes like [`Self::paste`], but with bullet lines the block keeps its
+    /// whole text (a non-blank preamble goes in at the cursor) and every
+    /// pasted block goes one level deeper, first under the block, keeping its
+    /// nesting (a paste into the task of an open card, §7.6). The cursor ends
+    /// after the last pasted block's text.
+    pub fn paste_under(
+        &mut self,
+        id: BlockId,
+        at: usize,
+        text: &str,
+        ids: &mut IdGen,
+    ) -> Result<PasteResult, EditError> {
+        self.paste_into(id, at, text, true, ids)
+    }
+
+    fn paste_into(
+        &mut self,
+        id: BlockId,
+        at: usize,
+        text: &str,
+        under: bool,
+        ids: &mut IdGen,
+    ) -> Result<PasteResult, EditError> {
         let i = self.find(id)?;
         let old = &self.blocks[i].text;
         if at > old.len() || !old.is_char_boundary(at) {
@@ -325,8 +351,25 @@ impl Document {
         let text = user_text(text.strip_prefix('\u{feff}').unwrap_or(text));
         let pasted = parse(&text, &mut IdGen::new());
 
+        let under = under && !pasted.blocks.is_empty();
         let mut pieces: Fragment = if pasted.blocks.is_empty() {
             vec![(0, format!("{before}{text}"))]
+        } else if under {
+            let shallowest = pasted.blocks.iter().map(|b| b.depth).min().unwrap_or(0);
+            let p = &pasted.preamble;
+            let first = if p.trim().is_empty() {
+                ""
+            } else {
+                p.strip_suffix('\n').unwrap_or(p)
+            };
+            std::iter::once((0, format!("{before}{first}{after}")))
+                .chain(
+                    pasted
+                        .blocks
+                        .into_iter()
+                        .map(|b| (b.depth - shallowest + 1, b.text)),
+                )
+                .collect()
         } else {
             let shallowest = pasted.blocks.iter().map(|b| b.depth).min().unwrap_or(0);
             let mut rest = pasted
@@ -345,7 +388,9 @@ impl Document {
         };
         let n = pieces.len() - 1;
         let cursor = pieces[n].1.len();
-        pieces[n].1.push_str(after);
+        if !under {
+            pieces[n].1.push_str(after);
+        }
 
         // Each piece must re-read as itself, one block, with no fence left
         // open; only a last block that already ended in an open fence may

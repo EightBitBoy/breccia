@@ -4446,12 +4446,38 @@ try {
   await kb.press('Shift+Tab')
   await expectFile('151 Shift Tab on a line directly under an open card task changes nothing', after151, journal)
   assert((await openCard.locator('[data-block-id]').count()) === 2, '151 Shift Tab took the line out of the open card')
+  // Enter at the very start of the task line keeps it whole: an empty line opens first under the task.
+  await openCard.locator('[data-block-id]').nth(0).locator('.content').click()
+  await openCard.locator('[data-block-id]').nth(0).locator('.cm-content').waitFor()
+  await kb.press('Home')
+  await kb.press('Enter')
+  await waitFor('151 a new line under the task', () => openCard.locator('[data-block-id]').count(), 3)
+  await openCard.locator('[data-block-id]').nth(1).locator('.cm-content').waitFor()
+  await kb.type('first')
+  const start151 = `${before151}- TODO card 151\n\t- first\n\t- inside\n- after 151\n`
+  await expectFile('151 Enter at the start of an open card task keeps the task line whole', start151, journal)
+  // Lines pasted into the task's line go under the task, and its own text stays whole.
+  await openCard.locator('[data-block-id]').nth(0).locator('.content').click()
+  await openCard.locator('[data-block-id]').nth(0).locator('.cm-content').waitFor()
+  await kb.press('End')
+  await page.evaluate(() => {
+    const dt = new DataTransfer()
+    dt.setData('text/plain', '- pasted a\n- pasted b')
+    document
+      .querySelector('[data-card-open] .cm-content')
+      .dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }))
+  })
+  await expectFile(
+    '151 lines pasted into an open card task go under it',
+    `${before151}- TODO card 151\n\t- pasted a\n\t- pasted b\n\t- first\n\t- inside\n- after 151\n`,
+    journal,
+  )
   await kb.press('Escape')
   await kb.press('Escape')
   await openCard.waitFor({ state: 'detached', timeout: 5000 })
   await page.locator('[data-testid="nav-journal"]').click()
   await page.locator(`[data-testid="day"][data-day="${today}"]`).waitFor()
-  console.log('PASS 151 an open card keeps its text inside the task (Enter at the task line, Shift Tab under it)')
+  console.log('PASS 151 an open card keeps its text inside the task (Enter at the task line, at its start, Shift Tab, paste)')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')

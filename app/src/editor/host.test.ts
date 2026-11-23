@@ -816,3 +816,33 @@ test('without an open card, Backspace, Shift Tab and Alt moves are sent as befor
     { type: 'block.merge', id: 1 },
   ])
 })
+
+test('in an open card, Enter at the start of the task or in its keyword keeps the task line whole', async () => {
+  openCard()
+  host.setKeywords(['TODO'])
+  await host.edit(1, 0)
+  hooks.onAction('split', { cursor16: 0 })
+  expect(sent.find((c) => c.type === 'block.split')).toEqual({ type: 'block.split', id: 1, at: 13, under: true })
+})
+
+test('in an open card, Enter inside the title moves the text after the cursor under the task', async () => {
+  openCard()
+  host.setKeywords(['TODO'])
+  await host.edit(1, 6)
+  hooks.onAction('split', { cursor16: 6 })
+  expect(sent.find((c) => c.type === 'block.split')).toEqual({ type: 'block.split', id: 1, at: 6, under: true })
+})
+
+test('in an open card, lines pasted into the task go under it', async () => {
+  openCard()
+  await host.edit(1, 13)
+  hooks.onOutlinePaste!('- a\n- b')
+  expect(sent.find((c) => c.type === 'block.paste')).toEqual({ type: 'block.paste', id: 1, at: 13, text: '- a\n- b', under: true })
+})
+
+test('in an open card, lines pasted into a block under the task are pasted as usual', async () => {
+  openCard()
+  await host.edit(2, 3)
+  hooks.onOutlinePaste!('- a\n- b')
+  expect(sent.find((c) => c.type === 'block.paste')).toEqual({ type: 'block.paste', id: 2, at: 3, text: '- a\n- b' })
+})

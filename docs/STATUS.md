@@ -196,9 +196,9 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1266 tests) and cargo tests (core: lib 53, integration 861 with 2 ignored; shell 95) pass
+- `just test`: Vitest (1272 tests) and cargo tests (core: lib 53, integration 863 with 2 ignored; shell 95) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
-- `just e2e`: 224 PASS lines, the last step is 151 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
+- `just e2e`: 226 PASS lines, the last step is 151 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
@@ -214,6 +214,10 @@ Candidates for the plan after it, to settle with the owner:
   level deeper, first under the task (text after the cursor moves into it); `Shift Tab` on a line directly under the
   task does nothing; `Alt ↑` on the first and `Alt ↓` on the last line under the task do nothing, and `Backspace` at the
   start of the task line does not merge it into the block above. Inside the task, every key works as in the journal.
+  Added the same day: `Enter` at the very start of the task line, or inside its state keyword (up to and including
+  the space after it), keeps the task line whole and opens an empty block first under the task; several bullet lines
+  pasted into the task's line go one level deeper, first under the task, keeping their nesting, and the task line keeps
+  its text (a paste without bullet lines stays in the line).
 - Deleting every selected block (`Delete`, `Backspace` or `Ctrl Shift K`) keeps one empty block with the caret in it
   (owner, 2026-11-11; review 79).
 - Only the NSIS installer is built; an MSI only if someone asks (backlog #51).
