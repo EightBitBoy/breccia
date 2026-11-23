@@ -210,6 +210,10 @@ Candidates for the plan after it, to settle with the owner:
 - Notes files are always saved with LF line endings; files Breccia did not change stay byte-identical (spec §2, §4).
 - Commits carry no attribution lines; `.claude/settings.json` turns Claude Code's attribution off.
 - The installer is not code signed (SmartScreen warns on the first run of each version).
+- An open card keeps its text inside the task (owner, 2026-11-23): `Enter` on the task's own line makes a new block one
+  level deeper, first under the task (text after the cursor moves into it); `Shift Tab` on a line directly under the
+  task does nothing; `Alt ↑` on the first and `Alt ↓` on the last line under the task do nothing, and `Backspace` at the
+  start of the task line does not merge it into the block above. Inside the task, every key works as in the journal.
 - Deleting every selected block (`Delete`, `Backspace` or `Ctrl Shift K`) keeps one empty block with the caret in it
   (owner, 2026-11-11; review 79).
 - Only the NSIS installer is built; an MSI only if someone asks (backlog #51).
