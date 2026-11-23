@@ -413,7 +413,7 @@ impl Session {
             Command::BlockInsert { page, after, text } => self.block_insert(&page, after, text),
             Command::BlockSetText { id, text } => self.block_set_text(id, text, typing, clock.ms),
             Command::BlockSettle { id, before } => self.block_settle(id, before, now),
-            Command::BlockSplit { id, at } => self.block_split(id, at),
+            Command::BlockSplit { id, at, under } => self.block_split(id, at, under),
             Command::BlockMerge { id } => self.block_merge(id),
             Command::BlockPaste { id, at, text } => self.block_paste(id, at, text),
             Command::BlockCycleState { id } => self.block_cycle_state(id, now),

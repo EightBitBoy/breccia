@@ -49,6 +49,7 @@
     addedText,
     boardDialogAfterConfig,
     cardFromView,
+    cardBlocks,
     cardOf,
     cardRoot,
     defaultColumns,
@@ -248,6 +249,7 @@
         pickerOpen = true
       },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
+      card: () => (boards.index !== null ? cardBlocks(boards.card) : null),
       quiet: (code, cmd) => recovery.quiet(code, cmd),
     },
     folded,

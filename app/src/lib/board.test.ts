@@ -3,6 +3,7 @@ import {
   moveBoardNamed,
   addableColumns,
   cardMenu,
+  cardBlocks,
   cardOf,
   cardRoot,
   clip,
@@ -145,6 +146,11 @@ test('board settings close only after the core accepted the edit, and only their
 test('cardRoot is the open card root, or null', () => {
   expect(cardRoot(null)).toBeNull()
   expect(cardRoot(refsOf('c', [blk(7, 'TODO x', 0, 'TODO'), blk(8, 'y', 1)]))).toBe(7)
+})
+test('cardBlocks are the open card task and everything under it, or null with no card open', () => {
+  expect(cardBlocks(null)).toBeNull()
+  const card = refsOf('c', [blk(7, 'TODO x', 0, 'TODO'), blk(8, 'y', 1)])
+  expect(cardBlocks(card)?.map((b) => b.id)).toEqual([7, 8])
 })
 test('the board dialog follows its board by name, case-insensitively (never by index)', () => {
   const boards = [{ name: 'Work', columns: [] }, { name: 'Home', columns: [] }]

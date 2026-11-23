@@ -31,6 +31,8 @@ let shown: [string, MenuView | null][]
 let order: ((id: number) => BlockView[]) | undefined
 /** The page names the mock answers `pages.list` with; a test sets them. */
 let linkNames: { key: string; name: string; exists: boolean }[]
+/** The open card's blocks (`EditorEnv.card`); null = no card open (the journal or a page). */
+let cardBlocks: BlockView[] | null
 
 /** An in-memory editor: the text and a caret, no selection. */
 const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
@@ -92,6 +94,7 @@ beforeEach(() => {
   notices = []
   shown = []
   order = undefined
+  cardBlocks = null
   typed = []
   host = new EditorHost(
     {
@@ -103,6 +106,7 @@ beforeEach(() => {
       notify: (n) => notices.push(n),
       showMenu: (which, m) => void shown.push([which, m]),
       selectWithNeighbour() {},
+      card: () => cardBlocks,
       mount,
       slot: () => ({}) as HTMLElement,
     },
@@ -747,4 +751,68 @@ test('deleting a linked reference with nothing else of its page shown ends editi
   await settle()
   expect(h.editingId).toBeNull()
   expect(notices).toEqual([])
+})
+
+/** An open card: task 1 with blocks 2 and 4 directly under it, and 3 under 2. */
+function openCard() {
+  const at = (id: number, depth: number, text: string) => ({ ...block(id, text), depth })
+  blocks = [at(1, 0, 'TODO task now'), at(2, 1, 'two'), at(3, 2, 'three'), at(4, 1, 'four')]
+  cardBlocks = blocks
+}
+
+test('in an open card, Enter on the task asks for the new block under it', async () => {
+  openCard()
+  await host.edit(1, 8)
+  hooks.onAction('split', { cursor16: 8 })
+  expect(sent.find((c) => c.type === 'block.split')).toEqual({ type: 'block.split', id: 1, at: 8, under: true })
+})
+
+test('in an open card, Enter inside the task is a plain split', async () => {
+  openCard()
+  await host.edit(2, 3)
+  hooks.onAction('split', { cursor16: 3 })
+  expect(sent.find((c) => c.type === 'block.split')).toEqual({ type: 'block.split', id: 2, at: 3 })
+})
+
+test('in an open card, keys that would take a block out of the task send nothing', async () => {
+  openCard()
+  await host.edit(1, 0)
+  hooks.onAction('merge', { cursor16: 0 })
+  await host.edit(2, 0)
+  hooks.onAction('outdent', { cursor16: 0 })
+  hooks.onAction('moveUp', { cursor16: 0 })
+  await host.edit(4, 0)
+  hooks.onAction('moveDown', { cursor16: 0 })
+  expect(sent.filter((c) => c.type !== 'pages.list')).toEqual([])
+  expect(notices).toEqual([])
+})
+
+test('in an open card, the same keys inside the task work as in the journal', async () => {
+  openCard()
+  await host.edit(3, 0)
+  hooks.onAction('outdent', { cursor16: 0 })
+  await host.edit(4, 0)
+  hooks.onAction('moveUp', { cursor16: 0 })
+  // A merge locks the editor until its answer: it goes last.
+  await host.edit(2, 0)
+  hooks.onAction('merge', { cursor16: 0 })
+  expect(sent.map((c) => c.type)).toEqual(['blocks.outdent', 'blocks.moveUp', 'block.merge'])
+})
+
+test('without an open card, Backspace, Shift Tab and Alt moves are sent as before', async () => {
+  // Enter without an open card: 'a split answer for a page that is not shown still ends the split'.
+  const at = (id: number, depth: number, text: string) => ({ ...block(id, text), depth })
+  blocks = [at(1, 0, 'TODO task now'), at(2, 1, 'two')]
+  await host.edit(2, 0)
+  hooks.onAction('outdent', { cursor16: 0 })
+  hooks.onAction('moveUp', { cursor16: 0 })
+  hooks.onAction('moveDown', { cursor16: 0 })
+  await host.edit(1, 0)
+  hooks.onAction('merge', { cursor16: 0 })
+  expect(sent).toEqual([
+    { type: 'blocks.outdent', ids: [2] },
+    { type: 'blocks.moveUp', ids: [2] },
+    { type: 'blocks.moveDown', ids: [2] },
+    { type: 'block.merge', id: 1 },
+  ])
 })

@@ -382,6 +382,28 @@ fn split_after_emoji() {
 }
 
 #[test]
+fn split_under_puts_the_new_block_first_under_the_block() {
+    // Enter on an open card's task (§7.6): the new block is the task's first child, even with no children yet.
+    let (t, mut s) = folder(&[("pages/P.md", "- TODO task now\n- next\n")]);
+    let a = ids(&mut s, "p")[0];
+    let out = ok(
+        &mut s,
+        json!({"type":"block.split","id":a,"at":9,"under":true}),
+        0,
+    );
+    assert_eq!(read(&t, "pages/P.md"), "- TODO task\n\t- now\n- next\n");
+    let page = out.page.unwrap();
+    let focus = out.focus.unwrap();
+    assert_eq!(focus.id, page.blocks[1].id);
+    assert_eq!(focus.at, 0);
+    // Without `under` the same split makes a sibling, as before.
+    let (t, mut s) = folder(&[("pages/P.md", "- TODO task now\n- next\n")]);
+    let a = ids(&mut s, "p")[0];
+    ok(&mut s, json!({"type":"block.split","id":a,"at":9}), 0);
+    assert_eq!(read(&t, "pages/P.md"), "- TODO task\n- now\n- next\n");
+}
+
+#[test]
 fn today_creates_journal_without_file() {
     let (t, mut s) = folder(&[]);
     let out = ok(&mut s, json!({"type":"page.today"}), 0);

@@ -101,13 +101,22 @@ impl Session {
         )
     }
 
-    pub(super) fn block_split(&mut self, id: BlockId, at: usize) -> Result<Output, CommandError> {
+    pub(super) fn block_split(
+        &mut self,
+        id: BlockId,
+        at: usize,
+        under: bool,
+    ) -> Result<Output, CommandError> {
         let key = self.page_of(id)?;
         self.mutate(
             &key,
             false,
             Box::new(move |d, ids, _| {
-                let new = d.split(id, at, ids)?;
+                let new = if under {
+                    d.split_under(id, at, ids)?
+                } else {
+                    d.split(id, at, ids)?
+                };
                 Ok(Some(Focus { id: new, at: 0 }))
             }),
         )

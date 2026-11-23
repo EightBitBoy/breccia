@@ -60,6 +60,11 @@ export function cardRoot(card: RefsView | null): BlockId | null {
   return card?.groups[0]?.refs[0]?.blocks[0]?.id ?? null
 }
 
+/** The open card's blocks: its task first, then everything under it (depths relative to the task, folded ones too); null with no card open. */
+export function cardBlocks(card: RefsView | null): BlockView[] | null {
+  return card?.groups[0]?.refs[0]?.blocks ?? null
+}
+
 /** A card's place on screen, for a drop: its block and its top and bottom edge. */
 export interface CardBox {
   id: BlockId

@@ -230,7 +230,15 @@ pub enum Command {
     #[serde(rename = "block.setText")]
     BlockSetText { id: BlockId, text: String },
     #[serde(rename = "block.split")]
-    BlockSplit { id: BlockId, at: usize },
+    BlockSplit {
+        id: BlockId,
+        at: usize,
+        /// The new block becomes the block's first child, also when it has
+        /// none yet (Enter on the task of an open card, §7.6).
+        #[serde(default)]
+        #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
+        under: bool,
+    },
     #[serde(rename = "block.merge")]
     BlockMerge { id: BlockId },
     #[serde(rename = "block.paste")]

@@ -124,6 +124,35 @@ fn split_and_merge() {
 }
 
 #[test]
+fn split_under_makes_the_first_child() {
+    // no children yet: the right part becomes the only child, one level deeper
+    assert_eq!(
+        with("- task now\n- next\n", |d, b, ids| {
+            d.split_under(b[0], 4, ids).unwrap();
+        }),
+        "- task\n\t- now\n- next\n"
+    );
+    // with children: the first of them, above the old first child
+    assert_eq!(
+        with("- task now\n  - old\n", |d, b, ids| {
+            d.split_under(b[0], 4, ids).unwrap();
+        }),
+        "- task\n  - now\n  - old\n"
+    );
+    // a file indented with spaces gets its own indent unit
+    assert_eq!(
+        with("- a\n  - b\n- task\n", |d, b, ids| {
+            d.split_under(b[2], 4, ids).unwrap();
+        }),
+        "- a\n  - b\n- task\n  -\n"
+    );
+    // inside a fence it is refused as a plain split is
+    with("- ```\n  code\n  ```\n", |d, b, ids| {
+        assert_eq!(d.split_under(b[0], 5, ids), Err(EditError::InsideFence));
+    });
+}
+
+#[test]
 fn merge_reparents_children_deeper() {
     let out = with("- a\n\t- x\n- b\n\t- c\n", |d, b, ids| {
         assert_eq!(d.merge_into_previous(b[2], ids).unwrap(), (b[1], 1));

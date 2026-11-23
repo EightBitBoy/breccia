@@ -389,6 +389,10 @@ a **finished** flag and an **in cycle** flag. Defaults:
   "Write release notes" is a TODO card and "Update the changelog" a DONE card, both marked "↳ Release version 2".
 - **Click a card to edit it right there** with the same block editor; the change goes straight into the source block.
   While the card is open, all its children (description and subtasks) are shown and editable, as in the file.
+  An open card keeps its text inside the task: `Enter` on the task's own line makes the new block one level deeper,
+  first under the task (the text after the cursor moves into it); `Shift Tab` on a block directly under the task,
+  `Alt ↑` on the first of them, `Alt ↓` on the last, and `Backspace` at the start of the task's line do nothing.
+  Every other key works as in the journal, also deeper inside the task.
 - **Hovering a card shows a small jump icon**; clicking it opens the source page and scrolls to the block, highlighted
   briefly.
 - **Drag a card to another column** to change the block's state in its file (done date added or removed per §5).

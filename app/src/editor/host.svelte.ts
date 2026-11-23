@@ -5,6 +5,7 @@
 import { tick } from 'svelte'
 import { errorCode, errorMessage } from '../api'
 import { answerOf } from '../lib/answer'
+import { cardKey } from '../lib/cardKeys'
 import type { Client } from '../lib/api'
 import type { Action } from '../lib/keys'
 import { deleteFocus, ownTextEnd } from '../lib/deleteBlock'
@@ -38,6 +39,11 @@ export interface EditorEnv {
   /** Opens the date picker; a pick calls `onpick` with the day's key, closing it calls nothing. */
   pickDate?(onpick: (key: string) => void): void
   selectWithNeighbour(id: BlockId, dir: -1 | 1): void
+  /**
+   * The open card's blocks on a board (its task first, depths relative to it, folded ones too), or null when no card
+   * is open: there the keys that would take a block out of the task do nothing (`cardKey`, §7.6).
+   */
+  card?(): readonly BlockView[] | null
   /** Whether the refusal of `cmd` with error `code` stays unshown (after an internal error); never asked for typed text. */
   quiet?(code: string | null, cmd: Command): boolean
   /** Test seams; default to mountEditor and the `[data-block-id="…"] .editor-slot` lookup. */
@@ -569,13 +575,15 @@ export class EditorHost {
 
   // ---- actions ------------------------------------------------------------------
 
-  /** Starts a split of block `id` at the caret; one split at a time. */
-  private split(id: BlockId, ed: BlockEditor) {
+  /** Starts a split of block `id` at the caret; one split at a time. With `under` the new block is its first child. */
+  private split(id: BlockId, ed: BlockEditor, under: boolean) {
     // A second one would orphan what was typed during the first.
     if (this.splitting) return
     ed.insert('') // A selection goes first.
     const s: Splitting = { id, t0: ed.text(), c: ed.cursor16(), queued: [] }
-    void this.exec({ type: 'block.split', id, at: utf16ToUtf8(s.t0, s.c) }, (code) => splitFailed(this.splitHost, s, code))
+    const at = utf16ToUtf8(s.t0, s.c)
+    const cmd: Command = under ? { type: 'block.split', id, at, under } : { type: 'block.split', id, at }
+    void this.exec(cmd, (code) => splitFailed(this.splitHost, s, code))
     this.splitting = s
   }
 
@@ -583,9 +591,12 @@ export class EditorHost {
   act(id: BlockId, a: Action) {
     const ed = this.mounted?.id === id ? this.mounted.ed : null
     if (!ed) return
+    // An open card keeps its text inside the task.
+    const rule = cardKey(a, id, this.env.card?.() ?? null)
+    if (rule === 'none') return
     switch (a) {
       case 'split':
-        this.split(id, ed)
+        this.split(id, ed, rule === 'splitUnder')
         return
       case 'merge':
         void this.exec({ type: 'block.merge', id }, (code) => code === 'noPrevious')

@@ -195,6 +195,28 @@ impl Document {
     /// leaves no invisible trailing space and no indented first line. They are
     /// the only characters a split ever removes.
     pub fn split(&mut self, id: BlockId, at: usize, ids: &mut IdGen) -> Result<BlockId, EditError> {
+        self.split_into(id, at, false, ids)
+    }
+
+    /// Splits like [`Self::split`], but the new block always becomes the
+    /// block's first child, also when it has no children yet (Enter on the
+    /// task of an open card keeps the text inside the task, §7.6).
+    pub fn split_under(
+        &mut self,
+        id: BlockId,
+        at: usize,
+        ids: &mut IdGen,
+    ) -> Result<BlockId, EditError> {
+        self.split_into(id, at, true, ids)
+    }
+
+    fn split_into(
+        &mut self,
+        id: BlockId,
+        at: usize,
+        under: bool,
+        ids: &mut IdGen,
+    ) -> Result<BlockId, EditError> {
         let i = self.find(id)?;
         let text = &self.blocks[i].text;
         if at > text.len() || !text.is_char_boundary(at) {
@@ -212,6 +234,11 @@ impl Document {
         let block = &self.blocks[i];
         let (pos, depth, indent) = match first_child_indent {
             Some(indent) => (i + 1 + extras, block.depth + 1, indent),
+            None if under => (
+                i + 1 + extras,
+                block.depth + 1,
+                format!("{}{}", block.indent, self.indent_unit),
+            ),
             None => (self.subtree_end(i), block.depth, block.indent.clone()),
         };
         let new = self.insert_block(pos, depth, indent, &right, ids);
