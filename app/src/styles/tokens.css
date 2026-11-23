@@ -28,6 +28,8 @@
   --c-dim: #85817a;
   --c-blue: #2f6fd0;
   --c-red: #c4423b;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #1f8a8a;
   --pc-crimson: #d4556c;
   --pc-red: #e86154;
@@ -89,6 +91,8 @@
     --c-dim: #7c7c84;
     --c-blue: #6fa0f0;
     --c-red: #ef7a73;
+    --due-soon: var(--c-amber);
+    --due-overdue: var(--c-red);
     --c-teal: #5cc4c4;
     --pc-crimson: #d36173;
     --pc-red: #e0685b;
@@ -150,6 +154,8 @@
   --c-dim: #7c7c84;
   --c-blue: #6fa0f0;
   --c-red: #ef7a73;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #5cc4c4;
   --pc-crimson: #d36173;
   --pc-red: #e0685b;
@@ -210,6 +216,8 @@
   --c-dim: #8a82a8;
   --c-blue: #8fb4ff;
   --c-red: #ff8a9a;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #6fd6d0;
   --pc-crimson: #da6779;
   --pc-red: #e76e61;
@@ -270,6 +278,8 @@
   --c-dim: #8b9198;
   --c-blue: #7fa8e0;
   --c-red: #e58080;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #5fc0b0;
   --pc-crimson: #bb5e6c;
   --pc-red: #c7655a;
@@ -330,6 +340,8 @@
   --c-dim: #5d767d;
   --c-blue: #4b9fe0;
   --c-red: #ec6a67;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #2aa198;
   --pc-crimson: #871a36;
   --pc-red: #911d18;
@@ -390,6 +402,8 @@
   --c-dim: #a89c8e;
   --c-blue: #4f6f9a;
   --c-red: #a8473a;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #3f7f78;
   --pc-crimson: #da7483;
   --pc-red: #ea7e71;
@@ -450,6 +464,8 @@
   --c-dim: #93a1a1;
   --c-blue: #2a7db6;
   --c-red: #c03f39;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #1b8079;
   --pc-crimson: #da7482;
   --pc-red: #ea7e71;
@@ -510,6 +526,8 @@
   --c-dim: #a0917e;
   --c-blue: #92b3a6;
   --c-red: #f2654f;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #96c489;
   --pc-crimson: #c95e6f;
   --pc-red: #d66559;
@@ -570,6 +588,8 @@
   --c-dim: #8a95a8;
   --c-blue: #88a9cc;
   --c-red: #d4808a;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #8fc4c1;
   --pc-crimson: #b8616d;
   --pc-red: #c4685d;
@@ -630,6 +650,8 @@
   --c-dim: #8f86a6;
   --c-blue: #8ab6ff;
   --c-red: #ff6b72;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #7fdde6;
   --pc-crimson: #d65e72;
   --pc-red: #e46458;
@@ -690,6 +712,8 @@
   --c-dim: #aa8d94;
   --c-blue: #8fb0cc;
   --c-red: #f5646f;
+  --due-soon: var(--c-amber);
+  --due-overdue: var(--c-red);
   --c-teal: #8cc7ae;
   --pc-crimson: #c95e6f;
   --pc-red: #d66559;

@@ -112,6 +112,8 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
   font-size: 11.5px; color: var(--muted); border: 1px solid var(--line);
   border-radius: 999px; padding: 0 8px; margin-left: 6px;
 }
+.chip.due[data-tone="soon"] { color: var(--due-soon); border-color: var(--due-soon); }
+.chip.due[data-tone="overdue"] { color: var(--due-overdue); border-color: var(--due-overdue); }
 .props { margin-top: 2px; }
 .prop { font-size: 13px; color: var(--muted); }
 .prop-key { color: var(--muted); font-weight: 600; }
