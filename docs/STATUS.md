@@ -234,6 +234,13 @@ Candidates for the plan after it, to settle with the owner:
 - The app no longer sends a command's own result back to the window as events; the window takes it from the command's
   answer (plan 15, Q1, owner 2026-11-20 after asking for the pros and cons; review item 66).
 - The window's wire types are generated (`just types`, ts-rs, developer build only) (plan 15, Q2, owner 2026-11-20).
+- Tasks get due dates (owner, 2026-11-23; no plan written yet). The property is `due:: [[YYYY-MM-DD]]`: named "due",
+  a date with no time, a journal link so the task shows in that day's linked references. Finishing a task keeps its
+  `due::` line; Breccia never removes it on its own. It is set by typing the line, or by "Set due date…" (a small
+  calendar, with "Remove due date") in a task's right-click menu, in the card menu and on a key in the editor. A chip
+  ("due 1 Dec") shows on board cards and next to tasks in pages and journal days: muted while the date is more than 2
+  days away, amber from 2 days before through the day itself, red ("overdue") after it; on finished tasks it is muted.
+  Sorting board columns by due date is not in the first version.
 
 ## Setting up a new machine or account
 
