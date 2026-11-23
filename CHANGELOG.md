@@ -2,6 +2,17 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.8.3] - 2026-11-23
+
+### Features
+
+- Quotes show with a bar on their left and muted text, without the large indent
+
+### Fixes
+
+- Boards: Enter on an open card's task makes a line under the task, not one that drops off
+- Boards: Enter at the start of an open card's task and pasted lines stay under the task
+
 ## [1.8.2] - 2026-11-20
 
 ### Features
