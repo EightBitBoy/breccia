@@ -240,6 +240,8 @@ Candidates for the plan after it, to settle with the owner:
   calendar, with "Remove due date") in a task's right-click menu, in the card menu and on a key in the editor. A chip
   ("due 1 Dec") shows on board cards and next to tasks in pages and journal days: muted while the date is more than 2
   days away, amber from 2 days before through the day itself, red ("overdue") after it; on finished tasks it is muted.
+  A date less than 6 days away is said in words ("due today", "due tomorrow", "due in 3 days"), with the date as a
+  tooltip; overdue and finished chips show the date.
   Sorting board columns by due date is not in the first version.
 
 ## Setting up a new machine or account
