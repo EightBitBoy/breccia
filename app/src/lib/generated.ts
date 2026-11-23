@@ -53,7 +53,11 @@ state: string | null,
 /**
  * Whether that state counts as finished.
  */
-finished: boolean, hasChildren: boolean,
+finished: boolean,
+/**
+ * A task's due day, `YYYY-MM-DD`.
+ */
+due?: string, hasChildren: boolean,
 /**
  * Journal blocks only: the page the block's first topic link goes to.
  */

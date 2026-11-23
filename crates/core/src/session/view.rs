@@ -12,7 +12,7 @@ use crate::inline::{LinkKind, links};
 use crate::naming::{journal_display, parse_journal_name};
 use crate::outline::{Block, BlockId};
 use crate::render::{block_html, crumb, preamble_html};
-use crate::task::task_state;
+use crate::task::{due_date, task_state};
 pub use crate::workspace::StateUsage;
 use crate::workspace::{LoadWarning, NameEntry, Page, PageKind, SaveError, Workspace};
 
@@ -223,6 +223,10 @@ pub struct BlockView {
     pub state: Option<String>,
     /// Whether that state counts as finished.
     pub finished: bool,
+    /// A task's due day, `YYYY-MM-DD`.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "wire-types", ts(optional))]
+    pub due: Option<String>,
     pub has_children: bool,
     /// Journal blocks only: the page the block's first topic link goes to.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -435,6 +439,9 @@ impl BlockView {
                     html: block_html(b.text(), cfg),
                     state: state.map(|s| s.keyword.clone()),
                     finished: state.is_some_and(|s| s.finished),
+                    due: state
+                        .and(due_date(b.text()))
+                        .map(|d| d.format("%Y-%m-%d").to_string()),
                     has_children: blocks.get(i + 1).is_some_and(|n| n.depth() > b.depth()),
                     topic: None,
                     color: None,

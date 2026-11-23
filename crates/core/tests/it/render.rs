@@ -347,3 +347,39 @@ fn a_quote_renders_as_a_quote_with_its_links() {
         "<blockquote>\n<p>Said <a class=\"link\" data-page=\"anna\" data-name=\"Anna\">Anna</a><br />\non two lines</p>\n</blockquote>\n"
     );
 }
+
+#[test]
+fn task_with_due_gets_a_placeholder_and_no_property_line() {
+    let html = h("TODO a\ndue:: [[2026-12-01]]");
+    assert!(
+        html.contains("<span class=\"chip due\" data-due=\"2026-12-01\"></span>"),
+        "{html}"
+    );
+    assert!(!html.contains("prop-key\">due<"), "{html}");
+}
+
+#[test]
+fn finished_task_due_placeholder_is_marked() {
+    let html = h("DONE a\ndue:: [[2026-12-01]]\ndone:: [[2026-12-02]] 10:00:00");
+    assert!(
+        html.contains("data-due=\"2026-12-01\" data-finished=\"\"></span>"),
+        "{html}"
+    );
+    assert!(html.find("chip due").unwrap() < html.find('\u{2713}').unwrap());
+}
+
+#[test]
+fn block_without_state_shows_due_as_a_property() {
+    let html = h("a\ndue:: [[2026-12-01]]");
+    assert!(!html.contains("chip due"), "{html}");
+    assert!(html.contains("prop-key\">due<"), "{html}");
+}
+
+#[test]
+fn second_due_line_stays_visible() {
+    let html = h("TODO a\ndue:: [[2026-12-01]]\ndue:: [[2026-12-09]]");
+    assert_eq!(html.matches("chip due").count(), 1, "{html}");
+    assert!(html.contains("data-due=\"2026-12-01\""), "{html}");
+    assert_eq!(html.matches("class=\"prop\"").count(), 1, "{html}");
+    assert!(html.contains("2026-12-09"), "{html}");
+}

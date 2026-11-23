@@ -1045,3 +1045,22 @@ fn an_open_card_carries_its_created_day() {
     // A finished card shows its done day; the created day is for open cards.
     assert_eq!(card(&b, "DONE finished").created, None);
 }
+
+#[test]
+fn cards_carry_their_due_date_and_finished_flag_in_their_first_block() {
+    let t = tempfile::tempdir().unwrap();
+    put(
+        t.path(),
+        "pages/P.md",
+        "- TODO a\n  due:: [[2026-12-01]]\n- DONE b\n  due:: [[2026-12-01]]\n  done:: [[2026-10-28]]\n- TODO c\n",
+    );
+    let mut s = open(t.path());
+    let b = board(&mut s, 0);
+    let a = &card(&b, "TODO a").blocks[0];
+    assert_eq!(a.due.as_deref(), Some("2026-12-01"));
+    assert!(!a.finished);
+    let d = &card(&b, "DONE b").blocks[0];
+    assert_eq!(d.due.as_deref(), Some("2026-12-01"));
+    assert!(d.finished);
+    assert_eq!(card(&b, "TODO c").blocks[0].due, None);
+}

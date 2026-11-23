@@ -3066,3 +3066,17 @@ fn pages_get_answers_pages_and_changes_nothing() {
     let keys: Vec<&str> = pages.iter().map(|p| p.key.as_str()).collect();
     assert_eq!(keys, ["b"]);
 }
+
+#[test]
+fn block_view_carries_the_due_date_of_a_task_only() {
+    let (_t, mut s) = folder(&[(
+        "pages/P.md",
+        "- TODO a\n  due:: [[2026-12-01]]\n- b\n  due:: [[2026-12-01]]\n",
+    )]);
+    let out = ok(&mut s, json!({"type":"page.get","key":"p"}), 0);
+    let page = out.page.unwrap();
+    assert_eq!(page.blocks[0].due.as_deref(), Some("2026-12-01"));
+    assert_eq!(page.blocks[1].due, None);
+    let v = serde_json::to_value(&page.blocks[1]).unwrap();
+    assert!(v.get("due").is_none(), "{v}");
+}
