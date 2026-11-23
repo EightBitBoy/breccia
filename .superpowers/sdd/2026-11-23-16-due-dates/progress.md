@@ -34,3 +34,7 @@ Task 4: implementer DONE 31ebc33 (RED captured after writing code, by moving fil
 Task 4: review clean (spec ✅, approved). Cannot-verify item (fillDueChips regex vs the core span) checked by controller: due.ts:48 matches render.rs:456 exactly.
 Task 4: minor (deferred): NOT_A_TASK "matches the core" test compares the constant with its own literal; real focus/visibility wiring untested and start() has no double-call guard; no finished-other-year or leap-day case; --due-* token lines sit mid --c-* run.
 Task 4: complete (commits 95f0349..31ebc33, review clean)
+Task 5: dispatched (opus, base 7e08d4f)
+Task 5: implementer DONE_WITH_CONCERNS ceea0cc (no by-eye check in just dev; e2e 226 green); review dispatched (opus). Ruling: the by-eye check moves to Task 10's e2e step 152 and review item 136 — the implementer cannot see the window — cost: a visual flaw found later by the owner.
+Task 5: review clean (opus; spec ✅, approved). minor (deferred): commit subject 95 chars (brief's wording); cardDue restates dueChip's return type; card chip lacks data-due (Task 10 may want it).
+Task 5: complete (commits 7e08d4f..ceea0cc, review clean)
