@@ -63,3 +63,9 @@ Task 10: implementer DONE 3041f79, 79ae92c (e2e 236 PASS; RED by renaming menu-d
 Task 10: review clean (opus; spec ✅, approved). minor (deferred): card chip text/tone read once without a wait (possible flake); finished chip's title never checked null; `today` fixed at script start (pre-existing midnight risk).
 Task 10: complete (commits 9e2fb0c..79ae92c, review clean)
 ## Final review
+Final review: dispatched (opus) over 02ee65a..45958ba
+Final review (opus): ready with fixes; 0 Critical, 3 Important (docs claim Ctrl D replaced select-next-occurrence — it never existed; core NotATask text differs from the window's; spec §2/§5 wording says `due:: soon` is kept though set overwrites/remove deletes it) + 4 minors to fix now (render test for non-link due line; DEADLINE: shows as plain not dimmed in item 136; plan R6/State wording; vocabulary "due chip"/"due date calendar"). Other deferred minors → follow-ups doc (final-review.md lists them).
+Final fix wave: dispatched (opus), all 7 items in one dispatch.
+Final fix wave: done (dd0d2ff, 5991837, 403d853); scoped re-review dispatched (sonnet)
+Final fix wave: re-review — all 7 ADDRESSED, no new breakage. Follow-ups doc written.
+Finishing: just lint clean; just test green (Vitest 1323; core lib 53, integration 882 + 2 ignored; shell 95); just e2e 236 PASS, exit 0. Follow-ups 34bbb7d. STATUS updated. Plan 16: finished.
