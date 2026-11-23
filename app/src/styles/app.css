@@ -210,7 +210,9 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
    Hover and focus deepen the tint. */
 .dp-day.marked { background: var(--dp-note); }
 .dp-day.marked:hover, .dp-day.marked.focused { background: var(--dp-note-strong); }
-.dp-foot { display: flex; justify-content: center; margin-top: 6px; }
+/* The due date calendar's chosen day (the task's due date) is filled with the accent. */
+.dp-day.chosen, .dp-day.chosen:hover { background: var(--accent); color: var(--on-accent); }
+.dp-foot { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
 /* "Today" looks like a button, like the board's column-width buttons. */
 .dp-today {
   padding: 2px 12px; font-size: 12.5px; line-height: 18px;

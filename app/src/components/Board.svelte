@@ -8,6 +8,7 @@
   import type { BlockId, BoardView, CardView, Command, RefsView } from '../lib/types'
   import BlockRow from './BlockRow.svelte'
   import BoardCard from './BoardCard.svelte'
+  import { duePick } from '../lib/duePick.svelte'
 
   let {
     board,
@@ -307,6 +308,8 @@
               onjump={() => onjump(c)}
               onmove={(k) => oncommand({ type: 'blocks.setState', ids: [c.id], keyword: k })}
               onarchive={() => oncommand({ type: 'blocks.setArchived', ids: [c.id], archived: true })}
+              onsetdue={(anchor) =>
+                duePick.show(c.blocks[0]?.due ?? null, anchor, (due) => oncommand({ type: 'block.setDue', id: c.id, due }))}
             />
           {/if}
         {/each}

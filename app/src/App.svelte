@@ -128,6 +128,7 @@
   import AllPagesView from './components/AllPagesView.svelte'
   import DailiesView from './components/DailiesView.svelte'
   import Notices from './components/Notices.svelte'
+  import DuePicker from './components/DuePicker.svelte'
   import CaretMenu from './components/CaretMenu.svelte'
   import FlowDialog from './components/FlowDialog.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -1548,7 +1549,7 @@
     // the search, is not a press outside the card or the editor. bits-ui closes it on the click, after this.
     // The date picker too: a press on it leaves the edited block alone, so Esc can go back to it. The theme menu
     // likewise: a pick gives the focus back to the edited block.
-    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-theme-menu]')) return
+    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-due-picker]') || t.closest('[data-theme-menu]')) return
     // The ? button opens the list, and the theme button its menu, without taking the focus (or the editing) from
     // the block.
     if (t.closest('[data-testid="status-item"]:is([data-id="help"], [data-id="theme"])')) {
@@ -1762,6 +1763,7 @@
 {#if ready}
   <div class="shell">
     <Notices items={notices.items} ondismiss={(id) => notices.dismiss(id)} />
+    <DuePicker />
     {#if linkMenu}
       <CaretMenu menu={linkMenu} testid="link-menu" onchoose={(i) => host.chooseMenu('link', i)} />
     {:else if slashMenu}

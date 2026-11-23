@@ -5,7 +5,8 @@
   import { Popover } from 'bits-ui'
   import { untrack } from 'svelte'
   import CalendarIcon from './CalendarIcon.svelte'
-  import { WEEKDAYS, addMonths, dayKey, dayLabel, monthGrid, monthTitle, pickerKey, startDay } from '../lib/calendar'
+  import MonthGrid from './MonthGrid.svelte'
+  import { dayKey, startDay } from '../lib/calendar'
 
   let {
     open = $bindable(false),
@@ -24,14 +25,11 @@
   /** The focused day; the month shown is its month. */
   let focused = $state(dayKey(new Date()))
   let today = $state(dayKey(new Date()))
-  let grid = $state<HTMLElement | null>(null)
   /** Where the focus was when the picker opened; Esc or a click outside sends it back there. */
   let before: HTMLElement | null = null
   let picked = false
   /** The focused day's button takes the focus after the next update (keys, Today, opening). */
   let focusDay = $state(false)
-
-  const weeks = $derived(monthGrid(focused, marked, today))
 
   $effect.pre(() => {
     if (!open) return
@@ -45,12 +43,6 @@
     })
   })
 
-  $effect(() => {
-    if (!focusDay || !grid) return
-    grid.querySelector<HTMLElement>(`[data-key="${focused}"]`)?.focus({ preventScroll: true })
-    focusDay = false
-  })
-
   function moveTo(key: string, focus: boolean) {
     focused = key
     if (focus) focusDay = true
@@ -61,14 +53,6 @@
     picked = true
     open = false
     onpick(key)
-  }
-
-  function onKey(e: KeyboardEvent) {
-    const r = pickerKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, focused)
-    if (r === null) return
-    e.preventDefault()
-    if (r === 'pick') pick(focused)
-    else moveTo(r.move, true)
   }
 </script>
 
@@ -94,38 +78,7 @@
         if (!picked && before?.isConnected) before.focus({ preventScroll: true })
       }}
     >
-      <div class="dp-head">
-        <button class="dp-nav" data-testid="date-picker-prev" aria-label="Previous month" title="Previous month (Page Up)" onclick={() => moveTo(addMonths(focused, -1), false)}>‹</button>
-        <span class="dp-title" data-testid="date-picker-title" aria-live="polite">{monthTitle(focused)}</span>
-        <button class="dp-nav" data-testid="date-picker-next" aria-label="Next month" title="Next month (Page Down)" onclick={() => moveTo(addMonths(focused, 1), false)}>›</button>
-      </div>
-      <div class="dp-grid" role="grid" tabindex="-1" aria-label={monthTitle(focused)} bind:this={grid} onkeydown={onKey}>
-        <div class="dp-row" role="row">
-          {#each WEEKDAYS as w (w)}<span class="dp-wd" role="columnheader">{w}</span>{/each}
-        </div>
-        {#each weeks as week (week[0].key)}
-          <div class="dp-row" role="row">
-            {#each week as c (c.key)}
-              <span role="gridcell" aria-selected={c.key === focused}>
-                <button
-                  class="dp-day"
-                  class:out={!c.inMonth}
-                  class:marked={c.marked}
-                  class:today={c.today}
-                  class:focused={c.key === focused}
-                  data-key={c.key}
-                  data-marked={c.marked ? '' : undefined}
-                  data-today={c.today ? '' : undefined}
-                  aria-current={c.today ? 'date' : undefined}
-                  aria-label={dayLabel(c)}
-                  tabindex={c.key === focused ? 0 : -1}
-                  onclick={() => pick(c.key)}>{c.day}</button
-                >
-              </span>
-            {/each}
-          </div>
-        {/each}
-      </div>
+      <MonthGrid bind:focused bind:focusDay {today} {marked} testid="date-picker" onpick={pick} />
       <div class="dp-foot">
         <button class="dp-today" data-testid="date-picker-today" title="Show today" onclick={() => moveTo(today, true)}>Today</button>
       </div>
