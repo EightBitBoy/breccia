@@ -1,7 +1,8 @@
 <script lang="ts">
   import { linkDisplay } from '../lib/linkDisplay.svelte'
   import { DropdownMenu } from 'bits-ui'
-  import { clip, descriptionOf, sourceLine, subtaskHint } from '../lib/board'
+  import { cardDue, clip, descriptionOf, sourceLine, subtaskHint } from '../lib/board'
+  import { today } from '../lib/today.svelte'
   import { cardDrag } from '../lib/dnd'
   import type { CardView } from '../lib/types'
   import BlockRow from './BlockRow.svelte'
@@ -43,6 +44,8 @@
   const clipped = $derived(clip(description, 4))
   const shown = $derived(expanded ? description : clipped.shown)
   const hint = $derived(subtaskHint(card))
+  // Reading `today.key` makes the chip follow midnight.
+  const due = $derived(cardDue(card, today.key))
   const noop = () => {}
 
   function click(e: MouseEvent) {
@@ -112,5 +115,9 @@
   {#if hint}
     <div class="hint">{hint}</div>
   {/if}
-  <div class="src">{sourceLine(card)}</div>
+  <div class="src">
+    {sourceLine(card)}{#if due}<span class="chip due" data-testid="card-due" data-tone={due.tone} title={due.title}
+        >{due.label}</span
+      >{/if}
+  </div>
 </div>

@@ -42,6 +42,7 @@
   import { linkDisplay } from './lib/linkDisplay.svelte'
   import type { LinkDisplay } from './lib/linkDisplay'
   import { everyMidnight } from './lib/feed'
+  import { today } from './lib/today.svelte'
   import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
   import { ancestorsOf, visible } from './lib/tree'
   import { isNewer } from './lib/treeVersion'
@@ -1705,6 +1706,8 @@
     })
     // At local midnight the feed reloads, so the new day is at the top.
     const stopMidnight = everyMidnight(() => journal.refresh())
+    // Due chips follow the day: after midnight and when the window wakes.
+    const stopToday = today.start()
     // "Saved to Git 2 min ago" moves on.
     const gitClock = setInterval(() => git.tick(), 30_000)
     // Once an hour, so a new day is noticed while the app runs.
@@ -1742,6 +1745,7 @@
     return () => {
       stopThemeTokens()
       stopMidnight()
+      stopToday()
       clearInterval(gitClock)
       stopArchive()
       stopDailies()

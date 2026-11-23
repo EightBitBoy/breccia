@@ -4,6 +4,8 @@
   import type { RowWash } from '../lib/pageColors'
   import { washValue } from '../lib/customColor'
   import { themeTokens } from '../lib/themeTokens.svelte'
+  import { fillDueChips } from '../lib/due'
+  import { today } from '../lib/today.svelte'
 
   let {
     block,
@@ -59,6 +61,6 @@
   {:else}
     <!-- Links inside are handled by the app's anchor handler before this click. -->
     <!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_static_element_interactions -->
-    <div class="content" onclick={(e) => onedit(block.id, e.shiftKey)}>{@html linkDisplay.apply(block.html)}</div>
+    <div class="content" onclick={(e) => onedit(block.id, e.shiftKey)}>{@html linkDisplay.apply(fillDueChips(block.html, today.key))}</div>
   {/if}
 </div>

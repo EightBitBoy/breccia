@@ -2,6 +2,7 @@ import { expect, test } from 'vitest'
 import {
   moveBoardNamed,
   addableColumns,
+  cardDue,
   cardMenu,
   cardBlocks,
   cardOf,
@@ -57,6 +58,14 @@ test('source line and subtask hint', () => {
   expect(sourceLine({ ...card([]), source: 'P', done: '28 Oct', created: '26 Oct' })).toBe('P · ✓ 28 Oct')
   expect(subtaskHint({ ...card([]), subtasksDone: 1, subtasksTotal: 2 })).toBe('1/2 subtasks')
   expect(subtaskHint({ ...card([]), subtasksDone: 0, subtasksTotal: 0 })).toBeNull()
+})
+test("a card's due chip is its task's chip, null without a due date", () => {
+  expect(cardDue(card([blk(1, 'TODO a', 0, 'TODO')]), '2026-11-23')).toBeNull()
+  expect(cardDue(card([]), '2026-11-23')).toBeNull()
+  const open = card([{ ...blk(1, 'TODO a', 0, 'TODO'), due: '2026-11-23' }])
+  expect(cardDue(open, '2026-11-23')).toEqual({ label: 'due today', tone: 'soon', title: '23 Nov 2026' })
+  const done = card([{ ...blk(1, 'DONE a', 0, 'DONE'), finished: true, due: '2026-11-20' }])
+  expect(cardDue(done, '2026-11-23')).toEqual({ label: 'due 20 Nov', tone: 'finished', title: null })
 })
 test('cardOf takes the subtree with relative depths', () => {
   const page = pg('p', [blk(1, 'a', 0), blk(2, 'TODO b', 1, 'TODO'), blk(3, 'c', 2), blk(4, 'd', 1)])
