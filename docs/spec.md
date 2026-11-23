@@ -253,14 +253,16 @@ second click on the Git history button is Back.
   that is not a task a note says "Only a task can have a due date." and nothing is written. `Ctrl Shift D` still opens
   the go-to-a-day calendar.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line,
-  which stays in the file but is not shown. In a journal day and on a page the right-click menu of a task has "Set due date…", which opens the due-date picker: the month calendar of the date
-  picker, with the day of a set date marked; a pick saves at once, and "Remove due date" (shown only when the task has a
-  date) removes it. Linked references and an open card show the chip but have no task menu (a card has its card
-  menu, §7.6). Any further `due::` line shows dimmed like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to "due in 5
-  days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says "overdue 22 Nov".
-  A finished task always shows the date ("due 22 Nov"). A chip in words (today to 5 days) has the date as its tooltip
-  ("1 Dec 2026"). The chip's tone: muted more than 2 days away, amber from today to 2 days away, red when overdue,
-  muted again on a finished task. It changes at midnight and after the computer wakes, with the app open.
+  which stays in the file but is not shown. In a journal day and on a page the right-click menu of a task has "Set due
+  date…", which opens the due-date picker: the month calendar of the date picker, with the day of a set date marked; a
+  pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and an
+  open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows dimmed
+  like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to
+  "due in 5 days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says
+  "overdue 22 Nov". A finished task always shows the date ("due 22 Nov"). A chip in words (today to 5 days) has the
+  date as its tooltip ("1 Dec 2026"). The chip's tone: muted more than 2 days away, amber from today to 2 days away,
+  red when overdue, muted again on a finished task. It changes at midnight and after the computer wakes, with the app
+  open.
 - Blocks with children have a fold arrow; folding is remembered per block for the session. *(my call: Logseq writes
   `collapsed:: true` into the file; Breccia does not, to keep files clean)*
 - **Autocomplete:** typing `[[` lists page names (fuzzy) and offers "create page"; typing `#` lists only the existing

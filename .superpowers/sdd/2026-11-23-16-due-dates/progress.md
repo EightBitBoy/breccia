@@ -52,3 +52,6 @@ Task 8: dispatched (opus, base 2d9d05b)
 Task 8: implementer DONE_WITH_CONCERNS 26dd796 (hand-checked; due calendar now closes after an internal-error reload). Concern: core EditError::NotATask text "Only a task has a due date" differs from window NOT_A_TASK "Only a task can have a due date." (F7 says one sentence) → final fix wave (Task 1 defect). Review dispatched (opus).
 Task 8: review clean (opus; spec ✅, approved). Cannot-verify (item 136 names Ctrl D) → carried into Task 9's dispatch. minor (deferred): App.svelte:59 `if (!b) return` drops the key silently; no test for coordsAtPos null fallback (host.svelte.ts:173); pickDue skips the dialogOpen/search.shown check pickDate has (harmless).
 Task 8: complete (commits 2d9d05b..26dd796, review clean)
+Task 9: dispatched (sonnet, base 523eea9) with the facts for item 136 (Ctrl D replaces select-next-occurrence; pages' new right-click zone; no Color… on pages; chips in linked refs/open card; card menu no keyboard path)
+Task 9: implementer DONE d0185c0 (backlog #98 sort, #99 card menu keyboard path); review dispatched (sonnet)
+Task 9: review: 1 Important (spec §7.2 claims a task menu in linked refs/open card — false, R9); minors: long lines §7.4/§5, chip/picker not in vocabulary (deferred), item 136 lacks one-undo-step (R8), spec lacks 'further due:: lines dimmed'. Fix round 1 sent (Important + 3 minors).
