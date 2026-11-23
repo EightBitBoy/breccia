@@ -58,3 +58,8 @@ Task 9: review: 1 Important (spec §7.2 claims a task menu in linked refs/open c
 Task 9: fix round 1/5 (4 addressed, 0 open — spec §7.2 task-menu places, re-wrap, undo step in item 136, further due:: dimmed; commits d0185c0..b011679)
 Task 9: minor (deferred): "chip" and "picker" are not in docs/vocabulary.md.
 Task 9: complete (commits 523eea9..b011679, review clean after 1 round)
+Task 10: dispatched (opus, base 9e2fb0c)
+Task 10: implementer DONE 3041f79, 79ae92c (e2e 236 PASS; RED by renaming menu-due); review dispatched (opus)
+Task 10: review clean (opus; spec ✅, approved). minor (deferred): card chip text/tone read once without a wait (possible flake); finished chip's title never checked null; `today` fixed at script start (pre-existing midnight risk).
+Task 10: complete (commits 9e2fb0c..79ae92c, review clean)
+## Final review
