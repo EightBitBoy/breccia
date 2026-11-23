@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-20. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-23. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -38,6 +38,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 13 | Dailies | done 2026-11-18 | `docs/plans/2026-11-18-13-dailies.md` | `docs/plans/2026-11-18-13-dailies-followups.md` |
 | 14 | Open follow-ups of plans 12 and 13 | done 2026-11-19 | `docs/plans/2026-11-19-14-open-followups.md` | `docs/plans/2026-11-19-14-open-followups-followups.md` |
 | 15 | The contract (from the audit) | done 2026-11-20 | `docs/plans/2026-11-20-15-the-contract.md` | `docs/plans/2026-11-20-15-the-contract-followups.md` |
+| 16 | Task due dates | done 2026-11-23 | `docs/plans/2026-11-23-16-due-dates.md` | `docs/plans/2026-11-23-16-due-dates-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -186,6 +187,14 @@ it after asking, a drag handle on dailies, a web link's full address on hover an
 Released 1.8.3 on 2026-11-23 (https://github.com/EightBitBoy/breccia/releases/tag/v1.8.3): quotes with a bar and
 muted text (review 134), and an open board card keeping its new lines and pasted lines under the task (review 135).
 
+Plan 16 (task due dates) is done (2026-11-23; owner decisions, answers Q1 to Q5 and rulings in the plan, pre-flight
+rulings in the ledger `.superpowers/sdd/2026-11-23-16-due-dates/progress.md`). A task gets a `due:: [[YYYY-MM-DD]]`
+line (format version 10) from "Set due date…" in its right-click menu (journal days and pages) or its card menu, or
+from `Ctrl D` while editing it; a due chip on rows and cards says the date in words when it is less than 6 days away
+and turns amber near it and red when overdue. Ordinary pages now have the journal's right-click zone ("Copy link",
+the task menu; the browser's own menu no longer opens there). The owner checks review item 136; sorting by due date is
+backlog #98, the card menu's keyboard path #99. Not released yet. Follow-ups are in the plan's follow-ups file.
+
 Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
@@ -198,7 +207,7 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1323 tests) and cargo tests (core: lib 53, integration 881 with 2 ignored; shell 95) pass
+- `just test`: Vitest (1323 tests) and cargo tests (core: lib 53, integration 882 with 2 ignored; shell 95) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 236 PASS lines, the last step is 152 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
@@ -234,7 +243,7 @@ Candidates for the plan after it, to settle with the owner:
 - The app no longer sends a command's own result back to the window as events; the window takes it from the command's
   answer (plan 15, Q1, owner 2026-11-20 after asking for the pros and cons; review item 66).
 - The window's wire types are generated (`just types`, ts-rs, developer build only) (plan 15, Q2, owner 2026-11-20).
-- Tasks get due dates (owner, 2026-11-23; no plan written yet). The property is `due:: [[YYYY-MM-DD]]`: named "due",
+- Tasks get due dates (owner, 2026-11-23; built by plan 16). The property is `due:: [[YYYY-MM-DD]]`: named "due",
   a date with no time, a journal link so the task shows in that day's linked references. Finishing a task keeps its
   `due::` line; Breccia never removes it on its own. It is set by typing the line, or by "Set due date…" (a small
   calendar, with "Remove due date") in a task's right-click menu, in the card menu and on a key in the editor. A chip
