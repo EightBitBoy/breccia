@@ -163,3 +163,11 @@ are its questions for you; each answer decides what a later plan does.
 134. [ ] **Quotes look like quotes:** write a block `> Some quote` (or add a second line `  > more` under it) and leave
    the editor: the quote shows with a thin bar on its left and muted text, flush with the row, without the big indent
    and extra space it had before. The same in a page's preamble and on a board card.
+
+135. [ ] **Boards: an open card keeps its text inside the task:** on a board, click a card to open it, put the caret at
+   the end of the task's line and press Enter: a new line appears one level deeper, first under the task (above any
+   description or subtasks); type a word and press Esc twice. The card now shows the word as its description, and the
+   file has it as a line under the task (before this, the line went next to the task and dropped off the card). In the
+   open card, Shift Tab on a line directly under the task, Alt ↑ on the first of them, Alt ↓ on the last, and Backspace
+   at the start of the task's line do nothing; deeper lines still outdent, and every key in the journal and on pages
+   works as before.
