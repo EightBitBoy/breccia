@@ -1,4 +1,4 @@
-# Breccia notes format, version 9
+# Breccia notes format, version 10
 
 ## 1. About this document
 
@@ -25,7 +25,7 @@ line, with strings written in Rust's debug form (`\n` is a line break inside a b
 - one line per block: its depth (0 is the top level), its task state or `-`, and its text;
 - under a block, indented: each `link` (with `shown "…"` when it has its own shown text) and `tag` in text order, each
   `property` (key and value), `created` with the time the task got its state, `done` with the done date (and its
-  time, when one is written), and `priority` with the task's priority (section 8).
+  time, when one is written), `priority` with the task's priority (section 8), and `due` with the due date (section 8).
 
 ## 2. The notes folder
 
@@ -550,9 +550,9 @@ the line or a space and the value. The value is trimmed. Only the first `::` spl
 
 A block's properties are the property lines directly after its first line (in its text, so after the continuation
 prefix is removed). The first line that is not a property line ends them; property lines after it are plain text.
-Keys keep their case. Breccia itself writes only `created::`, `done::`, `archived::` and `priority::` on blocks
-(sections 9 and 10) and `title::` and `color::` in the preamble (sections 4 and 8); it keeps every other property as it is. The `created`,
-`done`, `archived` and `priority` keys are matched exactly: `Done::` and `DONE::` are plain properties. Only `title::` and `color::` are matched ignoring
+Keys keep their case. Breccia itself writes only `created::`, `done::`, `archived::`, `priority::` and `due::` on blocks
+(sections 8, 9 and 10) and `title::` and `color::` in the preamble (sections 4 and 8); it keeps every other property as it is. The `created`,
+`done`, `archived`, `priority` and `due` keys are matched exactly: `Done::` and `DONE::` are plain properties. Only `title::` and `color::` are matched ignoring
 case (sections 4 and 8).
 
 ```markdown example
@@ -846,6 +846,51 @@ further ones, or adds the line after the last property line.
   done 2026-11-03 14:05:09
 ```
 
+**`due::`.** A block's **due date** is the day of the first `due::` property, among the property lines, whose value
+links to a journal day (`due:: [[2026-12-01]]`). A value that is no such link (`due:: 2026-12-01`, `due:: [[soon]]`,
+`due:: [[2026-02-30]]`) gives no date, and the next `due::` line is tried. The key is matched exactly. The parser reads the
+date on any block, but only a task shows it. Breccia writes it only when the user sets or clears a task's due date: it
+replaces the first `due::` line where it stands and removes any further ones, or adds the line after the last property
+line, and clearing it removes every `due::` line among the property lines. Setting a due date on a block that is not a
+task is refused. Changing the state of a task, also to a finished one or removing it, and archiving it leave every `due::` line as it is.
+
+```markdown example
+- TODO Send the offer
+  due:: [[2026-12-01]]
+- DONE Book the room
+  due:: [[2026-11-20]]
+  done:: [[2026-11-21]] 09:30:00
+- TODO Two lines
+  due:: [[soon]]
+  due:: [[2026-12-05]]
+- Not a task
+  due:: [[2026-12-02]]
+```
+
+```text reads
+0 TODO "TODO Send the offer\ndue:: [[2026-12-01]]"
+  link "2026-12-01"
+  property "due" "[[2026-12-01]]"
+  due 2026-12-01
+0 DONE "DONE Book the room\ndue:: [[2026-11-20]]\ndone:: [[2026-11-21]] 09:30:00"
+  link "2026-11-20"
+  link "2026-11-21"
+  property "due" "[[2026-11-20]]"
+  property "done" "[[2026-11-21]] 09:30:00"
+  done 2026-11-21 09:30:00
+  due 2026-11-20
+0 TODO "TODO Two lines\ndue:: [[soon]]\ndue:: [[2026-12-05]]"
+  link "soon"
+  link "2026-12-05"
+  property "due" "[[soon]]"
+  property "due" "[[2026-12-05]]"
+  due 2026-12-05
+0 - "Not a task\ndue:: [[2026-12-02]]"
+  link "2026-12-02"
+  property "due" "[[2026-12-02]]"
+  due 2026-12-02
+```
+
 ## 9. Task states
 
 A block is a **task** when the first line of its text starts with a configured state keyword (section 11) followed by
@@ -893,6 +938,7 @@ When the user changes a block's state, Breccia changes only that block (its chil
   lines (section 8): a task that is worked on again is no longer archived. A `priority::` line stays when the new
   state is not finished; removing the state removes every `priority::` line among the property lines too. Removing
   the state of a block that has none changes nothing.
+- A change of state, also to a finished one or removing it, and archiving leave every `due::` line as it is.
 - A change that would make the file read as another outline (for example a keyword that opens a code fence) is
   refused.
 
@@ -1112,6 +1158,9 @@ To work well with Breccia on the same folder:
 
 - **Version 9**: `breccia/dailies.md` is read (section 15), with `[dailies] reset` in `breccia/config.toml` (section 11).
   Before, nothing in `breccia/` but `config.toml` was read, so a file of that name was ignored.
+
+- **Version 10**: a `due::` property gives a task its due date (sections 8 and 9). Before, `due::` was a plain
+  property.
 
 ## 15. Dailies
 

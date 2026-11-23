@@ -35,4 +35,7 @@ pub enum EditError {
     MultiLineDaily,
     #[error("No state is in the cycle (Settings → States)")]
     NoCycle,
+    /// A due date was set on a block that has no state.
+    #[error("Only a task has a due date")]
+    NotATask,
 }

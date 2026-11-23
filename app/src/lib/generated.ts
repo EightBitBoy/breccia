@@ -196,7 +196,7 @@ title: string, };
  * Why a command did not run: the stable, camelCase code of a `CommandError`.
  * The codes `Internal`, `BadRequest`, `Recovered` and `Git` are answered by the shell.
  */
-export type ErrorCode = "badDate" | "badRequest" | "boardChanged" | "changedOnDisk" | "config" | "configChanged" | "create" | "dailiesSave" | "dailiesUnreadable" | "folderExists" | "folderMissing" | "folderNotEmpty" | "git" | "insideFence" | "internal" | "intoItself" | "invalidBoard" | "invalidDaily" | "invalidName" | "invalidOffset" | "invalidSetting" | "invalidState" | "io" | "joinOntoProperties" | "journal" | "layout" | "noCycle" | "noFolder" | "noNextSibling" | "noParent" | "noPrevious" | "noPreviousSibling" | "notFinished" | "open" | "pageExists" | "recovered" | "reload" | "search" | "stale" | "unknownBlock" | "unknownBoard" | "unknownColor" | "unknownDaily" | "unknownFolder" | "unknownPage" | "unknownState" | "unsaved" | "wouldChangeStructure";
+export type ErrorCode = "badDate" | "badRequest" | "boardChanged" | "changedOnDisk" | "config" | "configChanged" | "create" | "dailiesSave" | "dailiesUnreadable" | "folderExists" | "folderMissing" | "folderNotEmpty" | "git" | "insideFence" | "internal" | "intoItself" | "invalidBoard" | "invalidDaily" | "invalidName" | "invalidOffset" | "invalidSetting" | "invalidState" | "io" | "joinOntoProperties" | "journal" | "layout" | "noCycle" | "noFolder" | "noNextSibling" | "noParent" | "noPrevious" | "noPreviousSibling" | "notATask" | "notFinished" | "open" | "pageExists" | "recovered" | "reload" | "search" | "stale" | "unknownBlock" | "unknownBoard" | "unknownColor" | "unknownDaily" | "unknownFolder" | "unknownPage" | "unknownState" | "unsaved" | "wouldChangeStructure";
 
 /**
  * The days of the journal feed.

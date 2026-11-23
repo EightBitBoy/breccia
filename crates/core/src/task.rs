@@ -71,6 +71,22 @@ pub fn done_date(text: &str) -> Option<NaiveDate> {
         .find_map(|(_, v)| journal_date_in(v))
 }
 
+/// The due date: the day of the first `due::` property (among the property
+/// lines) whose value links to a journal day.
+pub fn due_date(text: &str) -> Option<NaiveDate> {
+    inline::properties(text)
+        .iter()
+        .filter(|(k, _)| k == "due")
+        .find_map(|(_, v)| journal_date_in(v))
+}
+
+/// `text` with its `due::` property lines replaced by one `due:: [[YYYY-MM-DD]]`
+/// at the first one's place (or after the last property line), or removed.
+fn with_due(text: &str, day: Option<NaiveDate>) -> String {
+    let value = day.map(|d| format!("[[{}]]", d.format("%Y-%m-%d")));
+    inline::with_property(text, "due", value.as_deref())
+}
+
 /// The day of the first `archived::` property among the property lines: a
 /// plain `YYYY-MM-DD` (as Breccia writes it, now with a time) or a link
 /// to a journal.
@@ -301,6 +317,28 @@ impl Document {
     pub fn set_priority(&mut self, id: BlockId, value: Option<u32>) -> Result<(), EditError> {
         let block = self.block(id)?;
         let text = with_priority(&block.text, value);
+        if text == block.text {
+            return Ok(());
+        }
+        self.replace_keeping_structure(id, &text)
+    }
+
+    /// Sets the task's due date (`Some`: the first `due::` property line
+    /// becomes `due:: [[YYYY-MM-DD]]` and any further ones go, or the line is
+    /// added after the last property line) or removes every `due::` property
+    /// line (`None`). A date for a block without a state is refused with
+    /// [`EditError::NotATask`]. Otherwise fails like [`Self::set_state`].
+    pub fn set_due(
+        &mut self,
+        id: BlockId,
+        day: Option<NaiveDate>,
+        cfg: &Config,
+    ) -> Result<(), EditError> {
+        let block = self.block(id)?;
+        if day.is_some() && task_state(&block.text, cfg).is_none() {
+            return Err(EditError::NotATask);
+        }
+        let text = with_due(&block.text, day);
         if text == block.text {
             return Ok(());
         }

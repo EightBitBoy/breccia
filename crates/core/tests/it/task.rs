@@ -738,3 +738,142 @@ fn crlf_properties_are_read() {
         Some("2026-11-04 09:12:30")
     );
 }
+
+fn due(day: u32) -> NaiveDate {
+    NaiveDate::from_ymd_opt(2026, 12, day).unwrap()
+}
+
+#[test]
+fn due_date_reads_the_first_journal_link() {
+    assert_eq!(due_date("TODO a\ndue:: [[2026-12-01]]"), Some(due(1)));
+    assert_eq!(
+        due_date("TODO a\ndue:: [[x]]\ndue:: [[2026-12-05]]"),
+        Some(due(5))
+    );
+    assert_eq!(due_date("TODO a\nDue:: [[2026-12-01]]"), None);
+    assert_eq!(due_date("TODO a\ndue:: 2026-12-01"), None);
+    assert_eq!(due_date("TODO a\ndue:: [[2026-02-30]]"), None);
+    assert_eq!(due_date("TODO a\nnote\ndue:: [[2026-12-01]]"), None);
+}
+
+fn set_due(src: &str, day: Option<NaiveDate>) -> Result<String, EditError> {
+    let mut d = parse(src, &mut IdGen::new());
+    let id = d.blocks()[0].id();
+    d.set_due(id, day, &Config::default())?;
+    Ok(d.render())
+}
+
+#[test]
+fn set_due_adds_after_the_last_property_line() {
+    assert_eq!(
+        set_due("- TODO a\n  created:: 2026-11-23 10:00:00\n", Some(due(1))).unwrap(),
+        "- TODO a\n  created:: 2026-11-23 10:00:00\n  due:: [[2026-12-01]]\n"
+    );
+}
+
+#[test]
+fn set_due_replaces_the_first_and_drops_the_rest() {
+    assert_eq!(
+        set_due(
+            "- TODO a\n  due:: [[2026-11-01]]\n  owner:: Ben\n  due:: x\n",
+            Some(due(1))
+        )
+        .unwrap(),
+        "- TODO a\n  due:: [[2026-12-01]]\n  owner:: Ben\n"
+    );
+}
+
+#[test]
+fn remove_due_removes_every_due_property_line_and_nothing_else() {
+    assert_eq!(
+        set_due(
+            "- TODO a\n  due:: [[2026-11-01]]\n  due:: x\n  text\n  due:: [[2026-11-02]]\n",
+            None
+        )
+        .unwrap(),
+        "- TODO a\n  text\n  due:: [[2026-11-02]]\n"
+    );
+}
+
+#[test]
+fn set_due_on_a_block_without_state_is_refused() {
+    let src = "- plain\n  owner:: Ben\n";
+    assert_eq!(set_due(src, Some(due(1))), Err(EditError::NotATask));
+    let mut d = parse(src, &mut IdGen::new());
+    let id = d.blocks()[0].id();
+    assert_eq!(
+        d.set_due(id, Some(due(1)), &Config::default()),
+        Err(EditError::NotATask)
+    );
+    assert_eq!(d.render(), src);
+    assert_eq!(
+        set_due("- plain\n  due:: [[2026-12-01]]\n  owner:: Ben\n", None).unwrap(),
+        "- plain\n  owner:: Ben\n"
+    );
+}
+
+#[test]
+fn state_changes_and_archiving_keep_due() {
+    let c = Config::default();
+    let src = "- TODO a\n  due:: [[2026-12-01]]\n";
+    let mut d = parse(src, &mut IdGen::new());
+    let id = d.blocks()[0].id();
+    for kw in [Some("DONE"), Some("TODO"), Some("WAITING"), None] {
+        d.set_state(id, kw, &c, today()).unwrap();
+        assert!(
+            d.render().contains("\n  due:: [[2026-12-01]]\n"),
+            "after {kw:?}: {}",
+            d.render()
+        );
+    }
+    d.set_state(id, Some("TODO"), &c, today()).unwrap();
+    d.set_archived(id, true, today()).unwrap();
+    assert!(d.render().contains("\n  due:: [[2026-12-01]]\n"));
+    d.set_archived(id, false, today()).unwrap();
+    assert!(d.render().contains("\n  due:: [[2026-12-01]]\n"));
+}
+
+#[test]
+fn set_due_never_changes_the_outline_around_the_block() {
+    // A due line goes in after the first line, so it cannot open or close a fence by itself (unlike a
+    // state keyword): an edit is either refused with the document unchanged, or the outline keeps its shape.
+    let c = Config::default();
+    for src in [
+        "- TODO a
+  ```
+  x
+  ```
+- next
+",
+        "- TODO a
+  ```
+  - x
+  due:: [[2026-12-02]]
+  ```
+- next
+",
+        "- TODO a
+  ```
+",
+    ] {
+        for day in [Some(due(1)), None] {
+            let mut d = parse(src, &mut IdGen::new());
+            let before = d.blocks().len();
+            let id = d.blocks()[0].id();
+            match d.set_due(id, day, &c) {
+                Ok(()) => assert_eq!(d.blocks().len(), before, "{src:?} {day:?}"),
+                Err(e) => {
+                    assert_eq!(e, EditError::WouldChangeStructure);
+                    assert_eq!(d.render(), src);
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn set_due_with_the_same_value_changes_nothing() {
+    let src = "- TODO a\n  due:: [[2026-12-01]]\n  owner:: Ben\n";
+    assert_eq!(set_due(src, Some(due(1))).unwrap(), src);
+    assert_eq!(set_due("- TODO a\n", None).unwrap(), "- TODO a\n");
+}

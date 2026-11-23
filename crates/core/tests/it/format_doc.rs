@@ -20,7 +20,7 @@ use breccia_core::config::PALETTE;
 use breccia_core::dailies::{CHECKED_FORMAT, checked_at, daily_text};
 use breccia_core::inline::{LinkKind, links, properties, title_line};
 use breccia_core::naming::file_stem_for;
-use breccia_core::task::{created_at, done_date, done_time, priority, task_state};
+use breccia_core::task::{created_at, done_date, done_time, due_date, priority, task_state};
 use breccia_core::{Config, IdGen, front_matter_len, parse};
 
 const DOC_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../docs/format.md");
@@ -129,6 +129,9 @@ fn describe(src: &str) -> String {
         }
         if let Some(n) = priority(b.text()) {
             out += &format!("  priority {n}\n");
+        }
+        if let Some(d) = due_date(b.text()) {
+            out += &format!("  due {d}\n");
         }
     }
     out
