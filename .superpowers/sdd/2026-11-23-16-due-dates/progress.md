@@ -15,3 +15,9 @@ Ruling F10: only Task 9 edits the spec. F11: MonthGrid keeps aria-selected as fo
 Ruling F12: e2e step 2 types at the end of the first line. F13: each pin test shown failing once by temporary mutation.
 Ruling F14: shortcut listed in "Blocks and tasks". F15: a fifth local copy of month names accepted. F17: pending typing flushed before pickDue checks the task.
 Ruling F16: chips also show in linked references and the open card (they render blocks) — harmless and consistent — cost: owner may want them off; noted in review item 136.
+Task 1: dispatched (sonnet, base 02ee65a)
+Task 1: implementer DONE_WITH_CONCERNS 60aa1ee (replaced an unfailable structure test with a fence test; set_due shares set_priority's unclosed-fence re-indent quirk, pre-existing); review dispatched (sonnet)
+Task 1: review: spec ✅, 1 Important (no F13 mutation evidence for the pin tests) → fix round 1 sent to implementer.
+Task 1: minor (deferred): replacement fence test is only a pin; test strings are multi-line literals unlike neighbours; set_due/set_priority re-indent a fence-swallowed sibling on replace (pre-existing) → follow-ups.
+Task 1: fix round 1/5 (1 addressed, 0 open — F13 mutation evidence in report; no commits). Ruling: no scoped re-review — the round changed no code (empty diff); controller checked the report holds both mutations, the command and the outputs — cost: none.
+Task 1: complete (commits 02ee65a..60aa1ee, review clean)
