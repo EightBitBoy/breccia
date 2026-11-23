@@ -732,6 +732,7 @@ fn set_due_on_a_plain_block_answers_not_a_task() {
     )
     .unwrap_err();
     assert_eq!(err.code, ErrorCode::NotATask);
+    assert_eq!(err.message, "Only a task can have a due date.");
     assert_eq!(read(&t, "pages/P.md"), original);
 }
 

@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs'
 import { expect, test } from 'vitest'
 import { NOT_A_TASK, dueChip, fillDueChips } from './due'
 
@@ -52,5 +53,6 @@ test('fillDueChips returns other HTML as is', () => {
 })
 
 test('the refusal sentence matches the core', () => {
-  expect(NOT_A_TASK).toBe('Only a task can have a due date.')
+  const errorRs = readFileSync(new URL('../../../crates/core/src/error.rs', import.meta.url), 'utf8')
+  expect(errorRs).toContain(`#[error("${NOT_A_TASK}")]`)
 })
