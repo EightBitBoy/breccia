@@ -191,6 +191,7 @@ are its questions for you; each answer decides what a later plan does.
      year), muted; 3 to 5 days: "due in 3 days", muted; 2 days: "due in 2 days", amber; tomorrow: "due tomorrow",
      amber; today: "due today", amber; yesterday or earlier: "overdue 22 Nov", red. A chip in words ("today" to "in 5
      days", and "overdue") shows the date as its tooltip, such as "1 Dec 2026".
+   - One pick or removal is one undo step: `Ctrl Z` brings the old `due::` line (or its absence) back.
    - Finish the task (`Ctrl Enter` to DONE): the `due::` line stays and the chip says "due 22 Nov", muted. Make it
      open again: the words and the colour come back.
    - Open the page of the due day (click the date in a link, or search it): the task is in its linked references.
@@ -198,7 +199,7 @@ are its questions for you; each answer decides what a later plan does.
    - A `due:: soon` line, or a `DEADLINE: <2026-12-01 Tue>` line, shows as ordinary dimmed text and gives no chip.
    Things you may want to object to:
    - Chips also show in linked references and in an open card, wherever the task is drawn, not only in the journal, on
-     pages and on board cards.
+     pages and on board cards. There they have no task right-click menu (only journal days and pages have one).
    - On ordinary pages the right-click zone is new: outside an open editor and off selected text the browser's own
      right-click menu no longer opens (as in journal days). Links on pages get "Copy link" and the task menu, but no
      "Color…" (only journal days list colorable links).

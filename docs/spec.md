@@ -149,8 +149,8 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
 - **Task state.** A block is a task when its text starts with a configured state keyword followed by a space
   (`TODO …`). Only the keyword at the very start counts.
 - **Properties.** `key:: value` lines directly after the block's first line. Breccia itself writes only `created::`,
-  `done::`, `archived::`, `priority::` and `due::` on blocks (`docs/format.md` §8), and `title::` and `color::` on pages (§4, §8); any other
-  properties are kept as they are and shown dimmed.
+  `done::`, `archived::`, `priority::` and `due::` on blocks (`docs/format.md` §8), and `title::` and `color::` on
+  pages (§4, §8); any other properties are kept as they are and shown dimmed.
 - **Done date.** When a block enters a *finished* state (DONE or any state marked finished), Breccia adds
   `done:: [[YYYY-MM-DD]]` (today) if it is not there yet. When it leaves the finished states, Breccia removes the
   property. Because the value is a page link, the task also appears in the linked references of the day it was finished.
@@ -253,10 +253,10 @@ second click on the Git history button is Back.
   that is not a task a note says "Only a task can have a due date." and nothing is written. `Ctrl Shift D` still opens
   the go-to-a-day calendar.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line,
-  which stays in the file but is not shown. In a journal day, on a page, in linked references and in an open card the
-  right-click menu of a task has "Set due date…", which opens the due-date picker: the month calendar of the date
+  which stays in the file but is not shown. In a journal day and on a page the right-click menu of a task has "Set due date…", which opens the due-date picker: the month calendar of the date
   picker, with the day of a set date marked; a pick saves at once, and "Remove due date" (shown only when the task has a
-  date) removes it. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to "due in 5
+  date) removes it. Linked references and an open card show the chip but have no task menu (a card has its card
+  menu, §7.6). Any further `due::` line shows dimmed like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to "due in 5
   days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says "overdue 22 Nov".
   A finished task always shows the date ("due 22 Nov"). A chip in words (today to 5 days) has the date as its tooltip
   ("1 Dec 2026"). The chip's tone: muted more than 2 days away, amber from today to 2 days away, red when overdue,
@@ -335,7 +335,8 @@ readable", in the normal text color and in italics.
   to a colorable page (including a link to a day or a missing page), the normal browser menu stays, so copy and paste
   keep working; elsewhere no menu opens. The same holds on a page: outside an open block editor and off selected text
   the browser's own menu no longer opens, and the right-click of a task gives its menu (above). On a page the
-  links get "Copy link" (web and mail links) and the task menu, but no "Color…", which only journal days list. When the menu or the picker closes (a pick, Esc, a click outside), the focus
+  links get "Copy link" (web and mail links) and the task menu, but no "Color…", which only journal days list.
+  When the menu or the picker closes (a pick, Esc, a click outside), the focus
   is on the link again, unless something else already holds it. If the day is drawn anew while the picker is open,
   the picker stays at its link; if the link is gone, it stays where it was, and a pick still colors the page.
 - **Web and mail links.** Wherever text is rendered (blocks, preambles, cards), the pointer resting on a web or mail
