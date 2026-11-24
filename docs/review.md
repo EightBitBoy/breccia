@@ -276,3 +276,17 @@ are its questions for you; each answer decides what a later plan does.
    - My calls (spec §7.2): a rendered block gets a new block after it rather than the link appended to its text (the
      text may end with property lines, and a new block changes no text you wrote); linked references and boards take
      no drop. Should a drop on a rendered block append to its text instead?
+
+## Back and Forward restore the edited or selected block (backlog #17)
+
+143. [ ] **Back gives back the block you left from:** by hand (`just dev`):
+   - On a page, click into a block and move the caret into the middle of its text. Open another page from the sidebar,
+     then press `Alt ←`: the block is edited again, the caret where it was.
+   - Select two blocks (click one, `Shift` click another), go to another page and press `Alt ←`: both are selected
+     again. `Alt →` and `Alt ←` once more do the same.
+   - The same in the journal, on a day's block.
+   - Delete the block in the other view (or outside Breccia) before going Back: the page and its scroll position
+     come back, with no block edited.
+   - Leaving a board (with a card open), the graph or Settings and coming back opens no editor.
+   - My call: the caret comes back at the same character count, clamped to the text's end, even if the text changed
+     meanwhile.
