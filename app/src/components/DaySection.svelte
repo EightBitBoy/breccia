@@ -55,6 +55,7 @@
     <LinkColorMenu targets={page.targets ?? []} blocks={page.blocks} {onsetcolor} {onsetdue}>
       <Outline
         blocks={page.blocks}
+        pageKey={day.key}
         {folded}
         {editingId}
         {selected}

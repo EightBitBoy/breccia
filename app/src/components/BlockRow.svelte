@@ -6,6 +6,7 @@
   import { themeTokens } from '../lib/themeTokens.svelte'
   import { fillDueChips } from '../lib/due'
   import { today } from '../lib/today.svelte'
+  import { linkTarget } from '../lib/dnd'
 
   let {
     block,
@@ -14,6 +15,7 @@
     folded,
     flash = false,
     wash = null,
+    linkDrops = false,
     onedit,
     ontoggle,
   }: {
@@ -25,6 +27,8 @@
     flash?: boolean
     /** The row's part of a page color wash (journal only). */
     wash?: RowWash | null
+    /** Whether a page dragged from the sidebar can be dropped on the row for a link (a page's or day's outline). */
+    linkDrops?: boolean
     /** A click on the rendered block; `shift` extends a selection. */
     onedit: (id: number, shift: boolean) => void
     ontoggle: (id: number) => void
@@ -44,6 +48,7 @@
   data-wash={wash?.color}
   style:--depth={block.depth}
   style:--wash={wash ? washValue(wash.color, themeTokens.current) : undefined}
+  use:linkTarget={linkDrops ? { block: block.id } : null}
 >
   <span class="fold">
     {#if block.hasChildren}

@@ -3,6 +3,7 @@
 // (and locking the editor while one changes the text), and what an output
 // does to the editor. App.svelte owns the page; this owns the editor.
 import { tick } from 'svelte'
+import { EditorSelection } from '@codemirror/state'
 import { errorCode, errorMessage } from '../api'
 import { answerOf } from '../lib/answer'
 import { cardKey, isCardTask, taskSplitAt } from '../lib/cardKeys'
@@ -430,6 +431,30 @@ export class EditorHost {
   editAtEnd(id: BlockId) {
     const b = this.blockOf(id)
     if (b) void this.edit(id, b.text.length)
+  }
+
+  /**
+   * A link dropped on the edited block (a page dragged from the sidebar): `text` goes in at the place under the
+   * window point (`x`, `y`), else at the caret, as if typed; the caret goes after it and the editor takes the focus.
+   * While the editor is locked it waits, as a typed key does.
+   */
+  dropText(x: number, y: number, text: string) {
+    const m = this.mounted
+    if (!m) return
+    m.ed.run((view) => {
+      if (view.state.readOnly) {
+        this.lockedText += text
+        return
+      }
+      const at = view.posAtCoords({ x, y }) ?? view.state.selection.main.head
+      view.dispatch({
+        changes: { from: at, insert: text },
+        selection: EditorSelection.cursor(at + text.length),
+        userEvent: 'input.drop',
+        scrollIntoView: true,
+      })
+      view.focus()
+    })
   }
 
   /** Leaves the block: flushes its text; the output renders it again. */

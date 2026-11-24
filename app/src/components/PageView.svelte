@@ -99,7 +99,7 @@
   <!-- Journal days and pages alike: links and tags have their menu, and task rows "Set due date…". Both list
        their colorable targets, so a page's links offer "Color…" as a journal's do. -->
   <LinkColorMenu targets={page.targets ?? []} blocks={page.blocks} onsetcolor={onlinkcolor} {onsetdue}>
-    <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
+    <Outline blocks={page.blocks} hasFile={page.hasFile} pageKey={page.key} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
   </LinkColorMenu>
   {#if refs}
     <LinkedRefs {refs} {folded} {editingId} {onedit} {ontoggle} {onopen} />

@@ -11,6 +11,7 @@ import {
 } from '@atlaskit/pragmatic-drag-and-drop/adapter/element-adapter'
 import { dropBefore, type CardBox } from './board'
 import { edgeSpeed } from './edgeScroll'
+import { canLinkDrag, LINK, linkData, rowLink, type LinkSpot } from './linkDrop'
 import { canDrag, canDrop, hoverOpen, PAGES, receiver, TREE, treeData, type Over } from './treeDrop'
 import type { Row } from './treeRows'
 import type { BlockId, TreeView } from './types'
@@ -207,15 +208,18 @@ export function watchDrops(onDrop: (card: CardData, target: string, before: Bloc
 // that receives the drop, opens a collapsed folder the pointer stays on, and reports the drop. The decisions are
 // in treeDrop.ts.
 
-/** Makes a tree row draggable while `canDrag(row)` (pages and folders); class `dragging` while it is dragged. */
+/**
+ * Makes a tree row draggable while `canLinkDrag(row)`: pages and folders (to move them), and journal days (only for
+ * their link, §7.2). The drag carries the row's id and its link. Class `dragging` while it is dragged.
+ */
 export const treeDrag: Action<HTMLElement, Row> = (el, param) => {
   let row = param
-  // A row's kind never changes (its id starts with it): journals and their days are never draggable.
-  if (!canDrag(row)) return {}
+  // A row's kind never changes (its id starts with it): the journal folds and tags are never draggable.
+  if (!canLinkDrag(row)) return {}
   const stop = draggable({
     element: el,
-    canDrag: () => canDrag(row),
-    getInitialData: () => ({ [TREE]: true, id: row.id }),
+    canDrag: () => canLinkDrag(row),
+    getInitialData: () => ({ [TREE]: true, id: row.id, [LINK]: rowLink(row) }),
     onDragStart: () => el.classList.add('dragging'),
     onDrop: () => el.classList.remove('dragging'),
   })
@@ -289,6 +293,46 @@ export function watchTreeDrops(
       const dragged = id === null ? null : env.row(id)
       const over = target(location.current.dropTargets[0]?.data.over)
       if (dragged && over) env.onDrop(dragged, over)
+    },
+  })
+}
+
+// ---- links dragged into the outline ---------------------------------------------------------------------------------
+// A tree row's drag carries a `[[link]]`; block rows and an empty page's "start writing" line take it. One monitor
+// reports the drop with the pointer's place; what it does is `linkDrop` in linkDrop.ts.
+
+/**
+ * Makes a block row (`{ block }`) or an empty page's start line (`{ page }`) take a dragged link (null: none);
+ * class `link-over` while hovered.
+ */
+export const linkTarget: Action<HTMLElement, LinkSpot | null> = (el, param) => {
+  let spot = param
+  const stop = dropTargetForElements({
+    element: el,
+    canDrop: ({ source }) => spot !== null && linkData(source.data) !== null,
+    getData: () => ({ [LINK]: spot }),
+    onDragEnter: () => el.classList.add('link-over'),
+    onDragLeave: () => el.classList.remove('link-over'),
+    onDrop: () => el.classList.remove('link-over'),
+  })
+  return {
+    update: (next) => (spot = next),
+    destroy: () => {
+      el.classList.remove('link-over')
+      stop()
+    },
+  }
+}
+
+/** Calls `onDrop` for every link dropped on a block row or start line, with the pointer's place; returns the stopper. */
+export function watchLinkDrops(onDrop: (link: string, spot: LinkSpot, x: number, y: number) => void): () => void {
+  return monitorForElements({
+    canMonitor: ({ source }) => linkData(source.data) !== null,
+    onDrop: ({ source, location }) => {
+      const link = linkData(source.data)
+      const spot = location.current.dropTargets[0]?.data[LINK] as LinkSpot | undefined
+      const { clientX, clientY } = location.current.input
+      if (link !== null && spot) onDrop(link, spot, clientX, clientY)
     },
   })
 }

@@ -44,6 +44,8 @@
   import { everyMidnight } from './lib/feed'
   import { today } from './lib/today.svelte'
   import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
+  import { watchLinkDrops } from './lib/dnd'
+  import { linkDrop, type LinkSpot } from './lib/linkDrop'
   import { ancestorsOf, visible } from './lib/tree'
   import { isNewer } from './lib/treeVersion'
   import {
@@ -809,6 +811,13 @@
     // Multi-select stays within the page's own outline, or within one day of the feed.
     if (shift && from !== null && extendsTo(journal.feed, page, from, id)) sel.select(from, id)
     else host.editAtEnd(id)
+  }
+
+  /** A page dragged from the sidebar was dropped on a block or an empty page: its link goes in (spec §7.2). */
+  function dropLink(link: string, spot: LinkSpot, x: number, y: number) {
+    const d = linkDrop(spot, link, host.editingId, (id) => editablePageOf(editable(), id))
+    if (d?.kind === 'caret') host.dropText(x, y, d.text)
+    else if (d?.kind === 'command') void exec(d.cmd)
   }
 
   function toggle(id: BlockId) {
@@ -1583,11 +1592,29 @@
     if (sel.ids.length && !e.shiftKey) sel.clear()
     if (host.editingId === null) return
     if (t.closest('.editor-slot') || onBlock) return
+    // A press on a sidebar row may start a drag of its link into the edited block (spec §7.2): the block is left when
+    // the press ends without a drag (a drag ends in pointercancel, with no pointerup).
+    if (t.closest('[data-testid="sidebar"] [data-row]')) {
+      const stop = () => {
+        window.removeEventListener('pointerup', up, true)
+        window.removeEventListener('pointercancel', stop, true)
+        window.removeEventListener('dragstart', stop, true)
+      }
+      const up = () => {
+        stop()
+        host.leave()
+      }
+      window.addEventListener('pointerup', up, true)
+      window.addEventListener('pointercancel', stop, true)
+      window.addEventListener('dragstart', stop, true)
+      return
+    }
     host.leave()
   }
 
   onMount(() => {
     const stopThemeTokens = watchThemeTokens(document.documentElement)
+    const stopLinkDrops = watchLinkDrops(dropLink)
     const removeDom = installDom({
       click: onAnchorClick,
       pointerDown: onPointerDown,
@@ -1762,6 +1789,7 @@
     })()
     return () => {
       stopThemeTokens()
+      stopLinkDrops()
       stopMidnight()
       stopToday()
       clearInterval(gitClock)

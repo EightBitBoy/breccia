@@ -151,6 +151,11 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .block.selected { background: var(--hover); outline: 1px solid var(--accent); border-radius: 4px; }
 .block.selected.wash-top { border-top-left-radius: 8px; border-top-right-radius: 8px; }
 .block.selected.wash-bottom { border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+/* A page dragged from the sidebar over a block: on a rendered one its link goes into a new block below; the edited
+   block takes it at the pointer. (CodeMirror's drop caret cannot show: the drag library takes the dragover events.) */
+.block.link-over:not(.editing) { box-shadow: inset 0 -2px 0 var(--accent); }
+.block.editing.link-over { outline: 1px solid var(--accent); border-radius: 4px; }
+.start.link-over { outline: 1px solid var(--accent); }
 .slash-menu {
   position: fixed; z-index: 10; min-width: 180px; margin-top: 4px; padding: 4px 0;
   background: var(--card); border: 1px solid var(--line); border-radius: 6px;

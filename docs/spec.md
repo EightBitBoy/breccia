@@ -224,8 +224,9 @@ Sidebar, top to bottom:
   new folder, rename, move, delete. At the bottom of the tree sits a folded **Journals** entry that groups journal pages
   by year and month; journal pages cannot be moved or renamed there. Pages and folders can also be
   dragged onto a folder, onto a page in a folder (into that folder), or onto the "Pages" heading (the top level);
-  journals and tags cannot be dragged. A page that is only linked to can be moved into a folder, which writes its file
-  there, empty; it cannot be deleted. A deleted page that is still linked to stays listed as linked-only.
+  journals and tags cannot be moved. A page that is only linked to can be moved into a folder, which writes its file
+  there, empty; it cannot be deleted. A deleted page that is still linked to stays listed as linked-only. A page or a
+  journal day dragged from the tree into the outline inserts a `[[link]]` to it and stays where it is (§7.2).
 - Footer: **Graph** and **Settings**.
 
 The sidebar can be resized and hidden. *(my call)*
@@ -281,6 +282,14 @@ second click on the Git history button is Back.
   show a small calendar.
 - Selecting several blocks (Shift-click or `Shift ↑/↓` from editing) allows indent, outdent, move, delete and set state
   for all of them.
+- **Drag a page from the sidebar into the outline** (a page's or a journal day's) to insert a link to it: `[[name]]`
+  as the `[[` completion writes it, `[[YYYY-MM-DD]]` for a journal day. Dropped into the block being edited, the link
+  goes in where the pointer is (the block is outlined while the pointer is over it) and the caret goes after it. Dropped on a rendered
+  block, a new block holding the link goes after that block and its children, and is edited (the drop line under the
+  row shows it). Dropped on an empty page's "start writing" line, the link is its first block. The page is not moved;
+  a drop elsewhere does nothing. Linked references and boards take no drop. *(my call: Obsidian inserts at the drop
+  point in its editor; a rendered block has no caret, so a new block is the one place that changes no text the user
+  wrote)*
 - Clicking a rendered `[[link]]` or `#tag` opens that page; `Ctrl`-click is reserved for "open in new tab" later.
 - Pasting multi-line text with bullets creates blocks.
 

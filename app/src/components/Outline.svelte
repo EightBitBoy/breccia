@@ -4,6 +4,7 @@
   import { emptyPageText } from '../lib/emptyPage'
   import { washRows } from '../lib/pageColors'
   import BlockRow from './BlockRow.svelte'
+  import { linkTarget } from '../lib/dnd'
 
   let {
     blocks,
@@ -12,6 +13,7 @@
     selected,
     flash = null,
     hasFile = false,
+    pageKey = null,
     onedit,
     ontoggle,
     onstart,
@@ -26,6 +28,8 @@
     flash?: number | null
     /** Whether the page has a file (a moved page's file may be empty); the journal feed leaves it out. */
     hasFile?: boolean
+    /** The page's key: an empty page's start line takes a link dragged from the sidebar. */
+    pageKey?: string | null
     onedit: (id: number, shift: boolean) => void
     ontoggle: (id: number) => void
     onstart: () => void
@@ -37,7 +41,12 @@
 </script>
 
 {#if blocks.length === 0}
-  <button class="start" data-testid="start-writing" onclick={onstart}>{emptyPageText(hasFile)}</button>
+  <button
+    class="start"
+    data-testid="start-writing"
+    onclick={onstart}
+    use:linkTarget={pageKey === null ? null : { page: pageKey }}>{emptyPageText(hasFile)}</button
+  >
 {:else}
   <div class="outline">
     {#each shown as b, i (b.id)}
@@ -48,6 +57,7 @@
         folded={folded.has(b.id)}
         flash={b.id === flash}
         wash={washes[i]}
+        linkDrops
         {onedit}
         {ontoggle}
       />
