@@ -249,3 +249,16 @@ are its questions for you; each answer decides what a later plan does.
    - Open question: two clicks can still make a blank page with `#` in its name (it gets a file once you type), as
      before: a tag (`#[[C# x]]`), and the All pages row of a linked-only page `Gone#H` (from `[[Gone#H]]` with no
      page `Gone`). Should the tag be refused, and should the row open `Gone` like the link does?
+
+## Aliases: fresh name lists and reader edge cases (backlog #14)
+
+141. [ ] **Aliases:** by hand, in a fresh folder (`just dev`):
+   - Open `Ctrl K` and type `wildebeest`. In another editor, add `aliases: [wildebeest]` to the front matter of an
+     existing page and save: the page row for `wildebeest` appears in the open box at once (it used to need the box
+     closed and opened again). The same in a block: type `[[wilde` and leave the completion open, then add the alias
+     outside: it is offered at once.
+   - Give two pages the same alias (`aliases: [x]` in `A.md` and `B.md`), outside Breccia: one warning. Rename `B` in
+     Breccia: no second warning. A third page that adds `x` is warned.
+   - Front matter Breccia now reads as Obsidian does: `aliases: ['it''s, here']` is one alias `it's, here`;
+     `aliases:x` (no space) gives no alias; `aliases: {a: b}`, an item `- a: b` and `[{a: b}, c]` give no alias for
+     the mapping (`c` stays). A name with `: ` needs quotes, as in YAML: `- "Kube: prod"`.

@@ -11,18 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 14. Aliases: stale lists and reader edge cases (Pages and links)
-
-After another program adds or removes an alias, the `Ctrl K` list and the completion name list stay old until asked
-again. Decide whether a journal day's aliases belong in completion and open that day. Renaming a page with a clashing
-alias warns about the clash again. The aliases reader drops `['a'', b']`, accepts `aliases:x` as the key and accepts
-mapping-like values as names.
-
-Owner, 2026-11-24 (checked against the code first): fix 1 (the `Ctrl K` list and the `[[` completion names refresh
-when an alias changes outside Breccia), 3 (an alias clash is warned once, not again after a rename) and 4 (the reader
-understands `''` inside single quotes, needs a space after `aliases:`, and ignores mapping-like values, as YAML and
-Obsidian do). Keep 2: journal days' aliases work as the spec says. Queued after #13.
-
 ## 15. More ways to drag pages (Pages and links)
 
 Drag a page from the All pages table onto a sidebar folder; drag a page from the sidebar into the outline to insert a

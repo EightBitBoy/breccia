@@ -627,6 +627,24 @@ with a heading part per form, so a tag `#Page#x` goes to `Page#x` in counts, lin
 the graph, while `[[Page#x]]` goes to `Page`. D stays: `[[Issue #42]]` counts as a link to a page `Issue`, and a click
 on it without that page now makes `Issue`.
 
+## 14. Aliases: stale lists and reader edge cases (Pages and links) (done 2026-11-24, no plan)
+
+After another program adds or removes an alias, the `Ctrl K` list and the completion name list stay old until asked
+again. Decide whether a journal day's aliases belong in completion and open that day. Renaming a page with a clashing
+alias warns about the clash again. The aliases reader drops `['a'', b']`, accepts `aliases:x` as the key and accepts
+mapping-like values as names.
+
+Owner, 2026-11-24 (checked against the code first): fix 1 (the `Ctrl K` list and the `[[` completion names refresh
+when an alias changes outside Breccia), 3 (an alias clash is warned once, not again after a rename) and 4 (the reader
+understands `''` inside single quotes, needs a space after `aliases:`, and ignores mapping-like values, as YAML and
+Obsidian do). Keep 2: journal days' aliases work as the spec says. Queued after #13.
+
+Closed 2026-11-24: done (review item 141). An open `Ctrl K` and an open `[[` completion load the page names again
+whenever a page changes outside Breccia, so an alias added or removed there shows at once. An alias clash is known by
+its kind and alias, not by its paths: a rename does not warn again, a page that joins the clash is warned. The reader
+reads `''` inside single quotes in a one-line list, needs a space after `aliases:`, and skips values YAML reads as a
+mapping or a nested list (`a: b`, `a:`, `{…}`, `[…]`); a name with `: ` needs quotes. 2 stays as the spec says.
+
 ## 16. Back and Forward follow renames made outside Breccia (Pages and links)
 
 A page file renamed in Explorer, a renamed or moved folder, and a board renamed in `config.toml` or by a pull are
