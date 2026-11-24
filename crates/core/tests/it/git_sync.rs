@@ -649,6 +649,97 @@ fn a_conflict_outside_the_notes_folder_says_so() {
     );
 }
 
+/// A stand-in for `git` that passes everything to the real one, except a call
+/// with the argument `trigger`: that call runs `on_trigger` (a `.cmd` file on
+/// Windows, a shell script elsewhere) instead.
+fn fake_git(e: &Env, trigger: &str, on_trigger_win: &str, on_trigger_sh: &str) -> Git {
+    #[cfg(windows)]
+    let (path, body) = (
+        e.root.path().join("fakegit.cmd"),
+        format!(
+            "@echo off\r\nfor %%a in (%*) do if \"%%a\"==\"{trigger}\" ({on_trigger_win})\r\ngit %*\r\nexit /b %errorlevel%\r\n"
+        ),
+    );
+    #[cfg(not(windows))]
+    let (path, body) = (
+        e.root.path().join("fakegit.sh"),
+        format!(
+            "#!/bin/sh\nfor a in \"$@\"; do\n  if [ \"$a\" = \"{trigger}\" ]; then\n{on_trigger_sh}\n  fi\ndone\nexec git \"$@\"\n"
+        ),
+    );
+    #[cfg(windows)]
+    let _ = on_trigger_sh;
+    #[cfg(not(windows))]
+    let _ = on_trigger_win;
+    std::fs::write(&path, body).unwrap();
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o755)).unwrap();
+    }
+    e.git.clone().with_program(path)
+}
+
+#[test]
+fn a_failed_rebase_abort_says_what_git_said() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &theirs, "pages/A.md", "- theirs\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "pages/A.md", "- mine\n");
+    // Git's own `rebase --abort` fails: the rebase stays in progress.
+    let g = fake_git(
+        &e,
+        "--abort",
+        "echo fatal: abort refused 1>&2 & exit /b 1",
+        "    echo 'fatal: abort refused' >&2\n    exit 1",
+    );
+    let r = open(&g, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let p = r.integrate(&t).unwrap_err();
+    assert_eq!(
+        p,
+        Problem::Busy {
+            what: "rebase (Git said: fatal: abort refused)".into()
+        }
+    );
+    assert_eq!(
+        p.message(),
+        "The repository is in the middle of a rebase (Git said: fatal: abort refused). Finish it with Git tools, then click here."
+    );
+    // The half-done rebase really is still there.
+    assert!(r.busy().unwrap().is_some());
+}
+
+#[test]
+fn a_push_that_hangs_is_unreachable_not_forever() {
+    use std::time::{Duration, Instant};
+    let e = env();
+    let (_bare, mine, _theirs) = two_clones(&e);
+    commit_file(&e, &mine, "pages/A.md", "- a2\n");
+    // A plain (not SSH) remote whose push never answers.
+    let fake = fake_git(
+        &e,
+        "push",
+        "ping -n 30 127.0.0.1 >nul & exit /b 0",
+        "    sleep 30",
+    );
+    let g = fake.with_network_limit(Duration::from_secs(1));
+    let r = open(&g, &mine);
+    let t = target(&r);
+    let start = Instant::now();
+    assert_eq!(
+        r.push(&t),
+        Err(Problem::Unreachable {
+            message: "git push took too long".into()
+        })
+    );
+    let took = start.elapsed();
+    assert!(took >= Duration::from_secs(1), "{took:?}");
+    assert!(took < Duration::from_secs(15), "{took:?}");
+}
+
 #[test]
 fn a_rebase_left_by_a_crash_explains_itself() {
     let m = Problem::Busy {
