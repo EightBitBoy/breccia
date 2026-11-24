@@ -43,6 +43,17 @@ backlog's highest number is 99, so a new item is **#100**.
 Ask one at a time, with the options. The plan is written with the recommended answers; another answer changes the task
 named.
 
+**Settled 2026-11-24.** The owner, asked Q1, said: "this is all about date. how do created:: and done:: solve this? do
+it just like in there." Breccia never edits a `done::` line in place; it writes the whole line and removes the whole
+line, words after the date included. So:
+- **Q1 b** (controller's reading of the owner's answer): picking a new date writes a fresh `due:: [[YYYY-MM-DD]]` line;
+  words after the old date go (`Ctrl Z` brings them back). Task 2 follows its Q1 b branch (skip Steps 1 to 5; the e2e
+  step expects the plain line). R3 does not apply.
+- **Q2 a** (as `done::`: the done chip on a card shows only the date): no words on the closed card.
+- **Q3 a** (controller's call, not a date question): "Color…" on a page's link to itself, as for every link.
+- Item 5 of the plan 16 follow-ups (the unclosed-fence re-indent) moves to the backlog as #100 (controller's call: it
+  predates plan 16 and nobody has met it).
+
 - **Q1. Picking a new date on a due line that has words after the date.** *What it is about:* with decision 1, a line
   like `due:: [[2026-12-01]] client waits` is now something you see and mean to keep. Today, picking a new date from the
   calendar rewrites the whole line to `due:: [[2026-12-05]]`, so "client waits" is lost without a word. (Task 2)
