@@ -39,3 +39,5 @@ Task 7: review clean (sonnet; spec ✅, approved; rewraps word-identical). minor
 Task 7: complete (commits d24a3b2..b53ef7b, review clean)
 ## Final review
 Final review: dispatched (opus) over 55e0623..b53ef7b
+Final review (opus): ready after a small fix wave; 0 Critical, 0 Important, 8 minor fix-now (backlog #100 soften; App.svelte comment on multi-select; item 136 note "changed by plan 17"; spec/format "replaces that line" → due lines become one fresh line; vocabulary/compatibility "other text besides the date"; #101 add the Esc consequence; double blank lines; STATUS decisions — controller at finishing). Step 110 flake not caused by plan 17. Plan 16 follow-ups closed: 1,2,3,5,6,7,8,9,10,11,14,15,17; open: 4 (release pause), 12, 13, 16.
+Final fix wave: dispatched (sonnet), items 1–7 plus striking closed plan 16 follow-ups.
