@@ -1,12 +1,16 @@
 // The navigation history: the views the main area showed this session, with a cursor, as a browser keeps
 // them. In memory only; App records arrivals and restores what `back` and `forward` return.
-import { samePlace, type NavPlace } from './nav'
+import { keepsFocus, samePlace, type NavFocus, type NavPlace } from './nav'
 
-/** A step: the place, and where it was scrolled to when left (`top`: the feed's day at the top). */
+/**
+ * A step: the place, where it was scrolled to when left (`top`: the feed's day at the top), and the block edited or
+ * selected then (on a page or in the journal only).
+ */
 export interface NavEntry {
   place: NavPlace
   scroll: number
   top: string | null
+  focus: NavFocus | null
 }
 
 export class Nav {
@@ -41,16 +45,17 @@ export class Nav {
   arrive(p: NavPlace | null): void {
     if (p === null) return
     if (this.cursor >= 0 && samePlace(p, this.entries[this.cursor].place)) return
-    const list = [...this.entries.slice(0, this.cursor + 1), { place: p, scroll: 0, top: null }]
+    const list = [...this.entries.slice(0, this.cursor + 1), { place: p, scroll: 0, top: null, focus: null }]
     if (list.length > this.limit) list.splice(0, list.length - this.limit)
     this.entries = list
     this.cursor = list.length - 1
   }
 
-  /** The current view is about to be left: keep its scroll position. Ignored while restoring. */
-  remember(scroll: number, top: string | null): void {
+  /** The view is about to be left: keep its scroll position and edited or selected block. Ignored while restoring. */
+  remember(scroll: number, top: string | null, focus: NavFocus | null = null): void {
     if (this.restoring || this.cursor < 0) return
-    this.replace(this.cursor, { ...this.entries[this.cursor], scroll, top })
+    const e = this.entries[this.cursor]
+    this.replace(this.cursor, { ...e, scroll, top, focus: keepsFocus(e.place) ? focus : null })
   }
 
   /** The step before the current one; the current entry itself when `here` is not it. */

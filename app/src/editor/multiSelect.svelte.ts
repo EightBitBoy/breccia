@@ -25,7 +25,7 @@ export class MultiSelect {
   ids = $state<BlockId[]>([])
   /** The selection runs from `anchor` to `head` in the visible order. */
   anchor: BlockId | null = null
-  private head: BlockId | null = null
+  head: BlockId | null = null
 
   constructor(
     private host: SelectionHost,
@@ -42,6 +42,14 @@ export class MultiSelect {
     this.anchor = from
     this.head = to
     this.ids = ids
+  }
+
+  /** Selects from `anchor` to `head` again (Back to a page); nothing when either is not shown. */
+  restore(anchor: BlockId, head: BlockId) {
+    this.anchor = anchor // in the journal, the anchor's day is where the order comes from
+    const order = this.host.order()
+    if (order.includes(anchor) && order.includes(head)) this.select(anchor, head)
+    else this.clear()
   }
 
   /** Selects `id` and its visible neighbour above (-1) or below (1). */

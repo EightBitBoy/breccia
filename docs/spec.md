@@ -234,8 +234,10 @@ The sidebar can be resized and hidden. *(my call)*
 **Back and forward**: `Alt ←` / `Alt →` (`Cmd [` / `Cmd ]` on a Mac) or the ← → buttons at the top left
 of the main area step through the views shown in this session (pages, journal days, boards, Dailies, All pages, Archive, Git
 history, Graph, Settings), the newest 50, not stored. Scrolling, cards and dialogs are not steps. The scroll position
-comes back; in the journal, the day that was at the top. Deleted pages are skipped; renamed ones are followed. A
-second click on the Git history button is Back.
+comes back; in the journal, the day that was at the top. On a page or in the journal, the block that was edited comes
+back edited, the caret where it was (at the end of the text if that is shorter now), or the blocks that were selected
+come back selected; a block that is gone or folded away is not (boards, the graph and the other views restore no
+editing). Deleted pages are skipped; renamed ones are followed. A second click on the Git history button is Back.
 
 ### 7.2 Outliner editor
 

@@ -1,4 +1,5 @@
 // Back and forward between views: what a place in the history is, and which one the main area shows.
+import type { BlockId } from './types'
 
 /** A view the main area can show, as the history keeps it. */
 export type NavPlace =
@@ -12,6 +13,14 @@ export type NavPlace =
   | { kind: 'gitLog' }
   | { kind: 'graph' }
   | { kind: 'settings' }
+
+/** The block left from: the edited one with its caret (UTF-16), or the selection from `anchor` to `head`. */
+export type NavFocus = { kind: 'edit'; id: BlockId; at: number } | { kind: 'select'; anchor: BlockId; head: BlockId }
+
+/** Back and Forward give the edited or selected block back on a page and in the journal only. */
+export function keepsFocus(p: NavPlace): boolean {
+  return p.kind === 'page' || p.kind === 'feed'
+}
 
 /** Whether `a` and `b` are the same place (two nulls are). */
 export function samePlace(a: NavPlace | null, b: NavPlace | null): boolean {

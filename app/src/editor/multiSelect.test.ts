@@ -129,3 +129,17 @@ test('Mod+Shift+Enter removes the state of every selected block', () => {
   expect(ran).toEqual([{ type: 'blocks.setState', ids: [a, b], keyword: null }])
   expect(e.defaultPrevented).toBe(true)
 })
+
+test('restore selects from anchor to head again, and nothing when either block is gone', () => {
+  sel.restore(a, b)
+  expect(sel.ids).toEqual([a, b])
+  expect(sel.anchor).toBe(a)
+  expect(sel.head).toBe(b)
+  sel.clear()
+  sel.restore(a, 99)
+  expect(sel.ids).toEqual([])
+  expect(sel.anchor).toBeNull()
+  sel.restore(99, c)
+  expect(sel.ids).toEqual([])
+  expect(sel.anchor).toBeNull()
+})

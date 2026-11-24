@@ -92,7 +92,7 @@
   import { Search } from './lib/search.svelte'
   import type { SearchRow } from './lib/search'
   import { isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './lib/keys'
-  import { placeHere, topDayOf, type NavPlace } from './lib/nav'
+  import { placeHere, topDayOf, type NavFocus, type NavPlace } from './lib/nav'
   import { Nav, type NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
@@ -462,8 +462,28 @@
     untrack(() => nav.arrive(p))
   })
 
-  /** The view shown is about to be left: its scroll position (in the feed, the day at the top) goes into its step. */
-  function rememberHere() {
+  /**
+   * The edited block or the selection a pointer press just left (a press on a sidebar row leaves it before the page
+   * it opens is shown); null again at the next press or key.
+   */
+  let pressFocus: NavFocus | null = null
+
+  /** The edited block with its caret, else the selection; null when neither. */
+  function focusHere(): NavFocus | null {
+    const id = host.editingId
+    if (id !== null) {
+      const at = host.editor?.id === id ? host.editor.ed.cursor16() : (host.blockOf(id)?.text.length ?? 0)
+      return { kind: 'edit', id, at }
+    }
+    const { anchor, head } = sel
+    return sel.ids.length && anchor !== null && head !== null ? { kind: 'select', anchor, head } : null
+  }
+
+  /**
+   * The view shown is about to be left: its scroll position (in the feed, the day at the top) and its edited or
+   * selected block (`focus`, read before the editor or the selection closes) go into its step.
+   */
+  function rememberHere(focus: NavFocus | null = focusHere() ?? pressFocus) {
     if (!scroller) return
     let top: string | null = null
     if (journal.feed) {
@@ -475,7 +495,7 @@
         .map(({ key, rect }) => ({ key, top: rect.top, bottom: rect.bottom }))
       top = topDayOf(sections, edge)
     }
-    nav.remember(scroller.scrollTop, top)
+    nav.remember(scroller.scrollTop, top, focus)
   }
 
   /**
@@ -489,24 +509,34 @@
     if (going || nav.busy || dialogOpen() || search.shown || pickerOpen) return
     going = true
     try {
+      const focus = focusHere() // before the editor and the selection close
       await closeCard() // with the card's own text, as any navigation closes it
       host.leave()
       sel.clear()
       // The typed text's answer lands first: while a restore has the main area empty, it would show its page again.
       await client.flush()
-      rememberHere()
+      rememberHere(focus)
       const step = () => (dir === 'back' ? nav.back(here) : nav.forward(here))
       let e = step()
       while (e && !(await restore(e))) {
         nav.drop()
         e = step()
       }
+      if (e?.focus) await refocus(e.focus)
     } catch (e) {
       refuse(e)
     } finally {
       nav.settle()
       going = false
     }
+  }
+
+  /** The block edited or selected when the step was left, again; nothing when it is no longer shown. */
+  async function refocus(f: NavFocus) {
+    await tick()
+    if (f.kind === 'select') return sel.restore(f.anchor, f.head)
+    const b = host.blockOf(f.id)
+    if (b) await host.edit(f.id, Math.min(f.at, b.text.length))
   }
 
   /** Shows step `e` again, at its scroll position; false when its page or board is gone. */
@@ -1565,6 +1595,7 @@
    * A plain press clears a selection; a Shift press on a block extends it (on click).
    */
   function onPointerDown(e: MouseEvent) {
+    pressFocus = null
     const t = e.target as Element | null
     // The search dialog and its backdrop sit over the main area: a press there, even one that dismisses
     // the search, is not a press outside the card or the editor. bits-ui closes it on the click, after this.
@@ -1589,6 +1620,7 @@
       e.preventDefault()
       return
     }
+    pressFocus = focusHere() // for Back to this page, should the press open another
     if (sel.ids.length && !e.shiftKey) sel.clear()
     if (host.editingId === null) return
     if (t.closest('.editor-slot') || onBlock) return
@@ -1620,6 +1652,7 @@
       pointerDown: onPointerDown,
       key: (e) => sel.onKey(e),
       keyCapture: (e) => {
+        pressFocus = null
         const k = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }
         if (isHelpKey(k)) {
           // Before the editor and before WebView2's own F1 (its help page).
