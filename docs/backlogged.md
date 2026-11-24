@@ -726,3 +726,14 @@ Done 2026-11-24: both tests are in `crates/core/tests/it/git_sync.rs`, using a f
 elsewhere) that passes everything to the real one except the call with `--abort` (fails) or `push` (hangs). Both were
 mutation-checked. Every push already runs under the network limit (`Repo::push`), so no timeout was missing and no fix was
 needed; the new test covers a plain (not SSH) remote that hangs: "Could not reach the remote: git push took too long".
+
+## 82. Translate the interface (Docs)
+
+Owner, 2026-11-13 (from #37): the interface is English only. Month and weekday names are fixed English lists in several
+places (`app/src/lib/gitLog.ts`, `allPages.ts`, `archive.ts`, `calendar.ts`, `git.ts`, and the journal headings in the
+core), and all texts (menus, buttons, notices, Settings) are English. Open: whether Breccia gets other languages at all
+(and which, German first?); a translation system for the texts; dates shown through the system locale; typed dates in
+search (`12 Mar`, `yesterday`) understanding the same language as the shown ones; what the notes format keeps unchanged
+(state keywords, `created::` and `done::` lines, `[[YYYY-MM-DD]]` journal names never change with the language).
+
+Owner, 2026-11-24: closed, English only. The notes format is language-free anyway; reopen if other users ask.

@@ -48,15 +48,6 @@ Owner, 2026-11-24: a second tab "Writing" next to "Shortcuts", with one small ex
 first (links, tags, tasks, properties, due dates), then the Markdown basics; a test keeps it in line with
 `docs/format.md`. Queued.
 
-## 82. Translate the interface (Docs)
-
-Owner, 2026-11-13 (from #37): the interface is English only. Month and weekday names are fixed English lists in several
-places (`app/src/lib/gitLog.ts`, `allPages.ts`, `archive.ts`, `calendar.ts`, `git.ts`, and the journal headings in the
-core), and all texts (menus, buttons, notices, Settings) are English. Open: whether Breccia gets other languages at all
-(and which, German first?); a translation system for the texts; dates shown through the system locale; typed dates in
-search (`12 Mar`, `yesterday`) understanding the same language as the shown ones; what the notes format keeps unchanged
-(state keywords, `created::` and `done::` lines, `[[YYYY-MM-DD]]` journal names never change with the language).
-
 ## 83. Re-implement the graph feature (Graph)
 
 Owner, 2026-11-13: the owner does not use the graph at all at the moment, and plans to re-implement the feature later.
