@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-23. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-24. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -39,6 +39,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 14 | Open follow-ups of plans 12 and 13 | done 2026-11-19 | `docs/plans/2026-11-19-14-open-followups.md` | `docs/plans/2026-11-19-14-open-followups-followups.md` |
 | 15 | The contract (from the audit) | done 2026-11-20 | `docs/plans/2026-11-20-15-the-contract.md` | `docs/plans/2026-11-20-15-the-contract-followups.md` |
 | 16 | Task due dates | done 2026-11-23 | `docs/plans/2026-11-23-16-due-dates.md` | `docs/plans/2026-11-23-16-due-dates-followups.md` |
+| 17 | Due date follow-ups | done 2026-11-24 | `docs/plans/2026-11-24-17-due-date-follow-ups.md` | `docs/plans/2026-11-24-17-due-date-follow-ups-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -195,6 +196,15 @@ and turns amber near it and red when overdue. Ordinary pages now have the journa
 the task menu; the browser's own menu no longer opens there). The owner checks review item 136; sorting by due date is
 backlog #98, the card menu's keyboard path #99. Not released yet. Follow-ups are in the plan's follow-ups file.
 
+Plan 17 (plan 16's follow-ups) is done (2026-11-24; owner answers in the plan 16 follow-ups file and the plan's
+"Settled" block, pre-flight rulings in the ledger `.superpowers/sdd/2026-11-24-17-due-date-follow-ups/progress.md`).
+A due line with other text besides the date stays visible, dimmed, next to the chip; picking a new date writes one
+fresh `due::` line, as Breccia does for `done::`. Ordinary pages get "Color…" on page links and tags (also a page's
+link to itself). The due date calendar and the task menu keep the focus where it belongs, and today keeps its ring
+when it is the chosen day. The rest is tidying and tests; the old unclosed-fence quirk is backlog #100, a very fast
+click that leaves the calendar open #101. The owner checks review items 137 to 139. Plans 16 and 17 are not released
+yet; plan 17's follow-ups file says how to fold their changelog lines at the release pause.
+
 Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
@@ -207,7 +217,7 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1323 tests) and cargo tests (core: lib 53, integration 882 with 2 ignored; shell 95) pass
+- `just test`: Vitest (1332 tests) and cargo tests (core: lib 53, integration 892 with 2 ignored; shell 95) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 253 PASS lines, the last step is 155 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
@@ -254,7 +264,9 @@ Candidates for the plan after it, to settle with the owner:
   Sorting board columns by due date is not in the first version.
   Added 2026-11-24 (plan 16 follow-ups): a due line with text after the date stays visible next to the chip; picking
   a date overwrites a words-only `due::` line; ordinary pages keep the journal's right-click zone and get "Color…" on
-  page links too. Plan 17 builds these with the other plan 16 follow-ups.
+  page links too (built by plan 17). Plan 17's settled questions: picking a new date writes one fresh `due::` line, so
+  words after the old date go (Ctrl Z brings them back), as for `done::` (Q1 b, owner: "do it just like" `created::` and
+  `done::`); a closed card shows no words from the due line (Q2 a); a page's link to itself also gets "Color…" (Q3 a).
 
 ## Setting up a new machine or account
 
