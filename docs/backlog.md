@@ -68,6 +68,8 @@ first (its per-frame picking pass, a full re-process per step). The whole graph 
 change; the layout never settles and stops at 10 s; the graph code is larger than estimated and carries an unused
 helper. A few hundred pages are far below this. `just graph-scale` measures it.
 
+Owner, 2026-11-24: stays open for a later rebuild; the graph stays as it is until then.
+
 ## 84. Assets: images and attachments in notes (Compatibility)
 
 Owner, 2026-11-13 (from #46): "something I never thought about yet". Not decided; this item holds the question and what
