@@ -33,3 +33,9 @@ Task 6: dispatched (opus, base 0dcb751; also host.test.ts import order from Task
 Task 6: implementer DONE_WITH_CONCERNS 286615e, 64805dd, 632e56c, 2dd7bb4 (e2e 253 PASS on 3rd run; run 1 failed in new 155.5 — fixed; run 2 failed in step 110 board column peek, unrelated → watch for flakiness). Implementer ruling: App.svelte's press handler leaves the edited block alone for a press on the task menu (data-task-menu) — otherwise a click on "Set due date…" closed the editor — cost: editor stays open under the task menu. Concern: a click under 10 ms on a block's text leaves the calendar open (bits-ui closes 10 ms after press) → follow-ups/backlog. Review dispatched (opus).
 Task 6: review clean (opus; spec ✅, approved; agrees with the press-handler ruling — data-task-menu only on task-row menus, typed text safe). minor (deferred): fast-click case leaves `outside` true so a later Esc doesn't return focus; pressFocus can go stale (harmless); a press on the task menu no longer clears a multi-block selection (comment it); click outside the task menu while editing may refocus a closing editor (ends on body, untested); STATUS Vitest/cargo counts stale (1323/882 → 1332/892, fixed at finishing); step 110 flaked once in three runs.
 Task 6: complete (commits 0dcb751..2dd7bb4, review clean)
+Task 7: dispatched (sonnet, base d24a3b2; plus rewraps and backlog #101 fast-click)
+Task 7: implementer DONE b53ef7b; review dispatched (sonnet)
+Task 7: review clean (sonnet; spec ✅, approved; rewraps word-identical). minor (deferred): backlog #100's claim that typing re-indents the same way is plausible but untested → soften to "probably" in the final fix wave; commit subject differs from the brief (harmless); thin report.
+Task 7: complete (commits d24a3b2..b53ef7b, review clean)
+## Final review
+Final review: dispatched (opus) over 55e0623..b53ef7b
