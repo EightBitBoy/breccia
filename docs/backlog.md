@@ -19,6 +19,11 @@ heading link, and renaming a page to such a name breaks its heading links (Obsid
 Also confirm: with a page `Issue`, `[[Issue #42]]` counts as a link to `Issue` and a rename updates it; is that wanted?
 (to check: whether the tag and link counting were ever split per form, `crates/core/src/index.rs`.)
 
+Owner, 2026-11-24 (checked against the code first): fix A (a click on a heading link to a missing or empty page
+makes `Page`, not `Page#H`), B (`#` is no longer allowed in a new page name or a rename, as in Obsidian; existing such
+pages keep working for plain links) and C (a tag never counts as a link). Keep D: `[[Issue #42]]` counts as a link to
+a page `Issue`, as in Obsidian. In progress.
+
 ## 14. Aliases: stale lists and reader edge cases (Pages and links)
 
 After another program adds or removes an alias, the `Ctrl K` list and the completion name list stay old until asked
