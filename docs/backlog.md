@@ -94,6 +94,8 @@ from the web, the app itself and `data:` (`app/src-tauri/tauri.conf.json`, `img-
 - Other files: PDFs and the like need a way to open them, not just show them.
 - Work: core (paths, copying), security rule, editor (paste and drop), format reference, tests, an e2e step.
 
+Owner, 2026-11-24: still thinking; stays open.
+
 ## 85. Performance with very large folders (Performance)
 
 Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59), to be taken up when a folder grows past a few
