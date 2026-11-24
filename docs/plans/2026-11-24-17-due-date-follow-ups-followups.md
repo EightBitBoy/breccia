@@ -6,10 +6,11 @@ Plan 16's follow-ups 4, 12, 13 and 16 stay open in their own file. The owner che
 
 ## Release pause (next `just release`)
 
-1. Changelog lines: use "Tasks and cards show a due date chip, amber when near and red when overdue" for the long line
+1. ~~Changelog lines: use "Tasks and cards show a due date chip, amber when near and red when overdue" for the long line
    (plan 16 follow-up 4). Fold or drop the three `fix(app)` lines of plan 17 (64805dd, 632e56c, 2dd7bb4): they fix
    plan 16 features that were never released. Merge the pages' right-click line (b744d84) with plan 16's task-menu
-   line (32393cb) if they read as duplicates.
+   line (32393cb) if they read as duplicates.~~ Done at the 1.9.0 release pause (2026-11-24): the long line shortened,
+   the three fix lines dropped, the two menu lines kept.
 
 ## Code
 

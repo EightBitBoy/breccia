@@ -187,6 +187,9 @@ it after asking, a drag handle on dailies, a web link's full address on hover an
 132 and 133), and plan 14's fixes. Plan 15 (no visible change) is in it too.
 Released 1.8.3 on 2026-11-23 (https://github.com/EightBitBoy/breccia/releases/tag/v1.8.3): quotes with a bar and
 muted text (review 134), and an open board card keeping its new lines and pasted lines under the task (review 135).
+Released 1.9.0 on 2026-11-24 (https://github.com/EightBitBoy/breccia/releases/tag/v1.9.0): task due dates (plan 16) and
+their follow-ups (plan 17); the three plan 17 fix lines were dropped from the notes at the release pause, since they fix
+unreleased features.
 
 Plan 16 (task due dates) is done (2026-11-23; owner decisions, answers Q1 to Q5 and rulings in the plan, pre-flight
 rulings in the ledger `.superpowers/sdd/2026-11-23-16-due-dates/progress.md`). A task gets a `due:: [[YYYY-MM-DD]]`
@@ -202,8 +205,8 @@ A due line with other text besides the date stays visible, dimmed, next to the c
 fresh `due::` line, as Breccia does for `done::`. Ordinary pages get "Color…" on page links and tags (also a page's
 link to itself). The due date calendar and the task menu keep the focus where it belongs, and today keeps its ring
 when it is the chosen day. The rest is tidying and tests; the old unclosed-fence quirk is backlog #100, a very fast
-click that leaves the calendar open #101. The owner checks review items 137 to 139. Plans 16 and 17 are not released
-yet; plan 17's follow-ups file says how to fold their changelog lines at the release pause.
+click that leaves the calendar open #101. The owner checks review items 137 to 139. Both are released
+as 1.9.0.
 
 Candidates for the plan after it, to settle with the owner:
 
