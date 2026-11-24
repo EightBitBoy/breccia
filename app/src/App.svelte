@@ -91,7 +91,8 @@
   import { JustRenamed, followRename, removalFor } from './lib/followRename'
   import { Search } from './lib/search.svelte'
   import type { SearchRow } from './lib/search'
-  import { isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './lib/keys'
+  import { historyKey, isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './lib/keys'
+  import { ViewUndo } from './lib/viewUndo'
   import { placeHere, topDayOf, type NavFocus, type NavPlace } from './lib/nav'
   import { Nav, type NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
@@ -359,6 +360,37 @@
   }
 
   const exec = (cmd: Command) => host.exec(cmd)
+
+  /** The board's and the journal's own changes, for `Ctrl Z` while no block is edited (spec §7.2). */
+  const viewUndo = new ViewUndo()
+
+  /** The view `Ctrl Z` and `Ctrl Shift Z` step while no block is edited: a board, the journal or a page; none elsewhere. */
+  function undoView(): string | null {
+    if (newPageFolder !== null || settings.shown || network.shown) return null
+    if (boards.index !== null) return `board:${boards.index}`
+    if (gitLog.shown || archiveView.shown || dailies.shown || allPages.shown) return null
+    if (journal.feed) return 'journal'
+    return page ? `page:${page.key}` : null
+  }
+
+  /**
+   * `Ctrl Z` / `Ctrl Shift Z` (`Ctrl Y`) with no block edited or selected: on a page its last change, on a board or in
+   * the journal the last change made there (spec §7.2). Never in a text field, a dialog, a menu or the search box.
+   */
+  function viewHistoryKey(e: KeyboardEvent) {
+    if (e.defaultPrevented || e.isComposing || host.editingId !== null || sel.ids.length) return
+    const a = historyKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, mac)
+    if (a === null || dialogOpen() || search.shown || slashMenu || linkMenu) return
+    const t = e.target instanceof Element ? e.target : null
+    if (t?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"], [role="menu"]')) return
+    if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]')) return
+    const view = undoView()
+    if (view === null) return
+    e.preventDefault()
+    const type = a === 'undo' ? 'history.undo' : 'history.redo'
+    const cmds: Command[] = view.startsWith('page:') ? [{ type, page: page!.key }] : viewUndo.step(view, a)
+    for (const cmd of cmds) void exec(cmd)
+  }
 
   const journal = new Journal({ run: (cmd) => client.run(cmd), notify })
   /** The shown board and its open card. */
@@ -678,6 +710,7 @@
 
   let lastGeneration: number | null = null
   function apply(out: Output, cmd: Command) {
+    viewUndo.record(undoView(), cmd, out)
     const folderAnswer = answerOf(out, 'folder')
     if (folderAnswer) {
       // A new notes folder: no old tree while the new one is on its way, no old "show more".
@@ -698,6 +731,7 @@
         network.newFolder()
         search.close()
         folded.clear()
+        viewUndo.clear()
         madeInRefs.clear()
         notices.newFolder() // their actions would run on the old folder's pages
         reloads.clear()
@@ -1650,7 +1684,10 @@
     const removeDom = installDom({
       click: onAnchorClick,
       pointerDown: onPointerDown,
-      key: (e) => sel.onKey(e),
+      key: (e) => {
+        sel.onKey(e)
+        viewHistoryKey(e)
+      },
       keyCapture: (e) => {
         pressFocus = null
         const k = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }

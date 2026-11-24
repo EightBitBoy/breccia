@@ -256,8 +256,12 @@ editing). Deleted pages are skipped; renamed ones are followed. A second click o
   above's own text, before its property lines (the start of the next one for a page's first block); the only block of a
   page is emptied instead (while editing); on a selection the key deletes every selected block, as `Backspace` and
   `Delete` do, and if that would leave the page (or journal day) without a block, one empty block stays with the caret
-  in it; one `Ctrl Z` brings it back; `Ctrl Z` / `Ctrl Y` undo / redo, also across block boundaries (splits, merges,
-  moves). `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due date
+  in it; one `Ctrl Z` brings it back; `Ctrl Z` / `Ctrl Y` (or `Ctrl Shift Z`) undo / redo, also across block
+  boundaries (splits, merges, moves). The undo history is kept per page. The same keys work with no block edited or
+  selected: on a page (or a journal day opened as a page) they undo and redo that page's last change; in the journal
+  feed they step back through the changes made in the feed, newest first, each on its own day (a change made in another
+  view starts this list again, and a change undone in a block editor counts as undone here too); on a board, see §7.6.
+  They do nothing while a dialog, a menu, the search box or a text field has the focus, and in other views. `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due date
   calendar (below). On a block that is not a task a note says "Only a task can have a due date." and nothing is
   written. `Ctrl Shift D` still opens the go-to-a-day calendar.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line
@@ -454,6 +458,11 @@ a **finished** flag and an **in cycle** flag. Defaults:
 - **Archiving:** a card's menu has "Archive", which adds an `archived::` line; the task keeps its state and leaves the
   board, and the Archive view lists it. A finished column has "Archive finished more than N days ago" (N configurable,
   default 14), and Breccia archives such tasks by itself while auto-archive is on (`docs/format.md` §8 and §11).
+- **Undo on the board**: with no block edited, `Ctrl Z` takes back the last change made on the board (a drop to another
+  column or place, an archive, a change from a card's menu or in an open card), and the board shows the cards as they
+  were; again and again, newest first. `Ctrl Shift Z` or `Ctrl Y` makes it again. A drop is one step, also when it
+  raised cards on other pages; "Archive finished…" is one step, also when it archived tasks on several pages. The list
+  holds the changes made on this board since the last change made in another view.
 - Board settings (rename, add/remove/reorder columns, delete board) open from the board's title.
 - **Hiding columns**: hovering a column shows a hide icon in its title (the ⋯ menu has no
   Hide or Show all entries). A hidden column is a faint thin line with a ▾ at the top; its tooltip names

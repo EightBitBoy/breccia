@@ -14,7 +14,7 @@ export const SHORTCUTS: Shortcut[] = [
   { group: 'Editing', keys: 'Backspace', mac: 'Backspace', what: 'In an empty block: delete it; at the start: merge into the previous block' },
   { group: 'Editing', keys: 'Ctrl Shift K', mac: 'Cmd Shift K', what: 'Delete the block with its sub-blocks' },
   { group: 'Editing', keys: 'Esc', mac: 'Esc', what: 'Stop editing, or clear the block selection' },
-  { group: 'Editing', keys: 'Ctrl Z / Ctrl Y', mac: 'Cmd Z / Cmd Y', what: 'Undo / redo' },
+  { group: 'Editing', keys: 'Ctrl Z / Ctrl Y', mac: 'Cmd Z / Cmd Y', what: 'Undo / redo, also with no block edited' },
   { group: 'Editing', keys: '/', mac: '/', what: 'The slash menu' },
   { group: 'Editing', keys: '[[', mac: '[[', what: 'Link to a page' },
   { group: 'Editing', keys: '#', mac: '#', what: 'Tag' },

@@ -104,6 +104,17 @@ export function isDatePickerKey(e: KeyInput, mac: boolean): boolean {
   return mod && !other && e.shift && !e.alt && e.key.toLowerCase() === 'd'
 }
 
+/** The page-history keys outside a block editor, the same as in one: `Ctrl Z` undoes, `Ctrl Shift Z` and `Ctrl Y` redo. */
+export function historyKey(e: KeyInput, mac: boolean): 'undo' | 'redo' | null {
+  const mod = mac ? e.meta : e.ctrl
+  const other = mac ? e.ctrl : e.meta
+  if (!mod || other || e.alt) return null
+  const key = e.key.toLowerCase()
+  if (key === 'z') return e.shift ? 'redo' : 'undo'
+  if (key === 'y' && !e.shift) return 'redo'
+  return null
+}
+
 /** `Alt ←` / `Alt →` (`Cmd [` / `Cmd ]` on a Mac) go back and forward between views. */
 export function navKey(e: KeyInput, mac: boolean): 'back' | 'forward' | null {
   if (e.shift) return null

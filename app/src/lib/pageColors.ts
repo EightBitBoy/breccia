@@ -1,4 +1,4 @@
-import type { KeyInput } from './keys'
+import { historyKey, type KeyInput } from './keys'
 import type { BlockView } from './types'
 
 /** The 25 page colors in picker order: five rows of five. */
@@ -266,13 +266,7 @@ export function colorPickerKey(e: KeyInput, at: number): number | 'pick' | null 
 
 /** The page-history keys on the focused swatch, the same as in a block editor. */
 export function swatchKey(e: KeyInput, mac: boolean): 'undo' | 'redo' | null {
-  const mod = mac ? e.meta : e.ctrl
-  const other = mac ? e.ctrl : e.meta
-  if (!mod || other || e.alt) return null
-  const key = e.key.toLowerCase()
-  if (key === 'z') return e.shift ? 'redo' : 'undo'
-  if (key === 'y' && !e.shift) return 'redo'
-  return null
+  return historyKey(e, mac)
 }
 
 export interface RowWash {
