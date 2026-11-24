@@ -46,20 +46,6 @@ Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scroll
 highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
 #21.
 
-## 67. Git and release test gaps (Tests) (partly done 2026-11-13; two cases left)
-
-Done 2026-11-13: the release undo's two error branches are tested ("Could not put back" and "could not be read",
-`app/scripts/release.test.mjs`); the changelog's "Breaking changes" group is produced once with a temp repository and the
-real git-cliff (`app/scripts/changelog.test.mjs`; it sits first, above Features); the "close gave up" tests were checked
-by breaking the code (the `finish_close` tests go red; the first `gave_up` check in `begin_close` is redundant with the
-second, so removing it changes nothing observable). All three were mutation-checked.
-
-Left: no test for the message when Git's own rebase abort fails (needs a fake `git`: `Git::with_program` takes one, so a
-`.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
-the separate push URL has one; the same fake `git`).
-
-Owner, 2026-11-24: add both tests; if a push turns out to have no timeout, fix that too. In progress.
-
 ## 81. Explain basic syntax in the help dialog (Docs)
 
 Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,

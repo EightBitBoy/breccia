@@ -694,3 +694,22 @@ Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; 
 front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
 
 Owner, 2026-11-24: not needed. Only aliases are read; Breccia never writes front matter.
+
+## 67. Git and release test gaps (Tests) (done 2026-11-24)
+
+Done 2026-11-13: the release undo's two error branches are tested ("Could not put back" and "could not be read",
+`app/scripts/release.test.mjs`); the changelog's "Breaking changes" group is produced once with a temp repository and the
+real git-cliff (`app/scripts/changelog.test.mjs`; it sits first, above Features); the "close gave up" tests were checked
+by breaking the code (the `finish_close` tests go red; the first `gave_up` check in `begin_close` is redundant with the
+second, so removing it changes nothing observable). All three were mutation-checked.
+
+Was left: no test for the message when Git's own rebase abort fails (needs a fake `git`: `Git::with_program` takes one, so a
+`.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
+the separate push URL has one; the same fake `git`).
+
+Owner, 2026-11-24: add both tests; if a push turns out to have no timeout, fix that too.
+
+Done 2026-11-24: both tests are in `crates/core/tests/it/git_sync.rs`, using a fake `git` (`.cmd` on Windows, a shell script
+elsewhere) that passes everything to the real one except the call with `--abort` (fails) or `push` (hangs). Both were
+mutation-checked. Every push already runs under the network limit (`Repo::push`), so no timeout was missing and no fix was
+needed; the new test covers a plain (not SSH) remote that hangs: "Could not reach the remote: git push took too long".
