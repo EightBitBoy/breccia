@@ -13,3 +13,7 @@ Task 1: dispatched (sonnet, base 7727513)
 Task 1: implementer DONE e9b8bd9; review dispatched (sonnet)
 Task 1: review clean (sonnet; spec ✅, approved). minor (deferred): spec.md:297 and format.md:246 unwrapped long lines (→ Task 7 rewraps); words_before test doesn't assert the link renders; compatibility.md ~120 still says "shown as a chip" (F11 → Task 7).
 Task 1: complete (commits 7727513..e9b8bd9, review clean)
+Task 2: dispatched (sonnet, base 6c6e5b9, Q1 b branch)
+Task 2: implementer DONE c91daa6 (e2e 238 PASS, step 153 RED shown); review dispatched (sonnet)
+Task 2: review clean (sonnet; spec ✅, approved; step 153 month-boundary path checked by reading). minor (deferred): Ctrl Z restoring the words has no e2e check; brief's separate "plain 153" row folded into the post-pick .prop count.
+Task 2: complete (commits 6c6e5b9..c91daa6, review clean)
