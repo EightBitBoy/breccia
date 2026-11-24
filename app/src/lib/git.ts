@@ -3,7 +3,6 @@ import type { StatusItem } from './status'
 import type { GitView } from './types'
 import { SHORT_MONTHS } from './months'
 
-
 /** How long ago `thenMs` was; a time in the future (a fast clock elsewhere) reads as now. */
 export function ago(thenMs: number, nowMs: number): string {
   const s = (nowMs - thenMs) / 1000

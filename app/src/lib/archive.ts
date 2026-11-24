@@ -14,7 +14,6 @@ export function shownRows(rows: ArchivedView[], filter: string): ArchivedView[] 
   return rows.filter((r) => matches(r, filter))
 }
 
-
 /** `YYYY-MM-DD` as `2 Mar 2026`, and `YYYY-MM-DD HH:MM` as `2 Mar 2026 09:00`; '—' for none. */
 export function formatDate(day: string | null): string {
   const m = day === null ? null : /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?$/.exec(day)

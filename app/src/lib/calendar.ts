@@ -5,7 +5,6 @@ import type { KeyInput } from './keys'
 import type { TreeView } from './types'
 import { LONG_MONTHS } from './months'
 
-
 /** The weekday headings, Monday first. */
 export const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
 
