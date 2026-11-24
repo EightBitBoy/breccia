@@ -11,19 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 13. Heading-link edge cases (Pages and links)
-
-A tag `#Page#x` counts as a link to `Page` in counts and the graph (clicks and renames are right). A heading link to a
-blank page made by a click makes a second blank page `Page#H`. A page whose name contains `#` cannot be reached by a
-heading link, and renaming a page to such a name breaks its heading links (Obsidian splits at the first `#` too).
-Also confirm: with a page `Issue`, `[[Issue #42]]` counts as a link to `Issue` and a rename updates it; is that wanted?
-(to check: whether the tag and link counting were ever split per form, `crates/core/src/index.rs`.)
-
-Owner, 2026-11-24 (checked against the code first): fix A (a click on a heading link to a missing or empty page
-makes `Page`, not `Page#H`), B (`#` is no longer allowed in a new page name or a rename, as in Obsidian; existing such
-pages keep working for plain links) and C (a tag never counts as a link). Keep D: `[[Issue #42]]` counts as a link to
-a page `Issue`, as in Obsidian. In progress.
-
 ## 14. Aliases: stale lists and reader edge cases (Pages and links)
 
 After another program adds or removes an alias, the `Ctrl K` list and the completion name list stay old until asked
@@ -41,6 +28,9 @@ Obsidian do). Keep 2: journal days' aliases work as the spec says. Queued after 
 Drag a page from the All pages table onto a sidebar folder; drag a page from the sidebar into the outline to insert a
 `[[link]]`; drag several selected rows at once (needs multi-select in the tree); a keyboard "pick up, move, drop" mode
 (today the Move... menu item is the keyboard way).
+
+Owner, 2026-11-24: build only "drag a page from the sidebar into the outline to insert a `[[link]]`"; the other three are
+not needed. Queued after #14.
 
 ## 16. Back and Forward follow renames made outside Breccia (Pages and links)
 
