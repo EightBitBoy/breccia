@@ -41,10 +41,6 @@ first 200 rows load again).
 Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
 back in the block left from); the rest are not needed. Queued after #15.
 
-## 18. Closing a card does not wait for a pending delete (Boards)
-
-The late answer is applied to the journal day instead. Nothing is lost. Accepted so far.
-
 ## 19. A second way to add tasks would lose its new task (Boards)
 
 The board's "+ Add" cleanup deletes an empty new task that arrives while the board is not shown. Any future feature that

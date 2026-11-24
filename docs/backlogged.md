@@ -634,3 +634,9 @@ skipped on Back instead of followed. Detecting such renames (same text, new name
 needs boards to have an identity (see "Boards need a stable identity").
 
 Owner, 2026-11-24: won't fix. Renames outside Breccia are rare, Back only skips one step, and nothing is lost.
+
+## 18. Closing a card does not wait for a pending delete (Boards)
+
+The late answer is applied to the journal day instead. Nothing is lost. Accepted so far.
+
+Owner, 2026-11-24: won't fix. Nothing is lost and nothing visible goes wrong.
