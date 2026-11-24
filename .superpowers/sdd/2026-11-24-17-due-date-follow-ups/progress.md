@@ -17,3 +17,7 @@ Task 2: dispatched (sonnet, base 6c6e5b9, Q1 b branch)
 Task 2: implementer DONE c91daa6 (e2e 238 PASS, step 153 RED shown); review dispatched (sonnet)
 Task 2: review clean (sonnet; spec ✅, approved; step 153 month-boundary path checked by reading). minor (deferred): Ctrl Z restoring the words has no e2e check; brief's separate "plain 153" row folded into the post-pick .prop count.
 Task 2: complete (commits 6c6e5b9..c91daa6, review clean)
+Task 3: dispatched (sonnet, base f912406)
+Task 3: implementer DONE b744d84 (e2e 241 PASS, step 154; two rename tests updated on purpose per F9); review dispatched (sonnet)
+Task 3: review clean (sonnet; spec ✅, approved; the two changed rename tests are correct, PageView field order unaffected, configChange compares only ConfigView). minor (deferred): rename.rs could pin `],"hasFile":true,"targets":[`; resend_linking re-sends every page linking a changed topic (a hub page with many backlinks sends many views) → follow-ups/backlog; e2e 154 absence check via frames() count is weak.
+Task 3: complete (commits f912406..b744d84, review clean)
