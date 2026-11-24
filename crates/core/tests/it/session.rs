@@ -703,6 +703,36 @@ fn set_due_writes_the_line_in_one_undo_step() {
 }
 
 #[test]
+fn set_due_twice_with_the_same_day_changes_nothing() {
+    let original = "- TODO a
+  created:: 2026-10-29 14:05:09
+";
+    let (t, mut s) = folder(&[("pages/P.md", original)]);
+    let a = ids(&mut s, "p")[0];
+    let set = json!({"type":"block.setDue","id":a,"due":"2026-12-01"});
+    ok(&mut s, set.clone(), 0);
+    let path = t.path().join("pages/P.md");
+    let written = read(&t, "pages/P.md");
+    assert!(
+        written.ends_with(
+            "  due:: [[2026-12-01]]
+"
+        ),
+        "{written}"
+    );
+    let mtime = std::fs::metadata(&path).unwrap().modified().unwrap();
+
+    let out = ok(&mut s, set, 10);
+    assert!(out.changed.is_empty());
+    assert_eq!(read(&t, "pages/P.md"), written);
+    assert_eq!(std::fs::metadata(&path).unwrap().modified().unwrap(), mtime);
+
+    // No second undo step: one undo goes back past both sets.
+    ok(&mut s, json!({"type":"history.undo","page":"p"}), 20);
+    assert_eq!(read(&t, "pages/P.md"), original);
+}
+
+#[test]
 fn set_due_null_removes_it() {
     let original = "- TODO a
   created:: 2026-10-29 14:05:09

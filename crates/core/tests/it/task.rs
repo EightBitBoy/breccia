@@ -833,42 +833,79 @@ fn state_changes_and_archiving_keep_due() {
     assert!(d.render().contains("\n  due:: [[2026-12-01]]\n"));
 }
 
+/// What `set_due` does with the first block of `src`: the new text, or the error with the text unchanged.
+fn try_set_due(src: &str, day: Option<NaiveDate>) -> Result<String, EditError> {
+    let mut d = parse(src, &mut IdGen::new());
+    let id = d.blocks()[0].id();
+    match d.set_due(id, day, &Config::default()) {
+        Ok(()) => Ok(d.render()),
+        Err(e) => {
+            assert_eq!(d.render(), src, "a refused edit leaves the text as it was");
+            Err(e)
+        }
+    }
+}
+
 #[test]
-fn set_due_never_changes_the_outline_around_the_block() {
-    // A due line goes in after the first line, so it cannot open or close a fence by itself (unlike a
-    // state keyword): an edit is either refused with the document unchanged, or the outline keeps its shape.
-    let c = Config::default();
-    for src in [
-        "- TODO a
+fn set_due_in_a_task_with_a_closed_fence() {
+    let src = "- TODO a
   ```
   x
   ```
 - next
-",
-        "- TODO a
+";
+    assert_eq!(
+        try_set_due(src, Some(due(1))),
+        Ok("- TODO a
+  due:: [[2026-12-01]]
+  ```
+  x
+  ```
+- next
+"
+        .to_string())
+    );
+    assert_eq!(try_set_due(src, None), Ok(src.to_string()));
+}
+
+#[test]
+fn set_due_in_a_task_with_a_fence_holding_an_outline_line() {
+    let src = "- TODO a
   ```
   - x
   due:: [[2026-12-02]]
   ```
 - next
-",
-        "- TODO a
+";
+    assert_eq!(
+        try_set_due(src, Some(due(1))),
+        Ok("- TODO a
+  due:: [[2026-12-01]]
   ```
-",
-    ] {
-        for day in [Some(due(1)), None] {
-            let mut d = parse(src, &mut IdGen::new());
-            let before = d.blocks().len();
-            let id = d.blocks()[0].id();
-            match d.set_due(id, day, &c) {
-                Ok(()) => assert_eq!(d.blocks().len(), before, "{src:?} {day:?}"),
-                Err(e) => {
-                    assert_eq!(e, EditError::WouldChangeStructure);
-                    assert_eq!(d.render(), src);
-                }
-            }
-        }
-    }
+  - x
+  due:: [[2026-12-02]]
+  ```
+- next
+"
+        .to_string())
+    );
+    assert_eq!(try_set_due(src, None), Ok(src.to_string()));
+}
+
+#[test]
+fn set_due_in_a_task_with_an_unclosed_fence() {
+    let src = "- TODO a
+  ```
+";
+    assert_eq!(
+        try_set_due(src, Some(due(1))),
+        Ok("- TODO a
+  due:: [[2026-12-01]]
+  ```
+"
+        .to_string())
+    );
+    assert_eq!(try_set_due(src, None), Ok(src.to_string()));
 }
 
 #[test]
