@@ -67,6 +67,10 @@ Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain t
 Add a short section. To settle: which syntax belongs in it (Breccia's own, or Markdown basics too), whether it is a second
 tab or a block below the shortcuts, and whether a test keeps it in line with `docs/format.md`.
 
+Owner, 2026-11-24: a second tab "Writing" next to "Shortcuts", with one small example per syntax: Breccia's own
+first (links, tags, tasks, properties, due dates), then the Markdown basics; a test keeps it in line with
+`docs/format.md`. Queued.
+
 ## 82. Translate the interface (Docs)
 
 Owner, 2026-11-13 (from #37): the interface is English only. Month and weekday names are fixed English lists in several
