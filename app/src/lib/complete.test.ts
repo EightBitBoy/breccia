@@ -54,6 +54,13 @@ test('completions never offer a name with a pipe (it reads as an alias)', () => 
   expect(completions(only, 'a|b').map((i) => i.kind)).toEqual([])
 })
 
+test('completions offer no new page with a # in its name (a link reads it as a heading); pages that have one are offered', () => {
+  const names = [{ key: 'c# notes', name: 'C# notes', exists: true }]
+  expect(completions(names, 'c#').map((i) => i.label)).toEqual(['C# notes'])
+  expect(completions(names, 'Page#Setup').map((i) => i.kind)).toEqual([])
+  expect(completions([], 'C# x', 8, 'tag').map((i) => i.kind)).toEqual(['create'])
+})
+
 test('linkText writes safe tag syntax', () => {
   expect(linkText('page', 'A b')).toBe('[[A b]]')
   expect(linkText('tag', 'infra')).toBe('#infra')

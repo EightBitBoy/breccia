@@ -34,6 +34,13 @@ pub fn is_linkable_name(name: &str) -> bool {
     is_valid_page_name(name) && !name.contains(['[', ']', '|'])
 }
 
+/// A name a new or renamed page may take: linkable, and without `#`, which a
+/// link reads as the start of a heading (`[[Page#Heading]]`). Pages and
+/// aliases that already have a `#` in their name keep it.
+pub fn is_new_page_name(name: &str) -> bool {
+    is_linkable_name(name) && !name.contains('#')
+}
+
 /// File stem (without extension) that is safe on Windows for the given page name.
 pub fn file_stem_for(name: &str) -> String {
     let mut chars: Vec<char> = name

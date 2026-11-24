@@ -60,7 +60,7 @@ function linkable(name: string): boolean {
 
 /**
  * The menu for `query`: the best `limit` names (a tag as written, `#tag`), then "Create page" ("New tag" for a tag)
- * unless a name is exactly the query. Names the link syntax cannot hold are never offered.
+ * unless a name is exactly the query or a page query has a `#`. Names the link syntax cannot hold are never offered.
  */
 export function completions(
   names: NameView[],
@@ -80,7 +80,8 @@ export function completions(
     .slice(0, limit)
     .map((r) => item(r.n))
   const lower = q.toLowerCase()
-  if (!linkable(q) || names.some((n) => n.key === lower)) return ranked
+  // A new page name has no `#`: a link reads it as the start of a heading (`[[Page#Heading]]`).
+  if (!linkable(q) || (kind === 'page' && q.includes('#')) || names.some((n) => n.key === lower)) return ranked
   const label = kind === 'tag' ? `New tag “${linkText('tag', q)}”` : `Create page “${q}”`
   return [...ranked, { kind: 'create', name: q, label }]
 }

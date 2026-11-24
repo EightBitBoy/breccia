@@ -1117,7 +1117,7 @@ try {
   await title.click()
   await nameInput.fill('Ze]ta')
   await kb.press('Enter')
-  await page.locator('.notice').filter({ hasText: 'cannot contain [, ] or |' }).waitFor({ timeout: 5000 })
+  await page.locator('.notice').filter({ hasText: 'cannot contain [, ], | or #' }).waitFor({ timeout: 5000 })
   await waitPath('37 file kept', zeta, true)
   assert(!existsSync(join(pagesDir, 'Ze]ta.md')), 'renamed to a bracket name')
   assert(readAt(zeta) === '- met [[Anna]]\n', 'refused rename changed the file')

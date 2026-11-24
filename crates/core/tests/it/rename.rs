@@ -844,6 +844,50 @@ fn folder_delete_refuses_a_folder_with_a_page_with_content() {
 }
 
 #[test]
+fn names_with_a_hash_are_refused_on_create_and_rename() {
+    // A link reads `#` as the start of a heading, so such a name could not
+    // be reached by `[[Name#Heading]]`. Existing pages keep their name.
+    let (t, mut s) = support::folder_at(
+        &[("pages/P.md", "- a\n"), ("pages/C# notes.md", "- c\n")],
+        clock(0),
+    );
+    let before = snapshot(&t);
+    assert_eq!(
+        code(
+            &mut s,
+            json!({"type": "page.create", "name": "C# basics", "folder": ""})
+        ),
+        ErrorCode::InvalidName
+    );
+    let e = cmd(
+        &mut s,
+        json!({"type": "page.rename", "key": "p", "name": "P#2"}),
+    )
+    .unwrap_err();
+    assert_eq!(e.code, ErrorCode::InvalidName);
+    assert!(
+        e.message.contains("cannot contain [, ], | or #"),
+        "{}",
+        e.message
+    );
+    assert_eq!(
+        code(
+            &mut s,
+            json!({"type": "page.rename", "key": "c# notes", "name": "C# Notes"})
+        ),
+        ErrorCode::InvalidName
+    );
+    assert_eq!(snapshot(&t), before);
+    // An existing page with `#` can still be renamed to a name without it.
+    cmd(
+        &mut s,
+        json!({"type": "page.rename", "key": "c# notes", "name": "CSharp notes"}),
+    )
+    .unwrap();
+    assert!(exists(&t, "pages/CSharp notes.md"));
+}
+
+#[test]
 fn names_with_brackets_are_refused_on_create_and_rename() {
     let (t, mut s) = support::folder_at(&[("pages/P.md", "- a\n")], clock(0));
     let before = snapshot(&t);
@@ -867,7 +911,7 @@ fn names_with_brackets_are_refused_on_create_and_rename() {
     )
     .unwrap_err();
     assert!(
-        e.message.contains("cannot contain [, ] or |"),
+        e.message.contains("cannot contain [, ], | or #"),
         "{}",
         e.message
     );

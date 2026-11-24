@@ -251,7 +251,7 @@ pub enum ReloadError {
 pub enum PageError {
     #[error("invalid page name: {0:?}")]
     InvalidName(String),
-    #[error("a page name cannot contain [, ] or |: {0:?}")]
+    #[error("a page name cannot contain [, ], | or #: {0:?}")]
     NotLinkable(String),
     #[error("a page with this name exists: {0}")]
     Exists(String),

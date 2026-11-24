@@ -13,7 +13,7 @@ use crate::color::{PageColor, parse_color, recolor};
 use crate::inline::{LinkKind, heading_base, links, title_line};
 use crate::layout::{JOURNALS, PAGES};
 use crate::naming::{
-    file_stem_for, is_linkable_name, is_valid_folder_path, is_valid_page_name, page_key,
+    file_stem_for, is_new_page_name, is_valid_folder_path, is_valid_page_name, page_key,
     parse_journal_name,
 };
 use crate::outline::{LineEnding, front_matter_len, parse};
@@ -45,7 +45,7 @@ impl Workspace {
         if !is_valid_page_name(name) || parse_journal_name(name).is_some() {
             return Err(PageError::InvalidName(name.to_string()));
         }
-        if !is_linkable_name(name) {
+        if !is_new_page_name(name) {
             return Err(PageError::NotLinkable(name.to_string()));
         }
         let key = page_key(name);
@@ -214,7 +214,7 @@ impl Workspace {
         if !is_valid_page_name(new_name) || parse_journal_name(new_name).is_some() {
             return Err(PageError::InvalidName(new_name.to_string()));
         }
-        if !is_linkable_name(new_name) {
+        if !is_new_page_name(new_name) {
             return Err(PageError::NotLinkable(new_name.to_string()));
         }
         let new_key = page_key(new_name);
