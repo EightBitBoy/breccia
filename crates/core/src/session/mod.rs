@@ -273,11 +273,13 @@ impl Session {
 
     /// Runs a command, then puts the typing run back when the command's kind
     /// says it is not an edit: queries always, `archive.auto` always and
-    /// `files.changed` when it reported nothing. Edits end the run.
+    /// `files.changed` when it reported nothing. Edits end the run, except a
+    /// refused one that recorded no undo step.
     fn dispatch(&mut self, req: Request, clock: Clock) -> Result<Output, CommandError> {
         let typing = self.typing;
         let kind = req.command.kind();
         let files_changed = matches!(req.command, Command::FilesChanged { .. });
+        let seq = self.history.next_seq();
         let result = self.execute(req, clock);
         let keep = match kind {
             CommandKind::Query => true,
@@ -287,7 +289,9 @@ impl Session {
                 out.notices.is_empty() && out.changed.is_empty() && out.removed.is_empty()
             }),
             CommandKind::Background => true,
-            CommandKind::Edit => false,
+            // A refused edit changed nothing (a failed edit restores the
+            // page); one that recorded an undo step first ends the run.
+            CommandKind::Edit => result.is_err() && self.history.next_seq() == seq,
         };
         if keep {
             self.typing = typing;

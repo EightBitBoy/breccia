@@ -2902,8 +2902,8 @@ fn a_settings_write_elsewhere_keeps_the_bad_value() {
 }
 
 #[test]
-fn a_refused_command_between_two_edits_ends_the_typing_run() {
-    // Pinned behaviour: the edits before and after a refused command are two undo steps, not one.
+fn a_refused_command_between_two_edits_leaves_the_typing_run_alone() {
+    // A refused command changed nothing: the edits before and after it are one undo step.
     for refused in [ErrorCode::UnknownState, ErrorCode::UnknownBlock] {
         let (t, mut s) = folder(&[("pages/P.md", "- a\n- b\n")]);
         let [a, _]: [BlockId; 2] = ids(&mut s, "p").try_into().unwrap();
@@ -2923,9 +2923,7 @@ fn a_refused_command_between_two_edits_ends_the_typing_run() {
             600,
         );
         let undo = json!({"type":"history.undo","page":"p"});
-        ok(&mut s, undo.clone(), 700);
-        assert_eq!(read(&t, "pages/P.md"), "- a1\n- b\n", "{refused:?}");
-        ok(&mut s, undo, 800);
+        ok(&mut s, undo, 700);
         assert_eq!(read(&t, "pages/P.md"), "- a\n- b\n", "{refused:?}");
     }
 }

@@ -93,6 +93,12 @@ impl Histories {
         self.pages.get(key)?.undo.back().map(|s| s.seq)
     }
 
+    /// The sequence number the next undo step gets: it differs before and
+    /// after a command exactly when the command recorded a step.
+    pub(crate) fn next_seq(&self) -> u64 {
+        self.next_seq
+    }
+
     /// An edit coalesced into the last undo step still ends any redo.
     pub(crate) fn clear_redo(&mut self, key: &str) {
         if let Some(h) = self.pages.get_mut(key) {
