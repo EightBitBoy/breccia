@@ -9,3 +9,7 @@ Ruling F4/F8: name the RED mutations (the "stays hidden" pin; Task 4's repeat-pi
 Ruling F6/F12/F13: the `row()` cast fix moves to Task 6; Task 6 owns the LinkColorMenu header comment; Task 6 is split into one refactor and three fix commits — file ownership and changelog-clean commits — cost: none.
 Ruling F7: e2e step 153 clicks "previous month" at month ends. F9: Task 3 expects and lists core tests broken by R5's wider resend. F11: spec:305, vocabulary:30, compatibility:120 assigned to Task 7.
 Ruling F10: not asked — 13b (which refusal comes first) and the month-end/year-end/midnight e2e paths stay not taken and remain in the follow-ups — the owner sees no difference from either, and asked for fewer questions on technical matters — cost: an e2e path breaks unnoticed until the day it runs.
+Task 1: dispatched (sonnet, base 7727513)
+Task 1: implementer DONE e9b8bd9; review dispatched (sonnet)
+Task 1: review clean (sonnet; spec ✅, approved). minor (deferred): spec.md:297 and format.md:246 unwrapped long lines (→ Task 7 rewraps); words_before test doesn't assert the link renders; compatibility.md ~120 still says "shown as a chip" (F11 → Task 7).
+Task 1: complete (commits 7727513..e9b8bd9, review clean)
