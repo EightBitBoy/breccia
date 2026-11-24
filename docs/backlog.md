@@ -304,3 +304,17 @@ after `priority::` (soonest first, cards without a due date after them). Decide 
 From plan 16. The button of a card's menu shows only on hover, so the card menu (with Archive and "Set due date…") cannot
 be reached by keyboard. This was so before due dates. A task in a journal day or on a page has the key `Ctrl D` while
 editing; a card has none. Options: show the button when the card has the focus, or a key on the focused card.
+
+## 100. A line swallowed by an unclosed code fence is re-indented when its block is written (Editor)
+
+From plan 16, follow-up 5; the owner settled on 2026-11-24 that it goes to the backlog. When a block has an opening
+code fence that is never closed, the lines after it belong to the fence. Setting or removing a due date or a priority
+replaces a property line, and the replacement re-indents a neighbouring line that the fence swallowed. Typing in such a
+block does the same. The words stay, but the spacing is not the user's. It was so before due dates. Decide whether
+Breccia should leave the lines of an unclosed fence as they are.
+
+## 101. A very fast click on a block's text leaves the due date calendar open (Editor)
+
+From plan 17, task 6. A click on a block's text that lasts under 10 ms leaves the due date calendar open: the
+calendar's library closes it 10 ms after the press, and by then the editor has replaced the element that was pressed.
+Slower clicks close it as they should. Find a way to close the calendar that does not depend on the pressed element.

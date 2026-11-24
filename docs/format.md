@@ -848,11 +848,16 @@ further ones, or adds the line after the last property line.
 
 **`due::`.** A block's **due date** is the day of the first `due::` property, among the property lines, whose value
 links to a journal day (`due:: [[2026-12-01]]`). A value that is no such link (`due:: 2026-12-01`, `due:: [[soon]]`,
-`due:: [[2026-02-30]]`) gives no date, and the next `due::` line is tried. The key is matched exactly. The parser reads the
-date on any block, but only a task shows it. A task's chip stands for the first due line that gives the date, and that line is hidden only when its value is the day link alone; with other text (`due:: [[2026-12-01]] client waits`) it shows dimmed next to the chip (a display rule, not a format change). Setting a new date writes a fresh `due:: [[YYYY-MM-DD]]` line in place of that line, so words after the old date go with it (Ctrl Z brings them back), as for `done::`. Breccia writes it only when the user sets or clears a task's due date: it
-replaces the first `due::` line where it stands and removes any further ones, or adds the line after the last property
-line, and clearing it removes every `due::` line among the property lines. Setting a due date on a block that is not a
-task is refused. Changing the state of a task, also to a finished one or removing it, and archiving it leave every `due::` line as it is.
+`due:: [[2026-02-30]]`) gives no date, and the next `due::` line is tried. The key is matched exactly. The parser
+reads the date on any block, but only a task shows it. A task's chip stands for the first due line that gives the
+date, and that line is hidden only when its value is the day link alone; with other text (`due:: [[2026-12-01]] client
+waits`) it shows dimmed next to the chip (a display rule, not a format change). Setting a new date writes a fresh
+`due:: [[YYYY-MM-DD]]` line in place of that line, so words after the old date go with it (Ctrl Z brings them back),
+as for `done::`. Breccia writes it only when the user sets or clears a task's due date: it replaces the first `due::`
+line where it stands and removes any further ones, or adds the line after the last property line, and clearing it
+removes every `due::` line among the property lines. Setting a due date on a block that is not a task is refused.
+Changing the state of a task, also to a finished one or removing it, and archiving it leave every `due::` line as it
+is.
 
 ```markdown example
 - TODO Send the offer

@@ -27,7 +27,7 @@ words today; the preferred word is a proposal until the owner confirms it (`docs
 | Word | Meaning | Where |
 |---|---|---|
 | **task** | A block that starts with a state keyword. | Page view, boards, Archive |
-| **due date** | The day a task should be finished by: a `due::` line with a link to that day. Shown as a chip. | Task right-click menu, the due chip, `docs/format.md` §8 |
+| **due date** | The day a task should be finished by: a `due::` line with a link to that day. Shown as a chip; a line with words after the date stays visible next to it. | Task right-click menu, the due chip, `docs/format.md` §8 |
 | **due chip** | The small label after a task, or on its card, that shows its due date ("due tomorrow", "overdue 22 Nov"). | Page view, journal, board cards |
 | **due date calendar** | The month calendar that sets or removes a task's due date. Not the date picker, which goes to a day. | "Set due date…" in the task and card menus, `Ctrl D` |
 | **state** | The keyword a task starts with (`TODO`, `DOING`, `WAITING`, `DONE` by default). A state can be *finished* and *in the cycle* (what `Ctrl Enter` steps through). | Settings > Task states, the slash menu |

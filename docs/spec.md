@@ -254,12 +254,14 @@ second click on the Git history button is Back.
   written. `Ctrl Shift D` still opens the go-to-a-day calendar.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line
   when the line holds only the date; the line stays in the file but is not shown. A due line with other text
-  (`due:: [[2026-12-01]] client waits`) stays visible, dimmed like other properties, next to the chip. Picking a new date replaces that line with a fresh `due:: [[YYYY-MM-DD]]` line: the words after the old date go with it, and Ctrl Z brings them back, as for `done::`. In a journal day and on a page the right-click menu of a task has "Set due
-  date…", which opens the due date calendar: the month calendar of the date picker, with the day of a set date marked; a
-  pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and an
-  open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows dimmed
-  like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days" up to
-  "due in 5 days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says
+  (`due:: [[2026-12-01]] client waits`) stays visible, dimmed like other properties, next to the chip. Picking a new date
+  replaces that line with a fresh `due:: [[YYYY-MM-DD]]` line: the words after the old date go with it, and Ctrl Z
+  brings them back, as for `done::`. In a journal day and on a page the right-click menu of a task has "Set due
+  date…", which opens the due date calendar: the month calendar of the date picker, with the day of a set date marked;
+  a pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and
+  an open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows
+  dimmed like any other property. The chip says, for an unfinished task: "due today", "due tomorrow", "due in 2 days"
+  up to "due in 5 days", then the date ("due 29 Nov", with the year when it is not this year); a day in the past says
   "overdue 22 Nov". A finished task always shows the date ("due 22 Nov"). A chip in words (today to 5 days) has the
   date as its tooltip ("1 Dec 2026"). The chip's tone: muted more than 2 days away, amber from today to 2 days away,
   red when overdue, muted again on a finished task. It changes at midnight and after the computer wakes, with the app
@@ -303,7 +305,7 @@ Vividness slider and when the pointer leaves the picker it shows the focused cho
 following that slider. A slider that stands at the page's saved color says so to a screen reader ("Hue 212, page
 color", "Vividness 150, page color"). The slider thumbs stay inside their tracks, and both tracks are as wide as the
 grid. A custom color is saved as `color:: hue <h>`. Picking a name after a hue, or a hue after a name, replaces the
-line. One save is one undo step. The right-click "Color…" menu in the journal opens the same picker.
+line. One save is one undo step. The right-click "Color…" menu in the journal and on pages opens the same picker.
 
 Under the hue slider is a "Vividness" slider (50 to 200, 100 is the normal look). It is always shown, so the picker
 never changes its layout, and it is greyed out (disabled, not a tab stop) until the page's color is a custom hue or
