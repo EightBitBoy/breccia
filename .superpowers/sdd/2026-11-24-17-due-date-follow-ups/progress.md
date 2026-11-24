@@ -22,3 +22,6 @@ Task 3: implementer DONE b744d84 (e2e 241 PASS, step 154; two rename tests updat
 Task 3: review clean (sonnet; spec ✅, approved; the two changed rename tests are correct, PageView field order unaffected, configChange compares only ConfigView). minor (deferred): rename.rs could pin `],"hasFile":true,"targets":[`; resend_linking re-sends every page linking a changed topic (a hub page with many backlinks sends many views) → follow-ups/backlog; e2e 154 absence check via frames() count is weak.
 Task 3: complete (commits f912406..b744d84, review clean)
 Task 4: dispatched (sonnet, base 115ead3)
+Task 4: implementer DONE b3ca833 (plan's mutation did not fail the repeat-pick test, as F8 said; a forced changed=true did); review dispatched (sonnet)
+Task 4: review clean (sonnet; spec ✅ with a style deviation, approved; pinned fence outcomes are the right behaviour under spec §2). minor (deferred): new fence tests use multi-line literals (brief asked for \n literals); try_set_due's Err branch unexercised.
+Task 4: complete (commits 115ead3..b3ca833, review clean)
