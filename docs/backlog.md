@@ -129,6 +129,9 @@ It changes many files in one command and is one slow answer, once.
 
 **Notes from plan 12 triage (2026-11-17):** three more measure-first items belong here. Plan 1 follow-up 9: nobody has measured a color pick on a page that many journal days link to (it re-sends every one of those days). Plan 1 follow-up 15: per keystroke on a journal, `PageView::of` parses the links of every top-level block again and `index_page` allocates a key for every colored page (measured within noise: `block.setText` median 11.95 ms against 12.37 ms). Plan 7 follow-up 19: the caret lookup is quadratic in the shown rows (one frame at about 4,000 to 5,000 rows).
 
+Owner, 2026-11-24: measure and fix now, as a plan (measure at 5,000 pages, then fix the worst points: the blank first
+window, the Git pause, long lists). Written after the backlog round.
+
 ## 86. A refused command splits the typing undo step (Editor)
 
 Found 2026-11-13 while writing the tests of #65 (`a_refused_command_between_two_edits_ends_the_typing_run` in
