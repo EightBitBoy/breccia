@@ -11,14 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 21. Undo on the board (Boards)
-
-`Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
-open on one of the changed pages; the undo request is sent only from the editor.
-
-Owner, 2026-11-24: build together with #91: `Ctrl Z` and `Ctrl Shift Z` work while no block is edited; on a board they
-take back the last card change, on a page the last change on that page. Queued after #17.
-
 ## 47. Headings and same-page heading links (Compatibility)
 
 `[[Page#Heading]]` links to the page already. Open: showing or jumping to the heading, and `[[#Heading]]` (today a page
@@ -176,12 +168,6 @@ From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery 
 From plan 12 triage (plan 6 follow-up 15). Only Git panics are logged (`git.rs`); a failing Git command and the window's
 `console.error` are not. Window errors may hold note text, and the owner's rule is that the log never holds note text,
 so this needs a decision on what may be logged (for example the error kind without its message).
-
-## 91. Undo on the page with nothing selected (Editor)
-
-From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctrl Z` does nothing; the undo history is
-the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
-clicking into a block. A new feature: decide the keys and what it should cover.
 
 ## 95. Pressing a cut-off page-tree row can drag the wrong row (Pages and links)
 

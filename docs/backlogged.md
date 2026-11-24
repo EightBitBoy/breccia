@@ -749,3 +749,27 @@ search (`12 Mar`, `yesterday`) understanding the same language as the shown ones
 (state keywords, `created::` and `done::` lines, `[[YYYY-MM-DD]]` journal names never change with the language).
 
 Owner, 2026-11-24: closed, English only. The notes format is language-free anyway; reopen if other users ask.
+
+## 21. Undo on the board (Boards) (done 2026-11-24, no plan: with #91)
+
+`Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
+open on one of the changed pages; the undo request is sent only from the editor.
+
+Owner, 2026-11-24: build together with #91: `Ctrl Z` and `Ctrl Shift Z` work while no block is edited; on a board they
+take back the last card change, on a page the last change on that page. Queued after #17.
+
+Done: with no block edited or selected, `Ctrl Z` and `Ctrl Shift Z` (or `Ctrl Y`) undo and redo on a page (its own
+history), in the journal feed (the changes made there, newest first, each on its own day) and on a board (its drops,
+archives and card changes, newest first; a drop is one step). Not in a dialog, menu, the search box or a text field.
+Spec §7.2 and §7.6, review item 144, e2e steps 159 and 160.
+
+## 91. Undo on the page with nothing selected (Editor) (done 2026-11-24, no plan: with #21)
+
+From plan 12 triage (plan 7 follow-up 23). With nothing edited or selected, `Ctrl Z` does nothing; the undo history is
+the page's, so a page-level `Ctrl Z` could take back the last change (a delete, a move, a state change) without first
+clicking into a block. A new feature: decide the keys and what it should cover.
+
+Done: with no block edited or selected, `Ctrl Z` and `Ctrl Shift Z` (or `Ctrl Y`) undo and redo on a page (its own
+history), in the journal feed (the changes made there, newest first, each on its own day) and on a board (its drops,
+archives and card changes, newest first; a drop is one step). Not in a dialog, menu, the search box or a text field.
+Spec §7.2 and §7.6, review item 144, e2e steps 159 and 160.
