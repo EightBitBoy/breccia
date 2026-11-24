@@ -1651,6 +1651,9 @@
       pageChanged: (p) =>
         inFlight.idle.run(() => {
           search.refresh() // an open search box asks again
+          // An alias may have come or gone, which changes no file name: the open name lists load again.
+          search.refreshNames()
+          host.reloadNames()
           journal.changed(p)
           viewsTake(p)
         }),
@@ -1658,6 +1661,7 @@
         if (isNewer(tree, t)) tree = t
         search.refresh()
         search.refreshNames()
+        host.reloadNames()
         allPages.refresh() // a page added, moved or removed on disk
         network.refresh()
       },

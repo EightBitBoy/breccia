@@ -4816,6 +4816,38 @@ try {
   await day152.waitFor()
   console.log('PASS 155 Ctrl D in an open card sets the due date')
 
+  // 156: an alias added by another program shows at once in an open Ctrl K and an open `[[` completion. The page's
+  // file exists first, so the alias edit changes no file name (and no sidebar tree).
+  const gnu156 = join(pagesDir, 'Gnu 156.md')
+  writeFileSync(gnu156, '- gnu\n')
+  if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+  await side.locator('[data-row="p:gnu 156"]').waitFor({ timeout: 10_000 })
+  await openSearch()
+  await searchInput.fill('wildebeest156')
+  await waitFor('156 no page yet', () => rows('page').count(), 0)
+  writeFileSync(gnu156, '---\naliases: [wildebeest156]\n---\n- gnu\n')
+  await waitFor('156 Ctrl K lists the new alias', () => rows('page').count(), 1)
+  await kb.press('Escape')
+  await dialog.waitFor({ state: 'detached' })
+  await page.locator('.block .content', { hasText: 'note 155!' }).click()
+  await kb.press('End')
+  await kb.type(' [[zebu15')
+  const linkMenu156 = page.locator('[data-testid="link-menu"]')
+  await linkMenu156.waitFor()
+  const offered156 = () => linkMenu156.locator('.slash-item').allInnerTexts()
+  assert(!(await offered156()).some((t) => t.startsWith('zebu156')), 'zebu156 offered before it exists')
+  writeFileSync(gnu156, '---\naliases: [wildebeest156, zebu156]\n---\n- gnu\n')
+  await waitFor('156 completion lists the new alias', async () => (await offered156()).some((t) => t.startsWith('zebu156')), true)
+  await linkMenu156.locator('.slash-item', { hasText: 'zebu156' }).first().click()
+  await expectFile(
+    '156 the alias is written as a link',
+    `${before155}- TODO task 155\n  due:: [[${today}]]\n- note 155! [[zebu156]]\n`,
+    journal,
+  )
+  assert(readAt(gnu156) === '---\naliases: [wildebeest156, zebu156]\n---\n- gnu\n', 'Gnu 156.md changed')
+  await kb.press('Escape')
+  console.log('PASS 156 an alias added outside Breccia shows at once in Ctrl K and in link completion')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

@@ -101,3 +101,18 @@ test('sync looks for a query in text the editor was mounted with', () => {
   expect(h.last()?.items.map((i) => i.label)).toEqual(['ab', 'abab'])
   expect(h.menu.active()).toBe(true)
 })
+
+test('reload asks the source again for the open query and keeps the menu open', () => {
+  let words = ['a1', 'a2']
+  let resets = 0
+  const h = harness({ ...at(() => words), reset: () => resets++ })
+  h.menu.reload()
+  expect(resets).toBe(0) // nothing open: nothing to reload
+  h.type('@a')
+  expect(h.last()?.items.map((i) => i.label)).toEqual(['a1', 'a2'])
+  words = ['a3']
+  h.menu.reload()
+  expect(resets).toBe(1)
+  expect(h.last()?.items.map((i) => i.label)).toEqual(['a3'])
+  expect(h.menu.active()).toBe(true)
+})

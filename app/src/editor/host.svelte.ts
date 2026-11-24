@@ -521,6 +521,11 @@ export class EditorHost {
     })
   }
 
+  /** The notes changed outside the window: an open link completion lists the page names and aliases again. */
+  reloadNames() {
+    this.mounted?.menus.link.reload()
+  }
+
   closeMenu() {
     this.mounted?.menus.link.close()
     this.mounted?.menus.slash.close()

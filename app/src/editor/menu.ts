@@ -63,6 +63,8 @@ export interface Slash {
   active(): boolean
   /** Looks for a query at the caret of `view` now: text a fresh editor was mounted with fires no update. */
   sync(view: EditorView): void
+  /** The source's items may have changed (the notes changed): while it has a query, forget them and ask again. */
+  reload(): void
 }
 
 export function createCaretMenu<I, Q extends MenuQuery = MenuQuery>(source: MenuSource<I, Q>, hooks: MenuHooks): Slash {
@@ -199,5 +201,10 @@ export function createCaretMenu<I, Q extends MenuQuery = MenuQuery>(source: Menu
     close,
     active: () => current !== null,
     sync: refresh,
+    reload() {
+      if (current === null || !view) return
+      source.reset?.()
+      refresh(view)
+    },
   }
 }
