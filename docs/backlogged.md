@@ -666,6 +666,18 @@ needs boards to have an identity (see "Boards need a stable identity").
 
 Owner, 2026-11-24: won't fix. Renames outside Breccia are rare, Back only skips one step, and nothing is lost.
 
+## 17. Back and Forward restore more (Pages and links) (done 2026-11-24, no plan: the edited or selected block; the rest not needed)
+
+Not restored today: the selected or edited block, the highlight after a card jump, a board's sideways scroll, the
+graph's camera, the Settings section, the All pages and Archive filters, and a deep scroll in the Git history (only the
+first 200 rows load again).
+
+Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
+back in the block left from); the rest are not needed. Queued after #15.
+
+Done: a step on a page or in the journal keeps the edited block with its caret, or the selected blocks, and Back or
+Forward gives them back; a block that is gone or folded away is skipped. Review item 143, e2e step 158.
+
 ## 18. Closing a card does not wait for a pending delete (Boards)
 
 The late answer is applied to the journal day instead. Nothing is lost. Accepted so far.

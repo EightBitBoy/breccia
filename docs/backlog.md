@@ -11,15 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 17. Back and Forward restore more (Pages and links)
-
-Not restored today: the selected or edited block, the highlight after a card jump, a board's sideways scroll, the
-graph's camera, the Settings section, the All pages and Archive filters, and a deep scroll in the Git history (only the
-first 200 rows load again).
-
-Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
-back in the block left from); the rest are not needed. Queued after #15.
-
 ## 21. Undo on the board (Boards)
 
 `Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
