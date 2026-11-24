@@ -41,12 +41,6 @@ first 200 rows load again).
 Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
 back in the block left from); the rest are not needed. Queued after #15.
 
-## 19. A second way to add tasks would lose its new task (Boards)
-
-The board's "+ Add" cleanup deletes an empty new task that arrives while the board is not shown. Any future feature that
-also appends to the journal (for example quick capture) must be told apart first; the guard is a comment in
-`app/src/lib/route.ts`.
-
 ## 20. Board settings could mix up two boards if several change at once (Boards)
 
 When one save deletes a board and adds another at the same position, the new one would inherit the deleted one's

@@ -640,3 +640,11 @@ Owner, 2026-11-24: won't fix. Renames outside Breccia are rare, Back only skips 
 The late answer is applied to the journal day instead. Nothing is lost. Accepted so far.
 
 Owner, 2026-11-24: won't fix. Nothing is lost and nothing visible goes wrong.
+
+## 19. A second way to add tasks would lose its new task (Boards)
+
+The board's "+ Add" cleanup deletes an empty new task that arrives while the board is not shown. Any future feature that
+also appends to the journal (for example quick capture) must be told apart first; the guard is a comment in
+`app/src/lib/route.ts`.
+
+Owner, 2026-11-24: closed. Not a bug today; the comment in app/src/lib/route.ts warns whoever adds a second way to append to the journal.
