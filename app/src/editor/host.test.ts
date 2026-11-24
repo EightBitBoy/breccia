@@ -35,6 +35,8 @@ let linkNames: { key: string; name: string; exists: boolean }[]
 let cardBlocks: BlockView[] | null
 /** The due calendars asked for (`EditorEnv.pickDue`), in order. */
 let dues: { id: number; caret: { left: number; top: number; right: number; bottom: number } }[]
+/** True: the fake view cannot place the caret (`coordsAtPos` answers null), as CodeMirror does off-screen. */
+let noCaretBox = false
 
 /** An in-memory editor: the text and a caret, no selection. */
 const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
@@ -62,8 +64,9 @@ const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
     run(f) {
       const state = EditorState.create({ doc: t, selection: EditorSelection.cursor(c), extensions: opts.extensions ?? [] })
       // The caret's box: the caret offset as its left edge, one line high.
-      const coordsAtPos = (pos: number) => ({ left: pos, right: pos, top: 10, bottom: 20 })
-      f({ state, requestMeasure() {}, coordsAtPos } as unknown as EditorView)
+      const coordsAtPos = (pos: number) => (noCaretBox ? null : { left: pos, right: pos, top: 10, bottom: 20 })
+      const contentDOM = { getBoundingClientRect: () => ({ left: 1, top: 2, right: 3, bottom: 4 }) }
+      f({ state, requestMeasure() {}, coordsAtPos, contentDOM } as unknown as EditorView)
     },
   })
 }
@@ -864,6 +867,19 @@ test('Ctrl D while editing opens the due calendar for the block, at the caret', 
   expect(dues).toEqual([{ id: 1, caret: { left: 3, right: 3, top: 10, bottom: 20 } }])
   // Opening the calendar writes nothing.
   expect(sent).toEqual([])
+})
+
+test('Ctrl D opens the due calendar at the editor box when the caret has no box', async () => {
+  blocks = [{ ...block(1, 'TODO alpha'), state: 'TODO' }, block(2, 'beta')]
+  noCaretBox = true
+  try {
+    await host.edit(1, 3)
+    hooks.onAction('setDue', { cursor16: 3 })
+    await settle()
+    expect(dues).toEqual([{ id: 1, caret: { left: 1, right: 3, top: 2, bottom: 4 } }])
+  } finally {
+    noCaretBox = false
+  }
 })
 
 test('Ctrl D sends the typed text first, then opens the due calendar (the keyword just typed counts)', async () => {

@@ -56,3 +56,12 @@ test('the refusal sentence matches the core', () => {
   const errorRs = readFileSync(new URL('../../../crates/core/src/error.rs', import.meta.url), 'utf8')
   expect(errorRs).toContain(`#[error("${NOT_A_TASK}")]`)
 })
+
+test('a finished task due in another year shows the year and no tooltip', () => {
+  expect(dueChip('2025-11-20', '2026-11-24', true)).toEqual({ label: 'due 20 Nov 2025', tone: 'finished', title: null })
+})
+
+test('a leap day counts as a day', () => {
+  expect(dueChip('2028-02-29', '2028-02-27', false)).toEqual({ label: 'due in 2 days', tone: 'soon', title: '29 Feb 2028' })
+  expect(dueChip('2028-03-01', '2028-02-28', false).label).toBe('due in 2 days')
+})
