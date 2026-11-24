@@ -7,6 +7,12 @@ are review item 136.
 
 ## Owner questions (also in review item 136)
 
+**Owner answers, 2026-11-24:** 1: a due line with text after the date stays visible (dimmed, like other properties)
+as well as the chip; without extra text it stays hidden. 2: overwrite, as now (a words-only `due::` line is replaced by
+a picked date, and "Remove due date" deletes it). 3: keep the pages' right-click zone and add "Color…" on page links on
+ordinary pages too (core change); the changelog gets a line for it. 4: the release notes use "Tasks and cards show a
+due date chip, amber when near and red when overdue". Items 1, 3 and 5 to 17 go into plan 17 (owner, 2026-11-24).
+
 1. **Text after the day link is hidden.** In `due:: [[2026-12-01]] urgent` the word "urgent" is hidden with the line
    in a rendered task (the chip stands for the line, as the done chip does for `done::`). The owner may want such a line
    kept visible.

@@ -252,6 +252,9 @@ Candidates for the plan after it, to settle with the owner:
   A date less than 6 days away is said in words ("due today", "due tomorrow", "due in 3 days"), with the date as a
   tooltip; overdue and finished chips show the date.
   Sorting board columns by due date is not in the first version.
+  Added 2026-11-24 (plan 16 follow-ups): a due line with text after the date stays visible next to the chip; picking
+  a date overwrites a words-only `due::` line; ordinary pages keep the journal's right-click zone and get "Color…" on
+  page links too. Plan 17 builds these with the other plan 16 follow-ups.
 
 ## Setting up a new machine or account
 
