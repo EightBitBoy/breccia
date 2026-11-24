@@ -290,3 +290,19 @@ are its questions for you; each answer decides what a later plan does.
    - Leaving a board (with a card open), the graph or Settings and coming back opens no editor.
    - My call: the caret comes back at the same character count, clamped to the text's end, even if the text changed
      meanwhile.
+
+## Undo with no block edited: page, journal and board (backlog #21, #91)
+
+144. [ ] **`Ctrl Z` works without clicking into a block:** by hand (`just dev`):
+   - On a page, move or delete a block, press `Esc`, then `Ctrl Z`: the change is taken back. `Ctrl Shift Z` (or
+     `Ctrl Y`) makes it again.
+   - In the journal, change blocks on two days, press `Esc`, then `Ctrl Z` twice: the newer change goes first, then
+     the older one, each on its own day.
+   - On a board, drag a card to another column (or to another place in its column), then `Ctrl Z`: the card goes back
+     and its file is as before; `Ctrl Shift Z` drops it again. The same for "Archive" and "Archive finished…".
+   - With the search box, a dialog, a menu or the board settings open, or while a block is edited, `Ctrl Z` does what
+     it did before (the editor keeps its own undo).
+   - My calls: in the journal feed and on a board the keys step back through the changes made in that view, newest
+     first; a change made in another view starts that list again (so after editing a page, `Ctrl Z` on the board does
+     nothing until the next board change). Changes in an open card count as board changes. Should the journal instead
+     always undo on the day at the top of the screen?
