@@ -576,3 +576,10 @@ From plan 13, owner decision 6. The list is flat. Groups such as Morning and Eve
 headings and counts. A new feature: decide how a group is written in `breccia/dailies.md` and how it is reordered.
 
 Not needed (owner, 2026-11-19): the list stays flat.
+
+## 9. A folder renamed outside Breccia while a page in it is unsaved gives a duplicate file (Pages and links)
+
+Choosing "Keep mine" writes a second copy at the old place. Nothing is lost, but the user has to delete one copy.
+Accepted so far.
+
+Owner, 2026-11-24: won't fix. Very rare, and nothing is lost.

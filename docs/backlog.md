@@ -11,11 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 9. A folder renamed outside Breccia while a page in it is unsaved gives a duplicate file (Pages and links)
-
-Choosing "Keep mine" writes a second copy at the old place. Nothing is lost, but the user has to delete one copy.
-Accepted so far.
-
 ## 10. The sidebar can briefly show an older page tree (Pages and links) (done 2026-11-12, no plan; the watcher-order part is left)
 
 Updates can arrive out of order, so an older tree can replace a newer one until the next change
