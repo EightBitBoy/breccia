@@ -42,6 +42,10 @@ take back the last card change, on a page the last change on that page. Queued a
 `[[Page#Heading]]` links to the page already. Open: showing or jumping to the heading, and `[[#Heading]]` (today a page
 named `#Heading`).
 
+Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scrolled to that heading (briefly
+highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
+#21.
+
 ## 48. Block links and embeds (Compatibility)
 
 Obsidian's `[[x#^id]]` and `![[x]]`, Logseq's `((uuid))` and `{{embed [[x]]}}` are not read. Open: which syntax Breccia
