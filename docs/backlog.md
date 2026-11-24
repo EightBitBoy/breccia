@@ -11,11 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 11. Two rare races when renaming a page (Pages and links)
-
-A rename from the sidebar can skip the "both versions" notice for a block that is being edited and also changed on
-disk; and the check that the new file name is free can race with another program. Accepted so far.
-
 ## 12. Saving to USB sticks and network drives is untested (Pages and links)
 
 Saving was never tried on FAT/exFAT drives or network shares (SMB), where file attributes and atomic renames behave

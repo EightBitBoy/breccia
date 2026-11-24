@@ -592,3 +592,10 @@ file watchers in the wrong order, and a refused sidebar drop does not fetch the 
 Fix by ignoring older trees by version and refetching after a refused drop.
 
 Closed 2026-11-24 (owner): done. The version check came 2026-11-12; the watcher keeps its folder generation since plan 12 (c5bd3a8, 2026-11-17), so an older folder open cannot replace a newer one; the sidebar never moves a row before the core confirms a drop, so a refused drop leaves nothing stale.
+
+## 11. Two rare races when renaming a page (Pages and links)
+
+A rename from the sidebar can skip the "both versions" notice for a block that is being edited and also changed on
+disk; and the check that the new file name is free can race with another program. Accepted so far.
+
+Owner, 2026-11-24: won't fix. Both need two events within a fraction of a second, and neither has been seen.
