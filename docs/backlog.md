@@ -11,11 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 12. Saving to USB sticks and network drives is untested (Pages and links)
-
-Saving was never tried on FAT/exFAT drives or network shares (SMB), where file attributes and atomic renames behave
-differently. SMB applies on Windows too.
-
 ## 13. Heading-link edge cases (Pages and links)
 
 A tag `#Page#x` counts as a link to `Page` in counts and the graph (clicks and renames are right). A heading link to a

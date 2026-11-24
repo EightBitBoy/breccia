@@ -599,3 +599,10 @@ A rename from the sidebar can skip the "both versions" notice for a block that i
 disk; and the check that the new file name is free can race with another program. Accepted so far.
 
 Owner, 2026-11-24: won't fix. Both need two events within a fraction of a second, and neither has been seen.
+
+## 12. Saving to USB sticks and network drives is untested (Pages and links)
+
+Saving was never tried on FAT/exFAT drives or network shares (SMB), where file attributes and atomic renames behave
+differently. SMB applies on Windows too.
+
+Owner, 2026-11-24: not needed. The notes live on the internal disk; reopen if someone keeps notes on a stick or a network share.
