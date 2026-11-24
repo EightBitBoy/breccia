@@ -96,8 +96,8 @@
   {#if page.preambleHtml}
     <div class="preamble">{@html linkDisplay.apply(page.preambleHtml)}</div>
   {/if}
-  <!-- Journal days and pages alike: links and tags have their menu, and task rows "Set due date…". Only journals
-       list colorable targets, so a page's links offer "Copy link" alone. -->
+  <!-- Journal days and pages alike: links and tags have their menu, and task rows "Set due date…". Both list
+       their colorable targets, so a page's links offer "Color…" as a journal's do. -->
   <LinkColorMenu targets={page.targets ?? []} blocks={page.blocks} onsetcolor={onlinkcolor} {onsetdue}>
     <Outline blocks={page.blocks} hasFile={page.hasFile} {folded} {editingId} {selected} {flash} {onedit} {ontoggle} {onstart} />
   </LinkColorMenu>

@@ -239,7 +239,7 @@ impl Session {
         let before = self.tree_state();
         let mut out = self.dispatch(req, clock)?;
         out.saved = self.take_saved();
-        self.resend_journals(&mut out, before.map(|b| b.0));
+        self.resend_linking(&mut out, before.map(|b| b.0));
         if let Some(ws) = self.ws.as_mut() {
             out.notices
                 .extend(ws.take_alias_warnings().iter().map(Notice::load_warning));

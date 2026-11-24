@@ -180,13 +180,13 @@ pub struct PageView {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "wire-types", ts(optional))]
     pub color: Option<PageColor>,
-    /// Journals only: the links and tags of its blocks that can be given a color.
+    /// The links and tags of its blocks that can be given a color.
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[cfg_attr(feature = "wire-types", ts(optional = nullable))]
     pub targets: Vec<TargetView>,
 }
 
-/// A link or tag in a journal whose page can be given a color: one that goes
+/// A link or tag in a page or journal whose page can be given a color: one that goes
 /// to an existing page that is not a journal, or a tag without a page yet.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 #[cfg_attr(feature = "wire-types", derive(ts_rs::TS))]
@@ -345,9 +345,8 @@ impl PageView {
         let (kind, title) = title_of(page);
         let blocks = page.doc.blocks();
         let mut views = BlockView::list(blocks, &ws.config);
-        let mut targets = Vec::new();
+        let targets = TargetView::list(blocks, ws);
         if kind == PageViewKind::Journal {
-            targets = TargetView::list(blocks, ws);
             // A top-level block takes its topic's color; deeper blocks keep their ancestor's.
             let mut current: Option<(String, PageColor)> = None;
             for (v, b) in views.iter_mut().zip(blocks) {

@@ -218,3 +218,7 @@ are its questions for you; each answer decides what a later plan does.
    with words shows dimmed next to the chip. Links in the words open their pages.
    Then pick a new date on the line with words: the line becomes `due:: [[the new day]]` and the words go; Ctrl Z
    brings them back.
+
+138. [ ] **Pages get the journal's right-click menu:** by hand, on an ordinary page with a link to another page and a
+   tag, right-click the link and the tag: each has "Color…". Color them and check the journal's washes follow. A
+   page's link to itself has "Color…" too. A link to a journal day has no menu entry.

@@ -446,7 +446,7 @@ hasFile: boolean,
  */
 color?: PageColor,
 /**
- * Journals only: the links and tags of its blocks that can be given a color.
+ * The links and tags of its blocks that can be given a color.
  */
 targets?: Array<TargetView>, };
 
@@ -568,7 +568,7 @@ linkedOnly: boolean, };
 export type TargetKind = "link" | "tag";
 
 /**
- * A link or tag in a journal whose page can be given a color: one that goes
+ * A link or tag in a page or journal whose page can be given a color: one that goes
  * to an existing page that is not a journal, or a tag without a page yet.
  */
 export type TargetView = {

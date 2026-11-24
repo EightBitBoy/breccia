@@ -310,10 +310,10 @@ impl Workspace {
         self.changes.take_topics()
     }
 
-    /// The journal pages with a block linking to any of `keys`, or to a
+    /// The pages with a block linking to any of `keys`, or to a
     /// spelling that goes to one: the key itself, its aliases, and every
     /// `[[Key#Heading]]` (unfiltered, so a deleted page's headings count).
-    pub fn journals_linking(&self, keys: &BTreeSet<String>) -> BTreeSet<String> {
+    pub fn pages_linking(&self, keys: &BTreeSet<String>) -> BTreeSet<String> {
         let mut out = BTreeSet::new();
         for k in keys {
             let raw = std::iter::once(k.clone())
@@ -326,11 +326,7 @@ impl Workspace {
                     .into_iter()
                     .flat_map(|m| m.keys())
                 {
-                    if self
-                        .pages
-                        .get(src)
-                        .is_some_and(|p| matches!(p.kind, PageKind::Journal(_)))
-                    {
+                    if self.pages.contains_key(src) {
                         out.insert(src.clone());
                     }
                 }

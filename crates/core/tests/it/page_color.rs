@@ -400,7 +400,7 @@ fn entry(raw: &str, kind: &str, key: &str, color: Option<&str>) -> Entry {
 }
 
 #[test]
-fn journal_views_list_their_colorable_targets() {
+fn page_views_list_their_colorable_targets() {
     let text = format!("{DAY}- #garden and [[Missing]], #2026-11-01\n");
     let (_t, mut s) = folder(&[
         ("pages/Project.md", "color:: red\n- p\n"),
@@ -432,8 +432,10 @@ fn journal_views_list_their_colorable_targets() {
     let k8s = &json["targets"][5];
     assert_eq!(k8s["name"], "Kubernetes");
     let out = ok(&mut s, json!({"type": "page.get", "key": "plain"}), 0);
-    let plain = serde_json::to_value(out.page.unwrap()).unwrap();
-    assert!(plain.get("targets").is_none(), "{plain}");
+    assert_eq!(
+        targets(&out.page.unwrap()),
+        vec![entry("project", "link", "project", Some("red"))]
+    );
     let out = pick(&mut s, "hiring", json!("green"));
     let hiring: Vec<Entry> = targets(day(&out))
         .into_iter()
@@ -445,6 +447,56 @@ fn journal_views_list_their_colorable_targets() {
             entry("hiring", "link", "hiring", Some("green")),
             entry("hiring", "tag", "hiring", Some("green")),
         ]
+    );
+}
+
+#[test]
+fn an_ordinary_page_lists_tags_without_a_page_and_itself() {
+    let (_t, mut s) = folder(&[(
+        "pages/Notes.md",
+        "- see [[Notes]], #fresh, [[Missing]], [[2026-11-01]]
+",
+    )]);
+    let out = ok(&mut s, json!({"type": "page.get", "key": "notes"}), 0);
+    let view = out.page.unwrap();
+    assert_eq!(
+        targets(&view),
+        vec![
+            entry("notes", "link", "notes", None),
+            entry("fresh", "tag", "fresh", None),
+        ]
+    );
+    let json = serde_json::to_value(&view).unwrap();
+    for b in json["blocks"].as_array().unwrap() {
+        assert!(b.get("topic").is_none() && b.get("color").is_none(), "{b}");
+    }
+}
+
+#[test]
+fn coloring_a_page_resends_the_ordinary_pages_linking_to_it() {
+    let (_t, mut s) = folder(&[
+        (
+            "pages/Project.md",
+            "color:: red
+- p
+",
+        ),
+        (
+            "pages/Plain.md",
+            "- x [[Project]]
+",
+        ),
+    ]);
+    ok(&mut s, json!({"type": "page.get", "key": "plain"}), 0);
+    let out = pick(&mut s, "project", json!("green"));
+    let plain = out
+        .changed
+        .iter()
+        .find(|p| p.key == "plain")
+        .expect("plain is resent");
+    assert_eq!(
+        targets(plain),
+        vec![entry("project", "link", "project", Some("green"))]
     );
 }
 

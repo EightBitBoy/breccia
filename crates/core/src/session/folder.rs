@@ -42,10 +42,10 @@ impl Session {
         Ok(self.replace_folder(ws, Vec::new()))
     }
 
-    /// Journal days with a block whose topic's color, existence or alias
+    /// Pages and journal days with a block whose topic's color, existence or alias
     /// changed travel with the command, unless the folder was switched
     /// (the changes then belong to another folder, or to a fresh one).
-    pub(super) fn resend_journals(&mut self, out: &mut Output, before: Option<u64>) {
+    pub(super) fn resend_linking(&mut self, out: &mut Output, before: Option<u64>) {
         let generation = self.generation;
         let Some(ws) = self.ws.as_mut() else {
             return;
@@ -54,7 +54,7 @@ impl Session {
         if before != Some(generation) || changes.is_empty() {
             return;
         }
-        for key in ws.journals_linking(&changes) {
+        for key in ws.pages_linking(&changes) {
             let sent = out.page.as_ref().is_some_and(|p| p.key == key)
                 || out.changed.iter().any(|p| p.key == key)
                 || out.removed.contains(&key);

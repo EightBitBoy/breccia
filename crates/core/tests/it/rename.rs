@@ -354,13 +354,14 @@ fn rename_reports_links_it_cannot_write() {
     assert_eq!(read(&t, "pages/a`b.md"), "- body\n");
     assert_eq!(read(&t, "pages/B.md"), b);
     assert_eq!(read(&t, J.0), j);
-    // Only the journal day is re-sent: its topic page is gone (journal blocks take a topic's color).
+    // The journal day and page B are re-sent: the topic page is gone (journal blocks take a
+    // topic's color, and a page's colorable targets list it).
     assert_eq!(
         out.changed
             .iter()
             .map(|v| v.key.as_str())
             .collect::<Vec<_>>(),
-        ["2026-10-29"]
+        ["2026-10-29", "b"]
     );
     assert_eq!(
         out.notices,
@@ -1348,10 +1349,10 @@ fn page_view_says_whether_the_page_has_a_file() {
         json!({"type": "page.move", "key": "idea", "folder": "X"}),
     );
     assert!(moved.page.unwrap().has_file);
-    // The last field on the wire, after the blocks.
+    // `hasFile` follows the blocks on the wire (`targets` comes after it, when there are any).
     let b = ok(&mut s, json!({"type": "page.get", "key": "b"}))
         .page
         .unwrap();
     let wire = serde_json::to_string(&b).unwrap();
-    assert!(wire.ends_with(",\"hasFile\":true}"), "{wire}");
+    assert!(wire.contains("],\"hasFile\":true"), "{wire}");
 }

@@ -36,7 +36,7 @@
     onsetdue,
     children,
   }: {
-    /** The day's colorable links and tags (`PageView.targets`). */
+    /** The outline's colorable links and tags (`PageView.targets`). */
     targets: TargetView[]
     /** The outline's blocks, to tell a task row from others (`PageView.blocks`). */
     blocks: BlockView[]

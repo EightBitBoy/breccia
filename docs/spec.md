@@ -332,13 +332,13 @@ readable", in the normal text color and in italics.
   same color. The feed and a day page look the same. Washes follow edits after the typing pause and any change of a
   page's color, from anywhere. A selected row and the jump highlight (after a jump from a card or a search result)
   keep the band's rounded ends; the highlight starts in the selection color and fades back to the band's color.
-- **Color from a link.** A right-click on a link or tag in a journal day opens a menu with "Color…", which opens the
+- **Color from a link.** A right-click on a link or tag in a journal day or on a page opens a menu with "Color…", which opens the
   same picker for the page the link goes to (aliases followed, tag-only pages included). Links to journal days and to
   pages that do not exist get no "Color…" entry. Inside an open block editor, and on selected text that is not a link
   to a colorable page (including a link to a day or a missing page), the normal browser menu stays, so copy and paste
   keep working; elsewhere no menu opens. The same holds on a page: outside an open block editor and off selected text
   the browser's own menu no longer opens, and the right-click of a task gives its menu (above). On a page the
-  links get "Copy link" (web and mail links) and the task menu, but no "Color…", which only journal days list.
+  links get "Copy link" (web and mail links), "Color…" (as in journal days) and the task menu.
   When the menu or the picker closes (a pick, Esc, a click outside), the focus
   is on the link again, unless something else already holds it. If the day is drawn anew while the picker is open,
   the picker stays at its link; if the link is gone, it stays where it was, and a pick still colors the page.
