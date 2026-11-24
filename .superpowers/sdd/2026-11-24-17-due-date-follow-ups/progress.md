@@ -25,3 +25,7 @@ Task 4: dispatched (sonnet, base 115ead3)
 Task 4: implementer DONE b3ca833 (plan's mutation did not fail the repeat-pick test, as F8 said; a forced changed=true did); review dispatched (sonnet)
 Task 4: review clean (sonnet; spec ✅ with a style deviation, approved; pinned fence outcomes are the right behaviour under spec §2). minor (deferred): new fence tests use multi-line literals (brief asked for \n literals); try_set_due's Err branch unexercised.
 Task 4: complete (commits 115ead3..b3ca833, review clean)
+Task 5: dispatched (sonnet, base fcbdcb8)
+Task 5: implementer DONE ab32967, c89e291 (Vitest 1328; e2e not run); review dispatched (sonnet)
+Task 5: review clean (sonnet; spec ✅ with one minor omission, approved; month output byte-identical, tokens unchanged, no stale midnight timer). minor (deferred): host.test.ts:7 import order not fixed (brief listed it) → Task 6 (it touches host tests); double blank lines left in archive.ts, git.ts, calendar.ts; today.test idempotence checks only unlisten, not the timer clear.
+Task 5: complete (commits fcbdcb8..c89e291, review clean)
