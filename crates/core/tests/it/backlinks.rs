@@ -334,6 +334,62 @@ fn a_heading_link_is_a_backlink() {
 }
 
 #[test]
+fn a_tag_never_counts_as_a_heading_link() {
+    // The tag `#Page#x` has the same text as the heading link `[[Page#x]]`;
+    // only the link goes to Page.
+    let t = dir(&[
+        ("pages/Page.md", "- p\n"),
+        ("pages/Ops.md", "- [[Page#x]]\n"),
+        ("pages/Tags.md", "- #Page#x\n"),
+        ("pages/Both.md", "- #Page#x\n- [[Page#x]]\n"),
+    ]);
+    let (ws, _) = Workspace::open(t.path()).unwrap();
+    assert_eq!(ws.linked_from("page"), 2);
+    let srcs: Vec<&str> = ws
+        .backlinks("page")
+        .iter()
+        .map(|b| b.page.key.as_str())
+        .collect();
+    assert_eq!(srcs, ["both", "ops"]);
+    let both = ws
+        .backlinks("page")
+        .into_iter()
+        .find(|b| b.page.key == "both")
+        .unwrap();
+    assert_eq!(both.roots.len(), 1);
+    assert_eq!(ws.links_out("tags"), 1);
+    let tag = ws
+        .tags()
+        .into_iter()
+        .find(|e| e.key == "page#x")
+        .expect("tag Page#x");
+    assert_eq!((tag.name.as_str(), tag.count), ("Page#x", 2));
+    assert!(!ws.tags().iter().any(|e| e.key == "page"));
+    assert!(ws.page_names().iter().any(|n| n.key == "page#x"));
+    let mut s = session(&t);
+    let g = answer!(cmd(&mut s, json!({"type": "graph.get"})), Graph);
+    let at = |k: &str| g.nodes.iter().position(|n| n.key == k).unwrap() as u32;
+    let node = &g.nodes[at("page#x") as usize];
+    assert_eq!((node.name.as_str(), node.tag_only), ("Page#x", true));
+    assert!(
+        g.edges.contains(&[at("tags"), at("page#x")]),
+        "{:?}",
+        g.edges
+    );
+    assert!(
+        !g.edges.contains(&[at("tags"), at("page")]),
+        "{:?}",
+        g.edges
+    );
+    assert!(g.edges.contains(&[at("both"), at("page")]), "{:?}", g.edges);
+    assert!(
+        g.edges.contains(&[at("both"), at("page#x")]),
+        "{:?}",
+        g.edges
+    );
+}
+
+#[test]
 fn an_existing_hash_page_keeps_its_links() {
     let t = dir(&[
         ("pages/C.md", "- c\n"),

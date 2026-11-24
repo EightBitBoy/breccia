@@ -634,7 +634,7 @@ impl Workspace {
         let keys = self.link_keys(key);
         let maps: Vec<&BTreeMap<String, Vec<BlockId>>> = keys
             .iter()
-            .filter_map(|k| self.links.sources_ref(k))
+            .filter_map(|k| self.sources_to(k, key))
             .collect();
         let mut out: Vec<Backlinks<'_>> = Vec::new();
         let mut push = |src: &str, linking: &dyn Fn(&BlockId) -> bool| {
@@ -696,7 +696,7 @@ impl Workspace {
     pub fn links_out(&self, key: &str) -> usize {
         self.links
             .targets_of(key)
-            .map(|t| self.resolve_key_ref(t))
+            .flat_map(|(raw, f)| self.resolve_forms(raw, f))
             .filter(|t| *t != key)
             .collect::<HashSet<&str>>()
             .len()
@@ -728,7 +728,7 @@ impl Workspace {
         let known: HashSet<String> = out.iter().map(|e| e.key.clone()).collect();
         for (key, spelling) in self.links.targets() {
             if known.contains(key)
-                || self.resolve_key(key) != key
+                || !self.goes_to_itself(key)
                 || parse_journal_name(spelling).is_some()
             {
                 continue;

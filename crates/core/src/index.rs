@@ -38,6 +38,17 @@ pub struct LinkIndex {
     /// `base key → heading key → number of pages` with a page link
     /// `[[Base#…]]` of that key (tags never count).
     headings: HashMap<String, HashMap<String, usize>>,
+    /// For keys with a heading part only (`page#x`), `inbound` split by
+    /// form: a `[[Page#x]]` may go to `Page` while the tag `#Page#x` never
+    /// does, so the two can go to different pages.
+    split: HashMap<String, FormSources>,
+}
+
+/// `page key → linking blocks` per link form.
+#[derive(Debug, Default)]
+struct FormSources {
+    page: BTreeMap<String, Vec<BlockId>>,
+    tag: BTreeMap<String, Vec<BlockId>>,
 }
 
 /// The base key of a raw link key that has a heading part.
@@ -67,7 +78,17 @@ impl LinkIndex {
         for b in doc.blocks() {
             let mut seen: Vec<String> = Vec::new();
             let mut tagged: Vec<String> = Vec::new();
+            let mut split_seen: Vec<(String, LinkKind)> = Vec::new();
             for l in links(b.text()) {
+                if base_key(&l.key).is_some() && !split_seen.contains(&(l.key.clone(), l.kind)) {
+                    let forms = self.split.entry(l.key.clone()).or_default();
+                    let map = match l.kind {
+                        LinkKind::Page => &mut forms.page,
+                        LinkKind::Tag => &mut forms.tag,
+                    };
+                    map.entry(key.to_string()).or_default().push(b.id());
+                    split_seen.push((l.key.clone(), l.kind));
+                }
                 let at = match out.iter().position(|o| o.key == l.key) {
                     Some(at) => at,
                     None => {
@@ -149,6 +170,13 @@ impl LinkIndex {
                     self.inbound.remove(&target);
                 }
             }
+            if let Some(forms) = self.split.get_mut(&target) {
+                forms.page.remove(key);
+                forms.tag.remove(key);
+                if forms.page.is_empty() && forms.tag.is_empty() {
+                    self.split.remove(&target);
+                }
+            }
         }
     }
 
@@ -164,6 +192,26 @@ impl LinkIndex {
     /// [`sources`](Self::sources), borrowed: page key → linking blocks.
     pub fn sources_ref(&self, target: &str) -> Option<&BTreeMap<String, Vec<BlockId>>> {
         self.inbound.get(target)
+    }
+
+    /// The sources of a key with a heading part (`page#x`) in one link
+    /// form only: page links `[[…]]` or tags. `None` for other keys.
+    pub fn form_sources_ref(
+        &self,
+        target: &str,
+        kind: LinkKind,
+    ) -> Option<&BTreeMap<String, Vec<BlockId>>> {
+        let forms = self.split.get(target)?;
+        let map = match kind {
+            LinkKind::Page => &forms.page,
+            LinkKind::Tag => &forms.tag,
+        };
+        (!map.is_empty()).then_some(map)
+    }
+
+    /// Whether some block has this key with a heading part as a `#tag`.
+    pub fn is_heading_tag(&self, raw_key: &str) -> bool {
+        self.split.get(raw_key).is_some_and(|f| !f.tag.is_empty())
     }
 
     /// The raw keys of page links `[[Base#…]]` whose base has the key
@@ -185,12 +233,13 @@ impl LinkIndex {
             .is_some_and(|m| m.contains_key(raw_key))
     }
 
-    /// The keys of the targets a page links to, in document order without repeats.
-    pub fn targets_of(&self, key: &str) -> impl Iterator<Item = &str> {
+    /// The keys of the targets a page links to, with their forms, in
+    /// document order without repeats.
+    pub fn targets_of(&self, key: &str) -> impl Iterator<Item = (&str, LinkForms)> {
         self.outgoing
             .get(key)
             .into_iter()
-            .flat_map(|v| v.iter().map(|o| o.key.as_str()))
+            .flat_map(|v| v.iter().map(|o| (o.key.as_str(), o.forms)))
     }
 
     /// Every linked target as `(key, first spelling seen)`, where the first

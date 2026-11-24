@@ -15,6 +15,7 @@ use crate::aliases::aliases;
 use crate::index::LinkForms;
 use crate::inline::{LinkKind, heading_base};
 use crate::naming::page_key;
+use crate::outline::BlockId;
 
 /// Where a link goes.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -78,14 +79,10 @@ impl Workspace {
         }
     }
 
-    /// The key a raw link key goes to: as [`link_target`](Self::link_target),
-    /// where a key splits at `#` only when some page link has it.
-    pub(crate) fn resolve_key(&self, raw_key: &str) -> String {
-        self.resolve_key_ref(raw_key).to_string()
-    }
-
-    /// [`resolve_key`](Self::resolve_key) without allocating: the key
-    /// borrows the page map, the alias table or `raw_key`.
+    /// The key a page link's raw key goes to: as
+    /// [`link_target`](Self::link_target), where a key splits at `#` only
+    /// when some page link has it. The key borrows the page map, the alias
+    /// table or `raw_key`.
     pub(crate) fn resolve_key_ref<'a>(&'a self, raw_key: &'a str) -> &'a str {
         if let Some(k) = self.resolve_name_ref(raw_key) {
             return k;
@@ -97,6 +94,52 @@ impl Workspace {
             return k;
         }
         raw_key
+    }
+
+    /// The key a tag with this raw key goes to: as
+    /// [`resolve_key_ref`](Self::resolve_key_ref), but never split at `#`, so a tag
+    /// `#Page#x` never goes to `Page`.
+    pub(crate) fn resolve_tag_ref<'a>(&'a self, raw_key: &'a str) -> &'a str {
+        self.resolve_name_ref(raw_key).unwrap_or(raw_key)
+    }
+
+    /// Where a raw key goes in the forms `f` it is used in: the page link's
+    /// key, then the tag's when it differs (only a page link splits at `#`).
+    pub(crate) fn resolve_forms<'a>(
+        &'a self,
+        raw_key: &'a str,
+        f: LinkForms,
+    ) -> impl Iterator<Item = &'a str> {
+        let page = f.page.then(|| self.resolve_key_ref(raw_key));
+        let tag = f
+            .tag
+            .then(|| self.resolve_tag_ref(raw_key))
+            .filter(|t| page != Some(*t));
+        page.into_iter().chain(tag)
+    }
+
+    /// Whether a link or tag with this raw key goes to the key itself.
+    pub(super) fn goes_to_itself(&self, raw_key: &str) -> bool {
+        self.resolve_key_ref(raw_key) == raw_key
+            || (self.links.is_heading_tag(raw_key) && self.resolve_tag_ref(raw_key) == raw_key)
+    }
+
+    /// The blocks, by page, whose links with this raw key go to `to`: all
+    /// of them, or only the page links or only the tags when the two forms
+    /// go to different pages (`[[Page#x]]` and `#Page#x`).
+    pub(super) fn sources_to(
+        &self,
+        raw_key: &str,
+        to: &str,
+    ) -> Option<&BTreeMap<String, Vec<BlockId>>> {
+        let page = self.resolve_key_ref(raw_key) == to;
+        let tag = self.resolve_tag_ref(raw_key) == to;
+        match (page, tag) {
+            (true, true) => self.links.sources_ref(raw_key),
+            (true, false) => self.links.form_sources_ref(raw_key, LinkKind::Page),
+            (false, true) => self.links.form_sources_ref(raw_key, LinkKind::Tag),
+            (false, false) => None,
+        }
     }
 
     /// The page a key names, if it exists: a page with content of that
@@ -126,12 +169,13 @@ impl Workspace {
         self.ensure_page(heading_base(target.trim()).unwrap_or(target))
     }
 
-    /// Every raw key that goes to `page_key`: itself (unless it goes to
-    /// another page), then its winning aliases by key, then the heading
-    /// keys (`[[Base#…]]`) of itself and of those aliases that go to it.
+    /// Every raw key that goes to `page_key`: itself (unless both its page
+    /// links and its tags go to another page), then its winning aliases by
+    /// key, then the heading keys (`[[Base#…]]`) of itself and of those
+    /// aliases that go to it.
     pub fn link_keys(&self, page_key: &str) -> Vec<String> {
         let mut out = Vec::new();
-        if self.resolve_key_ref(page_key) == page_key {
+        if self.goes_to_itself(page_key) {
             out.push(page_key.to_string());
         }
         let mut alias_keys: Vec<String> = self
@@ -179,19 +223,31 @@ impl Workspace {
     }
 
     /// Every `(source page key, resolved target key, forms)`, merged per
-    /// pair; a page's link to itself included. Sorted.
+    /// pair; a page's link to itself included. Sorted. A tag `#Page#x` and
+    /// a link `[[Page#x]]` in one page may go to two pages.
     pub(crate) fn link_forms(&self) -> Vec<(&str, &str, LinkForms)> {
         let mut cache: HashMap<&str, &str> = HashMap::new();
-        let mut all: Vec<(&str, &str, LinkForms)> = self
-            .links
-            .link_forms()
-            .map(|(src, raw, f)| {
-                let to = *cache
-                    .entry(raw)
-                    .or_insert_with(|| self.resolve_key_ref(raw));
-                (src, to, f)
-            })
-            .collect();
+        let mut all: Vec<(&str, &str, LinkForms)> = Vec::new();
+        for (src, raw, f) in self.links.link_forms() {
+            let to = *cache
+                .entry(raw)
+                .or_insert_with(|| self.resolve_key_ref(raw));
+            let tag_to = self.resolve_tag_ref(raw);
+            if f.page && f.tag && tag_to != to {
+                let page = LinkForms {
+                    page: true,
+                    tag: false,
+                };
+                let tag = LinkForms {
+                    page: false,
+                    tag: true,
+                };
+                all.push((src, to, page));
+                all.push((src, tag_to, tag));
+            } else {
+                all.push((src, if f.page { to } else { tag_to }, f));
+            }
+        }
         all.sort_unstable_by(|a, b| (a.0, a.1).cmp(&(b.0, b.1)));
         let mut merged: Vec<(&str, &str, LinkForms)> = Vec::with_capacity(all.len());
         for (src, to, f) in all {
@@ -211,12 +267,17 @@ impl Workspace {
     pub(crate) fn link_targets(&self) -> Vec<(String, String)> {
         let mut out: BTreeMap<&str, &str> = BTreeMap::new();
         for (raw, spelling) in self.links.targets() {
-            let key = self.resolve_key_ref(raw);
-            if out.contains_key(key) {
-                continue;
+            let tag = self
+                .links
+                .is_heading_tag(raw)
+                .then(|| self.resolve_tag_ref(raw));
+            for key in std::iter::once(self.resolve_key_ref(raw)).chain(tag) {
+                if out.contains_key(key) {
+                    continue;
+                }
+                let name = self.pages.get(key).map_or(spelling, |p| p.name.as_str());
+                out.insert(key, name);
             }
-            let name = self.pages.get(key).map_or(spelling, |p| p.name.as_str());
-            out.insert(key, name);
         }
         out.into_iter()
             .map(|(k, n)| (k.to_string(), n.to_string()))
@@ -266,7 +327,7 @@ impl Workspace {
             if crate::naming::parse_journal_name(spelling).is_some() {
                 continue;
             }
-            let key = self.resolve_key_ref(raw);
+            let key = self.resolve_tag_ref(raw);
             by_key.entry(key).or_insert((spelling, 0)).1 += n;
         }
         let mut out: Vec<TagEntry> = by_key
@@ -579,8 +640,8 @@ mod tests {
         }
         let (mut ws, _) = Workspace::open(t.path()).unwrap();
         assert_eq!(ws.names.recomputes, 1);
-        assert_eq!(ws.resolve_key("a7"), "p7");
-        assert_eq!(ws.resolve_key("shared"), "p0");
+        assert_eq!(ws.resolve_key_ref("a7"), "p7");
+        assert_eq!(ws.resolve_key_ref("shared"), "p0");
 
         // Outside changes to many files: once more.
         let mut rels = Vec::new();
@@ -591,7 +652,7 @@ mod tests {
         }
         ws.apply_disk_changes(&rels);
         assert_eq!(ws.names.recomputes, 2);
-        assert_eq!(ws.resolve_key("b7"), "p7");
-        assert_eq!(ws.resolve_key("a7"), "a7");
+        assert_eq!(ws.resolve_key_ref("b7"), "p7");
+        assert_eq!(ws.resolve_key_ref("a7"), "a7");
     }
 }
