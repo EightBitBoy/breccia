@@ -188,11 +188,11 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .date-picker { z-index: 35; padding: 8px; min-width: 0; user-select: none; }
 .dp-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
 .dp-title { font-weight: 600; }
-.dp-nav, .dp-today {
+.dp-nav, .dp-today, .dp-remove {
   border: none; background: none; color: var(--text); cursor: pointer; border-radius: 4px; font: inherit;
 }
 .dp-nav { width: 26px; height: 24px; font-size: 16px; line-height: 1; }
-.dp-nav:hover, .dp-today:hover { background: var(--hover); }
+.dp-nav:hover, .dp-today:hover, .dp-remove:hover { background: var(--hover); }
 .dp-grid { outline: none; }
 .dp-row { display: grid; grid-template-columns: repeat(7, 30px); gap: 2px; }
 .dp-wd { text-align: center; font-size: 11px; color: var(--muted); padding: 2px 0; }
@@ -213,8 +213,8 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 /* The due date calendar's chosen day (the task's due date) is filled with the accent. */
 .dp-day.chosen, .dp-day.chosen:hover { background: var(--accent); color: var(--on-accent); }
 .dp-foot { display: flex; justify-content: center; gap: 8px; margin-top: 6px; }
-/* "Today" looks like a button, like the board's column-width buttons. */
-.dp-today {
+/* "Today" and "Remove due date" look like buttons, like the board's column-width buttons. */
+.dp-today, .dp-remove {
   padding: 2px 12px; font-size: 12.5px; line-height: 18px;
   border: 1px solid var(--line); border-radius: 5px; background: var(--card);
 }

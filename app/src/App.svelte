@@ -131,6 +131,7 @@
   import DuePicker from './components/DuePicker.svelte'
   import { NOT_A_TASK } from './lib/due'
   import { duePick } from './lib/duePick.svelte'
+  import { dueKeyAction } from './lib/dueKey'
   import CaretMenu from './components/CaretMenu.svelte'
   import FlowDialog from './components/FlowDialog.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -252,13 +253,13 @@
         pickerInsert = onpick
         pickerOpen = true
       },
-      // Ctrl D: the due calendar at the caret, on a task only (a plain block gets the note and keeps editing). Esc or a
-      // click outside writes nothing; the calendar gives the focus back to the editor, the caret where it was.
+      // Ctrl D: the due calendar at the caret, on a task only (a plain block gets the note and keeps editing); nothing
+      // while the search or a dialog is open, as Ctrl Shift D (`dueKeyAction`). Esc or a click outside writes
+      // nothing; the calendar gives the focus back to the editor, the caret where it was.
       pickDue: (id, caret) => {
-        const b = host.blockOf(id)
-        if (!b) return
-        if (b.state === null) return notify({ kind: 'refused', message: NOT_A_TASK })
-        duePick.show(b.due ?? null, caret, (due) => void host.setDue(id, due))
+        const act = dueKeyAction(host.blockOf(id), dialogOpen() || search.shown)
+        if (act.kind === 'refuse') notify({ kind: 'refused', message: NOT_A_TASK })
+        else if (act.kind === 'open') duePick.show(act.due, caret, (due) => void host.setDue(id, due))
       },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
       card: () => (boards.index !== null ? cardBlocks(boards.card) : null),

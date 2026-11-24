@@ -1,6 +1,8 @@
-// Which link or tag a right-click in a page's outline gives a color to, and what that right-click does.
+// What a right-click in a page's outline does (`linkMenuAction`), which link or tag it gives a color to, and how the
+// link is found again when the outline is drawn anew. The task row's part is in `taskMenu.ts`.
 import { linkAddress } from './linkDisplay'
-import type { BlockId, BlockView, TargetView } from './types'
+import type { TaskSpot } from './taskMenu'
+import type { BlockId, TargetView } from './types'
 
 /** The parts of a rendered anchor that name its target. */
 export interface LinkAnchor {
@@ -21,18 +23,6 @@ export function colorTarget(a: LinkAnchor, targets: readonly TargetView[]): Targ
   const kind = classes.includes('ext') ? null : classes.includes('link') ? 'link' : classes.includes('tag') ? 'tag' : null
   if (kind === null) return null
   return targets.find((t) => t.kind === kind && t.raw === a.dataPage) ?? null
-}
-
-/** A task row under the pointer: its block and its due date (a day key), or none. */
-export interface TaskSpot {
-  id: BlockId
-  due: string | null
-}
-
-/** The task of the row `id` among `blocks`: a block with a state is a task. Other rows, and ids not there, give null. */
-export function taskOf(id: BlockId, blocks: readonly BlockView[]): TaskSpot | null {
-  const b = blocks.find((v) => v.id === id)
-  return b && b.state !== null ? { id: b.id, due: b.due ?? null } : null
 }
 
 /** What a right-click in a page's outline does. */

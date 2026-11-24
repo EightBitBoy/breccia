@@ -92,7 +92,7 @@
           }}>Today</button
         >
         {#if duePick.due}
-          <button class="dp-today" data-testid="due-picker-remove" onclick={() => duePick.remove()}>Remove due date</button>
+          <button class="dp-remove" data-testid="due-picker-remove" onclick={() => duePick.remove()}>Remove due date</button>
         {/if}
       </div>
     </Popover.Content>

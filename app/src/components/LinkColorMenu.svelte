@@ -21,10 +21,10 @@
     pickingColor,
     pointInBoxes,
     spotOf,
-    taskOf,
     type Box,
     type LinkSpot,
   } from '../lib/linkColor'
+  import { taskOf } from '../lib/taskMenu'
   import type { BlockId, BlockView, TargetView } from '../lib/types'
   import { duePick } from '../lib/duePick.svelte'
   import PageColorGrid from './PageColorGrid.svelte'
