@@ -115,13 +115,15 @@ impl Workspace {
 
     /// Returns the key of the page a clicked link goes to, creating the
     /// page in memory (as [`ensure_page`](Self::ensure_page)) only when it
-    /// does not exist. `Base#Heading` opens `Base` when it exists.
+    /// does not exist. `Base#Heading` opens `Base` when it exists, and
+    /// otherwise makes (or opens the blank page) `Base`: the heading part is
+    /// never part of a page name.
     pub fn open_link(&mut self, target: &str) -> Result<String, PageError> {
         let t = self.link_target(target, LinkKind::Page);
         if t.exists {
             return Ok(t.key);
         }
-        self.ensure_page(target)
+        self.ensure_page(heading_base(target.trim()).unwrap_or(target))
     }
 
     /// Every raw key that goes to `page_key`: itself (unless it goes to

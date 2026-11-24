@@ -2173,13 +2173,32 @@ fn a_link_click_opens_the_heading_page() {
         0,
     );
     assert_eq!(out.page.unwrap().key, "kubernetes");
-    // Without the base page, the whole text is the name.
+    // Without the base page, the click makes the base page: the heading
+    // part is no part of a page name.
     let out = ok(
         &mut s,
         json!({"type": "page.open", "name": "Issue #42", "link": true}),
         0,
     );
-    assert_eq!(out.page.unwrap().key, "issue #42");
+    assert_eq!(out.page.unwrap().key, "issue");
+    let e = cmd(&mut s, json!({"type": "page.get", "key": "issue #42"}), 0).unwrap_err();
+    assert_eq!(e.code, ErrorCode::UnknownPage);
+    // A blank page of the base (made by a click) is opened again.
+    let out = ok(
+        &mut s,
+        json!({"type": "page.open", "name": "Issue#Setup", "link": true}),
+        0,
+    );
+    assert_eq!(out.page.unwrap().key, "issue");
+    let e = cmd(&mut s, json!({"type": "page.get", "key": "issue#setup"}), 0).unwrap_err();
+    assert_eq!(e.code, ErrorCode::UnknownPage);
+    // A link without a heading part keeps its whole text.
+    let out = ok(
+        &mut s,
+        json!({"type": "page.open", "name": "C#", "link": true}),
+        0,
+    );
+    assert_eq!(out.page.unwrap().key, "c#");
     // Without `link`, the name is the page name as typed.
     let out = ok(&mut s, json!({"type": "page.open", "name": "C# basics"}), 0);
     let page = out.page.unwrap();
