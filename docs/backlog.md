@@ -46,6 +46,9 @@ back in the block left from); the rest are not needed. Queued after #15.
 `Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
 open on one of the changed pages; the undo request is sent only from the editor.
 
+Owner, 2026-11-24: build together with #91: `Ctrl Z` and `Ctrl Shift Z` work while no block is edited; on a board they
+take back the last card change, on a page the last change on that page. Queued after #17.
+
 ## 30. Search index repair messages (Search) (wording done 2026-11-13; the rest left open)
 
 Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
