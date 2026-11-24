@@ -313,3 +313,13 @@ are its questions for you; each answer decides what a later plan does.
    on a block whose state cycle is empty (or do anything the app refuses with a message) within a second, type more in
    the same block, then `Ctrl Z`: both bursts of typing go in one step. A command that does change something (a move,
    a state change) still ends the step.
+
+## A heading link jumps to its heading (backlog #47)
+
+146. [ ] **`[[Page#Heading]]` opens the page at that heading:** by hand (`just dev`): on a page with a long outline,
+   write a block `## Plans` far down; elsewhere link `[[That page#plans]]` and click it: the page opens with the
+   `## Plans` block in the middle of the view, briefly highlighted as a card jump is (any case, spaces around the
+   heading ignored, any level `#` to `######`). A heading the page does not have (`[[That page#Nowhere]]`) opens it at
+   the top. The same link clicked in a page's linked references jumps too. `[[#Plans]]` (same page) and
+   `[[Page#Heading#Sub]]` do not jump (the second opens at the top). Is the middle of the view right, or should the
+   heading sit at the top?

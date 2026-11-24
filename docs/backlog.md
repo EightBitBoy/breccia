@@ -11,15 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 47. Headings and same-page heading links (Compatibility)
-
-`[[Page#Heading]]` links to the page already. Open: showing or jumping to the heading, and `[[#Heading]]` (today a page
-named `#Heading`).
-
-Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scrolled to that heading (briefly
-highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
-#21.
-
 ## 81. Explain basic syntax in the help dialog (Docs)
 
 Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,

@@ -238,6 +238,18 @@ Only web images show; a local image shows its alt text. Recommended place: `asse
 Owner, 2026-11-13: closed as won't fix for now; the topic continues in #84 (Assets), which the owner has not thought through yet. Checked in the code: the renderer shows an image only for an `http` or `https` address (`crates/core/src/render.rs`), and the window's security rule allows images only from the web, the app or `data:` (`app/src-tauri/tauri.conf.json`, `img-src`); a local image shows its description as plain text.
 
 
+## 47. Headings and same-page heading links (Compatibility) (done 2026-11-24, no plan: the jump; same-page links not needed)
+
+`[[Page#Heading]]` links to the page already. Open: showing or jumping to the heading, and `[[#Heading]]` (today a page
+named `#Heading`).
+
+Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scrolled to that heading (briefly
+highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
+#21.
+
+Done 2026-11-24: a click on `[[Page#Heading]]` (also in linked references) opens the page scrolled to the first block
+that starts with that Markdown heading, highlighted; review item 146.
+
 ## 50. Release script rough edges (Release and build) (closed 2026-11-13: two fixed, one harmless)
 
 The hand-restore hint `git checkout -- CHANGELOG.md` depends on the current folder (print `git -C <repo>` or the full
