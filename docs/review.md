@@ -306,3 +306,10 @@ are its questions for you; each answer decides what a later plan does.
      first; a change made in another view starts that list again (so after editing a page, `Ctrl Z` on the board does
      nothing until the next board change). Changes in an open card count as board changes. Should the journal instead
      always undo on the day at the top of the screen?
+
+## A refused command no longer splits the typing undo step (backlog #86)
+
+145. [ ] **Typing around a refused command is one undo step:** by hand (`just dev`): type in a block, press `Ctrl Enter`
+   on a block whose state cycle is empty (or do anything the app refuses with a message) within a second, type more in
+   the same block, then `Ctrl Z`: both bursts of typing go in one step. A command that does change something (a move,
+   a state change) still ends the step.

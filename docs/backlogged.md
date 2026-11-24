@@ -773,3 +773,18 @@ Done: with no block edited or selected, `Ctrl Z` and `Ctrl Shift Z` (or `Ctrl Y`
 history), in the journal feed (the changes made there, newest first, each on its own day) and on a board (its drops,
 archives and card changes, newest first; a drop is one step). Not in a dialog, menu, the search box or a text field.
 Spec §7.2 and §7.6, review item 144, e2e steps 159 and 160.
+
+## 86. A refused command splits the typing undo step (Editor) (done 2026-11-24, no plan)
+
+Found 2026-11-13 while writing the tests of #65 (`a_refused_command_between_two_edits_ends_the_typing_run` in
+`crates/core/tests/it/session.rs`, which pins today's behaviour). Typing in a block is one undo step while the edits come
+within a short time. If a command is refused in between (for example `Ctrl Enter` with no state in the cycle, or a state
+that does not exist) the next edit starts a new step: edits before and after it need two Undos, not one. Nothing is lost
+or wrong; the question is whether a refused command, which changed nothing, should leave the typing run alone. Plan 6
+already made read-only commands leave it alone. To settle: refused commands too (the fix would be where the session ends
+the run, `crates/core/src/session/history.rs`), or leave it as it is.
+
+Owner, 2026-11-24: fix it: a refused command changed nothing, so it leaves the typing run alone.
+
+Done: a refused command (one that recorded no undo step) leaves the typing run alone, so typing before and after it is
+one undo step. Test `a_refused_command_between_two_edits_leaves_the_typing_run_alone`, review item 145.

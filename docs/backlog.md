@@ -124,18 +124,6 @@ It changes many files in one command and is one slow answer, once.
 Owner, 2026-11-24: measure and fix now, as a plan (measure at 5,000 pages, then fix the worst points: the blank first
 window, the Git pause, long lists). Written after the backlog round.
 
-## 86. A refused command splits the typing undo step (Editor)
-
-Found 2026-11-13 while writing the tests of #65 (`a_refused_command_between_two_edits_ends_the_typing_run` in
-`crates/core/tests/it/session.rs`, which pins today's behaviour). Typing in a block is one undo step while the edits come
-within a short time. If a command is refused in between (for example `Ctrl Enter` with no state in the cycle, or a state
-that does not exist) the next edit starts a new step: edits before and after it need two Undos, not one. Nothing is lost
-or wrong; the question is whether a refused command, which changed nothing, should leave the typing run alone. Plan 6
-already made read-only commands leave it alone. To settle: refused commands too (the fix would be where the session ends
-the run, `crates/core/src/session/history.rs`), or leave it as it is.
-
-Owner, 2026-11-24: fix it: a refused command changed nothing, so it leaves the typing run alone. In progress.
-
 ## 87. Run the end-to-end test in CI (Tests)
 
 From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
