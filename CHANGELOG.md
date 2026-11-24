@@ -2,6 +2,17 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.9.0] - 2026-11-24
+
+### Features
+
+- Tasks and cards show a due date chip, amber when near and red when overdue
+- Boards: set or remove a task's due date from the card menu
+- Set or remove a task's due date from its right-click menu
+- Ctrl D while editing a task sets or removes its due date
+- A due line with words after the date stays visible next to the chip
+- Pages get the journal's right-click menu: Copy link, Color… and Set due date…
+
 ## [1.8.3] - 2026-11-23
 
 ### Features
