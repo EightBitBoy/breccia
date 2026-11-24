@@ -7,7 +7,8 @@ use crate::inline::{self, Link, LinkKind};
 use crate::naming::{self, journal_display, parse_journal_name};
 use crate::outline::front_matter_len;
 use crate::task::{
-    created_at, done_date, done_time, due_date, journal_date_in, task_state, with_state,
+    created_at, done_date, done_time, due_date, journal_date_in, only_day_link, task_state,
+    with_state,
 };
 use chrono::NaiveDateTime;
 
@@ -375,9 +376,10 @@ pub fn block_html(text: &str, cfg: &Config) -> String {
     lines.drain(1..1 + props.len());
     let body = lines.join("\n");
 
-    let is_task = task_state(&body, cfg).is_some();
-    let is_finished = task_state(&body, cfg).is_some_and(|s| s.finished);
-    let body = match task_state(&body, cfg) {
+    let state = task_state(&body, cfg);
+    let is_task = state.is_some();
+    let is_finished = state.is_some_and(|s| s.finished);
+    let body = match state {
         Some(state) => {
             let kw = &state.keyword;
             let badge = slots.add(
@@ -425,14 +427,17 @@ pub fn block_html(text: &str, cfg: &Config) -> String {
         format!("<span class=\"chip\">\u{2713} {when}</span>")
     });
     // A task's first `due::` line with a day becomes a placeholder the window
-    // fills in; later `due::` lines stay visible as properties.
+    // fills in, and is hidden when it holds only that day link; any other
+    // `due::` line stays visible as a property.
     let due = if is_task { due_date(text) } else { None };
-    let mut due_hidden = false;
+    let mut due_seen = false;
     let mut shown = Vec::new();
     for (key, value) in &props {
-        if due.is_some() && !due_hidden && key == "due" && journal_date_in(value).is_some() {
-            due_hidden = true;
-            continue;
+        if due.is_some() && !due_seen && key == "due" && journal_date_in(value).is_some() {
+            due_seen = true;
+            if only_day_link(value).is_some() {
+                continue;
+            }
         }
         if key == "done" && journal_date_in(value).is_some() {
             continue;
@@ -450,8 +455,11 @@ pub fn block_html(text: &str, cfg: &Config) -> String {
         ));
     }
     if let Some(d) = due {
-        let finished = is_finished;
-        let mark = if finished { " data-finished=\"\"" } else { "" };
+        let mark = if is_finished {
+            " data-finished=\"\""
+        } else {
+            ""
+        };
         let span = format!(
             "<span class=\"chip due\" data-due=\"{}\"{mark}></span>",
             d.format("%Y-%m-%d")

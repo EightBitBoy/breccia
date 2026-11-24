@@ -210,3 +210,9 @@ are its questions for you; each answer decides what a later plan does.
      keyboard. This was so before; backlog #99 holds it. Should a card have a key, as a task in the journal has `Ctrl D`?
    - Boards cannot sort by due date yet (backlog #98). Which order do you want: a column setting, or due dates first
      after `priority::`?
+
+## Due date follow-ups (plan 17)
+
+137. [ ] **A due line with words stays visible:** by hand, on a task type `due:: [[2026-12-01]] client waits` in one
+   block and `due:: [[2026-12-01]]` in another, and leave each block. The line with only the date is hidden; the one
+   with words shows dimmed next to the chip. Links in the words open their pages.

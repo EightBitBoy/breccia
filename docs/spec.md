@@ -252,8 +252,9 @@ second click on the Git history button is Back.
   moves). `Ctrl D` (`Cmd D` on a Mac) sets or removes the due date of the task being edited: it opens the due date
   calendar (below). On a block that is not a task a note says "Only a task can have a due date." and nothing is
   written. `Ctrl Shift D` still opens the go-to-a-day calendar.
-- **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line,
-  which stays in the file but is not shown. In a journal day and on a page the right-click menu of a task has "Set due
+- **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line
+  when the line holds only the date; the line stays in the file but is not shown. A due line with other text
+  (`due:: [[2026-12-01]] client waits`) stays visible, dimmed like other properties, next to the chip. In a journal day and on a page the right-click menu of a task has "Set due
   date…", which opens the due date calendar: the month calendar of the date picker, with the day of a set date marked; a
   pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and an
   open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows dimmed

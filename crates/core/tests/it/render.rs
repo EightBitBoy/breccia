@@ -393,3 +393,47 @@ fn due_line_without_a_day_stays_a_property() {
         assert!(html.contains("prop-key\">due<"), "{html}");
     }
 }
+
+#[test]
+fn due_line_with_words_after_the_date_stays_visible() {
+    let html = h("TODO a\ndue:: [[2026-12-01]] client waits");
+    assert!(html.contains("data-due=\"2026-12-01\""), "{html}");
+    assert!(
+        html.contains("<div class=\"prop\"><span class=\"prop-key\">due</span>"),
+        "{html}"
+    );
+    assert!(html.contains("client waits"), "{html}");
+    assert!(html.contains("data-page=\"2026-12-01\""), "{html}");
+}
+
+#[test]
+fn due_line_with_words_before_the_date_stays_visible() {
+    let html = h("TODO a\ndue:: by [[2026-12-01]]");
+    assert!(html.contains("data-due=\"2026-12-01\""), "{html}");
+    assert!(
+        html.contains("<div class=\"prop\"><span class=\"prop-key\">due</span>"),
+        "{html}"
+    );
+    assert!(html.contains("by "), "{html}");
+}
+
+#[test]
+fn due_line_with_only_the_date_stays_hidden() {
+    let html = h("TODO a\ndue::  [[2026-12-01]] ");
+    assert!(html.contains("data-due=\"2026-12-01\""), "{html}");
+    assert!(!html.contains("prop-key\">due"), "{html}");
+}
+
+#[test]
+fn due_line_words_render_their_links_and_tags() {
+    let html = h("TODO a\ndue:: [[2026-12-01]] ask [[Ben]] #client");
+    assert!(html.contains("data-page=\"ben\""), "{html}");
+    assert!(html.contains("class=\"tag\""), "{html}");
+}
+
+#[test]
+fn a_later_duplicate_due_line_shows_even_when_the_first_has_words() {
+    let html = h("TODO a\ndue:: [[2026-12-01]] client\ndue:: [[2026-12-01]]");
+    assert_eq!(html.matches("chip due").count(), 1, "{html}");
+    assert_eq!(html.matches("prop-key\">due").count(), 2, "{html}");
+}

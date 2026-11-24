@@ -62,6 +62,20 @@ pub(crate) fn journal_date_in(value: &str) -> Option<NaiveDate> {
         .find_map(|l| parse_journal_name(&l.target))
 }
 
+/// The day when `value`, trimmed, is exactly one journal link and nothing
+/// else; `None` for a value with other text or another kind of link.
+pub(crate) fn only_day_link(value: &str) -> Option<NaiveDate> {
+    let value = value.trim();
+    let mut links = inline::links(value)
+        .into_iter()
+        .filter(|l| l.kind == LinkKind::Page);
+    let link = links.next()?;
+    if links.next().is_some() || link.range != (0..value.len()) {
+        return None;
+    }
+    parse_journal_name(&link.target)
+}
+
 /// The date of the first `done::` property (in the properties directly
 /// after the first line) whose value links to a journal.
 pub fn done_date(text: &str) -> Option<NaiveDate> {
