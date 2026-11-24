@@ -11,13 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 10. The sidebar can briefly show an older page tree (Pages and links) (done 2026-11-12, no plan; the watcher-order part is left)
-
-Updates can arrive out of order, so an older tree can replace a newer one until the next change
-(`app/src/App.svelte`, where the tree is assigned without a version check). Two quick folder opens can also start their
-file watchers in the wrong order, and a refused sidebar drop does not fetch the tree again, so a stale tree stays.
-Fix by ignoring older trees by version and refetching after a refused drop.
-
 ## 11. Two rare races when renaming a page (Pages and links)
 
 A rename from the sidebar can skip the "both versions" notice for a block that is being edited and also changed on

@@ -583,3 +583,12 @@ Choosing "Keep mine" writes a second copy at the old place. Nothing is lost, but
 Accepted so far.
 
 Owner, 2026-11-24: won't fix. Very rare, and nothing is lost.
+
+## 10. The sidebar can briefly show an older page tree (Pages and links) (done 2026-11-12, no plan; the watcher-order part is left)
+
+Updates can arrive out of order, so an older tree can replace a newer one until the next change
+(`app/src/App.svelte`, where the tree is assigned without a version check). Two quick folder opens can also start their
+file watchers in the wrong order, and a refused sidebar drop does not fetch the tree again, so a stale tree stays.
+Fix by ignoring older trees by version and refetching after a refused drop.
+
+Closed 2026-11-24 (owner): done. The version check came 2026-11-12; the watcher keeps its folder generation since plan 12 (c5bd3a8, 2026-11-17), so an older folder open cannot replace a newer one; the sidebar never moves a row before the core confirms a drop, so a refused drop leaves nothing stale.
