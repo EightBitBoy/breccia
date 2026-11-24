@@ -4558,8 +4558,7 @@ try {
   const card152 = cardTitled('due 152 now')
   await card152.waitFor()
   const cardDue152 = card152.locator('[data-testid="card-due"]')
-  assert((await cardDue152.innerText()).trim() === 'due today', `152 card chip: ${await cardDue152.innerText()}`)
-  assert((await cardDue152.getAttribute('data-tone')) === 'soon', `152 card chip tone: ${await cardDue152.getAttribute('data-tone')}`)
+  await waitFor('152 card chip', async () => [(await cardDue152.innerText()).trim(), await cardDue152.getAttribute('data-tone')], ['due today', 'soon'])
   await cardMenuOf('due 152 now')
   await page.locator('[data-testid="menu-due"]').click()
   await picker152.waitFor()
@@ -4587,7 +4586,8 @@ try {
   await kb.press('Escape')
   await page.locator('.cm-content').waitFor({ state: 'detached' })
   await chip152.and(page.locator('[data-tone="finished"]')).waitFor()
-  assert((await chip152.innerText()).trim() === `due ${short152(minus1)}`, `152 finished chip: ${await chip152.innerText()}`)
+  const finished152 = await look152()
+  assert(finished152.text === `due ${short152(minus1)}` && finished152.title === null, `152 finished chip: ${JSON.stringify(finished152)}`)
   console.log('PASS 152 an overdue chip is red with its date; a finished task keeps the line and the chip turns muted')
   // 5. Ctrl D on a plain block: a note, no calendar, no change.
   const plain152 = `${readAt(journal)}- plain 152\n`
@@ -4666,6 +4666,155 @@ try {
   await page.locator('[data-testid="nav-journal"]').click()
   await day152.waitFor()
   console.log('PASS 154 on a page, a link and a tag get "Color…"; a link to a journal day gets no menu')
+
+  // 155: the task menu and the due date calendar leave the focus where it belongs: nowhere when nothing held it (never
+  // the outline's hidden zone), back in the editor when it held it, and where a click outside the calendar put it; a
+  // chosen today keeps its ring; on a board, Esc after "Set due date…" leaves the focus on the card, and Ctrl D in an
+  // open card sets the due date.
+  const before155 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before155}- TODO task 155\n- note 155\n`)
+  renameSync(`${journal}.tmp`, journal)
+  const task155 = day152.locator('.block[data-block-id]', { hasText: 'task 155' }).first()
+  const note155 = day152.locator('.block[data-block-id]', { hasText: 'note 155' }).first()
+  await note155.waitFor()
+  /** What holds the focus: `body` (nothing), `zone` (the outline's hidden zone), `editor`, or the element. */
+  const focus155 = () =>
+    page.evaluate(() => {
+      const a = document.activeElement
+      if (!a || a === document.body) return 'body'
+      if (a.matches('.link-zone')) return 'zone'
+      if (a.closest('.cm-content')) return 'editor'
+      return `${a.tagName.toLowerCase()}.${a.className}`
+    })
+  const blur155 = () => page.evaluate(() => document.activeElement instanceof HTMLElement && document.activeElement.blur())
+  const taskMenu155 = async () => {
+    const box = await task155.locator('.content').boundingBox()
+    await task155.locator('.content').click({ button: 'right', position: { x: box.width - 4, y: box.height / 2 } })
+    await page.locator('[data-testid="task-due"]').waitFor()
+  }
+  /** A press and a release, with the calendar gone in between, as a hand's click (bits-ui closes it 10 ms after the press). */
+  const clickOutside155 = async (x, y) => {
+    await page.mouse.move(x, y)
+    await page.mouse.down()
+    await picker152.waitFor({ state: 'detached' })
+    await page.mouse.up()
+  }
+  // 1. Nothing focused: a pick from the task menu leaves nothing focused. A chosen today keeps its ring.
+  await blur155()
+  assert((await focus155()) === 'body', `155 the focus before the right-click: ${await focus155()}`)
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${today}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  const today155 = `${before155}- TODO task 155\n  due:: [[${today}]]\n- note 155\n`
+  await expectFile('155 a pick from the task menu writes the due line', today155, journal)
+  assert((await focus155()) === 'body', `155 after a pick from the task menu with nothing focused, the focus is on ${await focus155()}`)
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  const ring155 = await picker152.locator(`.dp-day:not(.out)[data-key="${today}"]`).evaluate((el) => {
+    const cs = getComputedStyle(el)
+    return { classes: el.className, shadow: cs.boxShadow, color: cs.color }
+  })
+  assert(
+    ring155.classes.includes('today') && ring155.classes.includes('chosen') && ring155.shadow.startsWith(ring155.color) && ring155.shadow.endsWith('inset'),
+    `155 a chosen today has no ring: ${JSON.stringify(ring155)}`,
+  )
+  await kb.press('Escape')
+  await picker152.waitFor({ state: 'detached' })
+  assert((await focus155()) === 'body', `155 after Esc on the calendar the focus is on ${await focus155()}`)
+  console.log('PASS 155 a pick from the task menu leaves nothing focused when nothing was; a chosen today keeps its ring')
+  // 2. Esc on the task menu: nothing written, nothing focused.
+  await taskMenu155()
+  await kb.press('Escape')
+  await page.locator('[data-testid="task-due"]').waitFor({ state: 'detached' })
+  await frames()
+  assert((await focus155()) === 'body', `155 after Esc on the task menu the focus is on ${await focus155()}`)
+  await expectFile('155 Esc on the task menu writes nothing', today155, journal)
+  // 3. While another block is edited: the pick gives the focus back to its editor, the caret where it was.
+  await clickRow(note155)
+  await note155.locator('.cm-content').waitFor()
+  await kb.press('End')
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  if (plus3.slice(0, 7) !== today.slice(0, 7)) await picker152.locator('[data-testid="due-picker-next"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${plus3}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  const plus155 = `${before155}- TODO task 155\n  due:: [[${plus3}]]\n- note 155\n`
+  await expectFile('155 a pick from the task menu while another block is edited writes the due line', plus155, journal)
+  await waitFor('155 the editor has the focus back', () => note155.locator('.cm-content').evaluate((el) => el === document.activeElement), true)
+  await kb.type('!')
+  await kb.press('Escape')
+  await note155.locator('.cm-content').waitFor({ state: 'detached' })
+  const typed155 = `${before155}- TODO task 155\n  due:: [[${plus3}]]\n- note 155!\n`
+  await expectFile('155 the caret is where it was', typed155, journal)
+  console.log('PASS 155 Esc on the task menu leaves nothing focused; a pick while editing gives the focus back to the editor')
+  // 4. A click outside the calendar on another block's text: that block's editor opens and keeps the focus.
+  await blur155()
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  const noteBox155 = await note155.locator('.content').boundingBox()
+  await clickOutside155(noteBox155.x + noteBox155.width - 4, noteBox155.y + noteBox155.height / 2)
+  await note155.locator('.cm-content').waitFor()
+  await waitFor('155 the clicked block is edited and has the focus', () => note155.locator('.cm-content').evaluate((el) => el === document.activeElement), true)
+  await frames()
+  assert(await note155.locator('.cm-content').evaluate((el) => el === document.activeElement), `155 the focus left the clicked block for ${await focus155()}`)
+  await kb.press('Escape')
+  await note155.locator('.cm-content').waitFor({ state: 'detached' })
+  await expectFile('155 a click outside the calendar writes nothing', typed155, journal)
+  console.log('PASS 155 a click outside the calendar on another block edits that block')
+  // 5. On a board: Esc after "Set due date…" from the card menu leaves the focus on the card; a click outside the
+  // calendar on an empty column leaves it on nothing.
+  await page.locator('[data-testid="nav-board"][data-board="0"]').click()
+  await page.locator('[data-testid="board-title"]').filter({ hasText: 'Tasks' }).waitFor()
+  const card155 = cardTitled('task 155')
+  await card155.waitFor()
+  const cardHasFocus155 = () => card155.evaluate((el) => el === document.activeElement)
+  await cardMenuOf('task 155')
+  await page.locator('[data-testid="menu-due"]').click()
+  await picker152.waitFor()
+  await kb.press('Escape')
+  await picker152.waitFor({ state: 'detached' })
+  await waitFor('155 Esc on the calendar leaves the focus on the card', cardHasFocus155, true)
+  await cardMenuOf('task 155')
+  await page.locator('[data-testid="menu-due"]').click()
+  await picker152.waitFor()
+  // A point near the bottom of a column, on no card and no control.
+  const empty155 = await page.evaluate(() => {
+    for (const col of document.querySelectorAll('[data-testid="column"]')) {
+      const r = col.getBoundingClientRect()
+      const x = r.left + r.width / 2
+      const y = Math.min(r.bottom, window.innerHeight) - 8
+      const at = document.elementFromPoint(x, y)
+      if (at && col.contains(at) && !at.closest('[data-testid="card"], button, a, input, [tabindex]')) return { x, y }
+    }
+    return null
+  })
+  assert(empty155, '155 no empty spot in a column')
+  await clickOutside155(empty155.x, empty155.y)
+  await frames()
+  assert((await focus155()) === 'body', `155 a click outside the calendar on an empty column left the focus on ${await focus155()}`)
+  await expectFile('155 Esc and a click outside the calendar on a board write nothing', typed155, journal)
+  console.log('PASS 155 on a board, Esc on the calendar leaves the focus on the card; a click outside leaves it on nothing')
+  // 6. Ctrl D in an open card's task line sets the due date.
+  await card155.locator('[data-testid="card-title"]').click()
+  await openCard.locator('.cm-content').waitFor()
+  await kb.press('End')
+  await kb.press('Control+d')
+  await picker152.waitFor()
+  await picker152.locator('[data-testid="due-picker-today"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${today}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('155 Ctrl D in an open card writes the due line under the task', `${before155}- TODO task 155\n  due:: [[${today}]]\n- note 155!\n`, journal)
+  await kb.press('Escape')
+  await kb.press('Escape')
+  await openCard.waitFor({ state: 'detached', timeout: 5000 })
+  await page.locator('[data-testid="nav-journal"]').click()
+  await day152.waitFor()
+  console.log('PASS 155 Ctrl D in an open card sets the due date')
 
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')

@@ -222,3 +222,15 @@ are its questions for you; each answer decides what a later plan does.
 138. [ ] **Pages get the journal's right-click menu:** by hand, on an ordinary page with a link to another page and a
    tag, right-click the link and the tag: each has "Color…". Color them and check the journal's washes follow. A
    page's link to itself has "Color…" too. A link to a journal day has no menu entry.
+
+139. [ ] **Due date calendar and task menu focus:** by hand, in a journal day:
+   - Give a task today's due date and open the calendar again on it: today's ring shows inside the filled day.
+   - Click on empty space so nothing is focused, right-click the task, "Set due date…", pick a day; then right-click
+     it again and press Esc. The Esc writes nothing. Afterwards nothing holds the focus, not even a hidden part of
+     the outline (e2e step 155 checks this; by hand it shows only in where Tab goes next).
+   - Edit another block, right-click the task, "Set due date…", pick a day: the editor has the focus back with the
+     caret where it was, and you can type on.
+   - Open the calendar and click another block's text: that block opens for editing and keeps the focus. On a board,
+     open the calendar from a card's menu and click an empty column: the focus is on nothing, not back on the card.
+   - On a board, open a card, put the caret in its task line, press Ctrl D and pick a day: the due line goes under
+     the task.

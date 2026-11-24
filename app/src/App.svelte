@@ -1560,8 +1560,9 @@
     // The search dialog and its backdrop sit over the main area: a press there, even one that dismisses
     // the search, is not a press outside the card or the editor. bits-ui closes it on the click, after this.
     // The date picker too: a press on it leaves the edited block alone, so Esc can go back to it. The theme menu
-    // likewise: a pick gives the focus back to the edited block.
-    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-due-picker]') || t.closest('[data-theme-menu]')) return
+    // likewise: a pick gives the focus back to the edited block. The task menu too: the due date calendar it opens
+    // gives the focus back to the edited block.
+    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-due-picker]') || t.closest('[data-theme-menu]') || t.closest('[data-task-menu]')) return
     // The ? button opens the list, and the theme button its menu, without taking the focus (or the editing) from
     // the block.
     if (t.closest('[data-testid="status-item"]:is([data-id="help"], [data-id="theme"])')) {

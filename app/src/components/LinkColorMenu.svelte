@@ -6,12 +6,16 @@
   // selected text keeps the native menu; anywhere else, no menu opens (`linkMenuAction`). "On selected text" means
   // the point lies in the selection's own boxes, not merely in an element that holds a selection.
   //
-  // When the menu or the picker closes (a pick, Esc, a click outside), the focus goes back to the link. While the
-  // picker is open, and while the focus given back is still on the link, the day may be drawn anew (a pick re-sends
-  // it, another program edits it): the link is then found again at its place (row, page, index), the picker moves
-  // with it, and a replaced focused link hands the focus to the new one. A link that is gone leaves the picker where
-  // it is, and closing it leaves the focus on the page. After "Set due date…" the focus goes back where it was before
-  // the right-click, and the calendar gives it back there when it closes.
+  // When the link menu or the color picker closes (a pick, Esc, a click outside), the focus goes back to the link,
+  // unless something else took it. While the picker is open, and while the focus given back is still on the link, the
+  // day may be drawn anew (a pick re-sends it, another program edits it): the link is then found again at its place
+  // (row, page, index), the picker moves with it, and a replaced focused link hands the focus to the new one. A link
+  // that is gone leaves the picker where it is, and closing it leaves the focus on the page.
+  //
+  // The task menu keeps where the focus was before the right-click (taken at the press, which moves the focus to this
+  // zone). When it closes, by Esc, a click outside or "Set due date…", the focus goes back there if that element is
+  // still in the page and no click put it elsewhere; when nothing held it, nothing holds it afterwards (never this
+  // zone). The calendar opened by "Set due date…" gives the focus back to the same place when a pick or Esc closes it.
   import { onDestroy, type Snippet } from 'svelte'
   import type { Action } from 'svelte/action'
   import { ContextMenu, Popover } from 'bits-ui'
@@ -55,7 +59,7 @@
   let task = $state<BlockId | null>(null)
   /** The task's row, where the calendar opens. */
   let taskRow: HTMLElement | null = null
-  /** Where the focus was before the right-click on a task row; it goes back there before the calendar opens. */
+  /** Where the focus was before the right-click on a task row, or null when nothing held it (`taskFocusBack`). */
   let taskFocus: HTMLElement | null = null
   /** "Set due date…" was chosen: the calendar opens once the menu has closed, so the menu's focus return cannot take it. */
   let pendingDue = false
@@ -164,11 +168,25 @@
   }
 
   /**
+   * The task menu closed: the focus goes back where it was before the right-click, unless a click outside put it
+   * elsewhere or that element is gone. When nothing held it, the zone, which took it at the press, gives it up.
+   */
+  function taskFocusBack() {
+    const active = document.activeElement
+    const onZone = active instanceof HTMLElement && active.matches('.link-zone')
+    const free = !active || active === document.body || onZone || !!active.closest('[data-testid="link-color-menu"]')
+    if (!free) return
+    if (taskFocus?.isConnected) taskFocus.focus({ preventScroll: true })
+    else if (onZone) active.blur()
+  }
+
+  /**
    * "Set due date…" was chosen and the menu has closed: the focus goes back where it was before the right-click, and
    * the calendar opens at the task's row (found again if the outline was drawn anew) on its due date now.
    */
   function openDue() {
     endRefocus()
+    taskFocusBack()
     const id = task
     if (id === null) return
     const now = taskOf(id, blocks)
@@ -177,7 +195,6 @@
       ? taskRow
       : zone?.querySelector<HTMLElement>(`[data-block-id="${CSS.escape(String(id))}"]`)
     if (!row) return
-    if (taskFocus?.isConnected) taskFocus.focus({ preventScroll: true })
     const r = (row.querySelector('.content') ?? row).getBoundingClientRect()
     duePick.show(now.due, { left: r.left, top: r.top, right: r.right, bottom: r.bottom }, (due) => onsetdue(id, due))
   }
@@ -201,7 +218,14 @@
    */
   const guard: Action<HTMLElement> = (node) => {
     zone = node
+    /** Where the focus was at a right press: the press then moves it to the zone, before the menu opens. */
+    let pressFocus: Element | null = null
+    function onpointerdown(e: PointerEvent) {
+      pressFocus = e.button === 2 ? document.activeElement : null
+    }
     function oncontextmenu(e: MouseEvent) {
+      const before = pressFocus ?? document.activeElement
+      pressFocus = null
       const el = e.target instanceof Element ? e.target : null
       const a = el?.closest<HTMLElement>('a.link, a.tag, a.ext') ?? null
       const row = el?.closest<HTMLElement>('[data-block-id]') ?? null
@@ -226,16 +250,18 @@
         copyUrl = act.kind === 'copy' ? act.url : null
         task = act.kind === 'task' ? act.id : null
         taskRow = act.kind === 'task' ? row : null
-        const active = document.activeElement
-        taskFocus = act.kind === 'task' && active instanceof HTMLElement && active !== document.body ? active : null
+        const held = before instanceof HTMLElement && before !== document.body && !before.matches('.link-zone')
+        taskFocus = act.kind === 'task' && held ? before : null
         anchor = a
         spot = a && act.kind === 'menu' ? spotOf(a) : null
         if (a) lastBox = a.getBoundingClientRect()
       }
     }
+    node.addEventListener('pointerdown', onpointerdown, true)
     node.addEventListener('contextmenu', oncontextmenu)
     return {
       destroy: () => {
+        node.removeEventListener('pointerdown', onpointerdown, true)
         node.removeEventListener('contextmenu', oncontextmenu)
         if (zone === node) zone = null
       },
@@ -253,11 +279,17 @@
     <ContextMenu.Content
       class="menu"
       data-testid="link-color-menu"
+      data-task-menu={task !== null ? '' : undefined}
       onCloseAutoFocus={(e) => {
         e.preventDefault()
         if (pendingDue) {
           pendingDue = false
           openDue()
+          return
+        }
+        if (task !== null) {
+          endRefocus()
+          taskFocusBack()
           return
         }
         if (!pending) {
