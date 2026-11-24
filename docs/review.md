@@ -216,3 +216,5 @@ are its questions for you; each answer decides what a later plan does.
 137. [ ] **A due line with words stays visible:** by hand, on a task type `due:: [[2026-12-01]] client waits` in one
    block and `due:: [[2026-12-01]]` in another, and leave each block. The line with only the date is hidden; the one
    with words shows dimmed next to the chip. Links in the words open their pages.
+   Then pick a new date on the line with words: the line becomes `due:: [[the new day]]` and the words go; Ctrl Z
+   brings them back.

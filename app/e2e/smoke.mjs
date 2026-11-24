@@ -4605,6 +4605,26 @@ try {
   await expectFile('152 Ctrl D on a plain block changes nothing', plain152, journal)
   console.log('PASS 152 Ctrl D on a plain block shows "Only a task can have a due date." and writes nothing')
 
+  // 153: a due line with words after the date shows them dimmed next to the chip; picking a new date writes a fresh
+  // `due:: [[date]]` line in place of it, and the words go with the old line (as for `done::`).
+  const before153 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before153}- TODO words 153\n  due:: [[${plus7}]] client waits\n`)
+  renameSync(`${journal}.tmp`, journal)
+  const row153 = day152.locator('.block[data-block-id]', { hasText: 'words 153' }).first()
+  await row153.locator('.chip.due').and(page.locator(`[data-due="${plus7}"]`)).waitFor()
+  await row153.locator('.prop', { hasText: 'client waits' }).waitFor()
+  const box153 = await row153.locator('.content').boundingBox()
+  await row153.locator('.content').click({ button: 'right', position: { x: box153.width - 4, y: box153.height / 2 } })
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  if (plus3.slice(0, 7) !== plus7.slice(0, 7)) await picker152.locator('[data-testid="due-picker-prev"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${plus3}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('153 a new date replaces the due line; the words after the old date go', `${before153}- TODO words 153\n  due:: [[${plus3}]]\n`, journal)
+  await row153.locator('.chip.due').and(page.locator(`[data-due="${plus3}"]`)).waitFor()
+  await waitFor('153 no dimmed words are left on the row', () => row153.locator('.prop').count(), 0)
+  console.log('PASS 153 a due line with words shows them dimmed; a new date replaces the line and the words go')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')
