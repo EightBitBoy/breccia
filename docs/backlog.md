@@ -46,11 +46,6 @@ Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scroll
 highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
 #21.
 
-## 48. Block links and embeds (Compatibility)
-
-Obsidian's `[[x#^id]]` and `![[x]]`, Logseq's `((uuid))` and `{{embed [[x]]}}` are not read. Open: which syntax Breccia
-would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
-
 ## 49. Front-matter values (Compatibility)
 
 Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside

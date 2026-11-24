@@ -680,3 +680,10 @@ Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or re
 the file until the next start. Wording, code comments and progress counts only.
 
 Owner, 2026-11-24: won't fix the rest. A second damage in one session is extremely unlikely and a restart fixes it; the counts are cosmetic.
+
+## 48. Block links and embeds (Compatibility)
+
+Obsidian's `[[x#^id]]` and `![[x]]`, Logseq's `((uuid))` and `{{embed [[x]]}}` are not read. Open: which syntax Breccia
+would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
+
+Owner, 2026-11-24: not wanted. Breccia stays page-level: links go to pages and headings; such syntax stays text.
