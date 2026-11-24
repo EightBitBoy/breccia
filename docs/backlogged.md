@@ -687,3 +687,10 @@ Obsidian's `[[x#^id]]` and `![[x]]`, Logseq's `((uuid))` and `{{embed [[x]]}}` a
 would write; whether it adds block ids (`id::` or `^id`) to text the user wrote.
 
 Owner, 2026-11-24: not wanted. Breccia stays page-level: links go to pages and headings; such syntax stays text.
+
+## 49. Front-matter values (Compatibility)
+
+Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
+front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
+
+Owner, 2026-11-24: not needed. Only aliases are read; Breccia never writes front matter.

@@ -46,11 +46,6 @@ Owner, 2026-11-24: build only the jump: `[[Page#Heading]]` opens the page scroll
 highlighted); a missing heading opens the page at the top. `[[#Heading]]` (same page) stays unsupported. Queued after
 #21.
 
-## 49. Front-matter values (Compatibility)
-
-Only `aliases` is read from front matter. Open: whether `tags:` counts as tags; whether `title:` (or a `title::` inside
-front matter) names the page; whether Breccia ever writes front matter, keeping YAML comments and formatting.
-
 ## 67. Git and release test gaps (Tests) (partly done 2026-11-13; two cases left)
 
 Done 2026-11-13: the release undo's two error branches are tested ("Could not put back" and "could not be read",
