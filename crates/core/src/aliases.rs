@@ -19,7 +19,12 @@ pub fn aliases(preamble: &str) -> Vec<String> {
     let lines: Vec<&str> = preamble[..n].split_inclusive('\n').map(content).collect();
     // Between the two `---` lines.
     let inner = &lines[1..lines.len() - 1];
-    let Some(at) = inner.iter().position(|l| l.starts_with("aliases:")) else {
+    // YAML reads `aliases:x` as text: the key's colon needs a space, a tab
+    // or the end of the line after it.
+    let Some(at) = inner.iter().position(|l| {
+        l.strip_prefix("aliases:")
+            .is_some_and(|r| r.is_empty() || r.starts_with([' ', '\t']))
+    }) else {
         return Vec::new();
     };
     let rest = inner[at]["aliases:".len()..].trim_matches([' ', '\t']);
@@ -65,20 +70,25 @@ pub fn aliases(preamble: &str) -> Vec<String> {
     out
 }
 
-/// Splits a flow list after its `[` at commas outside quotes, up to the
-/// closing `]`, after which only a ` #` comment may follow. A quote opens
-/// only at the start of an item (`don't` is text). `None` when there is no
+/// Splits a flow list after its `[` at commas outside quotes and outside
+/// nested `[…]` and `{…}`, up to the closing `]`, after which only a ` #`
+/// comment may follow. A quote opens only at the start of an item (`don't`
+/// is text); inside single quotes `''` is one quote. `None` when there is no
 /// closing `]` or something else follows it.
 fn split_flow(s: &str) -> Option<Vec<&str>> {
     let mut parts = Vec::new();
     let mut start = 0;
     let mut quote: Option<char> = None;
+    let mut depth = 0usize;
     let mut at_item_start = true;
     let mut close = None;
-    let mut chars = s.char_indices();
+    let mut chars = s.char_indices().peekable();
     while let Some((i, c)) = chars.next() {
         match quote {
             Some('"') if c == '\\' => {
+                chars.next();
+            }
+            Some('\'') if c == '\'' && chars.peek().is_some_and(|&(_, n)| n == '\'') => {
                 chars.next();
             }
             Some(q) if c == q => quote = None,
@@ -87,6 +97,17 @@ fn split_flow(s: &str) -> Option<Vec<&str>> {
                 quote = Some(c);
                 at_item_start = false;
             }
+            None if c == '[' || c == '{' => {
+                if at_item_start || depth > 0 {
+                    depth += 1;
+                }
+                at_item_start = depth > 0;
+            }
+            None if depth > 0 && (c == ']' || c == '}') => {
+                depth -= 1;
+                at_item_start = false;
+            }
+            None if c == ',' && depth > 0 => at_item_start = true,
             None if c == ',' => {
                 parts.push(&s[start..i]);
                 start = i + 1;
@@ -111,7 +132,8 @@ fn split_flow(s: &str) -> Option<Vec<&str>> {
     Some(parts)
 }
 
-/// A YAML scalar; `None` for nothing, or when it cannot be read.
+/// A YAML scalar; `None` for nothing, when it cannot be read, and for what
+/// YAML reads as a mapping or a nested list (`a: b`, `a:`, `{…}`, `[…]`).
 fn scalar(s: &str) -> Option<String> {
     if let Some(body) = s.strip_prefix('"') {
         let mut out = String::new();
@@ -150,7 +172,10 @@ fn scalar(s: &str) -> Option<String> {
             .min()
             .unwrap_or(s.len());
         let v = s[..cut].trim_matches([' ', '\t']);
-        (!v.is_empty() && v != "~" && v != "null" && !v.starts_with('#')).then(|| v.to_string())
+        let mapping = v.ends_with(':') || v.contains(": ") || v.contains(":\t");
+        let nested = v.starts_with(['{', '[']);
+        (!v.is_empty() && v != "~" && v != "null" && !v.starts_with('#') && !mapping && !nested)
+            .then(|| v.to_string())
     }
 }
 

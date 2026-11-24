@@ -131,12 +131,17 @@ it was typed with.
 A page can have other names, its **aliases**, which Obsidian calls the `aliases` property. Breccia reads them from the
 page's front matter (section 6):
 
-- Only the key `aliases` is read, in lower case at the start of a line. The old key `alias:` is not read.
+- Only the key `aliases` is read, in lower case at the start of a line, with a space, a tab or the end of the line
+  after its colon (`aliases:x` is text, as in YAML). The old key `alias:` is not read.
 - Three forms are read: a list with one `- name` a line (indented, as Obsidian writes it), a list on one line
   (`aliases: [a, "b"]`), and a single name (`aliases: a`). A name may be quoted (`"…"` or `'…'`); a quote counts only
-  at the start of a name, so `[don't panic, dp]` is two names. Spaces around a name are trimmed, inside quotes too. A
-  ` #` comment after a name or after the closing `]` is ignored, and so is a `#` comment line inside a `- name` list.
-  A list spread over several lines inside brackets, and YAML block text (`|`, `>`), give no aliases and no error.
+  at the start of a name, so `[don't panic, dp]` is two names; inside single quotes `''` is one quote, so
+  `['it''s, here']` is one name. Spaces around a name are trimmed, inside quotes too. A ` #` comment after a name or
+  after the closing `]` is ignored, and so is a `#` comment line inside a `- name` list.
+- A value YAML reads as a mapping or a nested list is not a name and is skipped, as Obsidian does: `a: b` and `a:`
+  unquoted (a colon followed by a space or ending the value; `x:y` is a name), `{…}` and `[…]` inside a list, and
+  `aliases: {…}`. Quote a name with `: ` in it (`"Kube: prod"`). The list's other names are still read.
+- A list spread over several lines inside brackets, and YAML block text (`|`, `>`), give no aliases and no error.
 - An alias is skipped when it is not linkable (section 4, it holds `[`, `]` or `|`), when it is a date in the journal
   form (`2026-10-29`; such a name always means a journal), when it repeats an earlier alias of the page (by key), and
   when it is the page's own name. Journals can have aliases too.

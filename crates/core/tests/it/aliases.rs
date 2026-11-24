@@ -160,3 +160,43 @@ fn a_hand_written_list_with_crlf_line_endings_is_read() {
     let single = "---\r\naliases: one name\r\n---\r\n";
     assert_eq!(aliases(single), ["one name"]);
 }
+
+#[test]
+fn a_doubled_quote_inside_single_quotes_is_one_quote_in_a_flow_list() {
+    // YAML reads `'a'', b'` as one item, "a', b".
+    assert_eq!(al("aliases: ['a'', b']"), ["a', b"]);
+    assert_eq!(al("aliases: ['it''s', x]"), ["it's", "x"]);
+}
+
+#[test]
+fn the_key_needs_a_space_after_its_colon() {
+    // YAML (and Obsidian) read `aliases:x` as text, not as the key.
+    for none in ["aliases:x", "aliases:[a, b]", "aliases:\"a\""] {
+        assert!(al(none).is_empty(), "{none:?}");
+    }
+    assert_eq!(al("aliases:\tx"), ["x"]);
+}
+
+#[test]
+fn mapping_like_values_are_not_names() {
+    // A value YAML reads as a mapping gives no alias; the other items stay.
+    for none in [
+        "aliases: {a: b}",
+        "aliases: {a, b}",
+        "aliases: a: b",
+        "aliases: a:",
+        "aliases:\n  - a: b",
+        "aliases:\n  - {a: b}",
+        "aliases: [{a: b}]",
+        "aliases: [{a: b, c: d}]",
+        "aliases: [{a, b}]",
+        "aliases: [a: b]",
+    ] {
+        assert!(al(none).is_empty(), "{none:?}");
+    }
+    assert_eq!(al("aliases:\n  - a: b\n  - c\n  - d:"), ["c"]);
+    assert_eq!(al("aliases: [{a: b, c}, d, e: f, [g, h], i]"), ["d", "i"]);
+    // A colon without a space after it is text.
+    assert_eq!(al("aliases: [x:y, \"Kube: prod\"]"), ["x:y", "Kube: prod"]);
+    assert_eq!(al("aliases:\n  - 'a: b'"), ["a: b"]);
+}

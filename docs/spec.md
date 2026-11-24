@@ -138,7 +138,10 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
   Breccia keeps it as page-level text, shows it dimmed and does not read values from it; a rename still rewrites a
   `[[link]]` inside it, and a `title::` line Breccia adds goes after it.
   It reads one value from it, `aliases` (other names of the page, which links resolve); a new page whose file name
-  differs from its name gets an alias block, and a rename keeps only that block in step.
+  differs from its name gets an alias block, and a rename keeps only that block in step. The reader is deliberately
+  simple: it reads the list and single-name forms Obsidian writes, quotes as YAML reads them (`''` inside single
+  quotes is one quote), needs a space after `aliases:`, and skips values YAML reads as a mapping or a nested list
+  (`a: b`, `{…}`), as Obsidian does (format.md section 4).
 - **Links.** `[[Page name]]` links to a page. `[[Page|shown text]]` links to `Page` and shows "shown text" (Obsidian's
   form); a rename keeps the shown text. A page name with `|` cannot be linked.
   `[[Page#Heading]]` and `[[x\|y]]` (Obsidian's table form) link to `Page` and `x`, and a link written as an alias goes
