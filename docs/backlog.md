@@ -58,6 +58,8 @@ Left: no test for the message when Git's own rebase abort fails (needs a fake `g
 `.cmd` file on Windows and a script elsewhere, and a real conflict first); no test for a push that hangs (to check: only
 the separate push URL has one; the same fake `git`).
 
+Owner, 2026-11-24: add both tests; if a push turns out to have no timeout, fix that too. In progress.
+
 ## 81. Explain basic syntax in the help dialog (Docs)
 
 Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,
