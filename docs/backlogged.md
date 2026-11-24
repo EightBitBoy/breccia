@@ -648,3 +648,10 @@ also appends to the journal (for example quick capture) must be told apart first
 `app/src/lib/route.ts`.
 
 Owner, 2026-11-24: closed. Not a bug today; the comment in app/src/lib/route.ts warns whoever adds a second way to append to the journal.
+
+## 20. Board settings could mix up two boards if several change at once (Boards)
+
+When one save deletes a board and adds another at the same position, the new one would inherit the deleted one's
+comments and keys in `config.toml`. Cannot happen with today's dialog (one change per save); revisit if that changes.
+
+Owner, 2026-11-24: closed. Not reachable with today's dialog (one change per save); a change that saves several board changes at once must handle it.

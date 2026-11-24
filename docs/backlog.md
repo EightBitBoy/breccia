@@ -41,11 +41,6 @@ first 200 rows load again).
 Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
 back in the block left from); the rest are not needed. Queued after #15.
 
-## 20. Board settings could mix up two boards if several change at once (Boards)
-
-When one save deletes a board and adds another at the same position, the new one would inherit the deleted one's
-comments and keys in `config.toml`. Cannot happen with today's dialog (one change per save); revisit if that changes.
-
 ## 21. Undo on the board (Boards)
 
 `Ctrl Z` while no block is edited should take back the last board change (a drop, a move). Today undo needs an editor
