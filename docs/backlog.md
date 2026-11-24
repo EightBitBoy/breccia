@@ -310,11 +310,11 @@ editing; a card has none. Options: show the button when the card has the focus, 
 From plan 16, follow-up 5; the owner settled on 2026-11-24 that it goes to the backlog. When a block has an opening
 code fence that is never closed, the lines after it belong to the fence. Setting or removing a due date or a priority
 replaces a property line, and the replacement re-indents a neighbouring line that the fence swallowed. Typing in such a
-block does the same. The words stay, but the spacing is not the user's. It was so before due dates. Decide whether
+block probably does the same (not checked). The words stay, but the spacing is not the user's. It was so before due dates. Decide whether
 Breccia should leave the lines of an unclosed fence as they are.
 
 ## 101. A very fast click on a block's text leaves the due date calendar open (Editor)
 
 From plan 17, task 6. A click on a block's text that lasts under 10 ms leaves the due date calendar open: the
 calendar's library closes it 10 ms after the press, and by then the editor has replaced the element that was pressed.
-Slower clicks close it as they should. Find a way to close the calendar that does not depend on the pressed element.
+Slower clicks close it as they should. After such a fast click, a later pick or Esc no longer gives the focus back. Find a way to close the calendar that does not depend on the pressed element.

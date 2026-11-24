@@ -117,7 +117,7 @@ Page colors use the same syntax: a `color:: <name>` line in the page's preamble 
 
 | Breccia | Obsidian | Logseq | What carries over |
 |---|---|---|---|
-| A task's `due:: [[YYYY-MM-DD]]` line gives it a due date, shown as a chip (a line with words after the date stays visible next to it); Breccia writes it only when you set or remove the date ([§8](format.md#8-properties)). | Nothing built in; the Tasks plugin writes `📅 YYYY-MM-DD` in the task's line instead (not verified). | A task's own deadline is `DEADLINE: <2026-12-01 Tue>` (not verified). | In Obsidian a `due::` line is text, and with the Dataview plugin it is an inline field `due` whose value links to the day's note (not verified); in Logseq a property with a link to the journal (not verified). Breccia keeps Logseq's `DEADLINE:` lines as text and does not read them as due dates. |
+| A task's `due:: [[YYYY-MM-DD]]` line gives it a due date, shown as a chip (a line with any other text besides the date stays visible next to it); Breccia writes it only when you set or remove the date ([§8](format.md#8-properties)). | Nothing built in; the Tasks plugin writes `📅 YYYY-MM-DD` in the task's line instead (not verified). | A task's own deadline is `DEADLINE: <2026-12-01 Tue>` (not verified). | In Obsidian a `due::` line is text, and with the Dataview plugin it is an inline field `due` whose value links to the day's note (not verified); in Logseq a property with a link to the journal (not verified). Breccia keeps Logseq's `DEADLINE:` lines as text and does not read them as due dates. |
 
 **Decision:** Breccia has its own `due::` line; it is ordinary text to the other apps.
 

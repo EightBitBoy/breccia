@@ -205,7 +205,7 @@ are its questions for you; each answer decides what a later plan does.
      pages and on board cards. There they have no task right-click menu (only journal days and pages have one).
    - On ordinary pages the right-click zone is new: outside an open editor and off selected text the browser's own
      right-click menu no longer opens (as in journal days). Links on pages get "Copy link" and the task menu, but no
-     "Color…" (only journal days list colorable links).
+     "Color…" (only journal days list colorable links; plan 17 changed this, see item 138).
    - A board card's menu button shows only on hover, so "Set due date…" (and Archive) on a card has no way in by
      keyboard. This was so before; backlog #99 holds it. Should a card have a key, as a task in the journal has `Ctrl D`?
    - Boards cannot sort by due date yet (backlog #98). Which order do you want: a column setting, or due dates first

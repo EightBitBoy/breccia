@@ -255,8 +255,8 @@ second click on the Git history button is Back.
 - **Due date of a task.** A task with a due date shows a small **chip** after its text, in place of the `due::` line
   when the line holds only the date; the line stays in the file but is not shown. A due line with other text
   (`due:: [[2026-12-01]] client waits`) stays visible, dimmed like other properties, next to the chip. Picking a new date
-  replaces that line with a fresh `due:: [[YYYY-MM-DD]]` line: the words after the old date go with it, and Ctrl Z
-  brings them back, as for `done::`. In a journal day and on a page the right-click menu of a task has "Set due
+  makes the task's `due::` lines one fresh `due:: [[YYYY-MM-DD]]` line where the first one stood (even a line with
+  words only): the words go, and Ctrl Z brings them back, as for `done::`. In a journal day and on a page the right-click menu of a task has "Set due
   date…", which opens the due date calendar: the month calendar of the date picker, with the day of a set date marked;
   a pick saves at once, and "Remove due date" (shown only when the task has a date) removes it. Linked references and
   an open card show the chip but have no task menu (a card has its card menu, §7.6). Any further `due::` line shows
