@@ -38,6 +38,9 @@ Not restored today: the selected or edited block, the highlight after a card jum
 graph's camera, the Settings section, the All pages and Archive filters, and a deep scroll in the Git history (only the
 first 200 rows load again).
 
+Owner, 2026-11-24: build only "Back and Forward restore the selected or edited block" (the caret or the selection comes
+back in the block left from); the rest are not needed. Queued after #15.
+
 ## 18. Closing a card does not wait for a pending delete (Boards)
 
 The late answer is applied to the journal day instead. Nothing is lost. Accepted so far.
