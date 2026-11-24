@@ -156,8 +156,8 @@ When two names clash, the order is:
 2. When several pages list the same alias, the first in the page order of the next section wins (journals first,
    then pages by their path).
 
-Breccia reports each clash once while it lasts. Breccia's "new page" and "rename" refuse a name that another page
-lists as an alias.
+Breccia reports each clash once while it lasts; a rename of a page in it does not report it again, and a page that
+joins it is reported. Breccia's "new page" and "rename" refuse a name that another page lists as an alias.
 
 ### Page names are unique
 

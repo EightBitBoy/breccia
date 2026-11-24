@@ -500,18 +500,25 @@ impl Workspace {
     }
 
     /// The clashes among the aliases not returned before, sorted by alias
-    /// key; one that ends and comes back is returned again. Does nothing
+    /// key; one that ends and comes back is returned again. A clash is known
+    /// by its kind and alias key, not by its paths, so a rename does not
+    /// return it again; a page that joins a clash adds one. Does nothing
     /// when no page's aliases or existence changed since the last call.
     pub fn take_alias_warnings(&mut self) -> Vec<LoadWarning> {
         if !std::mem::take(&mut self.names.clashes_dirty) {
             return Vec::new();
         }
         let current = self.alias_clashes();
-        let fresh = current
-            .iter()
-            .filter(|w| !self.names.reported.contains(w))
-            .cloned()
-            .collect();
+        let mut known: Vec<(bool, String)> = self.names.reported.iter().map(clash_id).collect();
+        let mut fresh = Vec::new();
+        for w in &current {
+            match known.iter().position(|k| *k == clash_id(w)) {
+                Some(i) => {
+                    known.swap_remove(i);
+                }
+                None => fresh.push(w.clone()),
+            }
+        }
         self.names.reported = current;
         fresh
     }
@@ -623,6 +630,16 @@ impl Workspace {
 /// A relative path with `/` on every platform, as warnings show paths.
 fn slashed(p: &Path) -> PathBuf {
     PathBuf::from(p.to_string_lossy().replace('\\', "/"))
+}
+
+/// What a clash warning is known by across renames: its kind and the alias
+/// key, without paths.
+fn clash_id(w: &LoadWarning) -> (bool, String) {
+    match w {
+        LoadWarning::AliasIsName { alias, .. } => (true, page_key(alias)),
+        LoadWarning::DuplicateAlias { alias, .. } => (false, page_key(alias)),
+        other => (false, other.path().to_string_lossy().into_owned()),
+    }
 }
 
 #[cfg(test)]

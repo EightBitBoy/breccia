@@ -817,6 +817,51 @@ fn clashes_are_warned_at_open() {
     );
 }
 
+#[test]
+fn a_clash_is_not_warned_again_after_a_rename() {
+    let t = tempfile::tempdir().unwrap();
+    put(
+        t.path(),
+        "pages/Kubernetes.md",
+        b"---\naliases: [k8s]\n---\n- k\n",
+    );
+    put(t.path(), "pages/k8s.md", b"- own page\n");
+    put(t.path(), "pages/A.md", b"---\naliases: [x]\n---\n- a\n");
+    put(t.path(), "pages/B.md", b"---\naliases: [X]\n---\n- b\n");
+    let (mut ws, warn) = Workspace::open(t.path()).unwrap();
+    assert_eq!(
+        warn.iter()
+            .filter(|w| matches!(
+                w,
+                LoadWarning::AliasIsName { .. } | LoadWarning::DuplicateAlias { .. }
+            ))
+            .count(),
+        2
+    );
+    ws.rename_page("kubernetes", "Kube").unwrap();
+    ws.rename_page("b", "C").unwrap();
+    ws.rename_page("a", "0 first").unwrap();
+    assert_eq!(ws.take_alias_warnings(), []);
+    // A third page joining a clash is new: it is warned.
+    put(t.path(), "pages/D.md", b"---\naliases: [x]\n---\n- d\n");
+    ws.apply_disk_changes(&[std::path::PathBuf::from("pages/D.md")]);
+    assert_eq!(
+        ws.take_alias_warnings(),
+        [LoadWarning::DuplicateAlias {
+            alias: "x".into(),
+            kept: "pages/0 first.md".into(),
+            ignored: "pages/D.md".into(),
+        }]
+    );
+    // One that ends and comes back is warned again.
+    put(t.path(), "pages/D.md", b"- d\n");
+    ws.apply_disk_changes(&[std::path::PathBuf::from("pages/D.md")]);
+    assert_eq!(ws.take_alias_warnings(), []);
+    put(t.path(), "pages/D.md", b"---\naliases: [x]\n---\n- d\n");
+    ws.apply_disk_changes(&[std::path::PathBuf::from("pages/D.md")]);
+    assert_eq!(ws.take_alias_warnings().len(), 1);
+}
+
 fn type_x(ws: &mut Workspace, key: &str) {
     ws.edit(key, |d, ids| {
         d.insert_after(None, "x", ids).unwrap();
