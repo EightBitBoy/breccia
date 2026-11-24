@@ -2,7 +2,8 @@
   // The due date calendar: one for every way in (the card menu, the task menu, the key), driven by `duePick`. It
   // opens at its anchor on the task's due date, marked as chosen, or at today (R7); the keys are the go-to-a-day
   // calendar's. A pick writes the day and "Remove due date" (shown only when the task has one) removes it; Esc or a
-  // click outside writes nothing. However it closes, the focus goes back where it was when it opened.
+  // click outside writes nothing. A pick, "Remove due date" or Esc gives the focus back where it was when it opened;
+  // a click outside leaves it where that click put it.
   import { Popover } from 'bits-ui'
   import { untrack } from 'svelte'
   import MonthGrid from './MonthGrid.svelte'
@@ -18,6 +19,8 @@
   let focusDay = $state(false)
   /** Where the focus was when the calendar opened; it goes back there on close. */
   let before: HTMLElement | null = null
+  /** The calendar closes by a press outside it: the press has placed the focus, so it is not given back. */
+  let outside = false
 
   $effect.pre(() => {
     if (!duePick.open) return
@@ -29,6 +32,7 @@
       if (!(a instanceof HTMLElement && a.closest('[data-due-picker]'))) {
         before = a instanceof HTMLElement && a !== document.body ? a : null
       }
+      outside = false
       focused = startDay(due, today.key)
       focusDay = true
     })
@@ -61,6 +65,7 @@
       align="start"
       sideOffset={4}
       collisionPadding={8}
+      onInteractOutside={() => (outside = true)}
       onOpenAutoFocus={(e) => {
         e.preventDefault()
         focusDay = true
@@ -69,7 +74,7 @@
         e.preventDefault()
         // bits-ui may also call this while the calendar opens (its focus scope mounts anew), so `before` is kept
         // until the next opening.
-        if (before?.isConnected) before.focus({ preventScroll: true })
+        if (!outside && before?.isConnected) before.focus({ preventScroll: true })
       }}
     >
       <MonthGrid

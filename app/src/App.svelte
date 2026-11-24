@@ -254,8 +254,8 @@
         pickerOpen = true
       },
       // Ctrl D: the due calendar at the caret, on a task only (a plain block gets the note and keeps editing); nothing
-      // while the search or a dialog is open, as Ctrl Shift D (`dueKeyAction`). Esc or a click outside writes
-      // nothing; the calendar gives the focus back to the editor, the caret where it was.
+      // while the search or a dialog is open, as Ctrl Shift D (`dueKeyAction`). Esc writes nothing and the calendar
+      // gives the focus back to the editor, the caret where it was; a click outside leaves the focus to that click.
       pickDue: (id, caret) => {
         const act = dueKeyAction(host.blockOf(id), dialogOpen() || search.shown)
         if (act.kind === 'refuse') notify({ kind: 'refused', message: NOT_A_TASK })
