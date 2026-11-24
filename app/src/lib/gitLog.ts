@@ -1,19 +1,18 @@
 // The Git history view: its status bar button, when it reloads, and its dates.
 import type { StatusItem } from './status'
 import type { GitView } from './types'
+import { LONG_MONTHS, SHORT_MONTHS } from './months'
 
 /** Commits per load; "Show more" loads this many more. */
 export const PAGE_SIZE = 200
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-const LONG_MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 const DAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** '3 Nov 2026 14:05', local time. */
 export function formatWhen(ms: number): string {
   const d = new Date(ms)
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+  return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`
 }
 
 /** Its tooltip: 'Tuesday, 3 November 2026, 14:05:09', local time. */

@@ -1,8 +1,8 @@
 // Git's status bar item (§7.9, §7.13): the texts, the tone and what a click does.
 import type { StatusItem } from './status'
 import type { GitView } from './types'
+import { SHORT_MONTHS } from './months'
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** How long ago `thenMs` was; a time in the future (a fast clock elsewhere) reads as now. */
 export function ago(thenMs: number, nowMs: number): string {
@@ -11,7 +11,7 @@ export function ago(thenMs: number, nowMs: number): string {
   if (s < 3600) return `${Math.floor(s / 60)} min ago`
   if (s < 86400) return `${Math.floor(s / 3600)} h ago`
   const d = new Date(thenMs)
-  return `on ${d.getDate()} ${MONTHS[d.getMonth()]}`
+  return `on ${d.getDate()} ${SHORT_MONTHS[d.getMonth()]}`
 }
 
 const RED_TEXTS: Record<string, string> = {

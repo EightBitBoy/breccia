@@ -3,8 +3,8 @@
 // shifts a day.
 import type { KeyInput } from './keys'
 import type { TreeView } from './types'
+import { LONG_MONTHS } from './months'
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
 
 /** The weekday headings, Monday first. */
 export const WEEKDAYS = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
@@ -81,13 +81,13 @@ const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'
 
 /** `Thursday, 12 March 2026, today, has a note`: a day button's name for a screen reader. */
 export function dayLabel(c: Cell): string {
-  const name = `${DAYS[weekday(c.key)]}, ${c.day} ${MONTHS[Number(c.key.slice(5, 7)) - 1]} ${c.key.slice(0, 4)}`
+  const name = `${DAYS[weekday(c.key)]}, ${c.day} ${LONG_MONTHS[Number(c.key.slice(5, 7)) - 1]} ${c.key.slice(0, 4)}`
   return name + (c.today ? ', today' : '') + (c.marked ? ', has a note' : '')
 }
 
 /** `March 2026`. */
 export function monthTitle(key: string): string {
-  return `${MONTHS[Number(key.slice(5, 7)) - 1]} ${key.slice(0, 4)}`
+  return `${LONG_MONTHS[Number(key.slice(5, 7)) - 1]} ${key.slice(0, 4)}`
 }
 
 /** Every journal day that has a file (the sidebar tree lists them). */

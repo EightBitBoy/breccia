@@ -1,4 +1,5 @@
 import type { PageRowView } from './types'
+import { SHORT_MONTHS } from './months'
 
 export type ColumnKey = 'name' | 'folder' | 'created' | 'edited' | 'linkedFrom' | 'linksOut'
 export interface Sort {
@@ -76,14 +77,13 @@ export function countLabel(shown: number, total: number, filtered: boolean): str
   return `${total} ${total === 1 ? 'page' : 'pages'}`
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 const pad = (n: number) => String(n).padStart(2, '0')
 
 /** '2 Mar 2026'; '—' for null. Local time. */
 export function formatDay(ms: number | null): string {
   if (ms === null) return '—'
   const d = new Date(ms)
-  return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`
+  return `${d.getDate()} ${SHORT_MONTHS[d.getMonth()]} ${d.getFullYear()}`
 }
 
 /** '29 Oct 2026, 09:04'; '—' for null. Local time. */

@@ -1,5 +1,6 @@
 // The Archive view: every archived task in one table, newest done date first.
 import type { ArchivedView } from './types'
+import { SHORT_MONTHS } from './months'
 
 /** Every whitespace-separated word of `filter` occurs in the task, its state, its page or the page's key, ignoring case. */
 export function matches(r: ArchivedView, filter: string): boolean {
@@ -13,13 +14,12 @@ export function shownRows(rows: ArchivedView[], filter: string): ArchivedView[] 
   return rows.filter((r) => matches(r, filter))
 }
 
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 /** `YYYY-MM-DD` as `2 Mar 2026`, and `YYYY-MM-DD HH:MM` as `2 Mar 2026 09:00`; '—' for none. */
 export function formatDate(day: string | null): string {
   const m = day === null ? null : /^(\d{4})-(\d{2})-(\d{2})(?: (\d{2}:\d{2}))?$/.exec(day)
   if (!m) return '—'
-  const date = `${Number(m[3])} ${MONTHS[Number(m[2]) - 1]} ${m[1]}`
+  const date = `${Number(m[3])} ${SHORT_MONTHS[Number(m[2]) - 1]} ${m[1]}`
   return m[4] ? `${date} ${m[4]}` : date
 }
 

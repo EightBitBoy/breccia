@@ -3,12 +3,12 @@
   import { BOARD_COL_DEFAULT, BOARD_COL_MAX, BOARD_COL_MIN, BOARD_COL_SLIDER_STEP, stepColumn } from '../lib/boardWidth'
   import { cardMenu, cardRoot, placeCommand } from '../lib/board'
   import { columnDrop, hiddenDrop, watchDrops, watchEdgeScroll, watchPeek } from '../lib/dnd'
+  import { duePick } from '../lib/duePick.svelte'
   import { canHide, hideDuration, markerTitle, PEEK_MS } from '../lib/hiddenColumns'
   import { refBlocks } from '../lib/refs'
   import type { BlockId, BoardView, CardView, Command, RefsView } from '../lib/types'
   import BlockRow from './BlockRow.svelte'
   import BoardCard from './BoardCard.svelte'
-  import { duePick } from '../lib/duePick.svelte'
 
   let {
     board,

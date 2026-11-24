@@ -1,6 +1,6 @@
 // The board's pure functions: what a card shows, the open card as a references
 // view, drops, and editing a board's columns.
-import { dueChip, type DueTone } from './due'
+import { dueChip, type DueChip } from './due'
 import type { BlockId, BlockView, BoardSummary, CardView, Command, PageView, RefsView, StateView } from './types'
 
 /** The card's description: blocks under the root with no state and no stated block between them and the root, depth minus 1. */
@@ -32,7 +32,7 @@ export function sourceLine(card: CardView): string {
 }
 
 /** The due chip of the card's task (`blocks[0]`), seen on `today`; null without a due date. */
-export function cardDue(card: CardView, today: string): { label: string; tone: DueTone; title: string | null } | null {
+export function cardDue(card: CardView, today: string): DueChip | null {
   const task = card.blocks[0]
   return task?.due ? dueChip(task.due, today, task.finished) : null
 }

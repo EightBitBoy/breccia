@@ -1,11 +1,18 @@
 // The words and tone of a task's due chip. The core renders an empty placeholder span; the window fills it with `today`.
 
+import { SHORT_MONTHS } from './months'
+
 export type DueTone = 'later' | 'soon' | 'overdue' | 'finished'
+
+/** A due chip's words, tone and tooltip (`title` is null when the label already says the date). */
+export interface DueChip {
+  label: string
+  tone: DueTone
+  title: string | null
+}
 
 /** The refusal text for a due date on a block that is not a task (the core's `NotATask` message). */
 export const NOT_A_TASK = 'Only a task can have a due date.'
-
-const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
 function parts(key: string): [number, number, number] {
   const [y, m, d] = key.split('-').map(Number)
@@ -15,7 +22,7 @@ function parts(key: string): [number, number, number] {
 /** `22 Nov`, or `22 Nov 2026` when `withYear`. */
 function shortDate(key: string, withYear: boolean): string {
   const [y, m, d] = parts(key)
-  return `${d} ${MONTHS[m - 1]}${withYear ? ` ${y}` : ''}`
+  return `${d} ${SHORT_MONTHS[m - 1]}${withYear ? ` ${y}` : ''}`
 }
 
 function daysBetween(from: string, to: string): number {
@@ -28,11 +35,7 @@ function daysBetween(from: string, to: string): number {
  * The chip for a task due on `due`, seen on `today` (both `YYYY-MM-DD`). `title` is the full date when the label
  * is in words (the tooltip), else null.
  */
-export function dueChip(
-  due: string,
-  today: string,
-  finished: boolean,
-): { label: string; tone: DueTone; title: string | null } {
+export function dueChip(due: string, today: string, finished: boolean): DueChip {
   const withYear = parts(due)[0] !== parts(today)[0]
   const date = shortDate(due, withYear)
   if (finished) return { label: `due ${date}`, tone: 'finished', title: null }

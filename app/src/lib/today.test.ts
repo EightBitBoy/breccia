@@ -52,3 +52,29 @@ test('a focus or visibility event after a clock jump updates key; stop unlistens
   stop()
   expect(unlisten).toHaveBeenCalledTimes(1)
 })
+
+function countingEnv() {
+  const e = env(() => new Date(2026, 10, 23, 10))
+  const listen = vi.fn(e.e.listen)
+  const set = vi.fn(e.e.timers.set)
+  const env2: TodayEnv = { ...e.e, listen, timers: { set, clear: e.e.timers.clear } }
+  return { env2, listen, set, unlisten: e.stop }
+}
+
+test('start twice runs once; the second stop function stops that run; start works again after stop', () => {
+  vi.useFakeTimers()
+  const { env2, listen, set, unlisten } = countingEnv()
+  const t = new Today(env2)
+  const stop1 = t.start()
+  const timers1 = set.mock.calls.length
+  const stop2 = t.start()
+  expect(listen).toHaveBeenCalledTimes(1)
+  expect(set).toHaveBeenCalledTimes(timers1)
+  expect(timers1).toBe(1)
+  stop2()
+  expect(unlisten).toHaveBeenCalledTimes(1)
+  stop1()
+  expect(unlisten).toHaveBeenCalledTimes(1)
+  t.start()
+  expect(listen).toHaveBeenCalledTimes(2)
+})

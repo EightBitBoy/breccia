@@ -35,15 +35,25 @@ export class Today {
     if (k !== this.key) this.key = k
   }
 
-  /** Re-checks after each local midnight and on focus and visibility change; returns the stop function. */
+  private running: (() => void) | null = null
+
+  /**
+   * Re-checks after each local midnight and on focus and visibility change; returns the stop function. Called while
+   * already started, it returns the running stop function and starts nothing.
+   */
   start(): () => void {
+    if (this.running) return this.running
     this.check()
     const stopMidnight = everyMidnight(() => this.check(), () => this.env.now(), this.env.timers)
     const stopListen = this.env.listen(() => this.check())
-    return () => {
+    const stop = () => {
+      if (this.running !== stop) return
       stopMidnight()
       stopListen()
+      this.running = null
     }
+    this.running = stop
+    return stop
   }
 }
 
