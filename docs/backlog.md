@@ -134,6 +134,8 @@ or wrong; the question is whether a refused command, which changed nothing, shou
 already made read-only commands leave it alone. To settle: refused commands too (the fix would be where the session ends
 the run, `crates/core/src/session/history.rs`), or leave it as it is.
 
+Owner, 2026-11-24: fix it: a refused command changed nothing, so it leaves the typing run alone. In progress.
+
 ## 87. Run the end-to-end test in CI (Tests)
 
 From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
