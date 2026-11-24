@@ -145,7 +145,10 @@ Logseq-style Markdown, so the files stay familiar and read well in any editor. E
 - **Links.** `[[Page name]]` links to a page. `[[Page|shown text]]` links to `Page` and shows "shown text" (Obsidian's
   form); a rename keeps the shown text. A page name with `|` cannot be linked.
   `[[Page#Heading]]` and `[[x\|y]]` (Obsidian's table form) link to `Page` and `x`, and a link written as an alias goes
-  to the page that lists it. Clicking `[[Page#Heading]]` opens `Page`, also when it does not exist yet. A new page name
+  to the page that lists it. Clicking `[[Page#Heading]]` opens `Page`, also when it does not exist yet, scrolled to its first block whose text
+  starts with a Markdown heading (`#` to `######`) whose text is "Heading" (trimmed, in any case), briefly highlighted
+  as a card jump is; with no such heading the page opens at the top. `[[#Heading]]` (a heading of the same page) is
+  not a heading link. A new page name
   or a rename cannot contain `#` (as in Obsidian); a page whose name already has one keeps it and its plain links. A
   tag is never a heading link: `#Page#x` is the tag `Page#x`.
   `#tag` and `#[[multi word tag]]` are links too: a tag is a page. A link to

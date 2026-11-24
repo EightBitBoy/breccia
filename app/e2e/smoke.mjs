@@ -5032,6 +5032,50 @@ try {
   await day152.waitFor()
   console.log('PASS 160 Ctrl Z and Ctrl Shift Z on a board undo and redo the last card drop')
 
+  // 161: a click on [[Page#Heading]] opens Page scrolled to the block with that heading (any case), highlighted; a
+  // heading the page does not have opens it at the top. A heading link in the linked references jumps too.
+  const filler161 = Array.from({ length: 60 }, (_, k) => `- filler ${k} 161\n`).join('')
+  writeFileSync(join(pagesDir, 'Heading161.md'), `- top 161\n${filler161}- ## Plans 161\n- after 161\n`)
+  writeFileSync(join(pagesDir, 'Link161.md'), '- go [[Heading161#plans 161]]\n- miss [[Heading161#Nowhere 161]]\n')
+  const sideRow161 = side.locator('[data-row="p:link161"]')
+  await sideRow161.waitFor({ timeout: 10_000 })
+  await side.locator('[data-row="p:heading161"]').waitFor({ timeout: 10_000 })
+  await sideRow161.click()
+  await title.filter({ hasText: 'Link161' }).waitFor()
+  const main161 = page.locator('.main')
+  const inView161 = (text) =>
+    page
+      .locator('.main .block[data-block-id]', { hasText: text })
+      .first()
+      .evaluate((el) => {
+        const r = el.getBoundingClientRect()
+        const m = el.closest('.main').getBoundingClientRect()
+        return r.top >= m.top && r.bottom <= m.bottom
+      })
+  await page.locator('.main a.link', { hasText: 'Heading161#plans 161' }).first().click()
+  await title.filter({ hasText: 'Heading161' }).waitFor()
+  await page.locator('.main .block.flash', { hasText: 'Plans 161' }).waitFor({ timeout: 5000 })
+  await waitFor('161 the heading block is scrolled into view', () => inView161('Plans 161'), true)
+  assert(!(await inView161('top 161')), '161 the page top is still in view: the jump did not scroll')
+  await page.locator('.main .block.flash').waitFor({ state: 'detached', timeout: 5000 })
+  // A heading the page does not have: the page at the top, nothing highlighted.
+  await kb.press('Alt+ArrowLeft')
+  await title.filter({ hasText: 'Link161' }).waitFor()
+  await page.locator('.main a.link', { hasText: 'Heading161#Nowhere 161' }).first().click()
+  await title.filter({ hasText: 'Heading161' }).waitFor()
+  await waitFor('161 a missing heading opens the page at the top', () => main161.evaluate((el) => el.scrollTop), 0)
+  assert((await page.locator('.main .block.flash').count()) === 0, '161 a block is highlighted for a missing heading')
+  // The same link in the page's linked references jumps on the page itself.
+  await page
+    .locator('[data-testid="linked-refs"] a.link', { hasText: 'Heading161#plans 161' })
+    .first()
+    .click()
+  await page.locator('.main .block.flash', { hasText: 'Plans 161' }).waitFor({ timeout: 5000 })
+  await waitFor('161 the linked reference jumps to the heading', () => inView161('Plans 161'), true)
+  await page.locator('[data-testid="nav-journal"]').click()
+  await day152.waitFor()
+  console.log('PASS 161 a heading link opens the page at that heading, highlighted, or at the top when it is missing')
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

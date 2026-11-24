@@ -29,3 +29,32 @@ export function linkClick(a: AnchorInfo): LinkClick {
   }
   return { kind: 'none' }
 }
+
+/**
+ * The heading part of a clicked link's target `Page#Heading` (after the first `#`, trimmed), or null when the target
+ * has none: no `#`, nothing before it (`[[#Heading]]` stays a page name), or nothing after it. Mirrors the core's
+ * `heading_base`.
+ */
+export function linkHeading(target: string): string | null {
+  const i = target.indexOf('#')
+  if (i < 0) return null
+  const base = target.slice(0, i).trim()
+  const rest = target.slice(i + 1).trim()
+  return base && rest ? rest : null
+}
+
+/** A Markdown heading line: 1 to 6 `#`, a space, the text, an optional closing run of `#`. */
+const HEADING = /^#{1,6}[ \t]+(.*?)(?:[ \t]+#+)?[ \t]*$/
+
+/**
+ * The first block whose text starts with a Markdown heading (`#` to `######` on its first line) whose text is
+ * `heading`, trimmed and in any case; null when none is.
+ */
+export function headingBlock<T extends { id: number; text: string }>(blocks: readonly T[], heading: string): T['id'] | null {
+  const want = heading.trim().toLowerCase()
+  for (const b of blocks) {
+    const m = HEADING.exec(b.text.split('\n', 1)[0])
+    if (m && m[1].trim().toLowerCase() === want) return b.id
+  }
+  return null
+}

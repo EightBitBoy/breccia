@@ -468,7 +468,8 @@ and Breccia writes something after it, it adds one.
   to the page `Page`, when a page with content or an alias named `Page` exists. Else the whole text is a page name as
   typed (`[[Issue #42]]` and `[[C# basics]]` link to pages of those names), but a click on the link opens `Page`
   (`Issue`, `C`), made blank when it does not exist: the heading part never becomes part of a new page's name. A page
-  or alias named exactly `Page#Heading` wins over the split. A heading link shows as typed, and its heading is ignored.
+  or alias named exactly `Page#Heading` wins over the split. A heading link shows as typed; its heading only
+  decides where a click scrolls the opened page: to the first block that starts with that Markdown heading.
   `[[C#]]` (nothing after the `#`) and `[[#Heading]]` (nothing before it) are never split; they link to pages named
   `C#` and `#Heading`. A tag is never split (`#C#` is one tag): `#Page#x` is the tag `Page#x` and never counts as a
   link to `Page`, even where `[[Page#x]]` does. `![[x]]` is `!` followed by a link to `x`. Breccia has no block or embed support.

@@ -36,7 +36,7 @@
   import { listenShell } from './lib/shellEvents'
   import { Recovery } from './lib/recovery'
   import { installDom } from './lib/dom'
-  import { linkClick } from './lib/links'
+  import { headingBlock, linkClick, linkHeading } from './lib/links'
   import { extendsTo, route, selectionPageOf } from './lib/route'
   import { Journal } from './lib/journal.svelte'
   import { linkDisplay } from './lib/linkDisplay.svelte'
@@ -1104,10 +1104,17 @@
     await flows.moveTo(row, folder)
   }
 
-  /** Opens page `name`, closing an open card first. A clicked `link` target `Page#Heading` opens `Page`. */
+  /**
+   * Opens page `name`, closing an open card first. A clicked `link` target `Page#Heading` opens `Page` and jumps to
+   * its block with that heading (`reveal`); with no such heading the page opens at the top.
+   */
   async function openPage(name: string, link = false) {
     await closeCard()
     await exec({ type: 'page.open', name, link: link || undefined })
+    const heading = link ? linkHeading(name) : null
+    if (heading === null || !page) return
+    const id = headingBlock(page.blocks, heading)
+    if (id !== null) await reveal(id)
   }
 
   async function openCard(c: CardView, column: string) {
@@ -1128,6 +1135,12 @@
     await closeCard()
     await exec({ type: 'page.show', key })
     if (!page?.blocks.some((b) => b.id === id)) return
+    await reveal(id)
+  }
+
+  /** Block `id` of the shown page: its ancestors unfolded, the block in the middle of the view and highlighted. */
+  async function reveal(id: BlockId): Promise<void> {
+    if (!page) return
     for (const a of ancestorsOf(page.blocks, id)) folded.delete(a)
     await tick()
     document.querySelector(`[data-block-id="${id}"]`)?.scrollIntoView({ block: 'center' })
