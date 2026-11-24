@@ -655,3 +655,10 @@ When one save deletes a board and adds another at the same position, the new one
 comments and keys in `config.toml`. Cannot happen with today's dialog (one change per save); revisit if that changes.
 
 Owner, 2026-11-24: closed. Not reachable with today's dialog (one change per save); a change that saves several board changes at once must handle it.
+
+## 30. Search index repair messages (Search) (wording done 2026-11-13; the rest left open)
+
+Owner, 2026-11-13: only the wording was fixed: a repair that cannot delete or reopen the file now names that failure. Left open: a second damage leaves the file until the next start, and the progress counts. Original note: when a damaged index cannot be deleted or reopened, the warning still names the original error; a second damage leaves
+the file until the next start. Wording, code comments and progress counts only.
+
+Owner, 2026-11-24: won't fix the rest. A second damage in one session is extremely unlikely and a restart fixes it; the counts are cosmetic.
