@@ -626,3 +626,11 @@ search offer no new page with `#`; pages and aliases that have one keep it. The 
 with a heading part per form, so a tag `#Page#x` goes to `Page#x` in counts, linked references, the Tags section and
 the graph, while `[[Page#x]]` goes to `Page`. D stays: `[[Issue #42]]` counts as a link to a page `Issue`, and a click
 on it without that page now makes `Issue`.
+
+## 16. Back and Forward follow renames made outside Breccia (Pages and links)
+
+A page file renamed in Explorer, a renamed or moved folder, and a board renamed in `config.toml` or by a pull are
+skipped on Back instead of followed. Detecting such renames (same text, new name) would fix the first; the board case
+needs boards to have an identity (see "Boards need a stable identity").
+
+Owner, 2026-11-24: won't fix. Renames outside Breccia are rare, Back only skips one step, and nothing is lost.

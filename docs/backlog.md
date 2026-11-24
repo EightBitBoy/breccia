@@ -32,12 +32,6 @@ Drag a page from the All pages table onto a sidebar folder; drag a page from the
 Owner, 2026-11-24: build only "drag a page from the sidebar into the outline to insert a `[[link]]`"; the other three are
 not needed. Queued after #14.
 
-## 16. Back and Forward follow renames made outside Breccia (Pages and links)
-
-A page file renamed in Explorer, a renamed or moved folder, and a board renamed in `config.toml` or by a pull are
-skipped on Back instead of followed. Detecting such renames (same text, new name) would fix the first; the board case
-needs boards to have an identity (see "Boards need a stable identity").
-
 ## 17. Back and Forward restore more (Pages and links)
 
 Not restored today: the selected or edited block, the highlight after a card jump, a board's sideways scroll, the
