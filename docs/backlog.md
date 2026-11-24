@@ -11,15 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 15. More ways to drag pages (Pages and links)
-
-Drag a page from the All pages table onto a sidebar folder; drag a page from the sidebar into the outline to insert a
-`[[link]]`; drag several selected rows at once (needs multi-select in the tree); a keyboard "pick up, move, drop" mode
-(today the Move... menu item is the keyboard way).
-
-Owner, 2026-11-24: build only "drag a page from the sidebar into the outline to insert a `[[link]]`"; the other three are
-not needed. Queued after #14.
-
 ## 17. Back and Forward restore more (Pages and links)
 
 Not restored today: the selected or edited block, the highlight after a card jump, a board's sideways scroll, the

@@ -645,6 +645,19 @@ its kind and alias, not by its paths: a rename does not warn again, a page that 
 reads `''` inside single quotes in a one-line list, needs a space after `aliases:`, and skips values YAML reads as a
 mapping or a nested list (`a: b`, `a:`, `{…}`, `[…]`); a name with `: ` needs quotes. 2 stays as the spec says.
 
+## 15. More ways to drag pages (Pages and links) (done 2026-11-24, no plan: the link drag; the other three not needed)
+
+Drag a page from the All pages table onto a sidebar folder; drag a page from the sidebar into the outline to insert a
+`[[link]]`; drag several selected rows at once (needs multi-select in the tree); a keyboard "pick up, move, drop" mode
+(today the Move... menu item is the keyboard way).
+
+Owner, 2026-11-24: build only "drag a page from the sidebar into the outline to insert a `[[link]]`"; the other three are
+not needed. Queued after #14.
+
+Done 2026-11-24: a page or journal day dragged from the sidebar into a page's or day's outline inserts a `[[link]]`
+(spec §7.2): at the pointer in the edited block, as a new block after a rendered block, or as the first block of an
+empty page. The page is not moved. e2e step 157; review item 142.
+
 ## 16. Back and Forward follow renames made outside Breccia (Pages and links)
 
 A page file renamed in Explorer, a renamed or moved folder, and a board renamed in `config.toml` or by a pull are

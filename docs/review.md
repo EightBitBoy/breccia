@@ -262,3 +262,17 @@ are its questions for you; each answer decides what a later plan does.
    - Front matter Breccia now reads as Obsidian does: `aliases: ['it''s, here']` is one alias `it's, here`;
      `aliases:x` (no space) gives no alias; `aliases: {a: b}`, an item `- a: b` and `[{a: b}, c]` give no alias for
      the mapping (`c` stays). A name with `: ` needs quotes, as in YAML: `- "Kube: prod"`.
+
+## Drag a page into the outline (backlog #15)
+
+142. [ ] **Drag a page from the sidebar into the outline:** by hand (`just dev`), on a page and in the journal:
+   - Click a block to edit it, then drag a page from the sidebar over its text: the block is outlined (there is no drop caret); drop,
+     and `[[Page name]]` is in the text at that place, with the caret after it. The page stays in its folder.
+   - Drag a page onto a rendered block (not edited): a line shows under the row; drop, and a new block holding
+     `[[Page name]]` comes after that block and its children, being edited.
+   - Open the Journals fold and drag a day: it inserts `[[YYYY-MM-DD]]`. Drag a page onto an empty page's "start
+     writing" line: the link is its first block.
+   - Dragging pages onto folders still moves them; a drop on linked references, a board or the page title does nothing.
+   - My calls (spec §7.2): a rendered block gets a new block after it rather than the link appended to its text (the
+     text may end with property lines, and a new block changes no text you wrote); linked references and boards take
+     no drop. Should a drop on a rendered block append to its text instead?
