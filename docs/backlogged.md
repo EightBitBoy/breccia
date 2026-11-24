@@ -606,3 +606,23 @@ Saving was never tried on FAT/exFAT drives or network shares (SMB), where file a
 differently. SMB applies on Windows too.
 
 Owner, 2026-11-24: not needed. The notes live on the internal disk; reopen if someone keeps notes on a stick or a network share.
+
+## 13. Heading-link edge cases (Pages and links) (done 2026-11-24, no plan)
+
+A tag `#Page#x` counts as a link to `Page` in counts and the graph (clicks and renames are right). A heading link to a
+blank page made by a click makes a second blank page `Page#H`. A page whose name contains `#` cannot be reached by a
+heading link, and renaming a page to such a name breaks its heading links (Obsidian splits at the first `#` too).
+Also confirm: with a page `Issue`, `[[Issue #42]]` counts as a link to `Issue` and a rename updates it; is that wanted?
+(to check: whether the tag and link counting were ever split per form, `crates/core/src/index.rs`.)
+
+Owner, 2026-11-24 (checked against the code first): fix A (a click on a heading link to a missing or empty page
+makes `Page`, not `Page#H`), B (`#` is no longer allowed in a new page name or a rename, as in Obsidian; existing such
+pages keep working for plain links) and C (a tag never counts as a link). Keep D: `[[Issue #42]]` counts as a link to
+a page `Issue`, as in Obsidian.
+
+Closed 2026-11-24: done (review item 140). A click on `[[Page#H]]` with no page `Page` (or a blank one) makes or opens
+`Page`. "New page" and rename refuse `#` ("a page name cannot contain [, ], | or #"), and the `[[` menu and quick
+search offer no new page with `#`; pages and aliases that have one keep it. The link index keeps the sources of keys
+with a heading part per form, so a tag `#Page#x` goes to `Page#x` in counts, linked references, the Tags section and
+the graph, while `[[Page#x]]` goes to `Page`. D stays: `[[Issue #42]]` counts as a link to a page `Issue`, and a click
+on it without that page now makes `Issue`.

@@ -234,3 +234,18 @@ are its questions for you; each answer decides what a later plan does.
      open the calendar from a card's menu and click an empty column: the focus is on nothing, not back on the card.
    - On a board, open a card, put the caret in its task line, press Ctrl D and pick a day: the due line goes under
      the task.
+
+## Heading links and `#` in page names (backlog #13)
+
+140. [ ] **Heading links, tags and `#` in names:** by hand, in a fresh folder (`just dev`):
+   - In a block type `[[Plan#Goals]]` with no page `Plan`, and click it: a blank page `Plan` opens, not `Plan#Goals`.
+     Type into it; the file is `pages/Plan.md`. Click the link again: `Plan` opens.
+   - On a page `Plan` with content, add `[[Plan#Goals]]` on one page and `#Plan#Goals` on another: Plan's linked
+     references list only the first; the Tags section lists `Plan#Goals`; in the graph the tag's page has an edge to
+     a node `Plan#Goals`, not to `Plan`.
+   - New page `C# notes`, and renaming any page to a name with `#`: both are refused with "a page name cannot contain
+     [, ], | or #". A page file `C# notes.md` made outside Breccia keeps its name and `[[C# notes]]` still opens it.
+   - In the `[[` menu, typing `Page#H` offers no "Create page"; existing pages with `#` are still offered.
+   - Open question: two clicks can still make a blank page with `#` in its name (it gets a file once you type), as
+     before: a tag (`#[[C# x]]`), and the All pages row of a linked-only page `Gone#H` (from `[[Gone#H]]` with no
+     page `Gone`). Should the tag be refused, and should the row open `Gone` like the link does?

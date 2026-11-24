@@ -114,8 +114,10 @@ desktop.ini
   (U+0000–U+001F, U+007F) and does not contain `[[` or `]]`. A page file whose name would not be valid is not loaded,
   and it is reported.
 - A name is **linkable** when it is valid and holds none of `[`, `]` and `|`. Breccia's "new page" and "rename"
-  accept only linkable names that are not dates in the journal form (`YYYY-MM-DD`). A page with an unlinkable name can
-  still exist (from its file name, its `title::`, or a tag such as `#a|b`), but a `[[…]]` link cannot reach it.
+  accept only linkable names without `#` (a link reads it as the start of a heading, section 7) that are not dates in
+  the journal form (`YYYY-MM-DD`). A page with an unlinkable name can still exist (from its file name, its `title::`,
+  or a tag such as `#a|b`), but a `[[…]]` link cannot reach it. A page whose name already holds `#` (from its file
+  name, its `title::`, or a tag such as `#[[C# basics]]`) keeps it, and a plain `[[C# basics]]` still reaches it.
 
 ### Names are case-insensitive
 
@@ -459,10 +461,12 @@ and Breccia writes something after it, it adds one.
   line of the same paragraph) or fenced code is a link or a tag.
 - `[[Page#Heading]]` (also `[[Page#Heading|shown]]`, `[[Page#Heading#Sub]]` and the block link `[[Page#^id]]`) is a link
   to the page `Page`, when a page with content or an alias named `Page` exists. Else the whole text is a page name as
-  typed (`[[Issue #42]]` and `[[C# basics]]` link to pages of those names). A page or alias named exactly
-  `Page#Heading` wins over the split. A heading link shows as typed, and its heading is ignored. `[[C#]]` (nothing after
-  the `#`) and `[[#Heading]]` (nothing before it) are never split; they link to pages named `C#` and `#Heading`. A tag
-  is never split (`#C#` is one tag). `![[x]]` is `!` followed by a link to `x`. Breccia has no block or embed support.
+  typed (`[[Issue #42]]` and `[[C# basics]]` link to pages of those names), but a click on the link opens `Page`
+  (`Issue`, `C`), made blank when it does not exist: the heading part never becomes part of a new page's name. A page
+  or alias named exactly `Page#Heading` wins over the split. A heading link shows as typed, and its heading is ignored.
+  `[[C#]]` (nothing after the `#`) and `[[#Heading]]` (nothing before it) are never split; they link to pages named
+  `C#` and `#Heading`. A tag is never split (`#C#` is one tag): `#Page#x` is the tag `Page#x` and never counts as a
+  link to `Page`, even where `[[Page#x]]` does. `![[x]]` is `!` followed by a link to `x`. Breccia has no block or embed support.
   In the `reads` blocks below, a link shows its target as typed; the resolution is this prose.
 
 ```markdown example
