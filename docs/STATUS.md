@@ -208,6 +208,13 @@ when it is the chosen day. The rest is tidying and tests; the old unclosed-fence
 click that leaves the calendar open #101. The owner checks review items 137 to 139. Both are released
 as 1.9.0.
 
+Backlog round 2026-11-24 (interactive, owner decides item by item; stopped by the owner before #87). Built and
+pushed, unreleased: #13 heading links, #14 aliases, #15 drag a page into the text, #17 Back restores the edited block,
+#21 and #91 undo with no block edited, #47 jump to a heading, #67 Git tests, #86 one undo step across a refused
+command (review items 140 to 146). Closed: #9, #10, #11, #12, #16, #18, #19, #20, #30, #48, #49, #82. Kept open:
+#83, #84. Decided, not built yet: #81 (a "Writing" tab in Help) and #85 (a plan to measure and fix speed at 5,000
+pages). Next in the round: #87.
+
 Candidates for the plan after it, to settle with the owner:
 
 - the by-hand checks in `docs/review.md` (items 1 to 63; 25 to 41 are page colors, 46 to 50 vividness, 51 to 58 plan 4,
