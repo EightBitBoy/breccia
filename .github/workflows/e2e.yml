@@ -44,6 +44,7 @@ jobs:
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2.9.3
         with:
           key: e2e-release
+          cache-on-failure: true
           save-if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
       - name: Install npm packages
         working-directory: app
@@ -55,6 +56,45 @@ jobs:
           Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile "$env:RUNNER_TEMP\wv2.exe"
           Start-Process "$env:RUNNER_TEMP\wv2.exe" -ArgumentList '/silent', '/install' -Wait
           if (Test-Path $key) { "WebView2 now: $((Get-ItemProperty $key).pv)" } else { 'WebView2 still not found' }
+      # Temporary diagnosis (backlog #87): why the DevTools port does not open on the runner.
+      - name: Build the release exe
+        run: |
+          just build
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Diagnose the app start
+        continue-on-error: true
+        run: |
+          "session: $([Environment]::UserInteractive) user=$env:USERNAME sessionname=$env:SESSIONNAME"
+          Get-Process -Name explorer, winlogon -ErrorAction SilentlyContinue | Format-Table Name, Id, SessionId
+          $exe = "$PWD\target\release\breccia.exe"
+          foreach ($off in @('1', '')) {
+            $run = Join-Path $env:RUNNER_TEMP "diag-$($off -ne '')"
+            New-Item -ItemType Directory -Force "$run\notes", "$run\config" | Out-Null
+            $env:BRECCIA_FOLDER = "$run\notes"
+            $env:BRECCIA_CONFIG_DIR = "$run\config"
+            $env:BRECCIA_OFFSCREEN = $off
+            $env:WEBVIEW2_USER_DATA_FOLDER = "$run\config\webview"
+            $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
+            "=== BRECCIA_OFFSCREEN='$off' ==="
+            $p = Start-Process $exe -PassThru -RedirectStandardOutput "$run\out.txt" -RedirectStandardError "$run\err.txt"
+            $up = $false
+            foreach ($i in 1..60) {
+              Start-Sleep 1
+              try { Invoke-RestMethod http://127.0.0.1:9222/json/version -TimeoutSec 2 | Out-String; $up = $true; break } catch {}
+              if ($p.HasExited) { "app exited, code $($p.ExitCode)"; break }
+            }
+            "port up: $up after $i s"
+            Get-Process -Name msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id, SessionId, StartTime
+            Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Select-Object -First 1 -ExpandProperty CommandLine
+            "--- stdout ---"; Get-Content "$run\out.txt" -ErrorAction SilentlyContinue
+            "--- stderr ---"; Get-Content "$run\err.txt" -ErrorAction SilentlyContinue
+            "--- breccia.log ---"; Get-ChildItem "$run\config" -Recurse -Filter breccia.log | Get-Content
+            "--- webview folder ---"; Get-ChildItem "$run\config\webview" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name
+            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+            Get-Process -Name msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force
+            Start-Sleep 2
+          }
+          Remove-Item Env:BRECCIA_FOLDER, Env:BRECCIA_CONFIG_DIR, Env:BRECCIA_OFFSCREEN, Env:WEBVIEW2_USER_DATA_FOLDER, Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue
       - name: End-to-end test
         run: |
           just e2e
