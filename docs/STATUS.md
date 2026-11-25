@@ -213,7 +213,13 @@ pushed, unreleased: #13 heading links, #14 aliases, #15 drag a page into the tex
 #21 and #91 undo with no block edited, #47 jump to a heading, #67 Git tests, #86 one undo step across a refused
 command (review items 140 to 146). Closed: #9, #10, #11, #12, #16, #18, #19, #20, #30, #48, #49, #82. Kept open:
 #83, #84. Decided, not built yet: #81 (a "Writing" tab in Help) and #85 (a plan to measure and fix speed at 5,000
-pages). Next in the round: #87.
+pages).
+
+Backlog round continued 2026-11-25, from #87 to the end (#101). Built and pushed, unreleased: #96 e2e waits for
+"nothing left to save", #98 cards with a due date first within a priority, #99 keyboard path to a card's menu,
+#101 a quick click outside the calendar closes it (review items 147 to 149). Closed: #87 (e2e stays local, before each
+release; no GitHub Actions run for it, owner's call), #88, #97 (for now), #100. Kept open: #89, #90, #95. The round
+is through; #81 and #85 are still to build.
 
 Candidates for the plan after it, to settle with the owner:
 
@@ -234,7 +240,8 @@ Candidates for the plan after it, to settle with the owner:
   (`BRECCIA_OFFSCREEN=1`, set by `smoke.mjs`). `BRECCIA_TRACE=1 just e2e` prints the timing summary; it reports
   12 unparsed lines, the `trace git state=…` lines, which predate plan 6.
   With little memory, `CARGO_BUILD_JOBS=2 just e2e`.
-- CI (`.github/workflows/ci.yml`) runs `just test` and `just lint` on every push; e2e runs only locally.
+- CI (`.github/workflows/ci.yml`) runs `just test` and `just lint` on every push; e2e runs only locally, before each
+  release (owner, 2026-11-25: no e2e on GitHub Actions).
 
 ## Owner decisions in force
 
