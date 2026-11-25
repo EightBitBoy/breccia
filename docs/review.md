@@ -323,3 +323,13 @@ are its questions for you; each answer decides what a later plan does.
    the top. The same link clicked in a page's linked references jumps too. `[[#Plans]]` (same page) and
    `[[Page#Heading#Sub]]` do not jump (the second opens at the top). Is the middle of the view right, or should the
    heading sit at the top?
+
+## Board columns sort by due date (backlog #98)
+
+147. [ ] **Within a priority, cards with a due date come first:** by hand (`just dev`): on a board, give three cards in
+   one open column the same priority (or none) and set due dates on two of them with "Set due date…", one soon and one
+   later; leave the third without. The two with a date come first, the soonest first, then the one without. A card
+   with a higher priority still comes above them all. Change a date and the cards re-order. Finished columns still go
+   by done date, and a card dropped among cards without a priority takes its place by the new order. Only the
+   `due:: [[YYYY-MM-DD]]` form counts. Open question: should dropping a card above an earlier-due card of the same
+   priority be possible (the drop only writes the priority, so due dates win within one priority)?

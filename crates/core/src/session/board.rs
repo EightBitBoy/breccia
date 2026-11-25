@@ -14,8 +14,8 @@ use crate::naming::{day_short, day_with_year};
 use crate::outline::{BlockId, Document};
 use crate::render::{card_html, crumb, plain_line, took};
 use crate::task::{
-    archived_at, created_at, done_at, done_date, done_time, is_archived, priority, task_state,
-    with_state,
+    archived_at, created_at, done_at, done_date, done_time, due_date, is_archived, priority,
+    task_state, with_state,
 };
 use crate::workspace::{Page, PageKind, Workspace};
 
@@ -103,6 +103,8 @@ struct Sorted {
     done: Option<NaiveDateTime>,
     /// `priority::`, in a column that is not finished.
     priority: Option<u32>,
+    /// The `due::` day, in a column that is not finished.
+    due: Option<NaiveDate>,
     source_date: Option<NaiveDate>,
     journal: bool,
     edited: Option<SystemTime>,
@@ -110,6 +112,16 @@ struct Sorted {
 }
 
 type Column = (ColumnView, Vec<Sorted>);
+
+/// Ascending, with `None` last.
+fn soonest_first<T: Ord>(a: &Option<T>, b: &Option<T>) -> Ordering {
+    match (a, b) {
+        (Some(a), Some(b)) => a.cmp(b),
+        (Some(_), None) => Ordering::Less,
+        (None, Some(_)) => Ordering::Greater,
+        (None, None) => Ordering::Equal,
+    }
+}
 
 /// Descending, with `None` last.
 fn newest_first<T: Ord>(a: &Option<T>, b: &Option<T>) -> Ordering {
@@ -166,7 +178,8 @@ impl BoardView {
 }
 
 /// A column's order. Finished: done date and time, newest first. Otherwise
-/// the prioritized cards first, highest first. Then, and for ties, the
+/// the prioritized cards first, highest first; within a priority the cards
+/// with a due day, soonest first. Then, and for ties, the
 /// computed order: source date (newest first), journal first, last edited,
 /// page, place in the page.
 fn sort_column(cards: &mut [Sorted], finished: bool) {
@@ -174,7 +187,7 @@ fn sort_column(cards: &mut [Sorted], finished: bool) {
         let first = if finished {
             newest_first(&a.done, &b.done)
         } else {
-            newest_first(&a.priority, &b.priority)
+            newest_first(&a.priority, &b.priority).then_with(|| soonest_first(&a.due, &b.due))
         };
         first
             .then_with(|| newest_first(&a.source_date, &b.source_date))
@@ -267,6 +280,11 @@ fn collect(ws: &Workspace, page: &Page, columns: &mut [Column]) {
                 None
             } else {
                 priority(b.text())
+            },
+            due: if state.finished {
+                None
+            } else {
+                due_date(b.text())
             },
             source_date,
             journal: matches!(page.kind, PageKind::Journal(_)),

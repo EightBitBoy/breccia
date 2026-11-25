@@ -2203,6 +2203,16 @@ try {
   assert((await doingCards.first().locator('[data-testid="card-title"]').innerText()) === 'Prio D', '90 Prio D is not at the top')
   console.log('PASS 90 the places hold after the board loads again')
 
+  // 162: within a priority, cards with a due date come first, soonest first; the others follow
+  writeFileSync(join(pagesDir, 'Due order.md'), '- DOING Due none\n- DOING Due late\n  due:: [[2099-12-01]]\n- DOING Due soon\n  due:: [[2099-11-02]]\n')
+  await cardTitled('Due soon').waitFor({ timeout: 10_000 })
+  const dueOrder = async () => (await titlesIn('DOING')).filter((t) => t.startsWith('Due '))
+  await waitFor('162 due order', dueOrder, ['Due soon', 'Due late', 'Due none'])
+  // The cards go again, so later steps see the column as before.
+  unlinkSync(join(pagesDir, 'Due order.md'))
+  await cardTitled('Due soon').waitFor({ state: 'detached', timeout: 10_000 })
+  console.log('PASS 162 within a priority the cards with a due date come first, soonest first')
+
   // 57: switching folders sends just-typed text first, then shows the other folder; and back
   await page.locator('[data-testid="nav-journal"]').click()
   const yFile = join(folder, 'journals', `${yesterday}.md`)

@@ -264,6 +264,39 @@ fn prioritized_cards_come_first_highest_first() {
 }
 
 #[test]
+fn within_a_priority_cards_with_a_due_date_come_first_soonest_first() {
+    let t = tempfile::tempdir().unwrap();
+    put(
+        t.path(),
+        "journals/2026-10-29.md",
+        "- TODO plain\n- TODO late\n  due:: [[2026-12-01]]\n- TODO high late\n  priority:: 3\n  due:: [[2026-12-01]]\n",
+    );
+    put(
+        t.path(),
+        "pages/P.md",
+        "- TODO soon\n  due:: [[2026-11-02]]\n- TODO high plain\n  priority:: 3\n- TODO high soon\n  priority:: 3\n  due:: [[2026-11-02]]\n- TODO text due\n  due:: tomorrow\n- DONE b\n  due:: [[2026-11-01]]\n  done:: [[2026-10-01]]\n- DONE a\n  due:: [[2026-12-01]]\n  done:: [[2026-10-02]]\n",
+    );
+    let mut s = open(t.path());
+    let b = board(&mut s, 0);
+    // Priority first; within a priority the due cards, soonest first, then the others in today's
+    // order (the page, edited now, before the older journal day).
+    assert_eq!(
+        titles(&b, "TODO"),
+        [
+            "TODO high soon",
+            "TODO high late",
+            "TODO high plain",
+            "TODO soon",
+            "TODO late",
+            "TODO text due",
+            "TODO plain"
+        ]
+    );
+    // A finished column keeps its done-date order.
+    assert_eq!(titles(&b, "DONE"), ["DONE a", "DONE b"]);
+}
+
+#[test]
 fn the_archive_sorts_by_done_and_archived_time() {
     let t = tempfile::tempdir().unwrap();
     put(

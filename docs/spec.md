@@ -450,7 +450,8 @@ a **finished** flag and an **in cycle** flag. Defaults:
 - **Hovering a card shows a small jump icon**; clicking it opens the source page and scrolls to the block, highlighted
   briefly.
 - **Drag a card to another column** to change the block's state in its file (done date added or removed per §5).
-- **Order within a column:** cards with a `priority::` number first, highest first; then newest source
+- **Order within a column:** cards with a `priority::` number first, highest first; then, within a priority, cards with a `due:: [[YYYY-MM-DD]]` first, soonest
+  first; then newest source
   first (journal date, or the page's last edit), then position in the file. Finished columns sort by done date and
   time, newest first. *(my call)*
 - **Drag a card to a place in a column**: the place is kept as its `priority::` (one more than the card

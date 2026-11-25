@@ -996,7 +996,9 @@ archiving a card adds the `archived::` line.
 
 **The order in a column.** A column of a finished state shows the newest done date and time first (a done date
 without a time counts as the start of its day; no done date last). Any other column shows the tasks with a priority
-(section 8) first, highest first, then the others. Ties, and the tasks without a priority, are in the computed order:
+(section 8) first, highest first, then the others. Within one priority (or among the tasks without one), the tasks with
+a due date (section 8) come first, the soonest first; the tasks without a due date follow. Ties, and the tasks without
+a due date, are in the computed order:
 newest source date first (a journal's day, or the day a page's file was last changed), journals before pages, the
 file changed last first, then by page and by place in the page.
 
