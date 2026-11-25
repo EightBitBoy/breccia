@@ -385,7 +385,7 @@ fn scale_5000_pages() {
         index_bytes as f64 / 1e6,
         notes_bytes as f64 / 1e6
     );
-    println!("query-time flush of all pages (fresh session) {flush_ms:.0} ms");
+    println!("search.query during the first build {flush_ms:.2} ms (no bar)");
     println!("links.set_page (one 20-block page) {set_page_ms:.3} ms (no bar)");
     report("block.split (21 samples)", split_ms, 16.0);
     report("folder.open + journal.feed", open_ms + feed_ms, 2000.0);
@@ -570,24 +570,237 @@ fn git_at_scale() {
         ms(t)
     });
 
+    // git.log at 3,000 commits: one fast-import stream, each commit changing one page, on
+    // top of `main`; pushed, so the plain line is not the slow case (nothing is unpushed).
+    let history = |dir: &Path| {
+        let mut stream = String::new();
+        for k in 0..3000usize {
+            let body = content(k % PAGES, 2000 + k);
+            stream.push_str(&format!(
+                "commit refs/heads/main\ncommitter T <t@example.invalid> {} +0000\ndata 8\nhistory\n",
+                1_700_000_000 + k
+            ));
+            if k == 0 {
+                stream.push_str("from refs/heads/main^0\n");
+            }
+            stream.push_str(&format!(
+                "M 100644 inline {}\ndata {}\n{}\n",
+                page_rel(k % PAGES),
+                body.len(),
+                body
+            ));
+        }
+        let file = e.root.path().join("history.fi");
+        fs::write(&file, stream).unwrap();
+        let out = std::process::Command::new("git")
+            .arg("-C")
+            .arg(dir)
+            .args(["fast-import", "--quiet", "--force"])
+            .env("GIT_CONFIG_NOSYSTEM", "1")
+            .env("GIT_CONFIG_GLOBAL", e.root.path().join("home/gitconfig"))
+            .stdin(fs::File::open(&file).unwrap())
+            .output()
+            .unwrap();
+        assert!(
+            out.status.success(),
+            "fast-import: {}",
+            String::from_utf8_lossy(&out.stderr)
+        );
+        git(dir, &["reset", "-q", "--hard", "main"]);
+    };
+    history(&mine);
+    git(&mine, &["push", "-q", "origin", "main"]);
+    let mut log_view = None;
+    let log_ms = time(|| {
+        let t = Instant::now();
+        let v = repo.log(0, 200).unwrap();
+        let took = ms(t);
+        log_view = Some(v);
+        took
+    });
+    let log_view = log_view.unwrap();
+    assert_eq!(log_view.entries.len(), 200, "git.log fills a page");
+    assert!(log_view.more, "git.log has older commits");
+    assert!(log_view.entries.iter().all(|x| x.pushed), "all pushed");
+
+    // The same on a repository whose only remote is an empty bare repository nothing was
+    // pushed to: no remote-tracking refs, so `unpushed()` lists every commit.
+    let lone = e.root.path().join("lone");
+    git(
+        e.root.path(),
+        &["clone", "-q", &mine.to_string_lossy(), "lone"],
+    );
+    git(&lone, &["remote", "remove", "origin"]);
+    let empty = crate::gitenv::bare(&e, "empty.git");
+    git(
+        &lone,
+        &["remote", "add", "origin", &empty.to_string_lossy()],
+    );
+    let lone_repo = match discover(&e.git, &lone).unwrap() {
+        Discovered::Repo(r) => r,
+        _ => panic!("not a repo"),
+    };
+    let mut lone_view = None;
+    let lone_ms = time(|| {
+        let t = Instant::now();
+        let v = lone_repo.log(0, 200).unwrap();
+        let took = ms(t);
+        lone_view = Some(v);
+        took
+    });
+    let lone_view = lone_view.unwrap();
+    assert_eq!(lone_view.entries.len(), 200);
+    assert!(
+        lone_view.entries.iter().all(|x| !x.pushed),
+        "nothing was pushed to this remote"
+    );
+
     println!("name median_ms bar_ms verdict");
     println!("git commit step (1 changed page, 5,000 pages) {commit_ms:.1} ms (no bar)");
     println!("git created_dates (5,000 pages, 1 commit + {n} more) {created_ms:.1} ms (no bar)");
     println!("git whole tick of a pull with a save during the fetch {tick_ms:.1} ms (no bar)");
     println!("git status of the folder (clean) {status_ms:.1} ms (no bar)");
+    report("git.log 200 of 3,000 commits", log_ms, 100.0);
+    report("git.log unpushed, remote never pushed to", lone_ms, 100.0);
     report(
         "git lock held, integrate with a save during the fetch",
         lock_ms,
-        500.0,
+        100.0,
     );
     report(
-        "git lock held, integrate with a save just before the lock (worst case)",
+        "git lock held, integrate with a save just before the lock (worst case, fallback by design)",
         last_ms,
         500.0,
     );
     report(
         "git lock held, integrate with no save during the fetch",
         quiet_ms,
-        500.0,
+        100.0,
+    );
+}
+
+/// The core measures for the large-folder points of backlog #85 that `scale_5000_pages`
+/// does not cover. A separate test: its extra files (today's day, colored pages, old DONE
+/// tasks) would break that test's page-count asserts and shift its numbers.
+///
+///   cargo test --release -p breccia-core -- --ignored --nocapture scale::scale_5000_extras
+#[test]
+#[ignore]
+fn scale_5000_extras() {
+    let t = tempfile::tempdir().unwrap();
+    let root = t.path();
+    generate(root);
+    put(
+        root,
+        "breccia/config.toml",
+        "[[states]]\nkeyword = \"TODO\"\nfinished = false\n\n\
+         [[states]]\nkeyword = \"DONE\"\nfinished = true\n",
+    );
+
+    // Today's journal day: 20 blocks linking 20 colored pages.
+    let day_key = today().format("%Y-%m-%d").to_string();
+    let mut day = String::new();
+    for b in 0..20 {
+        put(
+            root,
+            &format!("pages/Colors/Color {b}.md"),
+            &format!(
+                "color:: {}\n- a colored page\n",
+                ["red", "blue", "teal"][b % 3]
+            ),
+        );
+        day.push_str(&format!("- Block {b} links [[Color {b}]]\n"));
+    }
+    put(root, &format!("journals/{day_key}.md"), &day);
+
+    // A hub (Page 0) linked once from 500 pages and 500 journal days.
+    for i in 1..501 {
+        put(
+            root,
+            &page_rel(i),
+            &format!("{}- see [[Page 0]]\n", content(i, 0)),
+        );
+    }
+    for k in 0..500 {
+        let d = today() - Duration::days(1 + k as i64);
+        put(
+            root,
+            &format!("journals/{}.md", d.format("%Y-%m-%d")),
+            &format!("{}- see [[Page 0]]\n", content(k, 0)),
+        );
+    }
+
+    // 2,000 DONE tasks done 400 days ago, spread over 200 pages.
+    let old = (today() - Duration::days(400))
+        .format("%Y-%m-%d")
+        .to_string();
+    for p in 0..200 {
+        let mut text = String::new();
+        for b in 0..10 {
+            text.push_str(&format!("- DONE old task {p}.{b}\n  done:: [[{old}]]\n"));
+        }
+        put(root, &format!("pages/Old/Old {p}.md"), &text);
+    }
+
+    let cache = tempfile::tempdir().unwrap();
+    let mut s = Session::with_cache(cache.path().to_path_buf());
+    run(&mut s, json!({"type": "folder.open", "path": root}));
+    let gen_ = s.generation();
+    loop {
+        let p = s
+            .index_step(gen_, INDEX_CHUNK_PAGES)
+            .unwrap()
+            .expect("folder is open");
+        if p.done == p.total {
+            break;
+        }
+    }
+
+    // block.setText on the first block of today's day: 21 runs, median.
+    let shown = run(&mut s, json!({"type": "page.get", "key": day_key}));
+    let id = shown.page.expect("today's day").blocks[0].id;
+    let mut n = 0;
+    let mut set_samples = Vec::new();
+    for _ in 0..21 {
+        n += 1;
+        let t0 = Instant::now();
+        run(
+            &mut s,
+            json!({"type": "block.setText", "id": id, "text": format!("typed {n} [[Color 0]]")}),
+        );
+        set_samples.push(ms(t0));
+    }
+    let set_ms = median(set_samples);
+
+    // page.setColor on the hub: median of 5, alternating colors.
+    let mut c = 0;
+    let color_ms = time(|| {
+        c += 1;
+        let color = ["red", "blue"][c % 2];
+        let t0 = Instant::now();
+        run(
+            &mut s,
+            json!({"type": "page.setColor", "key": "page 0", "color": color}),
+        );
+        ms(t0)
+    });
+
+    // archive.auto, first run: one run, not a median.
+    let t0 = Instant::now();
+    let out = run(&mut s, json!({"type": "archive.auto"}));
+    let archive_ms = ms(t0);
+    println!("archive.auto touched {} files", out.changed.len());
+    assert!(
+        !out.changed.is_empty(),
+        "archive.auto archived the old tasks"
+    );
+
+    println!("name median_ms bar_ms verdict");
+    report("block.setText on today's journal day", set_ms, 16.0);
+    report("page.setColor on a page linked from 1,000", color_ms, 300.0);
+    report(
+        "archive.auto, first run, 2,000 old tasks",
+        archive_ms,
+        2000.0,
     );
 }
