@@ -156,6 +156,8 @@ drag on the wrong row. It was found while building Dailies and happens more in s
 the Dailies entry. The cause is not known (it may be WebView2's own drag handling). To do: find steps that show it,
 then the cause.
 
+Owner, 2026-11-25: keep open until it shows up again with steps.
+
 ## 96. A "nothing left to save" signal for the e2e test (Tests)
 
 From plan 14 triage (plan 13 follow-up 15). `expectFile` and `expectFileLike` in `app/e2e/smoke.mjs` wait a fixed
