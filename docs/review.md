@@ -343,3 +343,11 @@ are its questions for you; each answer decides what a later plan does.
    nothing and leaves the focus on the card, a picked day writes `due:: [[YYYY-MM-DD]]` under the task. Inside an open
    card, `Ctrl D` still sets the due date of the edited task. A mouse click on a card does not show its buttons once the
    pointer leaves.
+
+## A quick click outside the due date calendar (backlog #101)
+
+149. [ ] **A quick click outside the due date calendar always closes it:** by hand (`just dev`): open the due date
+   calendar on a task (right-click the task, "Set due date…", or `Ctrl D` while editing it), then click quickly on
+   another block's text. The calendar closes, that block is edited with the caret in it, and nothing is written. Open
+   the calendar again from there: `Esc` and a picked day give the focus back to that block's editor. A right-click
+   outside the calendar now closes it too, at the press.

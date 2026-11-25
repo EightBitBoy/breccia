@@ -150,9 +150,3 @@ the Dailies entry. The cause is not known (it may be WebView2's own drag handlin
 then the cause.
 
 Owner, 2026-11-25: keep open until it shows up again with steps.
-
-## 101. A very fast click on a block's text leaves the due date calendar open (Editor)
-
-From plan 17, task 6. A click on a block's text that lasts under 10 ms leaves the due date calendar open: the
-calendar's library closes it 10 ms after the press, and by then the editor has replaced the element that was pressed.
-Slower clicks close it as they should. After such a fast click, a later pick or Esc no longer gives the focus back. Find a way to close the calendar that does not depend on the pressed element.

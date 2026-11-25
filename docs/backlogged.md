@@ -861,6 +861,20 @@ transparent rather than `visibility: hidden` when not shown, so `Tab` from the c
 `Esc` gives the focus back to the card (`focusedCardKey` in `app/src/lib/cardKeys.ts`, `BoardCard.svelte`). Spec §7.6,
 the shortcut list, e2e step 163 and review item 148.
 
+## 101. A very fast click on a block's text leaves the due date calendar open (Editor) (done 2026-11-25, no plan)
+
+From plan 17, task 6. A click on a block's text that lasts under 10 ms leaves the due date calendar open: the
+calendar's library closes it 10 ms after the press, and by then the editor has replaced the element that was pressed.
+Slower clicks close it as they should. After such a fast click, a later pick or Esc no longer gives the focus back. Find a way to close the calendar that does not depend on the pressed element.
+
+Owner, 2026-11-25: fix it.
+
+Done 2026-11-25: the calendar now closes on any press outside it, decided when the press happens (a capture-phase
+`pointerdown` listener on the document, `closeOnPressOutside` in `app/src/lib/pressOutside.ts`, used by
+`DuePicker.svelte`), so it no longer depends on the pressed element still being in the page. A press outside with any
+button closes it and leaves the focus where the press puts it; Esc and a pick still give the focus back. e2e step 164
+and review item 149.
+
 ## 87. Run the end-to-end test in CI (Tests) (closed 2026-11-25: e2e stays local, before each release)
 
 From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
