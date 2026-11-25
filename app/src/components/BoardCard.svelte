@@ -3,7 +3,9 @@
   import { DropdownMenu } from 'bits-ui'
   import { cardDue, clip, descriptionOf, sourceLine, subtaskHint } from '../lib/board'
   import { today } from '../lib/today.svelte'
+  import { focusedCardKey } from '../lib/cardKeys'
   import { cardDrag } from '../lib/dnd'
+  import { isMac as mac } from '../lib/platform'
   import type { Box } from '../lib/linkColor'
   import type { CardView } from '../lib/types'
   import BlockRow from './BlockRow.svelte'
@@ -56,16 +58,41 @@
   let cardEl = $state<HTMLElement | null>(null)
   /** "Set due date…" was chosen: the calendar opens once the menu has closed, so the menu's focus return cannot take it. */
   let pendingDue = false
+  let menuOpen = $state(false)
+  /** The menu was opened by a key on the focused card: closing it gives the focus back to the card. */
+  let menuFromCard = false
 
   function menuClosed(e: Event) {
-    if (!pendingDue) return
+    // bits-ui also calls this as the menu opens: the focus stays for the menu's first item then.
+    if (menuOpen) {
+      if (menuFromCard) e.preventDefault()
+      return
+    }
+    const fromCard = menuFromCard
+    menuFromCard = false
+    if (!pendingDue) {
+      if (!fromCard) return
+      e.preventDefault()
+      if (cardEl?.isConnected) cardEl.focus({ preventScroll: true })
+      return
+    }
     pendingDue = false
     e.preventDefault()
     if (!menuButton?.isConnected) return
     // The calendar gives the focus back to where it is now. The menu button shows only on hover or a keyboard
-    // focus, and a hidden button loses the focus, so after a mouse pick the card itself holds it.
-    menuButton.focus({ preventScroll: true })
-    if (!menuButton.matches(':focus-visible')) cardEl?.focus({ preventScroll: true })
+    // focus, and a hidden button loses the focus, so after a mouse pick (or the menu opened from the card) the card
+    // itself holds it.
+    if (fromCard) cardEl?.focus({ preventScroll: true })
+    else {
+      menuButton.focus({ preventScroll: true })
+      if (!menuButton.matches(':focus-visible')) cardEl?.focus({ preventScroll: true })
+    }
+    setDue()
+  }
+
+  /** Opens the due date calendar at the menu button; the focus stays where it is, and the calendar gives it back. */
+  function setDue() {
+    if (!menuButton) return
     const r = menuButton.getBoundingClientRect()
     onsetdue({ left: r.left, top: r.top, right: r.right, bottom: r.bottom })
   }
@@ -76,9 +103,22 @@
   }
 
   function key(e: KeyboardEvent) {
-    if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+    if (e.target !== e.currentTarget) return
+    const act = focusedCardKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, mac)
+    if (act === null) return
     e.preventDefault()
-    onopen()
+    if (act === 'open') onopen()
+    else if (act === 'due') setDue()
+    else {
+      menuFromCard = true
+      menuOpen = true
+    }
+  }
+
+  /** The context-menu key and Shift F10 also send a `contextmenu` event to what has the focus (the card, or the menu
+   *  it just opened): the card menu takes the key, so the WebView's own menu stays shut. */
+  function noContextMenu(e: MouseEvent) {
+    if (e.target === e.currentTarget) e.preventDefault()
   }
 </script>
 
@@ -91,6 +131,7 @@
   tabindex="0"
   onclick={click}
   onkeydown={key}
+  oncontextmenu={noContextMenu}
   use:cardDrag={{ id: card.id, state: column, disabled: !draggable }}
 >
   <div class="tools">
@@ -101,12 +142,12 @@
       title="Show in {card.source}"
       onclick={onjump}>↗</button
     >
-    <DropdownMenu.Root>
+    <DropdownMenu.Root bind:open={menuOpen}>
       <DropdownMenu.Trigger bind:ref={menuButton} class="card-menu" data-testid="card-menu" aria-label="Card menu" title="Card menu">
         ⋯
       </DropdownMenu.Trigger>
       <DropdownMenu.Portal>
-        <DropdownMenu.Content class="menu" align="end" onCloseAutoFocus={menuClosed}>
+        <DropdownMenu.Content class="menu" align="end" onCloseAutoFocus={menuClosed} oncontextmenu={(e) => e.preventDefault()}>
           {#each menu.moveTo as k (k)}
             <DropdownMenu.Item class="menu-item" data-testid="menu-move" data-state={k} onSelect={() => onmove(k)}>
               Move to {k}

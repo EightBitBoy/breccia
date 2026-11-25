@@ -116,6 +116,15 @@ describe('the task state keys', () => {
   })
 })
 
+describe('card keys', () => {
+  it('lists the due date and menu keys on a focused card, on both platforms', () => {
+    const boards = shortcutGroups(false, '').find((g) => g.name === 'Boards')!.rows
+    expect(boards).toContainEqual({ keys: 'Ctrl D', what: 'On a card: set or remove its due date' })
+    expect(boards).toContainEqual({ keys: 'Shift F10 / Menu key', what: 'On a card: its menu (Esc closes it)' })
+    expect(shortcutRows(true)).toContainEqual({ keys: 'Cmd D', what: 'On a card: set or remove its due date' })
+  })
+})
+
 describe('back and forward', () => {
   it('lists Alt ← / Alt → under Navigation, Cmd [ / Cmd ] on a Mac', () => {
     const nav = shortcutGroups(false, '').find((g) => g.name === 'Navigation')!.rows

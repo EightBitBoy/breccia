@@ -5111,6 +5111,79 @@ try {
   await day152.waitFor()
   console.log('PASS 161 a heading link opens the page at that heading, highlighted, or at the top when it is missing')
 
+  // 163: a card's menu and due date by keyboard (backlog #99). Tab onto a card shows its buttons and reaches the menu
+  // button; Shift F10 and the context-menu key open the card menu on its first item, Esc gives the focus back to the
+  // card; Ctrl D opens the due date calendar, Esc writes nothing, a picked day writes the due line. The card is found
+  // by its title, so the order of the cards does not matter.
+  const before163 = readAt(journal)
+  writeFileSync(`${journal}.tmp`, `${before163}- TODO card 163\n`)
+  renameSync(`${journal}.tmp`, journal)
+  await page.locator('[data-testid="nav-board"][data-board="0"]').click()
+  await page.locator('[data-testid="board-title"]').filter({ hasText: 'Tasks' }).waitFor()
+  const card163 = cardTitled('card 163')
+  await card163.waitFor()
+  const menuButton163 = card163.locator('[data-testid="card-menu"]')
+  const active163 = () =>
+    page.evaluate(() => {
+      const a = document.activeElement
+      if (!a || a === document.body) return 'body'
+      if (a.matches('[data-testid="card"]')) return `card:${a.querySelector('[data-testid="card-title"]')?.textContent}`
+      if (a.matches('[data-testid="card-menu"]')) return `menu-button:${a.closest('[data-testid="card"]')?.querySelector('[data-testid="card-title"]')?.textContent}`
+      if (a.matches('[role="menuitem"]')) return `item:${a.textContent.trim()}`
+      return `${a.tagName.toLowerCase()}.${a.className}`
+    })
+  const visibility163 = () => menuButton163.evaluate((el) => (getComputedStyle(el).opacity === '1' ? 'visible' : 'hidden'))
+  // Reach the card by keyboard: focus it, then Tab to its first button and Shift Tab back, so the card has a keyboard
+  // focus.
+  await page.mouse.move(0, 0)
+  await card163.focus()
+  await waitFor('163 the card takes the focus', active163, 'card:card 163')
+  await kb.press('Tab')
+  await waitFor('163 Tab goes to the jump button', active163, 'button.jump')
+  await kb.press('Shift+Tab')
+  await waitFor('163 Shift Tab gives the card the focus', active163, 'card:card 163')
+  await waitFor('163 a card with the keyboard focus shows its menu button', visibility163, 'visible')
+  await kb.press('Tab')
+  await kb.press('Tab')
+  await waitFor('163 Tab reaches the menu button', active163, 'menu-button:card 163')
+  assert((await visibility163()) === 'visible', '163 the focused menu button is hidden')
+  await kb.press('Shift+Tab')
+  await kb.press('Shift+Tab')
+  await waitFor('163 Shift Tab goes back to the card', active163, 'card:card 163')
+  console.log('PASS 163 Tab onto a card shows its menu button and reaches it')
+  const menu163 = page.locator('[role="menu"]')
+  await kb.press('Shift+F10')
+  await menu163.waitFor()
+  const firstItem163 = `item:${(await menu163.locator('[role="menuitem"]').first().innerText()).trim()}`
+  await waitFor('163 Shift F10 opens the card menu on its first item', active163, firstItem163)
+  assert((await menu163.locator('[data-testid="menu-due"]').count()) === 1, '163 the menu opened by Shift F10 lacks "Set due date…"')
+  await kb.press('Escape')
+  await menu163.waitFor({ state: 'detached' })
+  await waitFor('163 Esc on the card menu gives the focus back to the card', active163, 'card:card 163')
+  await kb.press('ContextMenu')
+  await menu163.waitFor()
+  await waitFor('163 the context-menu key opens the card menu on its first item', active163, firstItem163)
+  await kb.press('Escape')
+  await menu163.waitFor({ state: 'detached' })
+  await waitFor('163 Esc after the context-menu key gives the focus back to the card', active163, 'card:card 163')
+  console.log('PASS 163 Shift F10 and the context-menu key open the card menu; Esc gives the focus back to the card')
+  await kb.press('Control+d')
+  await picker152.waitFor()
+  await kb.press('Escape')
+  await picker152.waitFor({ state: 'detached' })
+  await waitFor('163 Esc on the calendar gives the focus back to the card', active163, 'card:card 163')
+  await expectFile('163 Esc on the calendar opened by Ctrl D writes nothing', `${before163}- TODO card 163\n`, journal)
+  await kb.press('Control+d')
+  await picker152.waitFor()
+  if (plus3.slice(0, 7) !== today.slice(0, 7)) await picker152.locator('[data-testid="due-picker-next"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${plus3}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('163 Ctrl D on a focused card and a picked day write the due line', `${before163}- TODO card 163\n  due:: [[${plus3}]]\n`, journal)
+  await card163.locator(`[data-testid="card-due"][data-due="${plus3}"]`).waitFor()
+  console.log('PASS 163 Ctrl D on a focused card opens the due date calendar; a picked day writes the due line')
+  await page.locator('[data-testid="nav-journal"]').click()
+  await day152.waitFor()
+
   // 45: a folder that is not in Git offers set-up; one click and OK make the repository and the first commit
   await waitFor('45 offer', gitText, 'Not in Git · Set up…')
   assert(!existsSync(join(folder, '.git')), 'repository before set-up')

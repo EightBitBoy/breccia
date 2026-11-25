@@ -416,6 +416,11 @@ a **finished** flag and an **in cycle** flag. Defaults:
 - **Card**: the block's first line rendered (links and tags visible), its **description**, the source page (journal date
   or page name), the done date for finished tasks, and the due chip of a task with a due date (§7.2). A card's menu has
   "Set due date…", which opens the same due date calendar as the task menu.
+- **Cards by keyboard**: a card takes the focus with `Tab`. Its buttons (jump to the source, card menu) show on hover and
+  while the card or one of its buttons has a keyboard focus, so `Tab` reaches them. On a focused card, `Enter` or
+  `Space` opens it, `Ctrl D` (`Cmd D` on a Mac) opens the due date calendar for its task, and `Shift F10` or the
+  context-menu key opens its menu with the first item focused. `Esc` closes the menu or the calendar and gives the focus
+  back to the card. Inside an open card's editor `Ctrl D` stays the edited task's own key (§7.2).
 - **Nested blocks** (decided):
   - **Children without a state are the task's description.** They are displayed on the card, rendered, below the task
     line, with their own nesting (and their children, as long as those have no state either). Long descriptions are

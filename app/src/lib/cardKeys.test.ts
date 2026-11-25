@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { cardKey, isCardTask, taskSplitAt } from './cardKeys'
+import { cardKey, focusedCardKey, isCardTask, taskSplitAt } from './cardKeys'
 import type { Action } from './keys'
 import type { BlockView } from './types'
 
@@ -80,4 +80,44 @@ test('isCardTask names only the open card task', () => {
   expect(isCardTask(2, card)).toBe(false)
   expect(isCardTask(1, null)).toBe(false)
   expect(isCardTask(1, [])).toBe(false)
+})
+
+// A key on a closed card that has the keyboard focus (the card itself, not a button in it).
+const k = (key: string, mods: Partial<{ shift: boolean; alt: boolean; ctrl: boolean; meta: boolean }> = {}) => ({
+  key,
+  shift: false,
+  alt: false,
+  ctrl: false,
+  meta: false,
+  ...mods,
+})
+
+test('Enter and Space on a focused card open it', () => {
+  expect(focusedCardKey(k('Enter'), false)).toBe('open')
+  expect(focusedCardKey(k(' '), false)).toBe('open')
+  expect(focusedCardKey(k('Enter', { ctrl: true }), false)).toBeNull()
+})
+
+test('Ctrl D (Cmd D on a Mac) on a focused card opens the due date calendar', () => {
+  expect(focusedCardKey(k('d', { ctrl: true }), false)).toBe('due')
+  expect(focusedCardKey(k('D', { ctrl: true }), false)).toBe('due')
+  expect(focusedCardKey(k('d', { meta: true }), true)).toBe('due')
+  // Ctrl Shift D stays the date picker, and the other modifier does nothing.
+  expect(focusedCardKey(k('d', { ctrl: true, shift: true }), false)).toBeNull()
+  expect(focusedCardKey(k('d', { ctrl: true, alt: true }), false)).toBeNull()
+  expect(focusedCardKey(k('d', { ctrl: true }), true)).toBeNull()
+  expect(focusedCardKey(k('d', { meta: true }), false)).toBeNull()
+  expect(focusedCardKey(k('d'), false)).toBeNull()
+})
+
+test('Shift F10 and the context-menu key on a focused card open its menu', () => {
+  expect(focusedCardKey(k('F10', { shift: true }), false)).toBe('menu')
+  expect(focusedCardKey(k('ContextMenu'), false)).toBe('menu')
+  expect(focusedCardKey(k('ContextMenu', { shift: true }), false)).toBe('menu')
+  expect(focusedCardKey(k('F10'), false)).toBeNull()
+  expect(focusedCardKey(k('F10', { shift: true, ctrl: true }), false)).toBeNull()
+})
+
+test('other keys on a focused card are left alone', () => {
+  for (const key of ['a', 'Tab', 'Escape', 'ArrowDown', 'F1']) expect(focusedCardKey(k(key), false)).toBeNull()
 })

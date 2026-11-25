@@ -435,9 +435,13 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .card .tools { position: absolute; top: 4px; right: 4px; display: flex; gap: 2px; }
 .card .jump, .card .card-menu {
   padding: 0 6px; line-height: 20px; font-size: 12px;
-  border: none; background: var(--card-btn); color: var(--text); visibility: hidden;
+  border: none; background: var(--card-btn); color: var(--text); opacity: 0;
 }
-.card:hover .tools button, .card .tools button:focus-visible, .card .card-menu[data-state='open'] { visibility: visible; }
+/* The buttons show on hover, and while the card or one of its buttons has a keyboard focus. They are only transparent
+   when hidden, not `visibility: hidden`: Tab from the card blurs it before the button takes the focus, and a button
+   that hid for that moment would refuse it. */
+.card:hover .tools button, .card:focus-visible .tools button, .card:has(:focus-visible) .tools button,
+.card .card-menu[data-state='open'] { opacity: 1; }
 .card .jump:hover, .card .card-menu:hover, .card .card-menu[data-state='open'] { background: var(--card-btn-hover); color: var(--text); }
 .card.dragging { opacity: .5; }
 .col.drop-over { outline: 2px dashed var(--accent); outline-offset: -2px; }

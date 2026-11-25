@@ -1,7 +1,8 @@
 // The keyboard list: shown in Settings and, grouped and filterable, by the F1 overlay. Each entry follows
 // what the key handlers do: `keys.ts` (`decide` in a block, `isSearchKey`, `isSettingsKey`, `isNewPageKey`,
 // `isHelpKey`, `isDatePickerKey`, `navKey`), `calendar.ts` (`pickerKey`, in the date picker), `selection.ts` (blocks selected;
-// `cycleState` and `removeState` are in both), the menus in `editor/menu.ts`, `zoom.ts`, `Board.svelte` and
+// `cycleState` and `removeState` are in both), the menus in `editor/menu.ts`, `zoom.ts`, `Board.svelte`, `cardKeys.ts`
+// (`focusedCardKey`, on a focused card) and
 // `graph.ts`. A new key handler gets a line here.
 export type Shortcut = { group: string; keys: string; mac: string; what: string }
 
@@ -33,6 +34,8 @@ export const SHORTCUTS: Shortcut[] = [
   { group: 'Navigation', keys: 'Ctrl N', mac: 'Cmd N', what: 'New page' },
   { group: 'Navigation', keys: 'Ctrl ,', mac: 'Cmd ,', what: 'Settings' },
   { group: 'Boards', keys: 'Enter / Space', mac: 'Enter / Space', what: 'On a card: open it (on the board title: board settings)' },
+  { group: 'Boards', keys: 'Ctrl D', mac: 'Cmd D', what: 'On a card: set or remove its due date' },
+  { group: 'Boards', keys: 'Shift F10 / Menu key', mac: 'Shift F10 / Menu key', what: 'On a card: its menu (Esc closes it)' },
   { group: 'Boards', keys: 'Esc', mac: 'Esc', what: 'Close the open card' },
   { group: 'Window and zoom', keys: 'F1', mac: 'F1', what: 'This list of keyboard shortcuts' },
   { group: 'Window and zoom', keys: 'Ctrl +', mac: 'Cmd +', what: 'Zoom in (Ctrl and the mouse wheel too)' },
