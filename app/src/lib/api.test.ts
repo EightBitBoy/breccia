@@ -306,3 +306,35 @@ test('cancelled text is no longer unsaved', () => {
   c.cancel(1)
   expect(states).toEqual([true, false])
 })
+
+test('busy covers the typing pause, the queue and the applying of answers, with no gap between them', async () => {
+  const seen: boolean[] = []
+  let release!: () => void
+  const c = createClient(
+    () => new Promise<Output>((resolve) => (release = () => resolve(emptyOutput()))),
+    { onBusy: (b) => seen.push(b) },
+  )
+  expect(c.busy()).toBe(false)
+  c.setTextDebounced(1, 'a')
+  expect(c.busy()).toBe(true)
+  await vi.advanceTimersByTimeAsync(300) // the pause ends and the send starts in the same tick
+  expect(c.busy()).toBe(true)
+  release()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(c.busy()).toBe(false)
+  expect(seen).toEqual([true, false]) // never false in between
+})
+
+test('busy stays true until the answer has been applied, and a cancelled text is not busy', async () => {
+  let applied = false
+  const c = createClient(async () => emptyOutput(), { onOutput: () => void (applied = true) })
+  const run = c.run({ type: 'block.split', id: 1, at: 0 })
+  expect(c.busy()).toBe(true)
+  await run
+  await vi.advanceTimersByTimeAsync(0)
+  expect(applied).toBe(true)
+  expect(c.busy()).toBe(false)
+  c.setTextDebounced(2, 'x')
+  c.cancel(2)
+  expect(c.busy()).toBe(false)
+})

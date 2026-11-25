@@ -820,3 +820,10 @@ that adds or removes `>` on every line of the selection. Recommended: 1 with 3, 
 The owner is thinking about it; decide before building.
 
 Owner, 2026-11-25: closed for now; the owner wants more time with the app first.
+
+## 96. A "nothing left to save" signal for the e2e test (Tests) (done 2026-11-25, no plan)
+From plan 14 triage (plan 13 follow-up 15). `expectFile` and `expectFileLike` in `app/e2e/smoke.mjs` wait a fixed
+second for the save pause. The window could expose when nothing is pending and the write queue is idle, so these waits
+become waits for a state, not for time.
+
+Done 2026-11-25: the client counts text in the typing pause plus commands queued, running or being applied (`busy()`, hook `onBusy`, `app/src/lib/api.ts`); the window mirrors it as `data-busy` on the root element. `expectFile` and `expectFileLike` call `settled()`, which waits for a frame and two idle readings 50 ms apart (so a keypress the editor has not yet turned into a pending save cannot slip through), bounded at 5 s, then check the bytes. The fixed `sleep(1000)` is gone.

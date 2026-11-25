@@ -235,7 +235,10 @@
     onOutput: apply,
     onError: (e, cmd) => host.backgroundFailed(e, cmd),
     onUnsaved: (u) => void (unsavedText = u),
+    // For the e2e test (`settled`): whether any save is pending or queued. Not shown to the user.
+    onBusy: (b) => void (document.documentElement.dataset.busy = String(b)),
   })
+  document.documentElement.dataset.busy = 'false'
 
   /** What the editor may touch: the open card on a board, the feed's loaded days, or the page and its references. */
   const editable = (): EditableView => ({ board: boards.index !== null, card: boards.card, feed: journal.feed, page, refs })

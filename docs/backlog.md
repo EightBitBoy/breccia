@@ -158,12 +158,6 @@ then the cause.
 
 Owner, 2026-11-25: keep open until it shows up again with steps.
 
-## 96. A "nothing left to save" signal for the e2e test (Tests)
-
-From plan 14 triage (plan 13 follow-up 15). `expectFile` and `expectFileLike` in `app/e2e/smoke.mjs` wait a fixed
-second for the save pause. The window could expose when nothing is pending and the write queue is idle, so these waits
-become waits for a state, not for time.
-
 ## 98. Sort board columns by due date (Boards)
 
 From plan 16, owner 2026-11-23: not in the first version of due dates. Options: a column setting, or due dates first

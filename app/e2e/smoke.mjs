@@ -123,8 +123,31 @@ const jsonAt = (path) => {
     return {}
   }
 }
+// The main window's page, for the helpers outside `main`.
+let mainPage = null
+/**
+ * Waits until the window has nothing left to save: no text in the 300 ms typing pause and no command queued, running
+ * or being applied (`data-busy` on the root element, set by the window for this). It reads "idle" only after a
+ * frame has passed and twice in a row 50 ms apart, so a key the editor has not yet turned into a pending save cannot
+ * slip through. A bound, not a pause: after `ms` it returns and the caller's byte check reports what is wrong.
+ */
+async function settled(ms = 5000) {
+  if (!mainPage) return
+  const end = Date.now() + ms
+  let idle = 0
+  while (idle < 2 && Date.now() < end) {
+    let busy = true
+    try {
+      busy = await mainPage.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => r(document.documentElement.dataset.busy !== 'false'))),
+      )
+    } catch {}
+    idle = busy ? 0 : idle + 1
+    await sleep(50)
+  }
+}
 async function expectFile(step, expected, path) {
-  await sleep(1000) // longer than the 300 ms save pause
+  await settled()
   const end = Date.now() + 3000
   let actual = readAt(path)
   while (actual !== expected && Date.now() < end) {
@@ -149,7 +172,7 @@ const likeEnd = (expected) =>
   new RegExp(`${expected.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replaceAll(TIME, '\\d{2}:\\d{2}:\\d{2}')}$`)
 /** Like expectFile, with each `TIME` in `expected` standing for any `HH:MM:SS`; returns the file's text. */
 async function expectFileLike(step, expected, path) {
-  await sleep(1000) // longer than the 300 ms save pause
+  await settled()
   const re = likeRe(expected)
   const end = Date.now() + 3000
   let actual = readAt(path)
@@ -259,6 +282,7 @@ try {
   await waitForDevtools()
   const browser = await chromium.connectOverCDP(`http://127.0.0.1:${port}`)
   const page = browser.contexts()[0].pages()[0]
+  mainPage = page
   const kb = page.keyboard
 
   // 1

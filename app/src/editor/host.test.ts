@@ -73,6 +73,7 @@ const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
 
 /** Commands are recorded and never answered: the test applies outputs itself. */
 const client: Client = {
+  busy: () => false,
   run(cmd) {
     sent.push(cmd)
     // Link completion asks for the page names; everything else is answered by the test.

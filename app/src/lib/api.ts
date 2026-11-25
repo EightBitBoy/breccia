@@ -14,6 +14,8 @@ export interface Client {
   /** Drop the pending text of `id`, if it has not been sent yet. */
   cancel(id: BlockId): void
   setGeneration(n: number): void
+  /** Whether anything is left to do: text in the typing pause, or a command queued, running or being applied. */
+  busy(): boolean
 }
 
 export interface Hooks {
@@ -23,6 +25,8 @@ export interface Hooks {
   onError?(err: unknown, cmd: Command): void
   /** Whether typed text is still on its way to the core (in the typing pause or sent and not yet answered); on change only. */
   onUnsaved?(unsaved: boolean): void
+  /** Whether the client has any work left (typing pause, queue, applying answers); on change only. For tests of the whole app. */
+  onBusy?(busy: boolean): void
 }
 
 /** A hook must never reject the queue. */
@@ -39,9 +43,20 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
   let tail: Promise<unknown> = Promise.resolve()
   let sending = 0
   let unsaved = false
+  let queued = 0
+  let busy = false
   const pending = new Map<BlockId, { text: string; generation: number; timer: ReturnType<typeof setTimeout> }>()
 
+  /** Counts pending text and queued commands; every place that changes either one calls it in the same tick. */
+  function reportBusy(): void {
+    const now = pending.size + queued > 0
+    if (now === busy) return
+    busy = now
+    safely(() => hooks.onBusy?.(now))
+  }
+
   function reportUnsaved(): void {
+    reportBusy()
     const now = pending.size + sending > 0
     if (now === unsaved) return
     unsaved = now
@@ -50,11 +65,18 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
 
   // The generation is captured when the command is queued, not when it is sent.
   function enqueue(command: Command, gen: number): Promise<Output> {
+    queued++
+    reportBusy()
     const p = tail.then(() => invoke({ generation: gen, command }))
-    tail = p.then(
-      (out) => safely(() => hooks.onOutput?.(out, command)),
-      () => {},
-    )
+    tail = p
+      .then(
+        (out) => safely(() => hooks.onOutput?.(out, command)),
+        () => {},
+      )
+      .finally(() => {
+        queued--
+        reportBusy()
+      })
     return p
   }
 
@@ -107,6 +129,9 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
     },
     setGeneration(n) {
       generation = n
+    },
+    busy() {
+      return pending.size + queued > 0
     },
   }
 }
