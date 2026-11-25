@@ -146,6 +146,9 @@ From plan 12 triage (plan 6 follow-up 15). Only Git panics are logged (`git.rs`)
 `console.error` are not. Window errors may hold note text, and the owner's rule is that the log never holds note text,
 so this needs a decision on what may be logged (for example the error kind without its message).
 
+Owner, 2026-11-25: keep open, decide later (recommended then: Git failures as command and error kind only, no
+window errors).
+
 ## 95. Pressing a cut-off page-tree row can drag the wrong row (Pages and links)
 
 From plan 14 triage (plan 13 follow-up 2). Pressing a page-tree row that is cut off at the sidebar's edge can start a
