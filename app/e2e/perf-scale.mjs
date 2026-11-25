@@ -32,6 +32,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 const now = () => performance.timeOrigin + performance.now()
 const today = todayKey()
 const KEYS = 40
+const ENTER_GAP = 40 // ms from one letter to the next (each letter is followed by Enter)
 const CARET_PRESSES = 50
 const DAYS_BACK = 500
 const SHOW_MORE = 10
@@ -139,7 +140,9 @@ async function launch(folder, configDir, gitEnv, logPath) {
     window.__probe = { rowAt: null }
     const check = () => {
       if (window.__probe.rowAt !== null || !document.querySelector(sel)) return false
-      window.__probe.rowAt = performance.timeOrigin + performance.now()
+      // The next animation frame after the row went in, not the insertion itself.
+      window.__probe.rowAt = -1
+      requestAnimationFrame(() => (window.__probe.rowAt = performance.timeOrigin + performance.now()))
       return true
     }
     const mo = new MutationObserver(() => check() && mo.disconnect())
@@ -249,6 +252,7 @@ async function measureLaunch(folder, gitEnv, n) {
   const logPath = join(configDir, 'stderr.log')
   const r = {}
   const notes = {}
+  const invalid = []
   const { browser, page, spawnedAt, connectedAt } = await launch(folder, configDir, gitEnv, logPath)
   try {
     // 1, 2: the first contentful paint and the first journal row, both from the spawn. The page's clock is
@@ -262,16 +266,19 @@ async function measureLaunch(folder, gitEnv, n) {
       const rowAt = probed
         ? null
         : await new Promise((res) => {
-            const check = () => document.querySelector(sel) && (res(performance.timeOrigin + performance.now()), true)
+            const check = () =>
+              document.querySelector(sel) &&
+              (requestAnimationFrame(() => res(performance.timeOrigin + performance.now())), true)
             if (check()) return
             const mo = new MutationObserver(() => check() && mo.disconnect())
             mo.observe(document.documentElement, { subtree: true, childList: true })
           })
-      while (!fcp() || (probed && window.__probe.rowAt === null)) await new Promise((r) => setTimeout(r, 10))
+      while (!fcp() || (probed && !(window.__probe.rowAt > 0))) await new Promise((r) => setTimeout(r, 10))
       return { fcpAt: performance.timeOrigin + fcp().startTime, rowAt: probed ? window.__probe.rowAt : rowAt, exact: !shownBefore }
     }, JOURNAL_ROW)
     r['window shows'] = start.fcpAt - spawnedAt
-    r['journal usable'] = start.rowAt - spawnedAt
+    // Shown, not only inserted: the row's next frame, and never before the window's first paint.
+    r['journal usable'] = Math.max(start.rowAt, start.fcpAt) - spawnedAt
     notes.connectedMs = Math.round(connectedAt - spawnedAt)
     // false: the row was already shown when this script first looked, so `journal usable` is an upper bound.
     notes.journalExact = start.exact
@@ -288,16 +295,33 @@ async function measureLaunch(folder, gitEnv, n) {
     await page.locator('.cm-content[contenteditable="true"]').first().waitFor()
     // 20 letters, each followed by Enter. The editor saves a block 300 ms after its last key, so a burst of letters is
     // one `block.setText`; each Enter saves at once, as a `block.split` that carries the text. The first build is
-    // over about 1.5 s after the journal shows, too soon for 40 keys with pauses between them.
+    // over about 1.5 s after the journal shows, too soon for 40 keys with 300 ms pauses between them. The Enters
+    // are paced ENTER_GAP ms apart, so a save waits for the index rather than for the save before it.
     const letters = 'abcdefghijklmnopqrst'.slice(0, KEYS / 2)
     const todayFile = join(folder, 'journals', `${today}.md`)
     const onDisk = () => (existsSync(todayFile) ? readFileSync(todayFile, 'utf8') : '')
     const typedAt = now()
-    for (const ch of letters) {
-      await page.keyboard.press(ch)
+    // After each Enter, the next letter waits for the split on disk and the new empty row's editor (a fixed 40 ms
+    // pacing alone put letters into the wrong row: see the plan 18 Task 2 report), and at least ENTER_GAP ms.
+    const emptyEditor = () => {
+      const c = document.activeElement?.closest('.cm-content')
+      return c !== null && c !== undefined && c.textContent === ''
+    }
+    for (let k = 0; k < letters.length; k++) {
+      const keyAt = now()
+      await page.keyboard.press(letters[k])
       await page.keyboard.press('Enter')
+      const sofar = [...letters.slice(0, k + 1)].map((c) => `- ${c}\n`).join('')
+      const endK = Date.now() + 30_000
+      while (!(onDisk().startsWith(sofar) && (await page.evaluate(emptyEditor)))) {
+        if (Date.now() > endK) throw new Error(`key ${k + 1}: today's file is ${JSON.stringify(onDisk())}`)
+        await sleep(5)
+      }
+      const rest = ENTER_GAP - (now() - keyAt)
+      if (rest > 0) await sleep(rest)
     }
     notes.typingMs = Math.round(now() - typedAt)
+    // The index item still shows after the last key: every key went in during the first build.
     notes.typedDuringBuild = indexSeen && (await page.locator(INDEX_ITEM).count()) > 0
     const want = [...letters].map((c) => `- ${c}\n`).join('')
     const end3 = Date.now() + 30_000
@@ -342,9 +366,11 @@ async function measureLaunch(folder, gitEnv, n) {
       .split(/\r?\n/)
       .map((l) => l.trim())
       .filter((l) => /^trace run block\.(setText|split) /.test(l))
+    const waits = lines.map((l) => Number(/ wait=([\d.]+)ms /.exec(l)?.[1] ?? NaN))
     notes.saves = {
       setText: lines.filter((l) => l.includes('block.setText')).length,
       split: lines.filter((l) => l.includes('block.split')).length,
+      waitMax: Math.max(...waits),
     }
     const summary = summarize(lines.map((l) => l.replace(/^trace run block\.\w+ /, 'trace run typing ')).join('\n'))
     const row = summary.split('\n').find((l) => l.startsWith('run typing '))
@@ -352,6 +378,9 @@ async function measureLaunch(folder, gitEnv, n) {
     const [, , waitP95, , runP95] = row.trim().split(/\s+/).slice(2).map(Number)
     r['typing during first build, wait p95'] = waitP95
     r['typing during first build, run p95'] = runP95
+    // A line taken after the build is not "during the first build": marked INVALID, never ok or OVER.
+    if (!notes.typedDuringBuild) invalid.push('typing during first build, wait p95', 'typing during first build, run p95')
+    if (!notes.searchDuringBuild) invalid.push('search during first build')
 
     await indexQuiet(page)
     const goneAt = await page.evaluate(() => window.__index.goneAt)
@@ -380,11 +409,15 @@ async function measureLaunch(folder, gitEnv, n) {
     r[`git history show more x${SHOW_MORE}`] = Math.max(...more)
     notes.showMore = more.map(Math.round)
     notes.gitRows = await page.locator('[data-testid="log-row"]').count()
+    // The count line, not the rows in the page: a virtualised list holds only the rows in view.
+    const gitCount = await page.locator('[data-testid="log-count"]').innerText()
+    if (gitCount !== `newest ${200 * (SHOW_MORE + 1)} commits`) throw new Error(`the Git history counts "${gitCount}"`)
     const atEnd = () => {
       const m = document.querySelector('.main')
       return m.scrollTop + m.clientHeight >= m.scrollHeight - 2
     }
     const gitScroll = await wheelUntil(page, atEnd, 1000)
+    if (!gitScroll.reached) throw new Error(`the Git history did not scroll to its end in ${gitScroll.steps} steps`)
     r['git history scroll frame p95'] = p95(gitScroll.frames)
     notes.gitScroll = { frames: gitScroll.frames.length, steps: gitScroll.steps, reached: gitScroll.reached }
 
@@ -396,7 +429,10 @@ async function measureLaunch(folder, gitEnv, n) {
       return (await done) - t0
     })
     notes.archiveCount = await page.locator('[data-testid="archive-count"]').innerText()
+    // The count, not the rows in the page: a virtualised list holds only the rows in view.
+    if (notes.archiveCount !== '3000 tasks') throw new Error(`the Archive counts "${notes.archiveCount}"`)
     const archiveScroll = await wheelUntil(page, atEnd, 1000)
+    if (!archiveScroll.reached) throw new Error(`the Archive did not scroll to its end in ${archiveScroll.steps} steps`)
     r['archive scroll frame p95'] = p95(archiveScroll.frames)
     notes.archiveScroll = { frames: archiveScroll.frames.length, steps: archiveScroll.steps, reached: archiveScroll.reached }
 
@@ -448,7 +484,7 @@ async function measureLaunch(folder, gitEnv, n) {
     stopApp()
     for (let i = 0; i < 40 && (await devtoolsUp()); i++) await sleep(250)
   }
-  return { values: r, notes }
+  return { values: r, notes, invalid }
 }
 
 try {
@@ -513,8 +549,11 @@ try {
 
   const results = MEASURES.map(([name, bar]) => {
     const value = round1(median(runs.map((x) => x.values[name])))
-    const ok = bar === null ? null : value <= bar
-    console.log(`${name} ${value}ms ${bar === null ? '(no bar)' : `${bar} ${ok ? 'ok' : 'OVER'}`}`)
+    // INVALID: in some launch the first build was over before the measure (see the notes), so it measured other work.
+    const bad = runs.filter((x) => x.invalid.includes(name)).length
+    const ok = bad ? 'INVALID' : bar === null ? null : value <= bar
+    const verdict = bad ? `INVALID (after the build in ${bad} of ${RUNS} launches)` : bar === null ? '' : ok ? 'ok' : 'OVER'
+    console.log(`${name} ${value}ms ${bar === null ? '(no bar)' : bar}${verdict ? ` ${verdict}` : ''}`)
     return { name, value, unit: 'ms', bar, ok, runs: runs.map((x) => round1(x.values[name])) }
   })
   mkdirSync(outDir, { recursive: true })
@@ -524,7 +563,7 @@ try {
     JSON.stringify({ onscreen, runs: RUNS, files: written.files, links: written.links, results, notes: runs.map((x) => x.notes) }, null, 2) + '\n',
   )
   console.log(`wrote ${file}`)
-  console.log(results.every((x) => x.ok !== false) ? 'every bar met' : 'some bars missed (see OVER)')
+  console.log(results.every((x) => x.ok === true || x.ok === null) ? 'every bar met' : 'some bars missed (see OVER and INVALID)')
 } finally {
   foreground?.stop()
   stopApp()
