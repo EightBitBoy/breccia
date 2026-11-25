@@ -4801,6 +4801,53 @@ try {
   await note155.locator('.cm-content').waitFor({ state: 'detached' })
   await expectFile('155 a click outside the calendar writes nothing', typed155, journal)
   console.log('PASS 155 a click outside the calendar on another block edits that block')
+  // 164: a quick click (press and release under the library's 10 ms) on another block's text closes the calendar,
+  // edits that block and writes nothing; the next opening's Esc and pick give the focus back to that editor (backlog
+  // #101).
+  await blur155()
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  await page.evaluate(() => {
+    window.__press164 = []
+    for (const type of ['pointerdown', 'pointerup']) {
+      window.addEventListener(type, (e) => window.__press164.push(e.timeStamp), { capture: true, once: true })
+    }
+  })
+  const noteBox164 = await note155.locator('.content').boundingBox()
+  await page.mouse.move(noteBox164.x + noteBox164.width - 4, noteBox164.y + noteBox164.height / 2)
+  await Promise.all([page.mouse.down(), page.mouse.up()])
+  await picker152.waitFor({ state: 'detached' })
+  const press164 = await page.evaluate(() => window.__press164)
+  assert(press164.length === 2 && press164[1] - press164[0] < 10, `164 the click was not quick: ${JSON.stringify(press164)}`)
+  await note155.locator('.cm-content').waitFor()
+  await waitFor('164 the quickly clicked block is edited and has the focus', () => note155.locator('.cm-content').evaluate((el) => el === document.activeElement), true)
+  await expectFile('164 a quick click outside the calendar writes nothing', typed155, journal)
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  await kb.press('Escape')
+  await picker152.waitFor({ state: 'detached' })
+  await waitFor('164 Esc after a quick click gives the focus back to the editor', () => note155.locator('.cm-content').evaluate((el) => el === document.activeElement), true)
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  await picker152.locator('[data-testid="due-picker-today"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${today}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('164 a pick after a quick click writes the due line', `${before155}- TODO task 155\n  due:: [[${today}]]\n- note 155!\n`, journal)
+  await waitFor('164 a pick after a quick click gives the focus back to the editor', () => note155.locator('.cm-content').evaluate((el) => el === document.activeElement), true)
+  // Back to the due date the rest of step 155 expects.
+  await taskMenu155()
+  await page.locator('[data-testid="task-due"]').click()
+  await picker152.waitFor()
+  if (plus3.slice(0, 7) !== today.slice(0, 7)) await picker152.locator('[data-testid="due-picker-next"]').click()
+  await picker152.locator(`.dp-day:not(.out)[data-key="${plus3}"]`).click()
+  await picker152.waitFor({ state: 'detached' })
+  await expectFile('164 the due date is set back', typed155, journal)
+  await kb.press('Escape')
+  await note155.locator('.cm-content').waitFor({ state: 'detached' })
+  console.log('PASS 164 a quick click outside the calendar closes it; Esc and a pick afterwards give the focus back')
   // 5. On a board: Esc after "Set due date…" from the card menu leaves the focus on the card; a click outside the
   // calendar on an empty column leaves it on nothing.
   await page.locator('[data-testid="nav-board"][data-board="0"]').click()

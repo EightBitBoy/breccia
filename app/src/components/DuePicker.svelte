@@ -3,12 +3,14 @@
   // opens at its anchor on the task's due date, marked as chosen, or at today (R7); the keys are the go-to-a-day
   // calendar's. A pick writes the day and "Remove due date" (shown only when the task has one) removes it; Esc or a
   // click outside writes nothing. A pick, "Remove due date" or Esc gives the focus back where it was when it opened;
-  // a click outside leaves it where that click put it.
+  // a click outside leaves it where that click put it. A press outside closes it at once (`closeOnPressOutside`): the
+  // library's own close comes 10 ms later and misses a quick click on a block's text, whose element is gone by then.
   import { Popover } from 'bits-ui'
   import { untrack } from 'svelte'
   import MonthGrid from './MonthGrid.svelte'
   import { startDay } from '../lib/calendar'
   import { duePick } from '../lib/duePick.svelte'
+  import { closeOnPressOutside } from '../lib/pressOutside'
   import { today } from '../lib/today.svelte'
 
   /** No journal marks here: a due date has nothing to do with the notes of the day. */
@@ -36,6 +38,18 @@
       focused = startDay(due, today.key)
       focusDay = true
     })
+  })
+
+  $effect(() => {
+    if (!duePick.open) return
+    return closeOnPressOutside(
+      document,
+      (t) => t instanceof Element && t.closest('[data-due-picker]') !== null,
+      () => {
+        outside = true
+        duePick.close()
+      },
+    )
   })
 
   const anchor = $derived.by(() => {
