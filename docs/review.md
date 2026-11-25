@@ -333,3 +333,13 @@ are its questions for you; each answer decides what a later plan does.
    by done date, and a card dropped among cards without a priority takes its place by the new order. Only the
    `due:: [[YYYY-MM-DD]]` form counts. Open question: should dropping a card above an earlier-due card of the same
    priority be possible (the drop only writes the priority, so due dates win within one priority)?
+
+## A card's menu and due date by keyboard (backlog #99)
+
+148. [ ] **A card's menu and due date can be reached by keyboard:** by hand (`just dev`): open a board and press `Tab`
+   until a card has the focus: its ↗ and ⋯ buttons show (also with the mouse elsewhere), and two more `Tab`s reach
+   them. Back on the card, `Shift F10` (or the context-menu key) opens the card menu with its first item focused; `Esc`
+   closes it and the focus is back on the card. `Ctrl D` on the focused card opens the due date calendar; `Esc` writes
+   nothing and leaves the focus on the card, a picked day writes `due:: [[YYYY-MM-DD]]` under the task. Inside an open
+   card, `Ctrl D` still sets the due date of the edited task. A mouse click on a card does not show its buttons once the
+   pointer leaves.

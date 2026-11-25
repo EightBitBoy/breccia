@@ -158,12 +158,6 @@ then the cause.
 
 Owner, 2026-11-25: keep open until it shows up again with steps.
 
-## 99. A keyboard path to a card's menu (Boards)
-
-From plan 16. The button of a card's menu shows only on hover, so the card menu (with Archive and "Set due date…") cannot
-be reached by keyboard. This was so before due dates. A task in a journal day or on a page has the key `Ctrl D` while
-editing; a card has none. Options: show the button when the card has the focus, or a key on the focused card.
-
 ## 101. A very fast click on a block's text leaves the due date calendar open (Editor)
 
 From plan 17, task 6. A click on a block's text that lasts under 10 ms leaves the due date calendar open: the

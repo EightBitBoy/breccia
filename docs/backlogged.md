@@ -846,3 +846,17 @@ block probably does the same (not checked). The words stay, but the spacing is n
 Breccia should leave the lines of an unclosed fence as they are.
 
 Owner, 2026-11-25: closed, won't fix; a missing closing fence is a typo the user sees, since everything after it shows as code.
+
+## 99. A keyboard path to a card's menu (Boards) (done 2026-11-25, no plan)
+
+From plan 16. The button of a card's menu shows only on hover, so the card menu (with Archive and "Set due date…") cannot
+be reached by keyboard. This was so before due dates. A task in a journal day or on a page has the key `Ctrl D` while
+editing; a card has none. Options: show the button when the card has the focus, or a key on the focused card.
+
+Owner, 2026-11-25: both.
+
+Done 2026-11-25: a card's buttons show while the card or one of its buttons has a keyboard focus (they are now
+transparent rather than `visibility: hidden` when not shown, so `Tab` from the card reaches them). On a focused card,
+`Ctrl D` opens the due date calendar and `Shift F10` or the context-menu key opens the card menu on its first item;
+`Esc` gives the focus back to the card (`focusedCardKey` in `app/src/lib/cardKeys.ts`, `BoardCard.svelte`). Spec §7.6,
+the shortcut list, e2e step 163 and review item 148.
