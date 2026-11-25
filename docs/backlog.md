@@ -138,6 +138,8 @@ From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery 
   sidebar's actions dropped; an empty "+ Add" card can be left. Best done with the audit's move M39 (the controller into
   `lib/`).
 
+Owner, 2026-11-25: keep open; do it together with the controller move (M39).
+
 ## 90. Log Git failures, and maybe window errors (Safety net)
 
 From plan 12 triage (plan 6 follow-up 15). Only Git panics are logged (`git.rs`); a failing Git command and the window's
