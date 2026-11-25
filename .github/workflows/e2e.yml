@@ -48,6 +48,13 @@ jobs:
       - name: Install npm packages
         working-directory: app
         run: npm ci
+      - name: Install the WebView2 runtime
+        run: |
+          $key = 'HKLM:\SOFTWARE\WOW6432Node\Microsoft\EdgeUpdate\Clients\{F3017226-FE2A-4295-8BDF-00C3A9A7E4C5}'
+          if (Test-Path $key) { "WebView2 found: $((Get-ItemProperty $key).pv)" } else { 'WebView2 not found' }
+          Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile "$env:RUNNER_TEMP\wv2.exe"
+          Start-Process "$env:RUNNER_TEMP\wv2.exe" -ArgumentList '/silent', '/install' -Wait
+          if (Test-Path $key) { "WebView2 now: $((Get-ItemProperty $key).pv)" } else { 'WebView2 still not found' }
       - name: End-to-end test
         run: |
           just e2e
