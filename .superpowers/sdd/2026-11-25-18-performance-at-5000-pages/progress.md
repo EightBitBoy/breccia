@@ -21,3 +21,5 @@ Shared subagent rules: common.md (local).
 - Task 1: minor (deferred): the generated folder is 5,005 pages, not 5,000 (naming in the baseline).
 - Task 1: fix round 1/5 (1 addressed, 0 open — I1 scale_5000_pages asserts now pin the 5 tag rows; commits 82ce2e0..65066c4)
 - Task 1: complete (commits 07488ff..65066c4, review clean)
+- Task 2: dispatched (opus), BASE c0018fa.
+- Task 2: implemented 346d265 (opus), DONE_WITH_CONCERNS: typing run deviates from brief (20 letters + Enter x2, saves wait 300 ms); window OVER: shows 1399 (500), git history open 309 (200), show more 371 (200), typing wait p95 16.4 (16); caret 14.1 (16).
