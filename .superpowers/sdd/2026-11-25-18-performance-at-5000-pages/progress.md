@@ -28,3 +28,5 @@ Shared subagent rules: common.md (local).
 - Ruling: the misplaced-letters bug found by perf-scale becomes backlog #102 now (not fixed in this plan's Tasks 3-5) — it's a correctness bug, not a speed point; Task 6 lists it for the owner — cost if wrong: the owner may want it fixed inside plan 18. F9's "backlog #102 for the early search" takes the next free number instead.
 - Task 2: re-review: I1, I2, I3 ADDRESSED, no new breakage. Minor (deferred): baseline prose still says "within the noise" for the typing wait (now OVER: p95 18.2/30.6/20.1).
 - Task 2: complete (commits c0018fa..f229374, review clean). Baseline (window, ms, bar): window shows 1794 (500) OVER, journal usable 1794, git history open 336 (200) OVER, show more 508 (200) OVER, typing wait p95 20.1 (16) OVER, caret 18.5 (16) OVER; runs vary 10-30 %.
+- Task 3: dispatched (opus), BASE 067b582.
+- Task 3: implemented b38a7f7 (opus; resumed once after an API usage limit). perf-scale after: window shows 439 (500) ok, journal usable 1228 (2000) ok; one cold launch 746. Concerns: api.ts path differs from brief; only F1/theme/zoom work while opening; new panic message text.
