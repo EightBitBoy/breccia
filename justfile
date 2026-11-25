@@ -63,6 +63,10 @@ screenshots: build
 graph-scale *args: build
     Set-Location app; node e2e/graph-scale.mjs {{args}}
 
+# The window at 5,000 pages: start, typing, search, long lists, caret, journal (--onscreen, --runs N; local only)
+perf-scale *args: build
+    Set-Location app; node e2e/perf-scale.mjs {{args}}
+
 # Set the app version everywhere (Cargo.toml, Cargo.lock, package files), then check it
 version v:
     node app/scripts/version.mjs bump {{v}}; if ($LASTEXITCODE) { exit $LASTEXITCODE }

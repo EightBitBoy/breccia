@@ -15,6 +15,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { chromium } from 'playwright-core'
 import { keepForeground } from './foreground.mjs'
+import { DAYS, PAGES, PAIRS, today as todayKey, writeScaleFolder } from './scaleFolder.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const exe = process.env.BRECCIA_EXE ?? join(root, 'target', 'release', 'breccia.exe')
@@ -23,80 +24,7 @@ const port = 9222
 const onscreen = process.argv.includes('--onscreen')
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms))
 
-const PAGES = 2000
-const DAYS = 3000
-const FILES = PAGES + DAYS
-const COMMUNITIES = 50
-const PAIRS = 50_000
-const HUBS = 20
-
-const pad = (n) => String(n).padStart(2, '0')
-const today = (() => {
-  const d = new Date()
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
-})()
-const dayKey = (k) => {
-  const d = new Date()
-  const x = new Date(d.getFullYear(), d.getMonth(), d.getDate() - k)
-  return `${x.getFullYear()}-${pad(x.getMonth() + 1)}-${pad(x.getDate())}`
-}
-
-// A fixed pseudo-random sequence: every run measures the same folder.
-let seed = 20261031
-const rand = (n) => {
-  seed = (Math.imul(seed, 1103515245) + 12345) >>> 0
-  return (seed >>> 8) % n
-}
-
-// File i: pages first, then journal days (yesterday back, so today's page stays empty).
-const spelling = (i) => (i < PAGES ? `Page ${i}` : dayKey(1 + (i - PAGES)))
-const rel = (i) => (i < PAGES ? join('pages', `F${i % 50}`, `Page ${i}.md`) : join('journals', `${spelling(i)}.md`))
-// Community c holds the files c, c + 50, c + 100, ...: 40 pages and 60 journal days each.
-const community = (i) => i % COMMUNITIES
-const member = (c, m) => c + COMMUNITIES * m
-
-/** 50,000 distinct unordered pairs: 90% inside a community, the rest across; 20 hubs take about 20% of the cross pairs. */
-function makePairs() {
-  const seen = new Set()
-  const pairs = []
-  const add = (a, b) => {
-    if (a === b) return false
-    const id = Math.min(a, b) * FILES + Math.max(a, b)
-    if (seen.has(id)) return false
-    seen.add(id)
-    pairs.push(rand(2) ? [a, b] : [b, a]) // written once, in one direction
-    return true
-  }
-  const perCommunity = (PAIRS * 0.9) / COMMUNITIES // 900 of the 4,950 possible
-  for (let c = 0; c < COMMUNITIES; c++) {
-    let n = 0
-    while (n < perCommunity) if (add(member(c, rand(100)), member(c, rand(100)))) n++
-  }
-  const cross = PAIRS - pairs.length // 5,000
-  let n = 0
-  while (n < cross * 0.2) {
-    const hub = rand(HUBS) // files 0..19 are the hubs
-    const other = rand(FILES)
-    if (community(other) !== community(hub) && add(hub, other)) n++
-  }
-  while (pairs.length < PAIRS) {
-    const a = rand(FILES)
-    const b = rand(FILES)
-    if (community(a) !== community(b)) add(a, b)
-  }
-  return pairs
-}
-
-function writeNotes(folder) {
-  const outgoing = Array.from({ length: FILES }, () => [])
-  for (const [a, b] of makePairs()) outgoing[a].push(b)
-  for (let i = 0; i < FILES; i++) {
-    const path = join(folder, rel(i))
-    mkdirSync(dirname(path), { recursive: true })
-    const links = outgoing[i].map((t) => `- links [[${spelling(t)}]]\n`).join('')
-    writeFileSync(path, `- ${spelling(i)}\n${links}`)
-  }
-}
+const today = todayKey()
 
 const frameStats = (deltas) => {
   const s = [...deltas].sort((a, b) => a - b)
@@ -203,7 +131,8 @@ try {
   const logPath = join(tmp, `breccia-gscale-${process.pid}.log`)
   made.push(logPath)
   console.log('writing 5,000 notes ...')
-  writeNotes(folder)
+  const written = writeScaleFolder(folder)
+  if (written.files !== PAGES + DAYS || written.links !== PAIRS) throw new Error(`folder: ${JSON.stringify(written)}`)
   foreground = onscreen ? null : await keepForeground()
 
   // Launch 1: warms Defender's first-read scan of the 5,000 new files; discarded.

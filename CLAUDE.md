@@ -53,6 +53,8 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
 - `just e2e`: builds the release exe and drives it over the WebView2 DevTools port (`app/e2e/smoke.mjs`). It is
   Windows-only. Every step prints a `PASS` line, and the expected count is in `docs/STATUS.md`.
 - `just graph-scale [--onscreen]`: measures the graph at 5,000 pages; the results go to `target/graph-scale/`.
+- `just perf-scale [--onscreen] [--runs N]`: measures the window at 5,000 pages (local only); the results go to
+  `target/perf-scale/`, the baselines to `docs/perf/`.
 - `just bundle` builds the Windows installer (NSIS) into `target/release/bundle/nsis/`. `just version X.Y.Z` sets the
   app version everywhere, and `just check-version` checks that all version files agree.
 - `just release [X.Y.Z] [--yes]`: cuts a release (`app/scripts/release.mjs`). It checks (on `main`, clean, in sync
