@@ -596,6 +596,15 @@ the Dailies count (§7.14), and, at its right end, the theme button (§7.10) jus
 Any part of Breccia can show and remove an item there; items sit on the left or the right. With nothing to show, the
 strip stays empty and quiet.
 
+The help button (?), `F1` and "open the list" in Settings > Keyboard open the **help**, an overlay with two tabs. It
+opens on **Shortcuts**, every keyboard shortcut in groups. **Writing** shows one small example of each syntax a user
+writes, as typed, with a few words on what it does: Breccia's own first (links, links with other text, heading links,
+journal day links, tags, aliases, tasks with the configured states, properties, due dates, priority), then the
+Markdown basics (bold, italic, strikethrough, inline code, headings, quotes, web and mail links, code fences). Every
+syntax it lists is described in `docs/format.md` (a test checks this). One filter box above the tabs' content narrows
+the shown tab; `Esc` first clears a filled filter, then closes the help. `Shift Tab` from the filter reaches the tabs
+and the arrow keys switch them.
+
 ### 7.14 Dailies
 
 A list of things you do every day, each with a checkbox. The sidebar entry "Dailies" sits right under Journal and is a

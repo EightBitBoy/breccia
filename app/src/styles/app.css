@@ -707,6 +707,13 @@ button.status-item.pressed, button.status-item[data-state='open'] { background: 
 .shortcuts-group dd { margin: 0; }
 .shortcuts-group kbd { font-family: inherit; font-size: 12px; padding: 0 6px; min-width: 1.4em; text-align: center; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; background: var(--bg); white-space: nowrap; }
 .shortcuts-group .sep { color: var(--muted); }
+.help-tabs { display: flex; gap: 2px; margin: 0 0 8px; border-bottom: 1px solid var(--line); }
+.help-tab { padding: 4px 12px; margin-bottom: -1px; font: inherit; font-size: 13.5px; color: var(--muted); background: none; border: none; border-bottom: 2px solid transparent; cursor: pointer; }
+.help-tab:hover { color: var(--text); }
+.help-tab[data-state="active"] { color: var(--text); border-bottom-color: var(--accent); }
+.help-tab:focus-visible { outline: 1px solid var(--accent); outline-offset: -1px; }
+.writing-groups dl { grid-template-columns: max-content 1fr; }
+.writing-example { font-family: Consolas, "Cascadia Mono", monospace; font-size: 12.5px; white-space: pre; padding: 0 4px; border-radius: 3px; background: var(--edit); }
 .dialog.changelog-dialog { top: 8%; width: min(720px, 94vw); max-height: 84vh; display: flex; flex-direction: column; }
 .changelog-note { margin: 0 0 10px; color: var(--muted); font-size: 13.5px; }
 .changelog-body { overflow-y: auto; min-height: 0; outline: none; font-size: 13.5px; line-height: 1.5; }

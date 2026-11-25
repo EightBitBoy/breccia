@@ -530,6 +530,10 @@ boards, search, graph), and that includes links in property values (`owner:: [[A
 (section 4) and a heading link count for the page they go to. Links in the preamble are
 shown as links but do not count. Links inside front matter are neither shown nor counted.
 
+**Markdown.** Breccia shows a block's text as Markdown (CommonMark, with tables and strikethrough): `**bold**`,
+`*italic*`, `~~struck~~`, `` `code` `` (inline code), a heading `## Heading` (`#` to `######` and a space), a quote
+`> quote`, and a code fence that opens with `` ``` `` or `~~~` (section 6). Showing it changes no byte of the file.
+
 **Web addresses.** Breccia shows `[text](https://…)`, `<https://…>` and a bare `http://` or `https://` address in
 the text as a link that opens in the browser (`mailto:` links in the Markdown form only, and an email address in
 angle brackets, `<name@example.com>`; a bare email address stays plain text). A bare address ends at whitespace, a

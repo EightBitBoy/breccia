@@ -1930,7 +1930,7 @@
       <SearchDialog {search} {states} onchoose={chooseRow} />
     {/if}
     {#if helpShown}
-      <ShortcutsDialog {mac} onclose={() => (helpShown = false)} />
+      <ShortcutsDialog {mac} states={states.map((s) => s.keyword)} onclose={() => (helpShown = false)} />
     {/if}
     {#if settings.changelog}
       <ChangelogDialog version={appVersion} onclose={() => settings.hideChangelog()} />
