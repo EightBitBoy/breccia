@@ -827,3 +827,22 @@ second for the save pause. The window could expose when nothing is pending and t
 become waits for a state, not for time.
 
 Done 2026-11-25: the client counts text in the typing pause plus commands queued, running or being applied (`busy()`, hook `onBusy`, `app/src/lib/api.ts`); the window mirrors it as `data-busy` on the root element. `expectFile` and `expectFileLike` call `settled()`, which waits for a frame and two idle readings 50 ms apart (so a keypress the editor has not yet turned into a pending save cannot slip through), bounded at 5 s, then check the bytes. The fixed `sleep(1000)` is gone.
+
+## 98. Sort board columns by due date (Boards) (done 2026-11-25, no plan)
+
+From plan 16, owner 2026-11-23: not in the first version of due dates. Options: a column setting, or due dates first
+after `priority::` (soonest first, cards without a due date after them). Decide before building.
+
+Owner, 2026-11-25: always, after priority. Within a priority, cards with a due date come first, soonest first; cards without one follow in today's order.
+
+Done 2026-11-25: `sort_column` in `crates/core/src/session/board.rs` orders open columns by priority, then due day (only `due:: [[YYYY-MM-DD]]`, soonest first, none last), then the computed order. Finished columns keep their done-date order (the due day is not read there, as the priority is not). Spec, `docs/format.md` §10, core test and e2e step 162; review item 147.
+
+## 100. A line swallowed by an unclosed code fence is re-indented when its block is written (Editor) (closed 2026-11-25: won't fix)
+
+From plan 16, follow-up 5; the owner settled on 2026-11-24 that it goes to the backlog. When a block has an opening
+code fence that is never closed, the lines after it belong to the fence. Setting or removing a due date or a priority
+replaces a property line, and the replacement re-indents a neighbouring line that the fence swallowed. Typing in such a
+block probably does the same (not checked). The words stay, but the spacing is not the user's. It was so before due dates. Decide whether
+Breccia should leave the lines of an unclosed fence as they are.
+
+Owner, 2026-11-25: closed, won't fix; a missing closing fence is a typo the user sees, since everything after it shows as code.
