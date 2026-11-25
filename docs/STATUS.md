@@ -219,7 +219,7 @@ Backlog round continued 2026-11-25, from #87 to the end (#101). Built and pushed
 "nothing left to save", #98 cards with a due date first within a priority, #99 keyboard path to a card's menu,
 #101 a quick click outside the calendar closes it (review items 147 to 149). Closed: #87 (e2e stays local, before each
 release; no GitHub Actions run for it, owner's call), #88, #97 (for now), #100. Kept open: #89, #90, #95. The round
-is through; #81 and #85 are still to build.
+is through; #81 was built after it (review item 150); #85 is still to build.
 
 Candidates for the plan after it, to settle with the owner:
 
