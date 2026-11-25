@@ -26,6 +26,8 @@ button.primary:hover { filter: brightness(1.08); }
 .autohide.sb-on { scrollbar-color: var(--scroll-thumb) transparent; }
 
 .welcome { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; min-height: 0; gap: 12px; }
+/* While the startup folder opens (§6): its name in the middle of the main area. */
+.opening { display: flex; align-items: center; justify-content: center; flex: 1; min-height: 0; color: var(--muted); }
 .welcome h1 { margin: 0; font-size: 2em; }
 .welcome p { margin: 0 0 12px; color: var(--muted); }
 .welcome .actions { display: flex; gap: 12px; }

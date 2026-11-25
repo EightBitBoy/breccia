@@ -8,6 +8,7 @@
   import {
     invokeRun,
     startupNotices,
+    startupOpen,
     errorMessage,
     errorCode,
     uiState,
@@ -29,6 +30,7 @@
   import { answerOf } from './lib/answer'
   import { createClient, flushBeforeClose } from './lib/api'
   import { closeCheck } from './lib/close'
+  import { openingText, startupSequence } from './lib/startup'
   import { autoHideScrollbar } from './lib/scrollFade'
   import { saveItem } from './lib/saveStatus'
   import { InFlight, Refreshes } from './lib/external'
@@ -160,6 +162,8 @@
   /** The board's column width in px; null lets the columns fill the window. */
   let boardColumn = $state<number | null>(null)
   let ready = $state(false)
+  /** The folder the shell opens at startup, while the window waits for it ("Opening ‹folder›…"); null otherwise. */
+  let opening = $state<string | null>(null)
   /** Session-only folding: never written to files. */
   const folded = new SvelteSet<number>()
   /** The configured task states, from `config.get` (fetched once per folder). */
@@ -1714,6 +1718,8 @@
           if (!e.repeat) toggleHelp()
           return
         }
+        // While the startup folder opens, only the help and the zoom keys work: there is nothing to open yet.
+        if (opening !== null && !zoomKey(k, mac)) return
         if (isDatePickerKey(k, mac)) {
           // Before the editor, so it works while a block is edited.
           e.preventDefault()
@@ -1863,14 +1869,22 @@
         gitInstalled().then((ok) => void (hasGit = ok), () => {})
         inTray = await trayEnabled().catch(() => false)
         await shell.ready
-        await exec({ type: 'folder.status' })
-        // After `shell.ready`: every later change arrives as `git:changed`.
-        await exec({ type: 'git.status' })
-        if (folder) await openFolder()
-        ;(await startupNotices()).forEach(notify)
+        await startupSequence({
+          ...startupOpen(),
+          show: (path) => (opening = path),
+          folderStatus: async () => {
+            await exec({ type: 'folder.status' })
+            return folder !== null
+          },
+          gitStatus: async () => void (await exec({ type: 'git.status' })),
+          openFolder,
+          notices: startupNotices,
+          notify,
+        })
       } catch (e) {
         refuse(e)
       }
+      opening = null
       ready = true
     })()
     return () => {
@@ -1891,7 +1905,7 @@
   })
 </script>
 
-{#if ready}
+{#if ready || opening !== null}
   <div class="shell">
     <Notices items={notices.items} ondismiss={(id) => notices.dismiss(id)} />
     <DuePicker />
@@ -1938,7 +1952,17 @@
     {#if naming !== null}
       <NameDialog title="New board" initial="" onok={(name) => void newBoard(name)} oncancel={() => (naming = null)} />
     {/if}
-    {#if folder}
+    {#if opening !== null}
+      <!-- The folder opens in the shell: nothing to click yet but the status bar's theme and help. -->
+      <div class="body">
+        {#if !sidebarHidden}
+          <aside class="side" style:width="{sidebarWidth}px"></aside>
+        {/if}
+        <div class="main-wrap">
+          <div class="opening" data-testid="opening">{openingText(opening)}</div>
+        </div>
+      </div>
+    {:else if folder}
       <div class="body">
         {#if !sidebarHidden}
           <Sidebar

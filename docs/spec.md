@@ -189,7 +189,9 @@ properties). The frontend gets parsed structure from the core and only adds synt
 - **The files are the truth.** On opening a folder the core reads all files, parses them and builds the index (SQLite in
   the app's cache directory). When the index already exists, only files that changed since are re-read. Index
   rebuilding runs in the background; the journal is usable before it finishes. Its progress shows in the status bar
-  (§7.13).
+  (§7.13). The window shows at once; while the folder opens it says "Opening ‹folder name›…" in the main area, and
+  only the help, the theme and the zoom work. The journal shows as soon as the folder is open; a folder that fails to
+  open shows the Welcome screen with the reason.
 - **The frontend never writes files.** It sends intents to the core: "set this block's text", "set this block's state to
   DOING", "insert block after", "indent", "move", "create page", "rename page", and so on. The core applies the intent to
   its model, writes the file (atomically: write a temporary file, then rename), updates the index and answers with what

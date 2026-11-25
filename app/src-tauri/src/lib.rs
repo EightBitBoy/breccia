@@ -13,11 +13,12 @@ mod watching;
 mod window;
 
 use std::ffi::OsString;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64};
 use std::sync::mpsc::Sender;
 use std::sync::{Arc, Mutex};
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use breccia_core::git::GitView;
 use breccia_core::session::Notice;
@@ -29,7 +30,7 @@ use git::GitMsg;
 use guard::{Guarded, recovery_notice, with_session};
 use indexing::{cache_dir_for, index_in_background};
 use recovery::test_panic;
-use tauri::{Manager, RunEvent};
+use tauri::{AppHandle, Emitter, Manager, RunEvent};
 use tray::{build_tray, show_main, tray_wanted};
 use watching::start_watcher;
 use window::{
@@ -43,6 +44,9 @@ struct App {
     /// What the startup folder open has to tell the user (its load warnings,
     /// or why it failed), handed out once.
     startup_notices: Mutex<Vec<Notice>>,
+    /// The folder the startup open is opening, while it runs (set before its
+    /// thread starts, cleared before `folder:opened`).
+    opening: Mutex<Option<PathBuf>>,
     /// Watches the open folder, with the folder generation it was started
     /// for; replaced whenever a folder is opened, never by an older generation.
     watcher: Mutex<Option<(FolderWatcher, u64)>>,
@@ -89,6 +93,17 @@ fn today_override(var: Option<OsString>) -> Option<NaiveDate> {
         log::warn!("BRECCIA_TODAY must be YYYY-MM-DD; ignored");
     }
     parsed
+}
+
+/// `BRECCIA_TEST_OPEN_DELAY` (the e2e hook) in milliseconds: how long the
+/// startup open waits before it opens the folder. Anything else is ignored.
+fn open_delay(var: Option<OsString>) -> Option<Duration> {
+    let var = var.filter(|v| !v.is_empty())?;
+    let ms = var.to_str().and_then(|s| s.parse::<u64>().ok());
+    if ms.is_none() {
+        log::warn!("BRECCIA_TEST_OPEN_DELAY must be a number of milliseconds; ignored");
+    }
+    ms.map(Duration::from_millis)
 }
 
 impl App {
@@ -156,6 +171,7 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             commands::run,
             commands::startup_notices,
+            commands::startup_opening,
             commands::ui_state,
             commands::set_ui_state,
             commands::hidden_columns,
@@ -194,11 +210,15 @@ pub fn run() {
                     Some(dir) => Session::with_cache(dir),
                     None => Session::new(),
                 };
+            let startup = startup_folder(&config_dir);
             let state = App {
                 session: Mutex::new(session),
                 started: Instant::now(),
                 config_dir,
                 startup_notices: Mutex::new(Vec::new()),
+                // Set before the open's thread starts, so the window's first
+                // `startup_opening` sees it.
+                opening: Mutex::new(startup.clone()),
                 watcher: Mutex::new(None),
                 trace: trace_enabled(std::env::var_os("BRECCIA_TRACE")),
                 today: today_override(std::env::var_os("BRECCIA_TODAY")),
@@ -211,59 +231,12 @@ pub fn run() {
                 log_dir,
                 test_panic: Mutex::new(test_panic(std::env::var_os("BRECCIA_TEST_PANIC"))),
             };
-            let mut watch = None;
-            if let Some(path) = startup_folder(&state.config_dir) {
-                let notices = open_startup_folder(&state.session, path.clone(), state.clock());
-                *state
-                    .startup_notices
-                    .lock()
-                    .unwrap_or_else(|e| e.into_inner()) = notices;
-                let status = Request {
-                    generation: 0,
-                    command: Command::FolderStatus,
-                };
-                let clock = state.clock();
-                let status = match with_session(&state.session, |s| s.run(status, clock)) {
-                    Guarded::Ran(status) => status.ok(),
-                    // `App` is not managed yet, so the follow-up cannot run;
-                    // no watcher or index starts, and the notice says why.
-                    Guarded::Recovered(r) => {
-                        log::error!("the session was recovered at start-up ({r:?})");
-                        state
-                            .startup_notices
-                            .lock()
-                            .unwrap_or_else(|e| e.into_inner())
-                            .push(recovery_notice(&r));
-                        None
-                    }
-                };
-                if let Some(out) = status
-                    && let Some(Answer::Folder(folder)) = out.answer
-                    && let Some(root) = folder.path
-                {
-                    watch = Some((root, folder.generation));
-                    // The open folder is always first in the recent list.
-                    state.remember_folder(path);
-                }
-            }
             app.manage(state);
-            if let Some((root, generation)) = watch {
-                let notice = start_watcher(app.handle(), &root, generation);
-                if let Some(notice) = notice {
-                    let state = app.state::<App>();
-                    state
-                        .startup_notices
-                        .lock()
-                        .unwrap_or_else(|e| e.into_inner())
-                        .push(notice);
-                }
-                index_in_background(app.handle(), generation);
+            // The window shows at once; the folder opens in the background.
+            match startup {
+                Some(path) => open_in_background(app.handle().clone(), path),
+                None => start_git_thread(app.handle()),
             }
-            let tx = git::start_git(app.handle());
-            *app.state::<App>()
-                .git_tx
-                .lock()
-                .unwrap_or_else(|e| e.into_inner()) = Some(tx);
             Ok(())
         })
         .build(context)
@@ -284,6 +257,105 @@ fn startup_folder(config_dir: &std::path::Path) -> Option<PathBuf> {
         Some(p) if !p.is_empty() => Some(PathBuf::from(p)),
         _ => settings::load(config_dir).last_folder,
     }
+}
+
+/// The startup open, off the main thread, so the window shows at once: opens
+/// `path`, then (if it opened) remembers it and starts its watcher and index,
+/// then the Git thread. Then it clears `opening` and emits `folder:opened`,
+/// also after a panic, so the window never stays on "Opening…".
+fn open_in_background(app: AppHandle, path: PathBuf) {
+    let delay = open_delay(std::env::var_os("BRECCIA_TEST_OPEN_DELAY"));
+    std::thread::spawn(move || {
+        if let Some(delay) = delay {
+            std::thread::sleep(delay);
+        }
+        let state = app.state::<App>();
+        let generation = match catch_unwind(AssertUnwindSafe(|| open_and_follow(&app, path))) {
+            Ok(generation) => generation,
+            Err(_) => {
+                log::error!("the startup open panicked");
+                state
+                    .startup_notices
+                    .lock()
+                    .unwrap_or_else(|e| e.into_inner())
+                    .push(Notice::Refused {
+                        message: "Breccia ran into an internal error while opening the folder."
+                            .into(),
+                    });
+                0
+            }
+        };
+        // After the open, as before: its first step finds the folder.
+        if catch_unwind(AssertUnwindSafe(|| start_git_thread(&app))).is_err() {
+            log::error!("the Git thread could not be started");
+        }
+        *state.opening.lock().unwrap_or_else(|e| e.into_inner()) = None;
+        let _ = app.emit(
+            events::FOLDER_OPENED,
+            serde_json::json!({ "generation": generation }),
+        );
+    });
+}
+
+/// Opens the startup folder and stores its notices; if it opened, remembers
+/// it and starts its watcher and index. Returns the folder generation, 0 if
+/// no folder opened.
+fn open_and_follow(app: &AppHandle, path: PathBuf) -> u64 {
+    let state = app.state::<App>();
+    let (notices, opened) = open_startup(&state.session, path.clone(), state.clock());
+    let store = |more: Vec<Notice>| {
+        state
+            .startup_notices
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .extend(more)
+    };
+    store(notices);
+    let Some((root, generation)) = opened else {
+        return 0;
+    };
+    // The open folder is always first in the recent list.
+    state.remember_folder(path);
+    store(start_watcher(app, &root, generation).into_iter().collect());
+    index_in_background(app, generation);
+    generation
+}
+
+fn start_git_thread(app: &AppHandle) {
+    let tx = git::start_git(app);
+    *app.state::<App>()
+        .git_tx
+        .lock()
+        .unwrap_or_else(|e| e.into_inner()) = Some(tx);
+}
+
+/// Opens `path` at startup and asks what opened: the notices for the user, and
+/// the open folder's root and generation, `None` if no folder opened. After a
+/// recovered session nothing is followed up (no watcher or index), and a
+/// notice says why.
+fn open_startup(
+    session: &Mutex<Session>,
+    path: PathBuf,
+    clock: Clock,
+) -> (Vec<Notice>, Option<(PathBuf, u64)>) {
+    let mut notices = open_startup_folder(session, path, clock);
+    let status = Request {
+        generation: 0,
+        command: Command::FolderStatus,
+    };
+    let status = match with_session(session, |s| s.run(status, clock)) {
+        Guarded::Ran(status) => status.ok(),
+        Guarded::Recovered(r) => {
+            log::error!("the session was recovered at start-up ({r:?})");
+            notices.push(recovery_notice(&r));
+            None
+        }
+    };
+    let opened = match status.and_then(|out| out.answer) {
+        Some(Answer::Folder(folder)) => folder.path.map(|root| (root, folder.generation)),
+        _ => None,
+    };
+    (notices, opened)
 }
 
 /// Opens `path` at startup and returns what the user must be told: the load
@@ -384,6 +456,64 @@ mod tests {
         let session = Mutex::new(Session::new());
         let notices = open_startup_folder(&session, dir.path().to_path_buf(), test_clock());
         assert!(notices.is_empty(), "{notices:?}");
+    }
+
+    #[test]
+    fn startup_open_gives_the_root_and_generation() {
+        let dir = tempfile::tempdir().unwrap();
+        let session = Mutex::new(Session::new());
+        let (notices, opened) = open_startup(&session, dir.path().to_path_buf(), test_clock());
+        assert!(notices.is_empty(), "{notices:?}");
+        let (root, generation) = opened.expect("the folder opened");
+        assert_eq!(
+            root.canonicalize().unwrap(),
+            dir.path().canonicalize().unwrap()
+        );
+        assert!(generation > 0);
+    }
+
+    #[test]
+    fn startup_open_of_a_gone_folder_gives_no_root() {
+        let dir = tempfile::tempdir().unwrap();
+        let session = Mutex::new(Session::new());
+        let (notices, opened) = open_startup(&session, dir.path().join("gone"), test_clock());
+        assert_eq!(opened, None);
+        assert!(
+            matches!(notices.as_slice(), [Notice::Refused { message }] if message.contains("no longer exists")),
+            "{notices:?}"
+        );
+    }
+
+    #[test]
+    fn open_delay_needs_milliseconds() {
+        assert_eq!(open_delay(None), None);
+        assert_eq!(open_delay(Some("".into())), None);
+        assert_eq!(open_delay(Some("3s".into())), None);
+        assert_eq!(
+            open_delay(Some("3000".into())),
+            Some(Duration::from_millis(3000))
+        );
+    }
+
+    /// The window can paint only once `setup` returns, so the folder opens on
+    /// a thread; and that thread clears `opening` before `folder:opened`, so a
+    /// window that asks after the event never waits for one more.
+    #[test]
+    fn setup_opens_no_folder_and_the_thread_clears_opening_before_the_event() {
+        let src = include_str!("lib.rs");
+        let setup =
+            &src[src.find(".setup(move |app|").unwrap()..src.find(".build(context)").unwrap()];
+        assert!(
+            !setup.contains("open_startup"),
+            "setup opens the folder itself"
+        );
+        assert!(setup.contains("open_in_background("));
+        let thread = &src[src.find("fn open_in_background(").unwrap()..];
+        let thread = &thread[..thread.find("\n}\n").unwrap()];
+        let cleared = thread.find("opening.lock()").unwrap();
+        let emitted = thread.find("events::FOLDER_OPENED").unwrap();
+        assert!(cleared < emitted);
+        assert!(thread.find("catch_unwind").unwrap() < cleared);
     }
 
     #[test]

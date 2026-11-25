@@ -1,6 +1,8 @@
 // The Tauri side of the command client. Everything the UI changes goes through
 // one named command (`lib/api.ts`); these are the few raw calls besides it.
 import { invoke } from '@tauri-apps/api/core'
+import { listen } from '@tauri-apps/api/event'
+import type { OpeningEnv } from './lib/startup'
 import type { CommandError, ErrorCode, Notice, Output, Request, UiState, RecentFolder } from './lib/types'
 import type { LinkDisplay } from './lib/linkDisplay'
 
@@ -18,6 +20,32 @@ export function invokeRun(request: Request): Promise<Output> {
 /** What the startup folder open has to tell the user (load warnings, or why it failed), once. */
 export function startupNotices(): Promise<Notice[]> {
   return invoke<Notice[]>('startup_notices')
+}
+
+/** The folder the shell is opening at startup, or null when it is not opening one (any more). */
+export function startupOpening(): Promise<string | null> {
+  return invoke<string | null>('startup_opening')
+}
+
+/** The shell's startup open is over (`{ generation }`): the window may ask the core what is open. */
+export const FOLDER_OPENED = 'folder:opened'
+
+/**
+ * The shell side of `awaitStartupOpen`: `onOpened` starts listening for `folder:opened`, and `opening` asks only once
+ * that listener is registered, so an open that ends in between is never missed.
+ */
+export function startupOpen(): OpeningEnv {
+  let registered: Promise<() => void> = Promise.resolve(() => {})
+  return {
+    onOpened(cb) {
+      registered = listen(FOLDER_OPENED, () => cb())
+      return () => void registered.then((stop) => stop())
+    },
+    async opening() {
+      await registered
+      return startupOpening()
+    },
+  }
 }
 
 function isCommandError(e: unknown): e is CommandError {

@@ -364,3 +364,11 @@ are its questions for you; each answer decides what a later plan does.
    text when you switch. `Esc` clears the filter, a second `Esc` closes the help; the ? button and Settings > Keyboard
    "open the list" still open it. Open questions: are lists and tables wanted too (left out: the outline is the list)?
    Should the rows also show the rendered result?
+
+## Performance at 5,000 pages (plan 18)
+
+151. [ ] **The window shows at once and the folder opens inside it:** by hand, start Breccia on a large notes folder of
+   your own. The window appears at once with the status bar and "Opening ‹folder name›…" in the middle; the help
+   (`F1`), the theme and the zoom work, nothing else does yet. As soon as the files are read the journal shows and takes typing. A last folder that is gone or cannot be opened shows the
+   Welcome screen with the reason, never a window stuck on "Opening…". Open question: is the plain text enough, or is
+   a count of the files read wanted (Q1 b, later work)?

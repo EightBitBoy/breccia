@@ -443,6 +443,18 @@ pub async fn open_log_folder(app: AppHandle) -> Result<(), String> {
     .map_err(|e| e.to_string())?
 }
 
+/// The folder the startup open is opening, while it runs; `None` once it is
+/// over (then `folder:opened` has gone out) or if there was none.
+#[tauri::command]
+pub fn startup_opening(state: State<'_, App>) -> Option<String> {
+    state
+        .opening
+        .lock()
+        .unwrap_or_else(|e| e.into_inner())
+        .as_ref()
+        .map(|p| p.to_string_lossy().into_owned())
+}
+
 /// The notices of the startup folder open, once; empty after that.
 #[tauri::command]
 pub fn startup_notices(state: State<'_, App>) -> Vec<Notice> {

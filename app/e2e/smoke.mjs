@@ -4,6 +4,7 @@ import { spawn, spawnSync } from 'node:child_process'
 import {
   chmodSync,
   closeSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -86,6 +87,10 @@ let folder = ''
 let folder2 = ''
 let journal = ''
 let app = null
+// Step 166's own Breccia, its notes folder and config dir.
+let app166 = null
+let folder166 = ''
+let config166 = ''
 let logPath = ''
 let logFd = null
 let exited = null // set to a message when the app exits or fails to start
@@ -99,13 +104,15 @@ let closing = false // step 50 closes the app on purpose
 
 function cleanup() {
   foreground?.stop()
-  if (app?.pid) spawnSync('taskkill', ['/PID', String(app.pid), '/T', '/F'], { stdio: 'ignore' })
+  for (const a of [app, app166]) {
+    if (a?.pid) spawnSync('taskkill', ['/PID', String(a.pid), '/T', '/F'], { stdio: 'ignore' })
+  }
   if (logFd !== null) {
     try {
       closeSync(logFd)
     } catch {}
   }
-  for (const p of [folder, folder2, configDir, gitHome, logPath]) {
+  for (const p of [folder, folder2, configDir, gitHome, folder166, config166, logPath]) {
     if (!p) continue
     try {
       rmSync(p, { recursive: true, force: true, maxRetries: 10 })
@@ -5444,8 +5451,65 @@ try {
   assert(readAt(releaseFile49) === final, 'Release.md bytes at close')
   assert(git(remote, 'rev-parse', 'main') === remoteHead, 'pushed while stopped')
   console.log('PASS 50 closing commits the last typed text')
-
   await browser.close().catch(() => {})
+
+  // 166: the window shows at once and the folder opens inside it. A second Breccia on its own port and config dir,
+  // on a fresh copy of the demo folder, with the startup open held back 3 s (BRECCIA_TEST_OPEN_DELAY): the window
+  // says "Opening ‹folder›…" first, then the journal shows and takes typing.
+  const port166 = 9223
+  const up166 = async () => {
+    try {
+      return (await fetch(`http://127.0.0.1:${port166}/json/version`)).ok
+    } catch {
+      return false
+    }
+  }
+  assert(!(await up166()), `166 port ${port166} is in use`)
+  const tmp166 = realpathSync.native(tmpdir())
+  config166 = mkdtempSync(join(tmp166, 'breccia-e2e-config166-'))
+  folder166 = mkdtempSync(join(tmp166, 'breccia-e2e-opening-'))
+  cpSync(join(root, 'docs', 'demo'), folder166, { recursive: true })
+  app166 = spawn(exe, [], {
+    env: {
+      ...process.env,
+      BRECCIA_FOLDER: folder166,
+      BRECCIA_CONFIG_DIR: config166,
+      BRECCIA_WINDOW_TITLE: 'Breccia (test 166)',
+      BRECCIA_TODAY: today,
+      BRECCIA_OFFSCREEN: '1',
+      BRECCIA_NO_TRAY: '1',
+      BRECCIA_TEST_OPEN_DELAY: '3000',
+      WEBVIEW2_USER_DATA_FOLDER: join(config166, 'webview'),
+      BRECCIA_DEVTOOLS_PORT: String(port166),
+    },
+    stdio: ['ignore', logFd, logFd],
+  })
+  let exited166 = ''
+  app166.on('exit', (code) => (exited166 = `166 app exited early (code ${code})`))
+  const end166 = Date.now() + 120_000
+  while (!(await up166())) {
+    if (exited166) throw new Error(`FAIL ${exited166}`)
+    if (Date.now() > end166) throw new Error('FAIL 166 DevTools port did not answer within 120 s')
+    await sleep(100)
+  }
+  const browser166 = await chromium.connectOverCDP(`http://127.0.0.1:${port166}`)
+  try {
+    const page166 = browser166.contexts()[0].pages()[0]
+    mainPage = page166 // for `settled`
+    const opening166 = page166.locator('[data-testid="opening"]')
+    await opening166.waitFor({ timeout: 10_000 })
+    const said166 = await opening166.innerText()
+    assert(said166 === `Opening ${basename(folder166)}…`, `166 opening text: ${JSON.stringify(said166)}`)
+    const start166 = page166.locator('[data-testid="day"] [data-testid="start-writing"]')
+    await start166.waitFor({ timeout: 30_000 })
+    await opening166.waitFor({ state: 'detached' })
+    await start166.click()
+    await page166.locator('.cm-content').waitFor()
+    await page166.keyboard.type('opened')
+    await expectFile('166 the window shows "Opening…" first, then the journal takes typing', '- opened\n', join(folder166, 'journals', `${today}.md`))
+  } finally {
+    await browser166.close().catch(() => {})
+  }
 } catch (e) {
   failed = true
   console.error(e.message ?? e)

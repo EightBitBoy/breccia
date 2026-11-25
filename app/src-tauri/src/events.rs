@@ -22,6 +22,9 @@ pub(crate) const DAILIES_CHANGED: &str = "dailies:changed";
 pub(crate) const INDEX_CHANGED: &str = "index:changed";
 /// The session was recovered after an internal error (see `RecoveredEvent`).
 pub(crate) const SESSION_RECOVERED: &str = "session:recovered";
+/// The startup open is over (`{ generation }`, 0 if no folder opened): the
+/// window may ask the core what is open.
+pub(crate) const FOLDER_OPENED: &str = "folder:opened";
 
 /// The events one watcher run or Git step gives rise to, in emit order. Only changes made outside
 /// the window are sent: a command's own changes reach the window in its answer (§9).

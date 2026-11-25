@@ -84,6 +84,8 @@ Read `docs/STATUS.md` first. It says what the app does, what is in progress, and
     graph-scale set it; WebView2 ignores `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` on GitHub's runners).
   - `BRECCIA_TEST_PANIC=<text>`: the next `search.query` with exactly this text panics (a test hook: e2e step 127
     uses it, and it can check recovery by hand; never set it in normal use).
+  - `BRECCIA_TEST_OPEN_DELAY=<ms>`: the startup open waits this long before it opens the folder, so the window's
+    "Opening ‹folder›…" stays (a test hook: e2e step 166 uses it; never set it in normal use).
 - Toolchain known to work: Windows 11, Rust 1.90, Node 24, just 1.58, git-cliff 2.14.2 (`just release` and
   `just test` need it).
 
