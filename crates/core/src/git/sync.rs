@@ -50,6 +50,8 @@ pub struct Prepared {
     pub branch_ref: String,
     /// `origin/main` when the branch has no upstream yet, as `integrate` sets.
     pub set_upstream: Option<String>,
+    /// Folder-relative paths that differ between `base` and `tip`.
+    pub changed: Vec<PathBuf>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -453,6 +455,29 @@ impl Repo {
         }
     }
 
+    /// Folder-relative paths that differ between two commits.
+    fn changed_between(&self, base: &str, tip: &str) -> Option<Vec<PathBuf>> {
+        let args = [
+            "diff-tree",
+            "-r",
+            "--name-only",
+            "--no-relative",
+            "-z",
+            "--no-renames",
+            base,
+            tip,
+            "--",
+            ".",
+        ];
+        let out = self.git.ok(&self.folder, &args, LOCAL_LIMIT).ok()?;
+        Some(
+            out.nul_list()
+                .iter()
+                .filter_map(|path| self.to_folder_path(path))
+                .collect(),
+        )
+    }
+
     /// The first half of a pull's rebase, which needs no lock: `git replay`
     /// builds the rebased commits in the object store and touches no file, the
     /// index or the branch. `Ok(None)` means the fast path does not apply (a
@@ -485,15 +510,27 @@ impl Repo {
         {
             return None;
         }
+        // `rebase` runs these hooks and `git replay` runs none: a hook that
+        // edits the message or refuses the rebase must keep its say.
+        for hook in ["pre-rebase", "post-checkout", "prepare-commit-msg"] {
+            let path = self.text_of(&["rev-parse", "--git-path", &format!("hooks/{hook}")])?;
+            if self.folder.join(path).exists() {
+                return None;
+            }
+        }
         let set_upstream = t
             .upstream
             .is_none()
             .then(|| format!("{}/{}", t.remote, t.branch));
-        let prepared = |tip: String| Prepared {
-            base: base.clone(),
-            tip,
-            branch_ref: branch_ref.clone(),
-            set_upstream: set_upstream.clone(),
+        let prepared = |tip: String| {
+            let changed = self.changed_between(&base, &tip)?;
+            Some(Prepared {
+                changed,
+                base: base.clone(),
+                tip,
+                branch_ref: branch_ref.clone(),
+                set_upstream: set_upstream.clone(),
+            })
         };
         let is_ancestor = |a: &str, b: &str| {
             self.git
@@ -511,7 +548,7 @@ impl Repo {
             _ => return None,
         }
         match is_ancestor("HEAD", &remote)? {
-            0 => return Some(prepared(remote)),
+            0 => return prepared(remote),
             1 => {}
             _ => return None,
         }
@@ -585,7 +622,7 @@ impl Repo {
         if n != all {
             return None;
         }
-        Some(prepared(tip))
+        prepared(tip)
     }
 
     /// The second half, under the lock: moves the files and the branch to the
@@ -664,32 +701,8 @@ impl Repo {
             let arg = format!("--set-upstream-to={up}");
             let _ = self.git.run(&self.folder, &["branch", &arg], LOCAL_LIMIT);
         }
-        let out = self
-            .git
-            .ok(
-                &self.folder,
-                &[
-                    "diff-tree",
-                    "-r",
-                    "--name-only",
-                    "--no-relative",
-                    "-z",
-                    "--no-renames",
-                    &p.base,
-                    &p.tip,
-                    "--",
-                    ".",
-                ],
-                LOCAL_LIMIT,
-            )
-            .map_err(|e| Problem::failed(&e))?;
-        let changed = out
-            .nul_list()
-            .iter()
-            .filter_map(|path| self.to_folder_path(path))
-            .collect();
         Ok(Some(Integrated {
-            changed,
+            changed: p.changed.clone(),
             moved: p.base != p.tip,
         }))
     }

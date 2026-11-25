@@ -1083,3 +1083,82 @@ fn a_prepared_pull_sets_the_upstream_like_integrate() {
         "origin/main"
     );
 }
+
+#[test]
+fn a_hook_that_rebase_runs_keeps_the_pull_on_the_locked_rebase() {
+    for hook in ["pre-rebase", "post-checkout", "prepare-commit-msg"] {
+        let e = env();
+        let (mine, _theirs, r, t) = diverged(&e);
+        assert!(
+            r.prepare_integrate(&t).unwrap().is_some(),
+            "{hook}: no hook"
+        );
+        std::fs::write(mine.join(".git/hooks").join(hook), "#!/bin/sh\nexit 0\n").unwrap();
+        assert_eq!(r.prepare_integrate(&t).unwrap(), None, "{hook}");
+    }
+}
+
+#[test]
+fn a_hooks_path_hook_is_found_too() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let hooks = e.root.path().join("my-hooks");
+    std::fs::create_dir_all(&hooks).unwrap();
+    std::fs::write(hooks.join("pre-rebase"), "#!/bin/sh\nexit 1\n").unwrap();
+    git(
+        &e,
+        &mine,
+        &["config", "core.hooksPath", hooks.to_str().unwrap()],
+    );
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+}
+
+#[test]
+fn an_applied_pull_on_another_branch_at_the_same_commit_changes_nothing() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    git(&e, &mine, &["checkout", "-q", "-b", "other"]);
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(git(&e, &mine, &["rev-parse", "main"]), p.base);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+}
+
+#[test]
+fn an_applied_pull_finds_a_change_outside_the_notes_folder() {
+    let e = env();
+    let (_bare, mine, theirs) = clones(
+        &e,
+        &[
+            ("notes/pages/A.md", "- a\n"),
+            ("notes/pages/B.md", "- b\n"),
+            ("other/x.txt", "x\n"),
+        ],
+    );
+    commit_file(&e, &theirs, "notes/pages/B.md", "- b2\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "notes/pages/A.md", "- a2\n");
+    let r = open(&e.git, &mine.join("notes"));
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    std::fs::write(mine.join("other/x.txt"), "typed elsewhere\n").unwrap();
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "other/x.txt"), "typed elsewhere\n");
+    assert_eq!(read(&mine, "notes/pages/B.md"), "- b\n");
+}
+
+#[test]
+fn an_applied_pull_finds_an_operation_started_since() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    std::fs::write(mine.join(".git/MERGE_HEAD"), format!("{}\n", p.base)).unwrap();
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(git(&e, &mine, &["rev-parse", "HEAD"]), p.base);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+}

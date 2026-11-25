@@ -3,7 +3,8 @@
 //! worker, passing the session behind its lock.
 //!
 //! The session lock is taken for short pieces only: reading the folder, saving
-//! what failed to save, the local rebase with the reload after it, and setting
+//! what failed to save, the move of the files to the pulled commits (or the
+//! local rebase, when the fast path does not apply) with the reload after it, and setting
 //! the created dates. It is never held during `fetch`, `push`, `add`, `commit`
 //! or `log`, so typing never waits for the network.
 
