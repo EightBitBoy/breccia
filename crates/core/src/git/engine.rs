@@ -10,7 +10,7 @@
 use super::repo::{Discovered, HeadState, Repo, discover};
 use super::run::Git;
 use super::schedule::{Due, Schedule};
-use super::sync::{Problem, Pushed, Target, first_stderr_line};
+use super::sync::{Prepared, Problem, Pushed, Target, first_stderr_line};
 use super::view::{GitState, GitView, ProblemView};
 use super::{GitError, commit_message, init};
 use crate::config::GitSettings;
@@ -120,6 +120,10 @@ pub struct GitEngine {
     before_lock: Option<Box<dyn FnMut() + Send>>,
     #[cfg(feature = "test-seams")]
     before_rebase: Option<Box<dyn FnMut() + Send>>,
+    #[cfg(feature = "test-seams")]
+    after_replay: Option<Box<dyn FnMut() + Send>>,
+    #[cfg(feature = "test-seams")]
+    no_replay: bool,
     /// A rebase was refused and the pull is being tried once more.
     refused_once: bool,
 }
@@ -174,6 +178,10 @@ impl GitEngine {
             before_lock: None,
             #[cfg(feature = "test-seams")]
             before_rebase: None,
+            #[cfg(feature = "test-seams")]
+            after_replay: None,
+            #[cfg(feature = "test-seams")]
+            no_replay: false,
             refused_once: false,
         }
     }
@@ -206,6 +214,20 @@ impl GitEngine {
     #[cfg(feature = "test-seams")]
     pub fn before_rebase(&mut self, f: Box<dyn FnMut() + Send>) {
         self.before_rebase = Some(f);
+    }
+
+    /// A test seam: `f` runs after the rebase was prepared without the lock,
+    /// right before the lock is taken (the lock is free then).
+    #[cfg(feature = "test-seams")]
+    pub fn after_replay(&mut self, f: Box<dyn FnMut() + Send>) {
+        self.after_replay = Some(f);
+    }
+
+    /// A test seam: with `true` the fast path is skipped, as with a Git that
+    /// has no `git replay`: the pull goes through the locked rebase.
+    #[cfg(feature = "test-seams")]
+    pub fn no_replay(&mut self, off: bool) {
+        self.no_replay = off;
     }
 
     /// Files changed in the folder: the commit waits for a pause.
@@ -721,11 +743,27 @@ impl GitEngine {
                 return false;
             }
         }
+        // The rebase is prepared without the lock: typing goes on meanwhile.
+        // Under the lock only the files and the branch are moved, and only if
+        // nothing changed since; otherwise the locked rebase runs as before.
+        #[cfg(feature = "test-seams")]
+        let skip = self.no_replay;
+        #[cfg(not(feature = "test-seams"))]
+        let skip = false;
+        let prepared = if skip {
+            None
+        } else {
+            cx.repo.prepare_integrate(t).ok().flatten()
+        };
+        #[cfg(feature = "test-seams")]
+        if let Some(hook) = self.after_replay.as_mut() {
+            hook();
+        }
         #[cfg(feature = "test-seams")]
         if let Some(hook) = self.before_lock.as_mut() {
             hook();
         }
-        match self.integrate_locked(cx, t, outputs) {
+        match self.integrate_locked(cx, t, prepared.as_ref(), outputs) {
             Ok(()) => {
                 self.last_sync = Some(cx.now.ms);
                 true
@@ -747,6 +785,7 @@ impl GitEngine {
         &mut self,
         cx: &Ctx,
         t: &Target,
+        prepared: Option<&Prepared>,
         outputs: &mut Vec<(u64, Output)>,
     ) -> Result<(), Stop> {
         let Ctx {
@@ -772,7 +811,14 @@ impl GitEngine {
         if let Some(hook) = self.before_rebase.as_mut() {
             hook();
         }
-        let done = repo.integrate(t).map_err(Stop::Problem)?;
+        let fast = match prepared {
+            Some(p) => repo.apply_prepared(p).map_err(Stop::Problem)?,
+            None => None,
+        };
+        let done = match fast {
+            Some(done) => done,
+            None => repo.integrate(t).map_err(Stop::Problem)?,
+        };
         if !done.changed.is_empty() {
             let mut paths: Vec<PathBuf> = Vec::new();
             for path in &done.changed {

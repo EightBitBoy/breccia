@@ -18,5 +18,5 @@ pub use message::{Change, SUBJECT_MAX, commit_message};
 pub use repo::{Busy, Discovered, HeadState, Repo, classify_discover, discover};
 pub use run::{Git, GitError, GitOut, LOCAL_LIMIT, NETWORK_LIMIT, run_limited, without_auto_gc};
 pub use schedule::{Due, Schedule};
-pub use sync::{Integrated, Problem, Pushed, Target, is_ssh_url};
+pub use sync::{Integrated, Prepared, Problem, Pushed, Target, is_ssh_url};
 pub use view::{GitState, GitView, ProblemView};

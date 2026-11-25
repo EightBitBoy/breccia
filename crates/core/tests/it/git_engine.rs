@@ -988,3 +988,138 @@ fn a_deleted_git_folder_reads_not_in_git() {
     assert_eq!(v.state, GitState::NotRepo, "{:?}", v.problem);
     assert!(v.problem.is_none());
 }
+
+// A pull's rebase is prepared without the lock (`git replay`); only the files
+// and the branch are moved under it.
+
+/// `mine` has a local commit on `pages/A.md`; `theirs` has pushed one on
+/// `pages/B.md`. The engine's first tick pulls it.
+fn local_and_remote_commit(e: &Env) -> (PathBuf, PathBuf, Arc<Mutex<Session>>) {
+    let (_bare, mine, theirs) = two_clones(e);
+    commit_file(e, &mine, "pages/A.md", "- a local\n");
+    their_change(e, &theirs, "- b theirs\n");
+    let session = open(&mine);
+    (mine, theirs, session)
+}
+
+/// What the branch's last move says: our fast path writes "pull (breccia)".
+fn last_move(e: &Env, dir: &Path) -> String {
+    git(e, dir, &["reflog", "-1", "--format=%gs", "refs/heads/main"])
+}
+
+#[test]
+fn pull_replays_without_the_lock() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let e = env();
+    let (mine, theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    let free = Arc::new(AtomicUsize::new(0));
+    let ran = Arc::new(AtomicUsize::new(0));
+    let (hooked, f, r) = (Arc::clone(&session), Arc::clone(&free), Arc::clone(&ran));
+    engine.after_replay(Box::new(move || {
+        r.fetch_add(1, Ordering::SeqCst);
+        if hooked.try_lock().is_ok() {
+            f.fetch_add(1, Ordering::SeqCst);
+        }
+    }));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert_eq!(ran.load(Ordering::SeqCst), 1, "the seam never ran");
+    assert_eq!(free.load(Ordering::SeqCst), 1, "the lock was held");
+    assert!(
+        last_move(&e, &mine).starts_with("pull (breccia)"),
+        "{}",
+        last_move(&e, &mine)
+    );
+    assert_eq!(read(&mine, "pages/B.md"), "- b theirs\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a local\n");
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    // The local commit sits on top of the pulled one (the engine then pushes).
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD~1"]),
+        git(&e, &theirs, &["rev-parse", "HEAD"])
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+    // The page the pull changed is shown with the new text.
+    assert_eq!(blocks(&session, "b")[0].1, "b theirs");
+}
+
+#[test]
+fn save_during_replay_falls_back_and_keeps_both() {
+    let e = env();
+    let (mine, _theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    let hooked = Arc::clone(&session);
+    engine.after_replay(Box::new(move || {
+        set_text(&hooked, "a", 0, "saved during replay");
+    }));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert!(
+        !last_move(&e, &mine).starts_with("pull (breccia)"),
+        "the fast path must not apply after a save"
+    );
+    assert_eq!(
+        git(&e, &mine, &["show", "HEAD:pages/A.md"]),
+        "- saved during replay"
+    );
+    assert_eq!(read(&mine, "pages/B.md"), "- b theirs\n");
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+    assert_eq!(blocks(&session, "b")[0].1, "b theirs");
+}
+
+#[test]
+fn conflict_after_replay_is_reported_as_before() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &mine, "pages/A.md", "- mine\n");
+    commit_file(&e, &theirs, "pages/A.md", "- theirs\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    let session = open(&mine);
+    let mut engine = GitEngine::new(e.git.clone());
+    let head = git(&e, &mine, &["rev-parse", "HEAD"]);
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(problem_kind(&v), Some("conflict"), "{v:?}");
+    assert!(format!("{:?}", v.problem).contains("pages/A.md"));
+    assert_eq!(git(&e, &mine, &["rev-parse", "HEAD"]), head);
+    assert_eq!(read(&mine, "pages/A.md"), "- mine\n");
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
+#[test]
+fn old_git_without_replay_still_pulls() {
+    let e = env();
+    let (mine, _theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    engine.no_replay(true);
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert!(!last_move(&e, &mine).starts_with("pull (breccia)"));
+    assert_eq!(read(&mine, "pages/B.md"), "- b theirs\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a local\n");
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
+#[test]
+fn the_same_edit_on_both_machines_still_pulls_like_a_rebase() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &mine, "pages/A.md", "- same\n");
+    commit_file(&e, &theirs, "pages/A.md", "- same\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    let session = open(&mine);
+    let mut engine = GitEngine::new(e.git.clone());
+    let step = engine.tick(&session, now(T0));
+    assert_eq!(last_view(&engine, &step).state, GitState::Ready);
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD"]),
+        git(&e, &mine, &["rev-parse", "origin/main"])
+    );
+}

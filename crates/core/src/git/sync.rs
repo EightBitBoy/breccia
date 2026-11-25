@@ -37,6 +37,21 @@ pub struct Integrated {
     pub moved: bool,
 }
 
+/// The rebased commits of a pull, built without the lock (see
+/// `Repo::prepare_integrate`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Prepared {
+    /// The commit HEAD was at; the pull applies only while it still is.
+    pub base: String,
+    /// The last rebased commit (or the remote's, when the pull is a
+    /// fast-forward).
+    pub tip: String,
+    /// The branch HEAD names, e.g. `refs/heads/main`.
+    pub branch_ref: String,
+    /// `origin/main` when the branch has no upstream yet, as `integrate` sets.
+    pub set_upstream: Option<String>,
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Pushed {
     Done,
@@ -428,6 +443,255 @@ impl Repo {
             .filter_map(|p| self.to_folder_path(p))
             .collect();
         Ok(Integrated { changed, moved })
+    }
+
+    /// Runs a local Git command and gives its trimmed output when it exits 0.
+    fn text_of(&self, args: &[&str]) -> Option<String> {
+        match self.git.run(&self.folder, args, LOCAL_LIMIT) {
+            Ok(out) if out.code == 0 => Some(out.text()),
+            _ => None,
+        }
+    }
+
+    /// The first half of a pull's rebase, which needs no lock: `git replay`
+    /// builds the rebased commits in the object store and touches no file, the
+    /// index or the branch. `Ok(None)` means the fast path does not apply (a
+    /// conflict, a merge commit, a detached HEAD, a commit that `rebase` would
+    /// drop or sign, an old Git, or anything unexpected), so the locked
+    /// `integrate` decides, exactly as before. The result is applied by
+    /// `apply_prepared`.
+    pub fn prepare_integrate(&self, t: &Target) -> Result<Option<Prepared>, Problem> {
+        Ok(self.prepare(t))
+    }
+
+    fn prepare(&self, t: &Target) -> Option<Prepared> {
+        if self.busy().ok()?.is_some() {
+            return None;
+        }
+        let base = self.head_hash().ok()??;
+        let branch_ref = self.text_of(&["symbolic-ref", "-q", "HEAD"])?;
+        let remote_name = self.remote_ref(t).ok()??;
+        let remote = self.text_of(&[
+            "rev-parse",
+            "-q",
+            "--verify",
+            &format!("{remote_name}^{{commit}}"),
+        ])?;
+        // `rebase` signs again under commit.gpgsign; `git replay` cannot.
+        if self
+            .text_of(&["config", "--type=bool", "--get", "commit.gpgsign"])
+            .as_deref()
+            == Some("true")
+        {
+            return None;
+        }
+        let set_upstream = t
+            .upstream
+            .is_none()
+            .then(|| format!("{}/{}", t.remote, t.branch));
+        let prepared = |tip: String| Prepared {
+            base: base.clone(),
+            tip,
+            branch_ref: branch_ref.clone(),
+            set_upstream: set_upstream.clone(),
+        };
+        let is_ancestor = |a: &str, b: &str| {
+            self.git
+                .run(
+                    &self.folder,
+                    &["merge-base", "--is-ancestor", a, b],
+                    LOCAL_LIMIT,
+                )
+                .ok()
+                .map(|o| o.code)
+        };
+        match is_ancestor(&remote, "HEAD")? {
+            0 => return None, // nothing to pull
+            1 => {}
+            _ => return None,
+        }
+        match is_ancestor("HEAD", &remote)? {
+            0 => return Some(prepared(remote)),
+            1 => {}
+            _ => return None,
+        }
+        // Local commits on top of the remote. `rebase` drops a commit whose
+        // change is already upstream; `replay` would keep it as an empty one.
+        let range = format!("{remote}..HEAD");
+        let sym = format!("{remote}...HEAD");
+        let all: usize = self
+            .text_of(&["rev-list", "--count", &range])?
+            .parse()
+            .ok()?;
+        let unique: usize = self
+            .text_of(&[
+                "rev-list",
+                "--count",
+                "--cherry-pick",
+                "--right-only",
+                "--no-merges",
+                &sym,
+            ])?
+            .parse()
+            .ok()?;
+        if all == 0 || all != unique {
+            return None;
+        }
+        let out = self
+            .git
+            .run(
+                &self.folder,
+                &["replay", "--onto", &remote, &range],
+                LOCAL_LIMIT,
+            )
+            .ok()?;
+        if out.code != 0 {
+            return None;
+        }
+        // Exactly one `update <current branch> <new> <old>` line, with the
+        // old value being the base; any other output is not trusted.
+        let text = out.text();
+        let mut lines = text.lines().map(|l| l.trim_end_matches('\r'));
+        let line = lines.next()?;
+        if lines.next().is_some() {
+            return None;
+        }
+        let parts: Vec<&str> = line.split(' ').collect();
+        let [verb, name, new, old] = parts.as_slice() else {
+            return None;
+        };
+        if *verb != "update" || *name != branch_ref || *old != base {
+            return None;
+        }
+        let tip = (*new).to_string();
+        // The new commits must be `all` in number, none of them empty.
+        let tip_range = format!("{remote}..{tip}");
+        let trees = self.text_of(&[
+            "log",
+            "--reverse",
+            "--topo-order",
+            "--format=%T",
+            &tip_range,
+        ])?;
+        let mut previous = self.text_of(&["rev-parse", &format!("{remote}^{{tree}}")])?;
+        let mut n = 0;
+        for tree in trees.lines().map(str::trim).filter(|l| !l.is_empty()) {
+            if tree == previous {
+                return None;
+            }
+            previous = tree.to_string();
+            n += 1;
+        }
+        if n != all {
+            return None;
+        }
+        Some(prepared(tip))
+    }
+
+    /// The second half, under the lock: moves the files and the branch to the
+    /// prepared tip. `Ok(None)` leaves everything as it was and the caller
+    /// runs `integrate`: something changed since `prepare_integrate` (a commit,
+    /// an operation in progress, a modified tracked file) or Git refused.
+    pub fn apply_prepared(&self, p: &Prepared) -> Result<Option<Integrated>, Problem> {
+        if self.busy().map_err(|e| Problem::failed(&e))?.is_some() {
+            return Ok(None);
+        }
+        // HEAD is still the base commit and still names the same branch (one
+        // Git call: the commit, then the full name of HEAD).
+        let head = self
+            .text_of(&["rev-parse", "HEAD", "--symbolic-full-name", "HEAD"])
+            .unwrap_or_default();
+        let mut head = head.lines().map(|l| l.trim_end_matches('\r'));
+        if head.next() != Some(p.base.as_str()) || head.next() != Some(p.branch_ref.as_str()) {
+            return Ok(None);
+        }
+        // Whole repository, tracked files only; this also refreshes the index
+        // so that `read-tree` does not take a stat-dirty entry for a change.
+        match self.text_of(&["status", "--porcelain", "--untracked-files=no", "--", ":/"]) {
+            Some(s) if s.is_empty() => {}
+            _ => return Ok(None),
+        }
+        let read_tree = |from: &str, to: &str| {
+            self.git
+                .run(
+                    &self.folder,
+                    &[
+                        "-c",
+                        "core.autocrlf=false",
+                        "-c",
+                        "core.eol=lf",
+                        "read-tree",
+                        "-m",
+                        "-u",
+                        from,
+                        to,
+                    ],
+                    LOCAL_LIMIT,
+                )
+                .map(|o| o.code == 0)
+                .unwrap_or(false)
+        };
+        if !read_tree(&p.base, &p.tip) {
+            return Ok(None);
+        }
+        let moved_ref = self
+            .git
+            .run(
+                &self.folder,
+                &[
+                    "update-ref",
+                    "-m",
+                    "pull (breccia): files and branch moved to the rebased tip",
+                    &p.branch_ref,
+                    &p.tip,
+                    &p.base,
+                ],
+                LOCAL_LIMIT,
+            )
+            .map(|o| o.code == 0)
+            .unwrap_or(false);
+        if !moved_ref {
+            // The files are at the tip and the branch at the base: put the
+            // files back.
+            if !read_tree(&p.tip, &p.base) {
+                return Err(Problem::Failed {
+                    message: "the pull could not be undone after the branch was refused".into(),
+                });
+            }
+            return Ok(None);
+        }
+        if let Some(up) = &p.set_upstream {
+            let arg = format!("--set-upstream-to={up}");
+            let _ = self.git.run(&self.folder, &["branch", &arg], LOCAL_LIMIT);
+        }
+        let out = self
+            .git
+            .ok(
+                &self.folder,
+                &[
+                    "diff-tree",
+                    "-r",
+                    "--name-only",
+                    "--no-relative",
+                    "-z",
+                    "--no-renames",
+                    &p.base,
+                    &p.tip,
+                    "--",
+                    ".",
+                ],
+                LOCAL_LIMIT,
+            )
+            .map_err(|e| Problem::failed(&e))?;
+        let changed = out
+            .nul_list()
+            .iter()
+            .filter_map(|path| self.to_folder_path(path))
+            .collect();
+        Ok(Some(Integrated {
+            changed,
+            moved: p.base != p.tip,
+        }))
     }
 
     /// The rebase failed. Abort it only when it is our own, in progress now

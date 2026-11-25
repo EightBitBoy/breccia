@@ -523,6 +523,10 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
   message and the "N changes not pushed" count refer to that folder's changes and commits. *(my call)*
 - **If the repository has a remote:** pull when the app starts and every few minutes (default 5, configurable; 0 turns
   the timer off), and push after each commit. Pulls rebase local commits on top of remote ones.
+  The rebase is prepared without holding up typing (`git replay` builds the rebased commits while the notes stay
+  open for saves) and only the move of the files and the branch happens under the notes lock; whenever anything is
+  unusual (a save landed meanwhile, a conflict, a merge commit, a commit the remote already has, signed commits, an
+  older Git) Breccia runs the plain rebase under the lock as before. A conflict is handled as described below.
 - **Conflicts:** if a pull cannot be applied cleanly, Breccia stops syncing, leaves the repository in a state the user can
   resolve with normal Git tools (or aborts the rebase so local work is untouched — builder's choice, but no automatic
   resolution) and shows a red status with an explanation. It never discards text.

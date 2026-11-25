@@ -804,3 +804,282 @@ fn busy_names() {
     assert_eq!(Busy::Revert.name(), "revert");
     assert_eq!(Busy::Bisect.name(), "bisect");
 }
+
+// The fast path of a pull: `prepare_integrate` (no lock) and `apply_prepared`.
+
+/// `mine` has a local commit on `pages/A.md`, `theirs` has pushed one on
+/// `pages/B.md`; `mine` has fetched.
+fn diverged(e: &Env) -> (PathBuf, PathBuf, Repo, Target) {
+    let (_bare, mine, theirs) = two_clones(e);
+    commit_file(e, &theirs, "pages/B.md", "- b2\n");
+    git(e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(e, &mine, "pages/A.md", "- a2\n");
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    (mine, theirs, r, t)
+}
+
+fn state(e: &Env, dir: &Path) -> (String, String, String) {
+    (
+        git(e, dir, &["rev-parse", "HEAD"]),
+        git(e, dir, &["status", "--porcelain"]),
+        git(e, dir, &["ls-files", "-s"]),
+    )
+}
+
+#[test]
+fn a_prepared_pull_gives_what_a_rebase_gives() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    // A second clone of the same state goes through the plain rebase.
+    let twin = e.root.path().join("twin");
+    git(
+        &e,
+        e.root.path(),
+        &["clone", "-q", mine.to_str().unwrap(), "twin"],
+    );
+    git(
+        &e,
+        &twin,
+        &[
+            "remote",
+            "set-url",
+            "origin",
+            &git(&e, &mine, &["remote", "get-url", "origin"]),
+        ],
+    );
+    git(&e, &twin, &["fetch", "-q", "origin"]);
+    let rt = open(&e.git, &twin);
+    let tt = target(&rt);
+    let want = rt.integrate(&tt).unwrap();
+
+    let p = r.prepare_integrate(&t).unwrap().expect("fast path applies");
+    // Nothing moved yet.
+    assert_eq!(git(&e, &mine, &["rev-parse", "HEAD"]), p.base);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+    let done = r.apply_prepared(&p).unwrap().expect("applied");
+    assert_eq!(done, want);
+    assert!(done.moved);
+    assert_eq!(done.changed, vec![PathBuf::from("pages").join("B.md")]);
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD^{tree}"]),
+        git(&e, &twin, &["rev-parse", "HEAD^{tree}"])
+    );
+    assert_eq!(git(&e, &mine, &["rev-parse", "HEAD"]), p.tip);
+    assert_eq!(
+        git(&e, &mine, &["log", "--format=%s%n%an", "-1"]),
+        git(&e, &twin, &["log", "--format=%s%n%an", "-1"])
+    );
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD~1"]),
+        git(&e, &mine, &["rev-parse", "origin/main"])
+    );
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+    assert_eq!(read(&mine, "pages/B.md"), "- b2\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a2\n");
+}
+
+#[test]
+fn a_prepared_fast_forward_moves_to_the_remote() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &theirs, "pages/B.md", "- b2\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    assert_eq!(p.tip, git(&e, &mine, &["rev-parse", "origin/main"]));
+    let done = r.apply_prepared(&p).unwrap().unwrap();
+    assert_eq!(done.changed, vec![PathBuf::from("pages").join("B.md")]);
+    assert_eq!(read(&mine, "pages/B.md"), "- b2\n");
+    assert_eq!(git(&e, &mine, &["rev-parse", "HEAD"]), p.tip);
+}
+
+#[test]
+fn nothing_to_pull_prepares_nothing() {
+    let e = env();
+    let (_bare, mine, _theirs) = two_clones(&e);
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+}
+
+#[test]
+fn a_conflict_is_left_to_the_locked_rebase() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &theirs, "pages/A.md", "- theirs\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "pages/A.md", "- mine\n");
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let before = state(&e, &mine);
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert!(matches!(r.integrate(&t), Err(Problem::Conflict { .. })));
+    assert_eq!(state(&e, &mine), before);
+}
+
+#[test]
+fn the_same_edit_on_both_sides_is_left_to_the_locked_rebase() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &theirs, "pages/A.md", "- same\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "pages/A.md", "- same\n");
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+    r.integrate(&t).unwrap();
+    // Rebase drops the commit that is already upstream.
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD"]),
+        git(&e, &mine, &["rev-parse", "origin/main"])
+    );
+}
+
+#[test]
+fn signing_commits_is_left_to_the_locked_rebase() {
+    let e = env();
+    let (_mine, _theirs, r, t) = diverged(&e);
+    assert!(r.prepare_integrate(&t).unwrap().is_some());
+    add_config(&e, "[commit]\n\tgpgsign = true\n");
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+}
+
+#[test]
+fn a_detached_head_or_a_merge_commit_is_left_to_the_locked_rebase() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    git(&e, &mine, &["checkout", "-q", "--detach"]);
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+    git(&e, &mine, &["checkout", "-q", "main"]);
+    // A merge commit among the local commits.
+    git(&e, &mine, &["checkout", "-q", "-b", "other", "HEAD~1"]);
+    commit_file(
+        &e,
+        &mine,
+        "pages/D.md",
+        "- d
+",
+    );
+    git(&e, &mine, &["checkout", "-q", "main"]);
+    git(&e, &mine, &["merge", "-q", "--no-ff", "-m", "m", "other"]);
+    assert_ne!(
+        git(
+            &e,
+            &mine,
+            &["rev-list", "--merges", "HEAD", "--not", "origin/main"]
+        ),
+        ""
+    );
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+}
+
+#[test]
+fn an_applied_pull_that_found_the_head_moved_changes_nothing() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    commit_file(&e, &mine, "pages/A.md", "- a3\n");
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+}
+
+#[test]
+fn an_applied_pull_that_finds_a_tracked_file_changed_changes_nothing() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    std::fs::write(mine.join("pages/B.md"), "- typed\n").unwrap();
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "pages/B.md"), "- typed\n");
+}
+
+#[test]
+fn an_applied_pull_that_finds_an_untracked_file_in_the_way_changes_nothing() {
+    let e = env();
+    let (_bare, mine, theirs) = two_clones(&e);
+    commit_file(&e, &theirs, "pages/N.md", "- new\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "pages/A.md", "- a2\n");
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    std::fs::write(mine.join("pages/N.md"), "- mine, untracked\n").unwrap();
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "pages/N.md"), "- mine, untracked\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a2\n");
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+}
+
+#[test]
+fn a_branch_that_cannot_move_puts_the_files_back() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    // Another Git holds the branch: `update-ref` is refused after the files moved.
+    std::fs::write(mine.join(".git/refs/heads/main.lock"), "").unwrap();
+    let before = state(&e, &mine);
+    assert_eq!(r.apply_prepared(&p).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a2\n");
+}
+
+#[test]
+fn a_prepared_pull_never_writes_crlf() {
+    let e = env();
+    let (_bare, mine, theirs) = clones(
+        &e,
+        &[
+            (".gitattributes", "* text=auto\n"),
+            ("pages/A.md", "- a\n"),
+            ("pages/B.md", "- b\n"),
+        ],
+    );
+    add_config(&e, "[core]\n\tautocrlf = true\n\teol = crlf\n");
+    std::fs::write(mine.join("pages/A.md"), "- a\n").unwrap();
+    std::fs::write(mine.join("pages/B.md"), "- b\n").unwrap();
+    git(&e, &mine, &["add", "-A"]);
+    commit_file(&e, &theirs, "pages/B.md", "- b2\n");
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    commit_file(&e, &mine, "pages/A.md", "- a2\n");
+    let r = open(&e.git, &mine);
+    let t = target(&r);
+    r.fetch(&t).unwrap();
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    r.apply_prepared(&p).unwrap().unwrap();
+    assert_eq!(std::fs::read(mine.join("pages/B.md")).unwrap(), b"- b2\n");
+    assert_eq!(std::fs::read(mine.join("pages/A.md")).unwrap(), b"- a2\n");
+}
+
+#[test]
+fn a_prepared_pull_sets_the_upstream_like_integrate() {
+    let e = env();
+    let (mine, _theirs, r, t) = diverged(&e);
+    git(&e, &mine, &["branch", "--unset-upstream"]);
+    let t = Target {
+        upstream: None,
+        ..t
+    };
+    let p = r.prepare_integrate(&t).unwrap().unwrap();
+    assert!(r.apply_prepared(&p).unwrap().is_some());
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "--abbrev-ref", "@{upstream}"]),
+        "origin/main"
+    );
+}

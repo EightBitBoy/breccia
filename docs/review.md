@@ -372,3 +372,15 @@ are its questions for you; each answer decides what a later plan does.
    (`F1`), the theme and the zoom work, nothing else does yet. As soon as the files are read the journal shows and takes typing. A last folder that is gone or cannot be opened shows the
    Welcome screen with the reason, never a window stuck on "Opening…". Open question: is the plain text enough, or is
    a count of the files read wanted (Q1 b, later work)?
+
+152. [ ] **A pull no longer makes typing wait while Git rebases:** by hand (two clones of one remote, `just dev` on one):
+   in the other clone change a page and push; in Breccia's clone make a local commit first (or just type), then wait
+   for the pull (or click the Git status). Type in a journal day while it runs: typing does not stop for the rebase
+   (a short pause while the files move is expected), and afterwards your text and the pulled page's text are both
+   there, the history is one line with your commit on top, and no extra "notes:" commit appears. A pull with a
+   conflict still shows the red state with the file names and leaves your files as they were. Known differences: Git
+   hooks named `post-rewrite` do not run on the fast path, and an older Git (before 2.44) keeps today's locked
+   rebase. Measured at 5,000 pages (`scale::`): the time the notes are locked during a pull fell from 855 to about 500
+   ms (a save during the fetch) and from 703 to about 470 ms (none); the rest is two scans of the folder by Git
+   (about 100 ms each) plus the move of the files. Open question: is that enough, or should the locked commit step
+   be skipped when nothing was saved since the unlocked one (Task 6)?
