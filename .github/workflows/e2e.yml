@@ -56,63 +56,7 @@ jobs:
           Invoke-WebRequest 'https://go.microsoft.com/fwlink/p/?LinkId=2124703' -OutFile "$env:RUNNER_TEMP\wv2.exe"
           Start-Process "$env:RUNNER_TEMP\wv2.exe" -ArgumentList '/silent', '/install' -Wait
           if (Test-Path $key) { "WebView2 now: $((Get-ItemProperty $key).pv)" } else { 'WebView2 still not found' }
-      # Temporary diagnosis (backlog #87): why the DevTools port does not open on the runner.
-      - name: Build the release exe
-        run: |
-          just build
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-      - name: Diagnose the app start
-        continue-on-error: true
-        run: |
-          "session: $([Environment]::UserInteractive) user=$env:USERNAME sessionname=$env:SESSIONNAME"
-          Get-Process -Name explorer, winlogon -ErrorAction SilentlyContinue | Format-Table Name, Id, SessionId
-          $exe = "$PWD\target\release\breccia.exe"
-          foreach ($off in @('1', '')) {
-            $run = Join-Path $env:RUNNER_TEMP "diag-$($off -ne '')"
-            New-Item -ItemType Directory -Force "$run\notes", "$run\config" | Out-Null
-            $env:BRECCIA_FOLDER = "$run\notes"
-            $env:BRECCIA_CONFIG_DIR = "$run\config"
-            $env:BRECCIA_OFFSCREEN = $off
-            $env:WEBVIEW2_USER_DATA_FOLDER = "$run\config\webview"
-            $env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS = '--remote-debugging-port=9222'
-            "=== BRECCIA_OFFSCREEN='$off' ==="
-            $p = Start-Process $exe -PassThru -RedirectStandardOutput "$run\out.txt" -RedirectStandardError "$run\err.txt"
-            $up = $false
-            foreach ($i in 1..60) {
-              Start-Sleep 1
-              try { Invoke-RestMethod http://127.0.0.1:9222/json/version -TimeoutSec 2 | Out-String; $up = $true; break } catch {}
-              if ($p.HasExited) { "app exited, code $($p.ExitCode)"; break }
-            }
-            "port up: $up after $i s"
-            Get-Process -Name msedgewebview2 -ErrorAction SilentlyContinue | Format-Table Id, SessionId, StartTime
-            "--- browser process command line ---"
-            Get-CimInstance Win32_Process -Filter "Name='msedgewebview2.exe'" | Where-Object { $_.CommandLine -notmatch '--type=' } | ForEach-Object { $_.CommandLine -split ' --' | ForEach-Object { "  --$_" } }
-            "--- listening on 9222 ---"; Get-NetTCPConnection -LocalPort 9222 -ErrorAction SilentlyContinue | Format-Table LocalAddress, State, OwningProcess
-            "--- DevToolsActivePort ---"; Get-ChildItem "$run\config\webview" -Recurse -Filter DevToolsActivePort -ErrorAction SilentlyContinue | Get-Content
-            "--- stdout ---"; Get-Content "$run\out.txt" -ErrorAction SilentlyContinue
-            "--- stderr ---"; Get-Content "$run\err.txt" -ErrorAction SilentlyContinue
-            "--- breccia.log ---"; Get-ChildItem "$run\config" -Recurse -Filter breccia.log | Get-Content
-            "--- webview folder ---"; Get-ChildItem "$run\config\webview" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name
-            Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
-            Get-Process -Name msedgewebview2 -ErrorAction SilentlyContinue | Stop-Process -Force
-            Start-Sleep 2
-          }
-          "=== Edge and WebView2 policies ==="
-          foreach ($k in 'HKLM:\SOFTWARE\Policies\Microsoft\Edge', 'HKLM:\SOFTWARE\Policies\Microsoft\Edge\WebView2', 'HKLM:\SOFTWARE\Policies\Microsoft\EdgeUpdate', 'HKCU:\SOFTWARE\Policies\Microsoft\Edge') {
-            if (Test-Path $k) { "[$k]"; Get-ItemProperty $k | Out-String; Get-ChildItem $k -Recurse -ErrorAction SilentlyContinue | ForEach-Object { "[$($_.Name)]"; Get-ItemProperty $_.PSPath | Out-String } } else { "[$k] absent" }
-          }
-          "=== Edge itself with a debugging port ==="
-          $edge = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
-          if (Test-Path $edge) {
-            $e = Start-Process $edge -PassThru -ArgumentList '--headless=new', '--remote-debugging-port=9333', "--user-data-dir=$env:RUNNER_TEMP\edge-diag", 'about:blank'
-            $up = $false
-            foreach ($i in 1..30) { Start-Sleep 1; try { Invoke-RestMethod http://127.0.0.1:9333/json/version -TimeoutSec 2 | Out-String; $up = $true; break } catch {} }
-            "edge port up: $up after $i s"
-            Get-Process -Name msedge -ErrorAction SilentlyContinue | Stop-Process -Force
-          } else { 'msedge.exe not found' }
-          Remove-Item Env:BRECCIA_FOLDER, Env:BRECCIA_CONFIG_DIR, Env:BRECCIA_OFFSCREEN, Env:WEBVIEW2_USER_DATA_FOLDER, Env:WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS -ErrorAction SilentlyContinue
       - name: End-to-end test
-        if: ${{ false }} # off while the diagnosis runs
         run: |
           just e2e
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

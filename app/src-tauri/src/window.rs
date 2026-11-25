@@ -23,6 +23,26 @@ pub(crate) fn set_title(windows: &mut [tauri::utils::config::WindowConfig], var:
     }
 }
 
+/// wry's own WebView2 arguments, which a window's `additional_browser_args` replaces: no mini menu, no
+/// SmartScreen, and autoplay (wry adds it for Tauri's default `autoplay`).
+const WRY_DEFAULT_ARGS: &str = "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection --autoplay-policy=no-user-gesture-required";
+
+/// `BRECCIA_DEVTOOLS_PORT` (the test hook): every window's WebView2 opens its DevTools port there, for the e2e,
+/// screenshot and graph-scale runs. WebView2 ignores `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` on GitHub's Windows
+/// runners (backlog #87), so the app passes the port itself. Unset, empty or not a port means no change.
+pub(crate) fn set_devtools_port(
+    windows: &mut [tauri::utils::config::WindowConfig],
+    var: Option<OsString>,
+) {
+    let Some(port) = var.and_then(|v| v.to_str()?.parse::<u16>().ok()) else {
+        return;
+    };
+    for w in windows {
+        w.additional_browser_args =
+            Some(format!("{WRY_DEFAULT_ARGS} --remote-debugging-port={port}"));
+    }
+}
+
 /// Where an off-screen window's top left corner goes, in physical pixels on
 /// both axes: far beyond any monitor layout.
 const OFFSCREEN: i32 = -20_000;
@@ -125,6 +145,26 @@ mod tests {
         assert_eq!(windows[0].title, before, "no value, no change");
         set_title(&mut windows, Some("Breccia (test)".into()));
         assert!(windows.iter().all(|w| w.title == "Breccia (test)"));
+    }
+
+    /// `BRECCIA_DEVTOOLS_PORT` opens WebView2's DevTools port through the window's own browser arguments, keeping
+    /// wry's defaults; no value, an empty one or one that is not a port changes nothing.
+    #[test]
+    fn a_devtools_port_is_added_to_the_browser_arguments() {
+        let ctx: tauri::Context<tauri::Wry> = tauri::generate_context!();
+        let mut windows = ctx.config().app.windows.clone();
+        for bad in [None, Some(""), Some("abc"), Some("70000"), Some("--x 1")] {
+            set_devtools_port(&mut windows, bad.map(OsString::from));
+            assert_eq!(windows[0].additional_browser_args, None, "{bad:?}");
+        }
+        set_devtools_port(&mut windows, Some("9222".into()));
+        assert_eq!(
+            windows[0].additional_browser_args.as_deref(),
+            Some(
+                "--disable-features=msWebOOUI,msPdfOOUI,msSmartScreenProtection \
+                 --autoplay-policy=no-user-gesture-required --remote-debugging-port=9222"
+            )
+        );
     }
 
     /// An off-screen run neither restores nor saves the window state, so it

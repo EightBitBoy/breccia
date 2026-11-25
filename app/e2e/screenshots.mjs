@@ -70,7 +70,8 @@ try {
       GIT_TERMINAL_PROMPT: '0',
       // Its own WebView2 profile, never the installed app's (which an open Breccia holds).
       WEBVIEW2_USER_DATA_FOLDER: join(configDir, 'webview'),
-      WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS: `--remote-debugging-port=${port}`,
+      // The app opens the DevTools port itself: WebView2 ignores WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS on CI.
+      BRECCIA_DEVTOOLS_PORT: String(port),
     },
     stdio: 'ignore',
   })
