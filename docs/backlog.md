@@ -115,13 +115,6 @@ It changes many files in one command and is one slow answer, once.
 Owner, 2026-11-24: measure and fix now, as a plan (measure at 5,000 pages, then fix the worst points: the blank first
 window, the Git pause, long lists). Written after the backlog round.
 
-## 87. Run the end-to-end test in CI (Tests)
-
-From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
-and `just lint`. Running it there needs a Windows runner with a display and about 5 minutes per run (WebView2 and the
-release build), so it wants its own plan: when to run it (every push, or only on `main` and tags), and caching of the
-release build.
-
 ## 89. Recovery after an internal error: edges left (Safety net)
 
 From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery that plan 6 built:

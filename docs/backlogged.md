@@ -860,3 +860,12 @@ transparent rather than `visibility: hidden` when not shown, so `Tab` from the c
 `Ctrl D` opens the due date calendar and `Shift F10` or the context-menu key opens the card menu on its first item;
 `Esc` gives the focus back to the card (`focusedCardKey` in `app/src/lib/cardKeys.ts`, `BoardCard.svelte`). Spec §7.6,
 the shortcut list, e2e step 163 and review item 148.
+
+## 87. Run the end-to-end test in CI (Tests) (closed 2026-11-25: e2e stays local, before each release)
+
+From plan 12 triage (plan 6 follow-up 21; audit M53). `just e2e` runs only on the owner's machine; CI runs `just test`
+and `just lint`. Running it there needs a Windows runner with a display and about 5 minutes per run (WebView2 and the
+release build), so it wants its own plan: when to run it (every push, or only on `main` and tags), and caching of the
+release build.
+
+Owner, 2026-11-25: closed; e2e stays local and runs before each release (docs/releasing.md step 1). No GitHub Actions run for it: the owner does not want long Actions runs. Tried first: an E2E workflow on windows-latest. WebView2 there ignores WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so the app now opens the DevTools port itself under BRECCIA_DEVTOOLS_PORT (kept). The run then reached step 96 and failed at step 97, which checks the dragged row's dimming once without waiting (a candidate for a wait-on-state fix). The workflow was removed.
