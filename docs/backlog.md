@@ -11,17 +11,6 @@ Items marked "accepted" are rare edge cases earlier reviews chose to live with b
 so they are not forgotten, and the owner can close any of them as "won't fix". "(to check: ...)" marks a claim that was
 not verified when the list was written.
 
-## 81. Explain basic syntax in the help dialog (Docs)
-
-Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,
-`#tags`, task keywords, `key:: value` properties, `**bold**`, `<https://…>` and `<name@example.com>` links, and so on.
-Add a short section. To settle: which syntax belongs in it (Breccia's own, or Markdown basics too), whether it is a second
-tab or a block below the shortcuts, and whether a test keeps it in line with `docs/format.md`.
-
-Owner, 2026-11-24: a second tab "Writing" next to "Shortcuts", with one small example per syntax: Breccia's own
-first (links, tags, tasks, properties, due dates), then the Markdown basics; a test keeps it in line with
-`docs/format.md`. Queued.
-
 ## 83. Re-implement the graph feature (Graph)
 
 Owner, 2026-11-13: the owner does not use the graph at all at the moment, and plans to re-implement the feature later.

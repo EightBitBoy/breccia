@@ -883,3 +883,25 @@ release build), so it wants its own plan: when to run it (every push, or only on
 release build.
 
 Owner, 2026-11-25: closed; e2e stays local and runs before each release (docs/releasing.md step 1). No GitHub Actions run for it: the owner does not want long Actions runs. Tried first: an E2E workflow on windows-latest. WebView2 there ignores WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS, so the app now opens the DevTools port itself under BRECCIA_DEVTOOLS_PORT (kept). The run then reached step 96 and failed at step 97, which checks the dragged row's dimming once without waiting (a candidate for a wait-on-state fix). The workflow was removed.
+
+## 81. Explain basic syntax in the help dialog (Docs) (done 2026-11-25, no plan)
+
+Owner, 2026-11-12: the help dialog (`F1`) lists shortcuts but does not explain the basic syntax a user writes: `[[links]]`,
+`#tags`, task keywords, `key:: value` properties, `**bold**`, `<https://…>` and `<name@example.com>` links, and so on.
+Add a short section. To settle: which syntax belongs in it (Breccia's own, or Markdown basics too), whether it is a second
+tab or a block below the shortcuts, and whether a test keeps it in line with `docs/format.md`.
+
+Owner, 2026-11-24: a second tab "Writing" next to "Shortcuts", with one small example per syntax: Breccia's own
+first (links, tags, tasks, properties, due dates), then the Markdown basics; a test keeps it in line with
+`docs/format.md`. Queued.
+
+Done 2026-11-25: the help (`F1`, the ? button, Settings > Keyboard) has a second tab "Writing" next to "Shortcuts".
+It shows one example per syntax, as typed, with a few words: links, links with other text, heading links, journal
+day links, tags, `#[[two words]]`, aliases (front matter), tasks (with the configured states, or the defaults),
+properties, due dates and priority; then Markdown: bold, italic, strikethrough, inline code, headings, quotes, web
+links with text, `<https://…>`, `<name@example.com>` and code fences. Lists and tables are left out (the outline is
+the list). The rows are data in `app/src/lib/writing.ts`; each quotes the words of `docs/format.md` that describe its
+syntax, and `writing.test.ts` checks the doc still holds them (`docs/format.md` §7 got a short "Markdown" paragraph for
+the basics, so the check could pass). The one filter box narrows the shown tab and keeps its text when the tab
+changes. No rendered preview: the rendering is done by the core, and a copy in the dialog could drift. e2e step 165
+and review item 150.

@@ -351,3 +351,16 @@ are its questions for you; each answer decides what a later plan does.
    another block's text. The calendar closes, that block is edited with the caret in it, and nothing is written. Open
    the calendar again from there: `Esc` and a picked day give the focus back to that block's editor. A right-click
    outside the calendar now closes it too, at the press.
+
+## The help explains how to write (backlog #81)
+
+150. [ ] **A Writing tab in the help shows the syntax:** by hand (`just dev`): press `F1`. The help opens on
+   "Shortcuts" as before; next to it is a tab "Writing". Click it (or `Shift Tab` from the filter, then `→`): one row
+   per syntax, the example as typed in a monospace box and a few words: links, `[[Page|other text]]`, heading links,
+   journal day links, tags, `#[[two words]]`, aliases, a task (its example starts with your first state, and the row
+   lists your states: rename one in Settings > Task states and reopen the help), `key:: value`, `due::`, `priority::`,
+   then the Markdown basics (bold, italic, strikethrough, inline code, heading, quote, web and mail links, code fence).
+   Type `due` in the filter: only the due date row is left; the filter narrows whichever tab is shown and keeps its
+   text when you switch. `Esc` clears the filter, a second `Esc` closes the help; the ? button and Settings > Keyboard
+   "open the list" still open it. Open questions: are lists and tables wanted too (left out: the outline is the list)?
+   Should the rows also show the rendered result?
