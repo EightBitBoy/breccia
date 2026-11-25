@@ -808,3 +808,15 @@ custom domain needs a domain purchase and DNS settings, then the `CNAME` file, t
 README and in the app. The owner's decision.
 
 Owner, 2026-11-25: closed; the site keeps the GitHub Pages address.
+
+## 97. Multi-line quotes break at an empty line (Editor) (closed 2026-11-25: for now)
+
+From the owner, 2026-11-23, after 1.8.3 styled quotes. A quote (`> …`) ends at an empty line, as in standard Markdown,
+so a text with `>` only on its first line shows as a quote up to its first empty line and as plain text after it.
+Writing `>` on every line, and a lone `>` on empty lines, keeps it one quote, but that is tedious to type. Options
+discussed: (1) `Shift Enter` on a quote line and a multi-line paste into one add `> ` to each new line; (2) a text whose
+first line starts with `>` shows wholly as a quote (no typing, but other apps show it differently); (3) a Quote command
+that adds or removes `>` on every line of the selection. Recommended: 1 with 3, which keeps the file standard Markdown.
+The owner is thinking about it; decide before building.
+
+Owner, 2026-11-25: closed for now; the owner wants more time with the app first.
