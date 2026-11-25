@@ -122,12 +122,6 @@ and `just lint`. Running it there needs a Windows runner with a display and abou
 release build), so it wants its own plan: when to run it (every push, or only on `main` and tags), and caching of the
 release build.
 
-## 88. A custom domain for the website (Website)
-
-From plan 12 triage (plan 5 follow-up 10; left "Open" by the closed #64). The site is on the GitHub Pages address. A
-custom domain needs a domain purchase and DNS settings, then the `CNAME` file, the HTTPS setting and the links in the
-README and in the app. The owner's decision.
-
 ## 89. Recovery after an internal error: edges left (Safety net)
 
 From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery that plan 6 built:

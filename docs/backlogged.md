@@ -800,3 +800,11 @@ Owner, 2026-11-24: fix it: a refused command changed nothing, so it leaves the t
 
 Done: a refused command (one that recorded no undo step) leaves the typing run alone, so typing before and after it is
 one undo step. Test `a_refused_command_between_two_edits_leaves_the_typing_run_alone`, review item 145.
+
+## 88. A custom domain for the website (Website) (closed 2026-11-25: keep the GitHub Pages address)
+
+From plan 12 triage (plan 5 follow-up 10; left "Open" by the closed #64). The site is on the GitHub Pages address. A
+custom domain needs a domain purchase and DNS settings, then the `CNAME` file, the HTTPS setting and the links in the
+README and in the app. The owner's decision.
+
+Owner, 2026-11-25: closed; the site keeps the GitHub Pages address.
