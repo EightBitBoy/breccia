@@ -416,7 +416,14 @@ fn scale_5000_pages() {
     );
     assert!(!q_date.1, "date query has no more");
     assert_eq!(total, 5000, "index build covers every page and day");
-    assert_eq!(rows.len(), 5000, "pages.table rows");
+    // The 5,000 files, plus the five tags `content` writes (#t0, #t4, #t8, #t12, #t16),
+    // which `pages.table` lists as linked-only pages.
+    let tag_rows = rows
+        .iter()
+        .filter(|r| ["t0", "t4", "t8", "t12", "t16"].contains(&r.key.as_str()))
+        .count();
+    assert_eq!(tag_rows, 5, "the five tag pages are listed");
+    assert_eq!(rows.len(), 5000 + tag_rows, "pages.table rows");
     assert_eq!(feed_days, 3001, "journal.feed days");
 }
 
