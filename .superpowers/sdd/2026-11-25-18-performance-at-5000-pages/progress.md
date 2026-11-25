@@ -30,3 +30,5 @@ Shared subagent rules: common.md (local).
 - Task 2: complete (commits c0018fa..f229374, review clean). Baseline (window, ms, bar): window shows 1794 (500) OVER, journal usable 1794, git history open 336 (200) OVER, show more 508 (200) OVER, typing wait p95 20.1 (16) OVER, caret 18.5 (16) OVER; runs vary 10-30 %.
 - Task 3: dispatched (opus), BASE 067b582.
 - Task 3: implemented b38a7f7 (opus; resumed once after an API usage limit). perf-scale after: window shows 439 (500) ok, journal usable 1228 (2000) ok; one cold launch 746. Concerns: api.ts path differs from brief; only F1/theme/zoom work while opening; new panic message text.
+- Task 3: review (opus): spec ✅, quality ✅, 0 Critical/Important, 7 Minor. Minor (deferred): status bar Git items clickable while opening (spec §6 says only help/theme/zoom); step 166 may flake if a cold WebView2 needs > 3 s; panic notice says "ran into" (others "hit"), untested, not in review item 151; no behavioural test for F11 (folder remembered, Git thread after open); + 3 more in task-3-review.md.
+- Task 3: complete (commits 067b582..b38a7f7, review clean)
