@@ -29,6 +29,12 @@ Numbers: review items start at **151** (`docs/review.md` ends at 150); e2e steps
 
 ## Owner questions
 
+**Settled 2026-11-25 (owner):** Q1 (a): the window shows at once with "Opening ‹folder›…"; typing once the files are
+read (a counter or an early journal is later work). Q2 (b): search keeps waiting for the complete index; an early
+partial answer goes to the backlog. Q3: the bars as proposed. Q4 (a): small fixes in this plan, big ones into #85 with
+their numbers; the owner sees Task 6's list before any of its fixes start. Rulings R4 and R5 (`git replay`, no
+`post-rewrite` hooks on Breccia's pulls, older Git keeps today's locked rebase): accepted.
+
 Ask one at a time, with the options. The plan is written with the recommended answers; another answer changes the task
 named.
 
