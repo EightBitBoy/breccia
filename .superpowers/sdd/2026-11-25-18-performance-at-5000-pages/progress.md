@@ -12,3 +12,4 @@ Shared subagent rules: common.md (local).
   F6 the new scale measures are a separate test fn on an existing hub page; F8 no bar for search during the first
   build (owner Q2); F9 Task 6/7 writes backlog #102 (early search) and Q1's later work; F12 e2e 166 at the end (own
   exe), 167 and 168 before step 50.
+- Task 1: dispatched (sonnet), BASE 07488ff.
