@@ -139,3 +139,13 @@ the Dailies entry. The cause is not known (it may be WebView2's own drag handlin
 then the cause.
 
 Owner, 2026-11-25: keep open until it shows up again with steps.
+
+## 102. Fast typing with Enter during the first indexing puts letters in the wrong row (Editor)
+
+Found 2026-11-25 by plan 18's `just perf-scale` (Task 2), on the 5,005-page test folder during the first index build:
+a letter, then `Enter`, then the next letter, each 40 ms apart, put several letters into the last row in reverse order
+("mkige" instead of e, g, i, k and m in their own rows). Nothing was lost, but text landed in the wrong place (spec
+anti-goal §2). It looks like a reproducible case of closed #1 (misplaced text while typing fast, accepted as rare),
+which said to reopen if it shows up. Steps are in `docs/perf/2026-11-25-baseline.md` and the plan 18 Task 2 notes; the
+measuring script now waits for each new row before typing on. To do: reproduce in an e2e step, find the cause (likely
+keys queued while a split is in flight), fix.

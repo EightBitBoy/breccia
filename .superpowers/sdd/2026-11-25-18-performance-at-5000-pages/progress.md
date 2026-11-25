@@ -23,3 +23,6 @@ Shared subagent rules: common.md (local).
 - Task 1: complete (commits 07488ff..65066c4, review clean)
 - Task 2: dispatched (opus), BASE c0018fa.
 - Task 2: implemented 346d265 (opus), DONE_WITH_CONCERNS: typing run deviates from brief (20 letters + Enter x2, saves wait 300 ms); window OVER: shows 1399 (500), git history open 309 (200), show more 371 (200), typing wait p95 16.4 (16); caret 14.1 (16).
+- Task 2: review (opus): spec ✅; Important I1 typing p95 noise at bar, I2 during-build flags only noted, I3 journal usable before window shows; sent as fix round 1 with cheap minors (scroll end asserts, power state, commit name). Minor (deferred): caret frame taken before CodeMirror's measure; search line mostly measures build time left.
+- Task 2: fix round 1/5 (3 addressed per implementer — I1 Enters paced, I2 INVALID when not during build, I3 journal usable after first paint; commits 346d265..f229374). Re-review pending.
+- Ruling: the misplaced-letters bug found by perf-scale becomes backlog #102 now (not fixed in this plan's Tasks 3-5) — it's a correctness bug, not a speed point; Task 6 lists it for the owner — cost if wrong: the owner may want it fixed inside plan 18. F9's "backlog #102 for the early search" takes the next free number instead.
