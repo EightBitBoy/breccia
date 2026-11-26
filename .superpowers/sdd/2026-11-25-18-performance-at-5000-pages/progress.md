@@ -45,3 +45,7 @@ Shared subagent rules: common.md (local).
 - Task 5: fix round 1 implemented caf2fdd (rows stay in place, step 168 uses 'task 14' 134 matches, Back check; REDs captured; e2e 290). Re-review dispatched (sonnet).
 - Task 5: fix round 1/5 (3 addressed — I1 rows stay in place, I2 168 RED-able, Back scroll check; commits 6d6a79b..caf2fdd). Nit (deferred): scrollTop between 0 and the header margin is not corrected.
 - Task 5: complete (commits b32e8d4..caf2fdd, review clean). Minor (deferred, for follow-ups): All pages filter doesn't jump to the top; a focused row or text selection is lost once its rows scroll out.
+- Task 6: decision part dispatched (opus), BASE 74b00b4; no fixes until the owner sees the list.
+- Task 6: decision list done (opus), task-6-decision.md (local). Fix-now candidates: 1a, 1b, 2a, 3, 2b (owner question); #85: 1c, 2c, 2d. Owner items: #102 timing, #103 early search, #104 counter/early journal. Waiting for the owner.
+- Task 6: owner decided (recorded in the plan): build fixes 1-5; #85 gets 1c, 2c, 2d; #102 later; new #103, #104.
+- Ruling: fixes run as three sub-tasks in order — 6a = fixes 1+2 (same pull path, one implementer, opus review), 6b = fixes 3+5 (same git.log file), 6c = fix 4 (index step) plus the #85/#103/#104 backlog edits — fewer review seats on shared code — cost if wrong: a larger diff per review.

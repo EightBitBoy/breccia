@@ -347,6 +347,17 @@ named.
 
 ### Task 6: Decide the rest from the numbers (model: opus for the decision; sonnet per small fix)
 
+**Owner, 2026-11-26 (Task 6's list, re-measured at 74b00b4):** build five small fixes: (1) a pull tries the prepared
+update under the lock before the full `git status` (lock about 0.42-0.46 s → 0.32-0.36 s); (2) a pull's worst case (a
+save just before the lock) lets go once, commits and prepares outside the lock, then locks briefly (1.27 s → about 0.4
+s; falls back to the full locked rebase if it misses again); (3) the history's "not pushed" marks are found without the
+folder filter (same marks); (4) the first index build works in smaller steps with its own step-size constant (F15), and
+the 154 ms chunk is explained; (5) the history drops the folder filter when the notes folder is the repository's top
+folder (accepted: commits that change no file may then show). Into #85 with their numbers: the lock under 100 ms (no
+Git program under the lock), fewer Git starts per history load, reloading only the newest rows after a commit.
+Backlog #102 (letters in the wrong row): later, stays in the backlog. New backlog items: #103 early search answer during
+the first build (Q2), #104 a counter or early journal while opening (Q1).
+
 **Files:**
 - Modify: `docs/perf/2026-11-25-baseline.md` (a "Decisions" section), `docs/backlog.md` #85 (rewritten to what is
   left, with numbers), and the files of each small fix.
