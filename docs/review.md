@@ -370,7 +370,8 @@ are its questions for you; each answer decides what a later plan does.
 151. [ ] **The window shows at once and the folder opens inside it:** by hand, start Breccia on a large notes folder of
    your own. The window appears at once with the status bar and "Opening ‹folder name›…" in the middle; the help
    (`F1`), the theme and the zoom work, nothing else does yet. As soon as the files are read the journal shows and takes typing. A last folder that is gone or cannot be opened shows the
-   Welcome screen with the reason, never a window stuck on "Opening…". Open question: is the plain text enough, or is
+   Welcome screen with the reason, never a window stuck on "Opening…". If the open itself fails inside Breccia, the
+   Welcome screen says "Breccia hit an internal error while opening the folder." Open question: is the plain text enough, or is
    a count of the files read wanted (Q1 b, later work)?
 
 152. [ ] **A pull no longer makes typing wait while Git rebases:** by hand (two clones of one remote, `just dev` on one):

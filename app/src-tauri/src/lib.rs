@@ -259,6 +259,9 @@ fn startup_folder(config_dir: &std::path::Path) -> Option<PathBuf> {
     }
 }
 
+/// The notice when the startup open panicked.
+const STARTUP_PANIC: &str = "Breccia hit an internal error while opening the folder.";
+
 /// The startup open, off the main thread, so the window shows at once: opens
 /// `path`, then (if it opened) remembers it and starts its watcher and index,
 /// then the Git thread. Then it clears `opening` and emits `folder:opened`,
@@ -279,8 +282,7 @@ fn open_in_background(app: AppHandle, path: PathBuf) {
                     .lock()
                     .unwrap_or_else(|e| e.into_inner())
                     .push(Notice::Refused {
-                        message: "Breccia ran into an internal error while opening the folder."
-                            .into(),
+                        message: STARTUP_PANIC.into(),
                     });
                 0
             }
@@ -391,6 +393,14 @@ pub(crate) fn test_clock() -> Clock {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_startup_open_panic_is_worded_like_the_other_internal_errors() {
+        assert_eq!(
+            STARTUP_PANIC,
+            "Breccia hit an internal error while opening the folder."
+        );
+    }
 
     #[test]
     fn startup_open_keeps_load_warnings() {
