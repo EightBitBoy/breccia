@@ -162,7 +162,9 @@ Subagents write their reports to files and return short summaries.
   `ConfigView` from an answer with one from `config:changed` as JSON text.
 - Unit tests under Node miss WebView-only failures, for example calling `setTimeout` as a method. Run `just e2e`
   whenever app wiring changes.
-- `App.svelte` has no unit-test harness. Put logic that needs tests in `app/src/lib/`.
+- The window's logic lives in `AppController` (`app/src/lib/app.svelte.ts`) and the state classes in `lib/`, tested
+  with fake envs (`appEnv.testing.ts`); `App.svelte` only binds Tauri and the DOM. `*.svelte.test.ts` run in Vitest's
+  `client` project, where `$effect` runs.
 - Every test must be able to fail. Capture a failing (RED) run before implementing.
 - e2e steps must assert the bytes on disk where a file changes. Fix flaky steps by waiting for the right state, never
   by adding sleeps.

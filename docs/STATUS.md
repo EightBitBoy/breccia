@@ -41,6 +41,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 16 | Task due dates | done 2026-11-23 | `docs/plans/2026-11-23-16-due-dates.md` | `docs/plans/2026-11-23-16-due-dates-followups.md` |
 | 17 | Due date follow-ups | done 2026-11-24 | `docs/plans/2026-11-24-17-due-date-follow-ups.md` | `docs/plans/2026-11-24-17-due-date-follow-ups-followups.md` |
 | 18 | Performance at 5,000 pages | done 2026-11-26 | `docs/plans/2026-11-25-18-performance-at-5000-pages.md` | `docs/plans/2026-11-25-18-performance-at-5000-pages-followups.md` |
+| 19 | The frontend controller | done 2026-11-26 | `docs/plans/2026-11-26-19-the-frontend-controller.md` | `docs/plans/2026-11-26-19-the-frontend-controller-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -241,6 +242,22 @@ review items 151 to 157.
 
 Released as 1.9.1 (2026-11-26, https://github.com/EightBitBoy/breccia/releases/tag/v1.9.1): the two backlog rounds,
 #81 and plan 18. A patch number by the owner's choice, though it holds new features.
+
+Plan 19 (the frontend controller, audit moves M36 to M40 and M49, backlog #89's window edges) is done (2026-11-26;
+owner decisions Q1 to Q5 and the "Settled" block in the plan, ledger
+`.superpowers/sdd/2026-11-26-19-the-frontend-controller/progress.md`). Not released yet. The window's logic moved out
+of `App.svelte` into a tested `AppController` (`app/src/lib/app.svelte.ts`) and state classes, so `App.svelte` only
+binds Tauri and the DOM; one value says what the main area shows, one value says which dialog is open, and the folder's
+settings have their own store. Components take the state object instead of long prop lists. What a user can notice is
+the recovery after an internal error:
+- Q1 b: the reload's points and the "one notice a minute" rule; a second notice with other words is shown.
+- Q2: the window stops waiting for a stuck save after 10 s and keeps the text in a notice to copy.
+- Q3: refusals after "internal error again" say that Breccia needs a restart.
+- Q4: the window is greyed out and takes no input while the notes reload.
+- Q5 a: the empty "+ Add" card left by a reload is accepted and documented.
+Every open dialog now closes on a reload or a folder switch. The owner checks review items 158 to 163 (163: click
+through every view and dialog). Backlog #89 keeps only its two Git edges. The audit's plan 4 is done with this plan;
+its plan 5 still waits. Follow-ups: `docs/plans/2026-11-26-19-the-frontend-controller-followups.md`.
 
 Candidates for the plan after it, to settle with the owner:
 

@@ -478,5 +478,9 @@ core hang on purpose.
    and a name typed into a dialog is not kept. Covered by unit tests; by hand with `BRECCIA_TEST_PANIC` only if a
    dialog can be open at the panic (it cannot from step 127's search), so unit tests only.
 
+163. [ ] **Click once through every view and dialog:** journal, page, board and card, All pages, Archive, Dailies,
+   Git history, Graph, Settings and each of its dialogs, search, F1, the untitled page, Back and Forward. Everything
+   behaves as in 1.9.1. The refactor touches every view, and e2e does not cover every dialog.
+
 The empty card that "+ Add" makes on a board is left in today's journal (as its bare keyword, for example `TODO`) if
 an internal error hits while it is open; delete it by hand (owner, Q5 a).

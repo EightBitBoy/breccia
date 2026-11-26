@@ -69,6 +69,7 @@ Next free keys: `B8`, `T22`, `M56`, `Q7`. The owner questions Q1 to Q6 are in `R
 - 2026-11-10: areas 10 to 14 done as far as the table says (T17 to T20; M48 to M54).
 - 2026-11-10: area 15 done (T21; M55); `README.md` written. The audit is complete as far as the table above says. Next: the owner answers Q1 to Q6, then plan 1 of the README ("Safety net") is written as a normal plan.
 - 2026-11-11: plan 9 closed M1 to M8, M10 to M14, M16, M18, M22 to M31, M33.
+- 2026-11-26: plan 19 closed M36 to M40 and M49 (the frontend controller).
 
 ## To check in later areas
 

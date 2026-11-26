@@ -137,11 +137,12 @@ is wrong even if the tests pass.
   `client.flush()` first; keep that order in any new flow.
 - **One place applies an answer.** `apply(out, cmd)` in `App.svelte` is the only function that turns an `Output`
   into state; the decisions are in `route` (`lib/route.ts`), which is pure and tested.
-- **Own echoes are recognised, not suppressed.** Shell events wait while a command is in flight (`InFlight`) and
-  are compared with what the command returned (`Echoes`); that is why the payload's field order matters.
-- **State classes take an `env`.** `Journal`, `Boards`, `AllPages`, `Archive`, `Network`, `Search`, `GitLog`,
-  `PageFlows` are plain classes in `lib/*.svelte.ts` that get `run`, `notify` and friends injected and are tested
-  with fakes. New state follows this shape (M38, M39 extend it to what is still in `App.svelte`).
+- **Own echoes: obsolete (plan 15).** The shell no longer echoes the window's own changes, so the window does not
+  recognise them any more. Event payloads still keep their field order for `lib/configChange.ts`.
+- **State classes take an `env`.** `MainArea`, `Overlays`, `ConfigStore`, `Journal`, `Boards`, `AllPages`,
+  `Archive`, `Network`, `Search`, `GitLog`, `PageFlows` and `AppController` are plain classes in `lib/*.svelte.ts` that
+  get `run`, `notify` and friends injected and are tested with fakes (`appEnv.testing.ts`). New state follows this
+  shape (M36 to M40 are done in plan 19).
 - **Heavy views load on demand** (`NetworkView`, `GitLogView`, `ArchiveView` through `{#await import(…)}`).
 - **Settings writes are serialised** (`WriteQueue`) and each carries the config version its values came from.
 
