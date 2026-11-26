@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { awaitStartupOpen, openingText, startupSequence, type StartupEnv } from './startup'
+import { allowedWhileOpening, awaitStartupOpen, openingText, startupSequence, type StartupEnv } from './startup'
 import type { Notice } from './types'
 
 /** A fake shell: `opening` answers when `answer` is called, and `emit` sends `folder:opened`. */
@@ -149,5 +149,12 @@ describe('openingText', () => {
     expect(openingText('C:\\notes\\Work')).toBe('Opening Work…')
     expect(openingText('/home/a/notes/')).toBe('Opening notes…')
     expect(openingText('D:\\')).toBe('Opening D:\\…')
+  })
+})
+
+describe('allowedWhileOpening', () => {
+  it('lets only the help, the theme and the zoom work while "Opening…" shows', () => {
+    for (const id of ['help', 'theme', 'zoom']) expect(allowedWhileOpening(id), id).toBe(true)
+    for (const id of ['git', 'gitLog', 'dailies', 'index', 'unknown']) expect(allowedWhileOpening(id), id).toBe(false)
   })
 })

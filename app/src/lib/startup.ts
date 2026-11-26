@@ -68,3 +68,8 @@ export function openingText(path: string): string {
   const name = path.replace(/[\\/]+$/, '').split(/[\\/]/).pop() ?? ''
   return `Opening ${name && !name.endsWith(':') ? name : path}…`
 }
+
+/** Whether the status bar item `id` works while "Opening ‹folder›…" shows: only the help, the theme and the zoom (spec §6). */
+export function allowedWhileOpening(id: string): boolean {
+  return id === 'help' || id === 'theme' || id === 'zoom'
+}

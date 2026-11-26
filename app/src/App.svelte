@@ -30,7 +30,7 @@
   import { answerOf } from './lib/answer'
   import { createClient, flushBeforeClose } from './lib/api'
   import { closeCheck } from './lib/close'
-  import { openingText, startupSequence } from './lib/startup'
+  import { allowedWhileOpening, openingText, startupSequence } from './lib/startup'
   import { autoHideScrollbar } from './lib/scrollFade'
   import { saveItem } from './lib/saveStatus'
   import { InFlight, Refreshes } from './lib/external'
@@ -2179,7 +2179,7 @@
         onmissing={recentMissing}
       />
     {/if}
-    <StatusBar left={status.left} right={status.right} onitem={(id) => (id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'dailies' ? void openDailies() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
+    <StatusBar left={status.left} right={status.right} onitem={(id) => (opening !== null && !allowedWhileOpening(id) ? undefined : id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'dailies' ? void openDailies() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
       ontheme={chooseTheme}
       onthemewheel={(dy) => {
         const c = wheelTheme(theme, themeSteps, dy, zoom.percent)
