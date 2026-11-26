@@ -380,7 +380,7 @@ are its questions for you; each answer decides what a later plan does.
    there, the history is one line with your commit on top, and no extra "notes:" commit appears. A pull with a
    conflict still shows the red state with the file names and leaves your files as they were. Known differences: Git
    hooks named `post-rewrite` do not run on the fast path, and an older Git (before 2.44) keeps today's locked
-   rebase. Measured at 5,000 pages (`scale::`): the time the notes are locked during a pull fell from 855 to about 500
+   rebase; Git 2.53 and newer are handled too (item 157). Measured at 5,000 pages (`scale::`): the time the notes are locked during a pull fell from 855 to about 500
    ms (a save during the fetch) and from 703 to about 470 ms (none); the rest is two scans of the folder by Git
    (about 100 ms each) plus the move of the files. Open question: is that enough, or should the locked commit step
    be skipped when nothing was saved since the unlocked one (Task 6)? Done in item 154.
@@ -424,3 +424,12 @@ are its questions for you; each answer decides what a later plan does.
    went from 20.5 to about 7.5 ms (the goal is one frame, 16 ms); the whole build takes about 0.5 s longer (4.6 to
    5.1 s, goal 10 s). Two steps per build, about 0.15 s each, are longer (SQLite's full-text merge); that is in
    backlog #85.
+
+157. [ ] **With a newer Git, a pull no longer undoes the other computer's changes:** Git 2.53 changed the command
+   behind item 152's faster pull so that it moves the branch by itself. Without this fix, every pull with commits of
+   your own on top would have taken back the pulled text in the next commit and pushed that to the other computer
+   (still in the history, but gone from the pages, with no red state). Breccia now asks Git for the old behaviour,
+   and checks afterwards that the branch has not moved; if it has, it puts the branch back and does the plain rebase.
+   This machine has Git 2.45, so the new behaviour was only imitated in a test. By hand, if a Git 2.53 or newer is at
+   hand (for example a portable Git on `PATH` for `just dev`): do item 152's steps; afterwards both texts are there,
+   the history is one line with your commit on top, and no "notes:" commit undoes the pulled page.

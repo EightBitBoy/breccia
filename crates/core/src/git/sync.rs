@@ -486,10 +486,65 @@ impl Repo {
     /// `integrate` decides, exactly as before. The result is applied by
     /// `apply_prepared`.
     pub fn prepare_integrate(&self, t: &Target) -> Result<Option<Prepared>, Problem> {
-        Ok(self.prepare(t))
+        let mut moved = None;
+        let prepared = self.prepare(t, &mut moved);
+        match moved {
+            Some(p) => Err(p),
+            None => Ok(prepared),
+        }
     }
 
-    fn prepare(&self, t: &Target) -> Option<Prepared> {
+    /// Checks that `git replay` left the branch at `base`. If it moved the
+    /// branch while the index is still at the base (the files were not
+    /// moved with it), the branch is put back, so a commit cannot undo the
+    /// pulled changes; `Err(None)` then lets the locked rebase decide. A move
+    /// that came with the index (the user's own Git command) is left alone,
+    /// also `Err(None)`. `Err(Some(_))`: the branch could not be put back.
+    fn branch_still_at(&self, branch_ref: &str, base: &str) -> Result<(), Option<Problem>> {
+        let now_at = self
+            .text_of(&["rev-parse", "-q", "--verify", branch_ref])
+            .ok_or(None)?;
+        if now_at == base {
+            return Ok(());
+        }
+        let index_at_base = self
+            .git
+            .run(
+                &self.folder,
+                &["diff-index", "--cached", "--quiet", base, "--"],
+                LOCAL_LIMIT,
+            )
+            .map(|o| o.code == 0)
+            .unwrap_or(false);
+        if !index_at_base {
+            return Err(None);
+        }
+        let put_back = self
+            .git
+            .run(
+                &self.folder,
+                &[
+                    "update-ref",
+                    "-m",
+                    "pull (breccia): branch put back where git replay moved it from",
+                    branch_ref,
+                    base,
+                    &now_at,
+                ],
+                LOCAL_LIMIT,
+            )
+            .map(|o| o.code == 0)
+            .unwrap_or(false);
+        if put_back {
+            Err(None)
+        } else {
+            Err(Some(Problem::Failed {
+                message: "git replay moved the branch, and it could not be put back".into(),
+            }))
+        }
+    }
+
+    fn prepare(&self, t: &Target, failed: &mut Option<Problem>) -> Option<Prepared> {
         if self.busy().ok()?.is_some() {
             return None;
         }
@@ -574,14 +629,25 @@ impl Repo {
         if all == 0 || all != unique {
             return None;
         }
-        let out = self
-            .git
-            .run(
-                &self.folder,
-                &["replay", "--onto", &remote, &range],
-                LOCAL_LIMIT,
-            )
-            .ok()?;
+        // Git 2.53 and newer move the branch themselves unless asked to print
+        // the move: the files and the index would stay at the base, and the
+        // next commit would undo the pulled changes. Print mode is asked for
+        // twice: the option where Git knows it, and the setting (ignored by
+        // older Git), which also outranks a `replay.refAction` of the user's.
+        let mut args = vec!["-c", "replay.refAction=print", "replay"];
+        if self.git.replay_knows_ref_action(&self.folder) {
+            args.push("--ref-action=print");
+        }
+        args.extend(["--onto", &remote, &range]);
+        let out = self.git.run(&self.folder, &args, LOCAL_LIMIT);
+        #[cfg(feature = "test-seams")]
+        let out = out.map(|o| self.replay_as_git_2_53(o));
+        // Whatever replay answered, the branch must still be at the base.
+        if let Err(problem) = self.branch_still_at(&branch_ref, &base) {
+            *failed = problem;
+            return None;
+        }
+        let out = out.ok()?;
         if out.code != 0 {
             return None;
         }
@@ -623,6 +689,28 @@ impl Repo {
             return None;
         }
         prepared(tip)
+    }
+
+    /// The test seam behind `Git::with_replay_moving_the_branch`: applies the
+    /// `update` lines itself, the way Git 2.53's default does, and prints nothing.
+    #[cfg(feature = "test-seams")]
+    fn replay_as_git_2_53(&self, out: GitOut) -> GitOut {
+        if !self.git.replay_moves_ref() {
+            return out;
+        }
+        for line in out.text().lines() {
+            let parts: Vec<&str> = line.trim_end_matches('\r').split(' ').collect();
+            if let ["update", name, new, old] = parts.as_slice() {
+                let _ = self
+                    .git
+                    .run(&self.folder, &["update-ref", name, new, old], LOCAL_LIMIT);
+            }
+        }
+        GitOut {
+            code: 0,
+            stdout: Vec::new(),
+            stderr: String::new(),
+        }
     }
 
     /// The second half, under the lock: moves the files and the branch to the

@@ -741,7 +741,13 @@ impl GitEngine {
         if !self.commit_before_lock(cx) {
             return false;
         }
-        let mut prepared = self.prepare_unlocked(cx, t);
+        let mut prepared = match self.prepare_unlocked(cx, t) {
+            Ok(p) => p,
+            Err(p) => {
+                self.pull_problem(p, cx.now, cx.retrying);
+                return false;
+            }
+        };
         self.locked_for = None;
         // A save that lands just before the lock makes the prepared move miss.
         // The lock is then let go of once, the save is committed and the move
@@ -763,7 +769,10 @@ impl GitEngine {
                     if !self.commit_before_lock(cx) {
                         return false;
                     }
-                    prepared = self.prepare_unlocked(cx, t);
+                    prepared = match self.prepare_unlocked(cx, t) {
+                        Ok(p) => p,
+                        Err(p) => break Err(Stop::Problem(p)),
+                    };
                 }
                 Ok(Locked::Done) => break Ok(()),
                 Err(stop) => break Err(stop),
@@ -809,12 +818,14 @@ impl GitEngine {
     /// The rebase is prepared without the lock: typing goes on meanwhile.
     /// Under the lock only the files and the branch are moved, and only if
     /// nothing changed since; otherwise the locked rebase runs as before.
-    fn prepare_unlocked(&self, cx: &Ctx, t: &Target) -> Option<Prepared> {
+    /// `Err`: `git replay` moved the branch and it could not be put back; the
+    /// pull stops, so no commit is made over the moved branch.
+    fn prepare_unlocked(&self, cx: &Ctx, t: &Target) -> Result<Option<Prepared>, Problem> {
         #[cfg(feature = "test-seams")]
         if self.no_replay {
-            return None;
+            return Ok(None);
         }
-        cx.repo.prepare_integrate(t).ok().flatten()
+        cx.repo.prepare_integrate(t)
     }
 
     /// The local part of a pull. The lock is held over the move or the rebase

@@ -525,8 +525,13 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
   the timer off), and push after each commit. Pulls rebase local commits on top of remote ones.
   The rebase is prepared without holding up typing (`git replay` builds the rebased commits while the notes stay
   open for saves) and only the move of the files and the branch happens under the notes lock; whenever anything is
-  unusual (a conflict, a merge commit, a commit the remote already has, signed commits, an
-  older Git) Breccia runs the plain rebase under the lock as before. A save that lands just before the
+  unusual (a conflict, a merge commit, a commit the remote already has, signed commits, a repository with a
+  `pre-rebase`, `post-checkout` or `prepare-commit-msg` hook, a Git operation in progress, a Git older than 2.44)
+  Breccia runs the plain rebase under the lock as before. Git hooks named `post-rewrite` do not run on the fast path.
+  Git 2.53 and newer make `git replay` move the branch itself by default; Breccia asks it to only print the move
+  (`--ref-action=print` where Git knows it, and the `replay.refAction=print` setting for that one call), and checks
+  after it that the branch has not moved. If it has while the files have not, Breccia puts the branch back and runs
+  the plain rebase, so a pull never commits over a moved branch. A save that lands just before the
   lock is committed and the rebase prepared again outside it, once; only a second save in that gap sends the pull to
   the plain rebase. A page created in that last instant goes in with the next regular commit instead. A conflict is handled as described below.
 - **Conflicts:** if a pull cannot be applied cleanly, Breccia stops syncing, leaves the repository in a state the user can

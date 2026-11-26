@@ -5,7 +5,7 @@ use std::io::Read;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output, Stdio};
 use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
-use std::sync::{Arc, mpsc};
+use std::sync::{Arc, OnceLock, mpsc};
 use std::time::{Duration, Instant};
 
 /// Limit for commands that only touch the local disk.
@@ -79,14 +79,25 @@ impl GitOut {
     }
 }
 
+/// What every clone of a `Git` shares.
+#[derive(Debug, Default)]
+struct Shared {
+    runs: AtomicUsize,
+    /// Whether `git replay` knows `--ref-action`, asked once (see
+    /// `Git::replay_knows_ref_action`).
+    replay_ref_action: OnceLock<bool>,
+}
+
 #[derive(Clone, Debug)]
 pub struct Git {
     program: PathBuf,
     env: Vec<(OsString, OsString)>,
     remove_env: Vec<OsString>,
     cancel: Option<Arc<AtomicBool>>,
-    runs: Arc<AtomicUsize>,
+    shared: Arc<Shared>,
     network_limit: Duration,
+    #[cfg(feature = "test-seams")]
+    replay_moves_ref: bool,
 }
 
 impl Default for Git {
@@ -104,9 +115,24 @@ impl Git {
             env: Vec::new(),
             remove_env: REPOSITORY_VARS.iter().map(OsString::from).collect(),
             cancel: None,
-            runs: Arc::new(AtomicUsize::new(0)),
+            shared: Arc::default(),
             network_limit: NETWORK_LIMIT,
+            #[cfg(feature = "test-seams")]
+            replay_moves_ref: false,
         }
+    }
+
+    /// A test seam: `git replay` behaves as Git 2.53 does by default (it moves
+    /// the branch itself and prints nothing), whatever Breccia asks of it.
+    #[cfg(feature = "test-seams")]
+    pub fn with_replay_moving_the_branch(mut self) -> Git {
+        self.replay_moves_ref = true;
+        self
+    }
+
+    #[cfg(feature = "test-seams")]
+    pub(crate) fn replay_moves_ref(&self) -> bool {
+        self.replay_moves_ref
     }
 
     pub fn with_env(mut self, key: impl Into<OsString>, value: impl Into<OsString>) -> Git {
@@ -129,7 +155,30 @@ impl Git {
 
     pub fn with_program(mut self, program: impl Into<PathBuf>) -> Git {
         self.program = program.into();
+        // Another program: its own answers and its own count.
+        self.shared = Arc::default();
         self
+    }
+
+    /// Whether this Git's `git replay` has `--ref-action` (Git 2.53 and newer,
+    /// where replay moves the branch itself unless told to print instead).
+    /// Asked once with `git replay -h`, whose usage text lists the options;
+    /// a Git that cannot answer is asked again next time.
+    pub fn replay_knows_ref_action(&self, dir: &Path) -> bool {
+        if let Some(known) = self.shared.replay_ref_action.get() {
+            return *known;
+        }
+        let Ok(out) = self.run(dir, &["replay", "-h"], LOCAL_LIMIT) else {
+            return false;
+        };
+        let usage = format!("{}{}", String::from_utf8_lossy(&out.stdout), out.stderr);
+        if !usage.contains("usage:") {
+            return false;
+        }
+        *self
+            .shared
+            .replay_ref_action
+            .get_or_init(|| usage.contains("--ref-action"))
     }
 
     /// A running network command (`fetch`, `push`, `ls-remote`) is cancelled
@@ -160,12 +209,12 @@ impl Git {
 
     /// How many times `run` was called, across all clones.
     pub fn runs(&self) -> usize {
-        self.runs.load(Ordering::SeqCst)
+        self.shared.runs.load(Ordering::SeqCst)
     }
 
     /// Runs `git -C <dir> <BASE_FLAGS> [NO_AUTO_GC] <args>`. A non-zero exit is not an error.
     pub fn run(&self, dir: &Path, args: &[&str], limit: Duration) -> Result<GitOut, GitError> {
-        self.runs.fetch_add(1, Ordering::SeqCst);
+        self.shared.runs.fetch_add(1, Ordering::SeqCst);
         let mut cmd = Command::new(&self.program);
         cmd.arg("-C").arg(dir).args(BASE_FLAGS);
         if without_auto_gc(args) {

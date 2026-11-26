@@ -1342,6 +1342,38 @@ fn old_git_without_replay_still_pulls() {
     assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
 }
 
+/// Git 2.53 changed `git replay` to move the branch itself and print nothing.
+/// The pull must still end with both changes and no revert commit.
+#[test]
+fn a_git_whose_replay_moves_the_branch_still_pulls_like_a_rebase() {
+    let e = env();
+    let (mine, theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone().with_replay_moving_the_branch());
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert_eq!(read(&mine, "pages/B.md"), "- b theirs\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a local\n");
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/B.md"]), "- b theirs");
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    // Exactly the local commit on top of the pulled one: no "notes:" revert.
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD~1"]),
+        git(&e, &theirs, &["rev-parse", "HEAD"])
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+    // What was pushed has both changes too.
+    assert_eq!(
+        git(&e, &mine, &["show", "origin/main:pages/B.md"]),
+        "- b theirs"
+    );
+    assert_eq!(
+        git(&e, &mine, &["show", "origin/main:pages/A.md"]),
+        "- a local"
+    );
+    assert_eq!(blocks(&session, "b")[0].1, "b theirs");
+}
+
 #[test]
 fn the_same_edit_on_both_machines_still_pulls_like_a_rebase() {
     let e = env();

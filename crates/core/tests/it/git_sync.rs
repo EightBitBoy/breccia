@@ -828,6 +828,53 @@ fn state(e: &Env, dir: &Path) -> (String, String, String) {
     )
 }
 
+/// Git 2.53 made `git replay` move the branch itself by default. Breccia asks
+/// for print mode where Git knows it, and on this Git (older) the flag is left out.
+#[test]
+fn replay_print_mode_is_asked_for_only_where_git_knows_it() {
+    let e = env();
+    let version = git(&e, e.root.path(), &["version"]);
+    let mut nums = version
+        .split_whitespace()
+        .nth(2)
+        .unwrap()
+        .split('.')
+        .map(|n| n.parse::<u32>().unwrap_or(0));
+    let (major, minor) = (nums.next().unwrap(), nums.next().unwrap());
+    let newer = (major, minor) >= (2, 53);
+    let g = e.git.clone();
+    assert_eq!(g.replay_knows_ref_action(e.root.path()), newer, "{version}");
+    // Asked once: the answer is kept, also by clones.
+    let runs = g.runs();
+    assert_eq!(g.clone().replay_knows_ref_action(e.root.path()), newer);
+    assert_eq!(g.runs(), runs);
+}
+
+#[test]
+fn a_replay_that_moves_the_branch_itself_is_put_back_and_not_used() {
+    let e = env();
+    let (mine, _theirs, _r, _t) = diverged(&e);
+    let r = open(&e.git.clone().with_replay_moving_the_branch(), &mine);
+    let t = target(&r);
+    let before = state(&e, &mine);
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert_eq!(read(&mine, "pages/B.md"), "- b\n");
+    assert!(
+        git(
+            &e,
+            &mine,
+            &["reflog", "-1", "--format=%gs", "refs/heads/main"]
+        )
+        .contains("put back"),
+    );
+    // The locked rebase then pulls as before.
+    let done = r.integrate(&t).unwrap();
+    assert_eq!(done.changed, vec![PathBuf::from("pages").join("B.md")]);
+    assert_eq!(read(&mine, "pages/B.md"), "- b2\n");
+    assert_eq!(read(&mine, "pages/A.md"), "- a2\n");
+}
+
 #[test]
 fn a_prepared_pull_gives_what_a_rebase_gives() {
     let e = env();
