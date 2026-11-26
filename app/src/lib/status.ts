@@ -1,5 +1,6 @@
 // The status bar's items (§7.13): short state along the bottom of the window.
 import { THEME_NAMES, type ThemeChoice } from './theme'
+import { allowedWhileOpening } from './startup'
 import type { IndexProgress } from './types'
 
 export interface StatusItem {
@@ -78,4 +79,14 @@ export function themeItem(c: ThemeChoice): StatusItem {
     tip: `Theme: ${THEME_NAMES[c]}. Scroll to switch.`,
     label: 'Theme',
   }
+}
+
+export type StatusAction = 'git' | 'gitLog' | 'dailies' | 'zoom' | 'help'
+
+const STATUS_ACTIONS: ReadonlySet<string> = new Set<StatusAction>(['git', 'gitLog', 'dailies', 'zoom', 'help'])
+
+/** What a click on the status bar item does; null for an item without a click action, or one not allowed while a folder opens. */
+export function statusAction(id: string, opening: boolean): StatusAction | null {
+  if (!STATUS_ACTIONS.has(id) || (opening && !allowedWhileOpening(id))) return null
+  return id as StatusAction
 }

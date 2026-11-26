@@ -1,4 +1,5 @@
 // The status bar's items; any part of Breccia can show and remove one (§7.13).
+import { untrack } from 'svelte'
 import { placeItems, type StatusItem } from './status'
 
 export class StatusItems {
@@ -13,6 +14,14 @@ export class StatusItems {
 
   clear(id: string): void {
     if (this.items.some((x) => x.id === id)) this.items = this.items.filter((x) => x.id !== id)
+  }
+
+  /** Shows what `item` returns under `id`, and removes it when it returns null. Call it during component setup. */
+  bind(id: string, item: () => StatusItem | null): void {
+    $effect(() => {
+      const value = item()
+      untrack(() => (value ? this.set(value) : this.clear(id)))
+    })
   }
 
   get left(): StatusItem[] {

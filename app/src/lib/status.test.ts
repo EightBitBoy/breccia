@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { helpItem, indexItem, placeItems, themeItem, type StatusItem } from './status'
+import { helpItem, indexItem, placeItems, statusAction, themeItem, type StatusItem } from './status'
 
 const item = (id: string, side: 'left' | 'right', order: number): StatusItem => ({ id, side, order, text: id, progress: null, tone: 'normal' })
 
@@ -59,5 +59,25 @@ describe('themeItem', () => {
   it('sits just before the ? button, after the zoom and the history button', () => {
     const placed = placeItems([helpItem(false), themeItem('system'), item('zoom', 'right', 30), item('gitLog', 'right', 11)])
     expect(placed.right.map((i) => i.id)).toEqual(['gitLog', 'zoom', 'theme', 'help'])
+  })
+})
+
+describe('statusAction', () => {
+  const table: [string, 'git' | 'gitLog' | 'dailies' | 'zoom' | 'help' | null][] = [
+    ['git', 'git'],
+    ['gitLog', 'gitLog'],
+    ['dailies', 'dailies'],
+    ['zoom', 'zoom'],
+    ['help', 'help'],
+    ['theme', null],
+    ['save', null],
+    ['index', null],
+    ['unknown', null],
+  ]
+  it.each(table)('%s while not opening', (id, action) => {
+    expect(statusAction(id, false)).toBe(action)
+  })
+  it.each(table)('%s while opening', (id, action) => {
+    expect(statusAction(id, true)).toBe(id === 'zoom' || id === 'help' ? action : null)
   })
 })

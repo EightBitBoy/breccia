@@ -30,7 +30,7 @@
   import { answerOf } from './lib/answer'
   import { createClient, flushBeforeClose } from './lib/api'
   import { closeCheck } from './lib/close'
-  import { allowedWhileOpening, openingText, startupSequence } from './lib/startup'
+  import { openingText, startupSequence } from './lib/startup'
   import { autoHideScrollbar } from './lib/scrollFade'
   import { saveItem } from './lib/saveStatus'
   import { InFlight, Refreshes } from './lib/external'
@@ -76,7 +76,7 @@
   import { Zoom } from './lib/zoom.svelte'
   import { WheelSteps, zoomItem, zoomKey } from './lib/zoom'
   import { wheelTheme } from './lib/themeWheel'
-  import { helpItem, indexItem, themeItem } from './lib/status'
+  import { helpItem, indexItem, statusAction, themeItem } from './lib/status'
   import { GitStatus } from './lib/git.svelte'
   import { gitClick } from './lib/git'
   import { historyItem, historyStale } from './lib/gitLog'
@@ -271,26 +271,19 @@
   const status = new StatusItems()
   /** The zoom of the whole window: the webview's own zoom, kept per computer. */
   const zoom = new Zoom({ apply: (f) => getCurrentWebview().setZoom(f), save: setZoom })
-  $effect(() => {
-    const item = zoomItem(zoom.percent)
-    untrack(() => (item ? status.set(item) : status.clear('zoom')))
-  })
+  status.bind('zoom', () => zoomItem(zoom.percent))
   /** Typed text not yet written (§7.13): in the typing pause, or sent and not yet answered. */
   let unsavedText = $state(false)
   /** Git's state; its item sits on the right of the status bar (§7.9). */
   const git = new GitStatus({ now: () => Date.now() })
-  $effect(() => {
-    const item = git.item
-    untrack(() => (item ? status.set(item) : status.clear('git')))
-  })
-  $effect(() => {
-    const item = saveItem({
+  status.bind('git', () => git.item)
+  status.bind('save', () =>
+    saveItem({
       folder: folder !== null,
       unsaved: unsavedText,
       failed: new Set(notices.items.flatMap((n) => (n.unsavedPage === undefined ? [] : [n.unsavedPage]))).size,
-    })
-    untrack(() => (item ? status.set(item) : status.clear('save')))
-  })
+    }),
+  )
 
   const notices = new NoticeCenter({
     typingMark: () => host.typingMark(),
@@ -374,9 +367,9 @@
   }
 
   const journal = new Journal({ area: mainArea, run: (cmd) => client.run(cmd), notify })
-  /** The shown board and its open card. */
   /** Hidden board columns of the open folder, kept on this PC. */
   const hiddenCols = new HiddenColumns({ load: hiddenColumns, save: setHiddenColumns })
+  /** The shown board and its open card. */
   const boards = new Boards({
     area: mainArea,
     run: (cmd) => client.run(cmd),
@@ -410,33 +403,21 @@
     clearInterval: window.clearInterval.bind(window),
   })
   /** "Dailies 2 open" or "Dailies ✓" in the status bar; none without dailies. A click opens the view. */
-  $effect(() => {
-    const item = folder ? dailies.item : null
-    untrack(() => (item ? status.set(item) : status.clear('dailies')))
-  })
+  status.bind('dailies', () => (folder ? dailies.item : null))
   /** The F1 list of keyboard shortcuts: F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
   function toggleHelp() {
     if (overlays.is('help')) overlays.close('help')
     else if (overlays.may('toggleHelp')) overlays.open({ kind: 'help' })
   }
-  $effect(() => {
-    const item = folder ? helpItem(overlays.is('help')) : null
-    untrack(() => (item ? status.set(item) : status.clear('help')))
-  })
+  status.bind('help', () => (folder ? helpItem(overlays.is('help')) : null))
   /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
-  $effect(() => {
-    const item = folder ? themeItem(theme) : null
-    untrack(() => (item ? status.set(item) : status.clear('theme')))
-  })
+  status.bind('theme', () => (folder ? themeItem(theme) : null))
   /** The Git history; `git.log` skips the command queue, so a slow log never holds typed text up. */
   const gitLog = new GitLog({
     area: mainArea,
     log: (skip, limit) => invokeRun({ generation: 0, command: { type: 'git.log', skip, limit } }),
   })
-  $effect(() => {
-    const item = historyItem(git.view, gitLog.shown)
-    untrack(() => (item ? status.set(item) : status.clear('gitLog')))
-  })
+  status.bind('gitLog', () => historyItem(git.view, gitLog.shown))
   /** The Graph screen (§7.11); a failed load is a notice. */
   const network = new Network({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The quick search box (§7.8). */
@@ -505,13 +486,13 @@
     nav.remember(scroller.scrollTop, top, focus)
   }
 
+  /** A Back or Forward is under way (from the first await on), so a key repeat waits for nothing. */
+  let going = false
   /**
    * Back or Forward: the edited block's text is sent first, then the step's view is shown again. A step
    * whose page or board is gone is dropped and the next one is tried. Nothing over a dialog, the search box, F1
    * or the date picker, nor while a restore is still loading.
    */
-  /** A Back or Forward is under way (from the first await on), so a key repeat waits for nothing. */
-  let going = false
   async function go(dir: 'back' | 'forward') {
     if (going || nav.busy || !overlays.may('go') || pickerOpen) return
     going = true
@@ -780,7 +761,7 @@
     if (r.applyRefs) {
       refs = answerOf(out, 'refs')
       madeInRefs.clear()
-      if (host.editingId !== null) host.reconcile(null).catch((e) => console.error('editor update failed', e))
+      if (host.editingId !== null) reconcileShown()
     }
     if (r.madeInRefs !== null) madeInRefs.add(r.madeInRefs)
     for (const p of r.patch) refs = patchRefs(refs!, p, madeInRefs)
@@ -1202,7 +1183,7 @@
         return
       // The board reloads (held while a card is open); the open card follows its page.
       case 'board':
-        if (boards.changed(p)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
+        if (boards.changed(p)) reconcileShown()
         return
     }
     pageChanged(
@@ -1213,7 +1194,7 @@
         reload: (key) => reloads.request(key),
         patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
         refresh: () => refreshRefs.request(),
-        reconcile: () => host.reconcile(null).catch((err) => console.error('editor update failed', err)),
+        reconcile: () => reconcileShown(),
       },
       p,
     )
@@ -1256,6 +1237,20 @@
     host.leave()
     await client.flush()
     await client.run({ type: 'git.sync' }).catch(refuse)
+  }
+
+  /** What a click on a status bar item does (`statusAction` says which, and when a folder is still opening). */
+  const statusClicks = {
+    git: () => void clickGit(),
+    gitLog: () => void toggleGitLog(),
+    dailies: () => void openDailies(),
+    zoom: () => void zoom.reset(),
+    help: () => toggleHelp(),
+  }
+
+  /** Brings the open editor in line with the shown text again. */
+  function reconcileShown() {
+    host.reconcile(null).catch((e) => console.error('editor update failed', e))
   }
 
   /** A click on the Git status: sync, offer set-up, or explain a problem and try again. */
@@ -1956,7 +1951,10 @@
         onmissing={recentMissing}
       />
     {/if}
-    <StatusBar left={status.left} right={status.right} onitem={(id) => (opening !== null && !allowedWhileOpening(id) ? undefined : id === 'git' ? void clickGit() : id === 'gitLog' ? void toggleGitLog() : id === 'dailies' ? void openDailies() : id === 'zoom' ? void zoom.reset() : id === 'help' && toggleHelp())} {theme}
+    <StatusBar left={status.left} right={status.right} onitem={(id) => {
+      const action = statusAction(id, opening !== null)
+      if (action) statusClicks[action]()
+    }} {theme}
       ontheme={chooseTheme}
       onthemewheel={(dy) => {
         const c = wheelTheme(theme, themeSteps, dy, zoom.percent)
