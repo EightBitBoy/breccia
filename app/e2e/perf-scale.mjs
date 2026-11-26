@@ -397,10 +397,12 @@ async function measureLaunch(folder, gitEnv, n) {
     for (let k = 0; k < SHOW_MORE; k++) {
       more.push(
         await page.evaluate(async () => {
-          const rows = () => document.querySelectorAll('[data-testid="log-row"]').length
-          const before = rows()
+          // The count line, not the rows in the page: a virtualised list draws only the rows in view, and the new
+          // rows are below them. The count changes in the same update that adds the rows.
+          const count = () => document.querySelector('[data-testid="log-count"]')?.textContent
+          const before = count()
           const t0 = performance.now()
-          const done = window.__until(() => rows() > before)
+          const done = window.__until(() => count() !== before)
           document.querySelector('[data-testid="log-more"]').click()
           return (await done) - t0
         }),
