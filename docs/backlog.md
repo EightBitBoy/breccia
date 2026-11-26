@@ -75,26 +75,25 @@ Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59). Owner
 `docs/perf/2026-11-25-baseline.md`. This item is partly closed: what is left is below. Measure with `just perf-scale`
 and `cargo test --release -p breccia-core -- --ignored --nocapture scale::` (test folder of 5,000 pages).
 
-**Task 7's runs (`docs/perf/2026-11-25-plan-18-after.md`, two runs) did not all confirm this list:** caret down was 19
-to 27 ms (bar 16), `pages.table` 122 and 203 ms (bar 100), the window shows 476 to 525 ms (bar 500), so those three
-stay open in #85 until a quiet-machine run settles them.
-
-**Closed by plan 18 (2026-11-26), within their bars at 5,000 pages, as measured by Task 6:** the window shows (408 ms, bar 500; one launch of
-three 715 on a cold WebView2), typing during the first index build (wait p95 12.6 ms, bar 16), the index step (about
-7.5 ms for 10 pages, bar 16), caret down at 5,000 rows (12.9 ms, bar 16; the outline is not virtualised, which would
-be the fix if it grows), `pages.table` (96 ms, bar 100: at the bar), `page.setColor` on a page linked from 1,000
-(148 ms), the first `archive.auto` run (610 ms), `block.setText` (7 ms), the long Git history and archive lists (drawn
-by rows on screen), the blank first window (the folder opens inside the window), queued change messages to the Git
-thread (cost next to nothing: a step does Git work only when a commit or a pull is due). Plan 1 follow-ups 9 and 15 and
-old #59 are answered by these numbers.
+**Closed by plan 18 (2026-11-26), within their bars at 5,000 pages (Task 7's runs,
+`docs/perf/2026-11-25-plan-18-after.md`, unless named):** typing during the first index build (wait p95 10 to 12.6
+ms, bar 16), the index step (about 7.5 to 10 ms for 10 pages, bar 16), `page.setColor` on a page linked from 1,000
+(148 ms, Task 6), the first `archive.auto` run (610 ms, Task 6), `block.setText` (8 to 14 ms), the long Git history and
+archive lists (drawn by rows on screen), the blank first window (the folder opens inside the window), queued change
+messages to the Git thread (cost next to nothing: a step does Git work only when a commit or a pull is due). Plan 1
+follow-ups 9 and 15 and old #59 are answered by these numbers.
 
 **Still open:**
-- **1c. The notes lock during a pull, under 100 ms.** About 350 to 360 ms after plan 18 task 6a (before: 424 to 1,267)
-  with a save during the fetch, none, or just before the lock. The rest is Git programs run under the notes lock
+- **Not settled: needs a quiet-machine run.** Task 6 measured these within their bars once; Task 7's two runs did not:
+  caret down at 5,000 rows (Task 6 12.9 ms; Task 7 19 to 27, median 20 to 21; bar 16; the outline is not virtualised,
+  which would be the fix), `pages.table` (Task 6 96 ms; Task 7 122 and 203; bar 100), the window shows (Task 6 408 ms,
+  one launch of three 715 on a cold WebView2; Task 7 476 to 525; bar 500). The machine was noisy in every run.
+- **1c. The notes lock during a pull, under 100 ms.** About 350 to 360 ms after plan 18 task 6a, 376 to 406 ms in Task 7's
+  runs (before: 424 to 1,267), with a save during the fetch, none, or just before the lock. The rest is Git programs run under the notes lock
   (rebase, status, hooks and Git LFS also run there). Fix: no Git program under the lock; apply the pulled change in
   memory or in a scratch worktree. Big.
-- **2c. Fewer Git starts per history load.** `git.log` of 200 of 3,000 commits is about 181 to 193 ms (bar 100), with a
-  remote never pushed to 186 to 224 ms; the window opens the history in about 0.34 s (bar 200). Cause: five or six Git
+- **2c. Fewer Git starts per history load.** `git.log` of 200 of 3,000 commits is 224 to 231 ms in Task 7's runs (bar
+  100; 181 to 193 in Task 6b's), with a remote never pushed to 249 to 338 ms (186 to 224 in Task 6b's); the window opens the history in about 0.34 s (bar 200). Cause: five or six Git
   programs started in a row. Fix: keep the found repository and remote between loads (drop them when the folder, branch
   or remote changes), drop the separate HEAD check, run the "not pushed" check at the same time as the history read.
 - **2d. After a commit, reload only the newest 200 history rows** and merge them with the kept ones (a full reload when
@@ -170,7 +169,7 @@ query that does not flush the pending pages first (`search.query` does today). N
 
 ## 104. A counter or an early journal day while a folder opens (Window)
 
-Plan 18 Q1 (a), owner 2026-11-25: later work. Today the window shows at 408 ms and says "Opening..."; the journal is
+Plan 18 Q1 (a), owner 2026-11-25: later work. Today the window shows at about 408 to 525 ms (Task 6 and Task 7, `docs/perf/2026-11-25-plan-18-after.md`) and says "Opening..."; the journal is
 usable at about 1.3 s (bar 2 s) at 5,000 pages, so neither is needed on this machine. For much bigger folders or slow
 disks there are two options: a count in the status bar ("Opening: 1,200 of 5,000 files"), or today's journal day first,
 typeable while the rest of the folder is read (this one needs the editor to accept edits before the folder is loaded,
