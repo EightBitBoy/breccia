@@ -26,7 +26,8 @@ app shell and state", the rules a refactor must keep), `docs/backlog.md` #89, pl
 
 ## State
 
-Written 2026-11-26 at commit `6e66ba2` (1.9.1 released); waits for the owner's review. Ledger:
+Written 2026-11-26 at commit `6e66ba2` (1.9.1 released); the owner approved it on 2026-11-26 with the answers under
+"Owner questions". Ledger:
 `.superpowers/sdd/2026-11-26-19-the-frontend-controller/progress.md`.
 Numbers: review items start at **158** (`docs/review.md` ends at 157); e2e has 290 PASS lines, the last step is 168,
 so a new step is **169**; backlog's highest number is 104, so a new item is **#105**.
@@ -63,6 +64,21 @@ not:
 
 Ask one at a time, with the options. The plan is written with the recommended answers; another answer changes the task
 named. Everything else in the plan changes nothing a user sees.
+
+**Settled 2026-11-26 (owner).** These answers win over the options and recommendations below; Task 9 follows them.
+- **Q1: b.** The reload's points and the "one notice a minute" rule; the two Git edges stay in #89.
+- **Q2: not a, not b. Reload anyway after 10 s.** If the save before the reload has not answered after 10 seconds,
+  the window stops waiting and reloads the notes. Text from that save that may not have reached the disk is kept in a
+  "could not be saved" notice to copy (the existing pattern of the recovery's notices), so the window never drops it
+  silently (spec §2). If the reload itself is refused or never answers, the notice says to restart Breccia.
+- **Q3: a.** Refusals after "internal error again" say in plain words that Breccia needs a restart (wording at the
+  implementer's choice, along "Not done: Breccia needs a restart after an internal error.").
+- **Q4: the owner's own answer. While the window reloads it is greyed out and takes no input.** A layer covers the
+  window for the duration of the reload: no clicks, no typing, no shortcuts reach the views (keyboard focus held on
+  the layer), so no click can be refused or dropped. It goes away when the reload ends (or turns into the Q2/Q3
+  restart notice). A reload that ends normally shows no extra notice.
+- **Q5: a.** The empty card is accepted and documented; #89's point is closed.
+- **R1 to R7:** confirmed as written.
 
 - **Q1. Which of backlog #89's edges to close here.** *What it is about:* #89 lists four edges of the recovery after
   an internal error. Two are in the window and fit this plan, because the code they live in moves here anyway: (1) the
@@ -144,8 +160,8 @@ named. Everything else in the plan changes nothing a user sees.
 
 ## Global Constraints
 
-- **No behaviour change** except the answers to Q1 to Q5 and R2. Spec §2: never silently drop, reorder or reformat
-  text the user wrote; every flow that leaves a view calls `host.leave()` and `client.flush()` first, in that order
+- **No behaviour change** except the owner's answers to Q1 to Q5 ("Settled") and R2. Spec §2: never silently drop,
+  reorder or reformat text the user wrote; every flow that leaves a view calls `host.leave()` and `client.flush()` first, in that order
   (`notes.md`, "One command at a time").
 - `apply` stays the one place an `Output` is applied; decisions stay in pure functions (`route`), carried out by
   classes (`notes.md`).
@@ -159,9 +175,9 @@ named. Everything else in the plan changes nothing a user sees.
 - `just test`, `just lint` and `just e2e` stay green after every task; e2e keeps its 290 PASS lines (more only where a
   task adds a step). Fix a flaky step by waiting for the right state, never by sleeping.
 - No colour literals or `color-mix` outside `app/src/styles/tokens.css`.
-- Commits: `refactor(app): …` for moves; `fix(app): Recovery: …` in plain words for Q2 to Q4 and R2; no file or
-  function names in `fix` subjects; no attribution lines; on `main`, push after each commit; ledger committed after
-  each task. Lines wrapped at 120.
+- Commits: `refactor(app): …` for moves; `fix(app): Recovery: …` in plain words for Q1 to Q3 and R2 (`feat(app)` for
+  the Q4 layer); no file or function names in `fix` subjects; no attribution lines; on `main`, push after each commit;
+  ledger committed after each task. Lines wrapped at 120.
 - Words from `docs/vocabulary.md`: view, page, journal day, block, task, board, card, column, Archive, All pages.
 
 ## Review Focus
@@ -501,39 +517,54 @@ Every task ends with `npm test` in `app/` (or `just test`), `just lint` and `jus
 - [ ] **Step 4: Run** `npm test`, `just lint`, `just e2e`.
 - [ ] **Step 5: Commit** `refactor(app): navigation, folder switching, Git and closing move into the controller`.
 
-### Task 9: Recovery after an internal error: the window's edges (backlog #89) (model: sonnet; review: opus)
+### Task 9: Recovery after an internal error: the window's edges (backlog #89) (model: opus; review: opus)
 
-Written for Q1 b, Q2 a, Q3 a, Q4 a, Q5 a and R2.
+Written for the owner's settled answers (Q1 b, Q2 "reload anyway after 10 s", Q3 a, Q4 "grey the window out", Q5 a)
+and R2. Opus, since Q4 adds a visible layer to the window.
 
 **Files:**
 - Modify: `app/src/lib/recovery.ts`, `recovery.test.ts`, `app/src/lib/app.svelte.ts` (the env's `clear`),
-  `app.svelte.test.ts`, `docs/backlog.md` (#89 keeps only the Git edges), `docs/review.md` (items 158 to 161, heading
-  "The frontend controller (plan 19)")
+  `app.svelte.test.ts`, `app/src/App.svelte` (the reload layer), `app/src/styles/tokens.css` (the layer's colour, if
+  a new token is needed), `app/e2e/smoke.mjs` (step 127 checks the layer), `docs/backlog.md` (#89 keeps only the Git
+  edges), `docs/spec.md` (the recovery's paragraph: the layer and the 10 s rule), `docs/review.md` (items 158 to 162,
+  heading "The frontend controller (plan 19)")
 
 **Interfaces:**
-- `RecoveryEnv` gains `setTimeout`/`clearTimeout` (bound). New exported texts in `recovery.ts`: `NOT_ANSWERING =
-  'Breccia is not answering. Please restart Breccia.'`, `NEEDS_RESTART = 'Not done: Breccia needs a restart after an
-  internal error.'`, `RELOADING = 'Not done: Breccia was reloading the notes. Please try again.'` (copy fixed by
-  Q2 to Q4).
+- `RecoveryEnv` gains `setTimeout`/`clearTimeout` (bound). `Recovery` gains `reloading: boolean` (`$state`, or a
+  callback the controller turns into state): true from the start of the reload until it ends or turns into a restart
+  notice. New exported texts in `recovery.ts`: `NOT_ANSWERING = 'Breccia is not answering. Please restart
+  Breccia.'` (the reload itself is refused or does not answer) and `NEEDS_RESTART = 'Not done: Breccia needs a restart
+  after an internal error.'` (Q3; final wording at the implementer's choice, plain words).
 - `Recovery.message(code: string | null, cmd: Command | null, raw: string): string | null`: what a refusal says (null:
   unshown), replacing the two calls to `quiet` and `quietMessage` in `refuse`/`notify`/the host's `quiet` hook.
   `block.setText` refusals keep their text to copy unchanged.
+- The layer (Q4): while `reloading`, `App.svelte` shows a full-window layer over everything (greyed, with a short
+  "Reloading the notes…" text), which takes pointer events and holds keyboard focus, and the controller's key handler
+  ignores shortcuts. Colour from `tokens.css` only. `aria-busy` on the main area.
 
 - [ ] **Step 1: Write the failing tests** in `recovery.test.ts`: `a failed flush still reloads` (R2); `a flush that
-  does not answer in 10 s shows NOT_ANSWERING and ends the quiet` (Q2); `after the again notice a stale refusal says
-  NEEDS_RESTART` (Q3); `a stale refusal of a command sent before the reload's status answer says RELOADING` (Q4);
-  `typed text keeps its notice in every case`; `within a minute, a reopened session after a kept one shows its notice,
-  the same notice twice stays quiet` (Q1 b). In `app.svelte.test.ts`: `a reload closes the search, the date picker
-  and the due calendar` (plan 6 follow-up 23). Run: FAIL.
-- [ ] **Step 2: Implement.** Q5 a: no code; a comment in `clear()` says why the bare card is not deleted.
-- [ ] **Step 3: Run** `npm test`, `just lint`, `just e2e` (step 127 covers the reload end to end; no new step: the
-  core cannot be made to hang or fail twice from e2e).
-- [ ] **Step 4: Review items** 158 (R2), 159 (Q2), 160 (Q3), 161 (Q4): each says what to look for; all four are
-  covered by unit tests, so each says "covered by unit tests; by hand only with `BRECCIA_TEST_PANIC`" where it applies.
-- [ ] **Step 5: Commits** one per point, e.g. `fix(app): Recovery: the notes reload even when saving the last typed
-  text fails`, `fix(app): Recovery: say so when Breccia stops answering after an internal error`, `fix(app): Recovery:
-  refused clicks after an internal error say a restart is needed`, `fix(app): Recovery: a click during the reload says
-  to try again`, `fix(app): Recovery: a second, different error notice within a minute is shown`.
+  does not answer in 10 s reloads anyway and keeps the text to copy` (Q2: the text of the unanswered `block.setText`
+  shows in a "could not be saved" notice); `a reload that is refused or does not answer shows NOT_ANSWERING` (Q2);
+  `after the again notice a stale refusal says NEEDS_RESTART` (Q3); `reloading is true from the start of the reload
+  until it ends` and `a reload that ends normally shows no extra notice` (Q4); `typed text keeps its notice in every
+  case`; `within a minute, a reopened session after a kept one shows its notice, the same notice twice stays quiet`
+  (Q1 b). In `app.svelte.test.ts`: `a reload closes the search, the date picker and the due calendar` (plan 6
+  follow-up 23) and `a shortcut while reloading does nothing` (Q4). Run: FAIL.
+- [ ] **Step 2: Implement.** Q5 a: no code; a comment in `clear()` says why the bare card is not deleted, and #89's
+  point is closed in `docs/backlog.md` as accepted.
+- [ ] **Step 3: e2e.** Step 127 (the reload after `BRECCIA_TEST_PANIC`) also asserts the layer: it is shown during the
+  reload (wait on its element, with `BRECCIA_TEST_OPEN_DELAY`-style hook only if the reload is too fast to see; never a
+  sleep) and gone afterwards, and a click on a sidebar row during it opens nothing. If the reload is too fast to
+  observe the layer reliably, assert only that it is gone afterwards and say so in the step.
+- [ ] **Step 4: Run** `npm test`, `just lint`, `just e2e`.
+- [ ] **Step 5: Review items** 158 (R2), 159 (Q2), 160 (Q3), 161 (Q4, the layer: how it looks in a light and a dark
+  theme), 162 (Q1 b): each says what to look for and "covered by unit tests; by hand only with `BRECCIA_TEST_PANIC`"
+  where it applies.
+- [ ] **Step 6: Commits** one per point, e.g. `fix(app): Recovery: the notes reload even when saving the last typed
+  text fails`, `fix(app): Recovery: the notes reload after 10 s if Breccia stops answering, keeping your text`,
+  `fix(app): Recovery: refused clicks after an internal error say a restart is needed`, `feat(app): Recovery: the
+  window is greyed out while the notes reload`, `fix(app): Recovery: a second, different error notice within a minute
+  is shown`.
 
 ### Task 10: Components take the state object (model: opus; review: opus)
 
@@ -556,7 +587,7 @@ Written for Q1 b, Q2 a, Q3 a, Q4 a, Q5 a and R2.
 ## Finish
 
 - `just test`, `just lint`, `just e2e` (expected: 290 PASS lines, the last step 168; record them in `docs/STATUS.md`).
-- Review item 162: "Click once through every view and dialog (journal, page, board and card, All pages, Archive,
+- Review item 163: "Click once through every view and dialog (journal, page, board and card, All pages, Archive,
   Dailies, Git history, Graph, Settings and each of its dialogs, search, F1, the untitled page, Back and Forward):
   everything behaves as in 1.9.1." The refactor touches every view; e2e does not cover every dialog.
 - Update `docs/audit/2026-11-10/notes.md`: the "Own echoes are recognised" rule is obsolete (plan 15); "State classes
