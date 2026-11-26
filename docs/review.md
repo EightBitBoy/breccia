@@ -393,3 +393,14 @@ are its questions for you; each answer decides what a later plan does.
    when you scroll up. In the Archive, scroll down, then type in the filter: the list jumps to its top and shows the
    first match. Back (`Alt ←`) from a page opened in either view brings its scroll position back (the Git history
    reloads only its newest 200 commits, as before). Only the rows on screen are drawn now, as in All pages.
+
+154. [ ] **A pull right after typing no longer holds up typing for a second:** by hand (two clones of one remote,
+   `just dev` on one): change a page in the other clone and push; in Breccia's clone keep typing in a journal day while
+   the pull runs (wait for the timer, or click the Git status), also with a keystroke landing the instant the pull
+   starts. Typing pauses for a fraction of a second at most (no longer a full second when you typed just before the
+   pull), and afterwards your text and the pulled page's text are both there, the history is one line with your
+   commit on top, and the Git status is green. Known difference: a page you created in the last instant before the
+   pull is committed right after it, not before it (the text is the same). Measured at 5,000 pages (`scale::`), the
+   time the notes are locked during a pull fell from 460 to about 360 ms (a save during the fetch), from 424 to about
+   360 ms (none) and from 1267 to about 350 ms (a save just before the lock). Still over the 100 ms goal (follow-up in
+   backlog #85).

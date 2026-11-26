@@ -519,11 +519,30 @@ fn git_at_scale() {
             );
         })
     };
+    // The worst case saves once per round, on the first lock take only: the
+    // retry (the lock let go of, the save committed outside it) must then fit.
+    let takes = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+    let first_take_saves = {
+        let (hooked, takes, typed) = (Arc::clone(&session), Arc::clone(&takes), Arc::clone(&typed));
+        move || -> Box<dyn FnMut() + Send> {
+            let (hooked, takes, typed) = (hooked.clone(), takes.clone(), typed.clone());
+            Box::new(move || {
+                if takes.fetch_add(1, std::sync::atomic::Ordering::SeqCst) == 0 {
+                    let k = typed.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+                    run(
+                        &mut hooked.lock().unwrap(),
+                        json!({"type": "block.setText", "id": id, "text": format!("saved before the lock {k}")}),
+                    );
+                }
+            })
+        }
+    };
     // One round: `theirs` pushes a changed page, then `mine` ticks; returns
     // (lock held ms, whole tick ms).
     let mut round_no = 0;
     let mut round = |engine: &mut GitEngine| -> (f64, f64) {
         round_no += 1;
+        takes.store(0, std::sync::atomic::Ordering::SeqCst);
         let k = round_no;
         git(&theirs, &["pull", "-q", "--rebase", "origin", "main"]);
         put(&theirs, &page_rel(1001), &content(1001, 500 + k as usize));
@@ -555,7 +574,7 @@ fn git_at_scale() {
     // Worst case: a save lands in the last instant before the lock, so the
     // commit under the lock has to take it.
     engine.after_fetch(Box::new(|| {}));
-    engine.before_lock(save_hook());
+    engine.before_lock(first_take_saves());
     let mut last = Vec::new();
     for _ in 0..RUNS {
         last.push(round(&mut engine).0);
@@ -675,7 +694,7 @@ fn git_at_scale() {
         100.0,
     );
     report(
-        "git lock held, integrate with a save just before the lock (worst case, fallback by design)",
+        "git lock held, integrate with a save just before the lock (worst case, retried outside the lock)",
         last_ms,
         500.0,
     );

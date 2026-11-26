@@ -129,6 +129,14 @@ pub struct GitEngine {
     refused_once: bool,
 }
 
+/// How a locked part of a pull ended.
+enum Locked {
+    Done,
+    /// The prepared move did not fit and nothing was changed: the lock is
+    /// released and the caller prepares again.
+    Missed,
+}
+
 /// How long a refused pull waits before its one retry.
 const REFUSED_RETRY_MS: i64 = 10_000;
 
@@ -730,41 +738,38 @@ impl GitEngine {
         if let Some(hook) = self.after_fetch.as_mut() {
             hook();
         }
-        // Saves that landed during the fetch are committed here, without the
-        // lock (a save is an atomic rename, so Git reads a whole file), so the
-        // locked part below normally finds nothing left to commit.
-        match Self::commit_changes(cx.repo) {
-            Ok(hash) => self.need_dates |= hash.is_some(),
-            Err(Stop::Locked) => {
-                self.on_lock(cx.now);
-                return false;
-            }
-            Err(Stop::Problem(p)) => {
-                self.flag(p);
-                return false;
-            }
+        if !self.commit_before_lock(cx) {
+            return false;
         }
-        // The rebase is prepared without the lock: typing goes on meanwhile.
-        // Under the lock only the files and the branch are moved, and only if
-        // nothing changed since; otherwise the locked rebase runs as before.
-        #[cfg(feature = "test-seams")]
-        let skip = self.no_replay;
-        #[cfg(not(feature = "test-seams"))]
-        let skip = false;
-        let prepared = if skip {
-            None
-        } else {
-            cx.repo.prepare_integrate(t).ok().flatten()
+        let mut prepared = self.prepare_unlocked(cx, t);
+        self.locked_for = None;
+        // A save that lands just before the lock makes the prepared move miss.
+        // The lock is then let go of once, the save is committed and the move
+        // prepared again without it, and the lock is retaken briefly. A second
+        // miss runs the locked rebase.
+        let mut may_retry = true;
+        let result = loop {
+            #[cfg(feature = "test-seams")]
+            if let Some(hook) = self.after_replay.as_mut() {
+                hook();
+            }
+            #[cfg(feature = "test-seams")]
+            if let Some(hook) = self.before_lock.as_mut() {
+                hook();
+            }
+            match self.integrate_locked(cx, t, prepared.as_ref(), may_retry, outputs) {
+                Ok(Locked::Missed) => {
+                    may_retry = false;
+                    if !self.commit_before_lock(cx) {
+                        return false;
+                    }
+                    prepared = self.prepare_unlocked(cx, t);
+                }
+                Ok(Locked::Done) => break Ok(()),
+                Err(stop) => break Err(stop),
+            }
         };
-        #[cfg(feature = "test-seams")]
-        if let Some(hook) = self.after_replay.as_mut() {
-            hook();
-        }
-        #[cfg(feature = "test-seams")]
-        if let Some(hook) = self.before_lock.as_mut() {
-            hook();
-        }
-        match self.integrate_locked(cx, t, prepared.as_ref(), outputs) {
+        match result {
             Ok(()) => {
                 self.last_sync = Some(cx.now.ms);
                 true
@@ -780,15 +785,52 @@ impl GitEngine {
         }
     }
 
-    /// The local part of a pull. The lock is held from the commit of what a
-    /// save left behind during the fetch, over the rebase, to the reload.
+    /// Saves that landed during the fetch are committed without the lock (a
+    /// save is an atomic rename, so Git reads a whole file), so the locked
+    /// part normally finds nothing left to commit. Returns whether it worked;
+    /// a problem is already recorded.
+    fn commit_before_lock(&mut self, cx: &Ctx) -> bool {
+        match Self::commit_changes(cx.repo) {
+            Ok(hash) => {
+                self.need_dates |= hash.is_some();
+                true
+            }
+            Err(Stop::Locked) => {
+                self.on_lock(cx.now);
+                false
+            }
+            Err(Stop::Problem(p)) => {
+                self.flag(p);
+                false
+            }
+        }
+    }
+
+    /// The rebase is prepared without the lock: typing goes on meanwhile.
+    /// Under the lock only the files and the branch are moved, and only if
+    /// nothing changed since; otherwise the locked rebase runs as before.
+    fn prepare_unlocked(&self, cx: &Ctx, t: &Target) -> Option<Prepared> {
+        #[cfg(feature = "test-seams")]
+        if self.no_replay {
+            return None;
+        }
+        cx.repo.prepare_integrate(t).ok().flatten()
+    }
+
+    /// The local part of a pull. The lock is held over the move or the rebase
+    /// and the reload. With a prepared move, it is tried first, with no commit
+    /// and no status of its own: it checks that nothing changed. If it does
+    /// not fit and `may_retry`, the lock is released at once (`Missed`) and the
+    /// caller commits and prepares again outside it. Otherwise what a save
+    /// left is committed and the full rebase runs.
     fn integrate_locked(
         &mut self,
         cx: &Ctx,
         t: &Target,
         prepared: Option<&Prepared>,
+        may_retry: bool,
         outputs: &mut Vec<(u64, Output)>,
-    ) -> Result<(), Stop> {
+    ) -> Result<Locked, Stop> {
         let Ctx {
             session,
             now,
@@ -800,25 +842,31 @@ impl GitEngine {
         let held = Instant::now();
         // The folder was switched during the fetch: leave the old one as it is.
         if !matches!(guard.git_target(), Some((_, g, _)) if g == generation) {
-            return Ok(());
+            return Ok(Locked::Done);
         }
-        // A save during the fetch left a tracked file modified, and a rebase
-        // refuses to start then. Saves only happen under this lock, so the
-        // tree stays clean from here to the end of the rebase.
-        if Self::commit_changes(repo)?.is_some() {
-            self.need_dates = true;
+        let mut fast = None;
+        if let Some(p) = prepared {
+            fast = repo.apply_prepared(p).map_err(Stop::Problem)?;
+            if fast.is_none() && may_retry {
+                self.locked_for = Some(self.locked_for.unwrap_or_default().max(held.elapsed()));
+                return Ok(Locked::Missed);
+            }
         }
-        #[cfg(feature = "test-seams")]
-        if let Some(hook) = self.before_rebase.as_mut() {
-            hook();
-        }
-        let fast = match prepared {
-            Some(p) => repo.apply_prepared(p).map_err(Stop::Problem)?,
-            None => None,
-        };
         let done = match fast {
             Some(done) => done,
-            None => repo.integrate(t).map_err(Stop::Problem)?,
+            None => {
+                // A save left a tracked file modified, and a rebase refuses to
+                // start then. Saves only happen under this lock, so the tree
+                // stays clean from here to the end of the rebase.
+                if Self::commit_changes(repo)?.is_some() {
+                    self.need_dates = true;
+                }
+                #[cfg(feature = "test-seams")]
+                if let Some(hook) = self.before_rebase.as_mut() {
+                    hook();
+                }
+                repo.integrate(t).map_err(Stop::Problem)?
+            }
         };
         if !done.changed.is_empty() {
             let mut paths: Vec<PathBuf> = Vec::new();
@@ -875,8 +923,8 @@ impl GitEngine {
         if done.moved {
             self.need_dates = true;
         }
-        self.locked_for = Some(held.elapsed());
-        Ok(())
+        self.locked_for = Some(self.locked_for.unwrap_or_default().max(held.elapsed()));
+        Ok(Locked::Done)
     }
 
     /// Pushes when the remote lacks commits of the folder. A remote that

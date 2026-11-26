@@ -863,6 +863,8 @@ fn a_refused_rebase_is_tried_again_once() {
     let (_bare, mine, theirs) = two_clones(&e);
     let session = open(&mine);
     let mut engine = GitEngine::new(e.git.clone());
+    // The locked rebase is what is refused; the fast path has no rebase.
+    engine.no_replay(true);
     their_change(&e, &theirs, "- b theirs\n");
     // Another program writes a tracked file just before the rebase, once.
     let calls = Arc::new(AtomicUsize::new(0));
@@ -896,6 +898,8 @@ fn a_second_refusal_stops_syncing() {
     let (_bare, mine, theirs) = two_clones(&e);
     let session = open(&mine);
     let mut engine = GitEngine::new(e.git.clone());
+    // The locked rebase is what is refused; the fast path has no rebase.
+    engine.no_replay(true);
     their_change(&e, &theirs, "- b theirs\n");
     // Every rebase finds a tracked file changed (the text differs each time).
     let calls = Arc::new(AtomicUsize::new(0));
@@ -937,6 +941,8 @@ fn a_retry_that_ends_otherwise_forgets_the_refusal() {
     let (bare, mine, theirs) = two_clones(&e);
     let session = open(&mine);
     let mut engine = GitEngine::new(e.git.clone());
+    // The locked rebase is what is refused; the fast path has no rebase.
+    engine.no_replay(true);
     their_change(&e, &theirs, "- b theirs\n");
     // Every rebase finds a tracked file changed.
     let calls = Arc::new(AtomicUsize::new(0));
@@ -1045,30 +1051,130 @@ fn pull_replays_without_the_lock() {
     assert_eq!(blocks(&session, "b")[0].1, "b theirs");
 }
 
+/// A hook that saves a changed text on the calls whose numbers (from 0) are in
+/// `on`, and counts every call.
+fn saving_on(
+    session: &Arc<Mutex<Session>>,
+    on: &'static [usize],
+    calls: &Arc<std::sync::atomic::AtomicUsize>,
+) -> Box<dyn FnMut() + Send> {
+    let (hooked, n) = (Arc::clone(session), Arc::clone(calls));
+    Box::new(move || {
+        let k = n.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+        if on.contains(&k) {
+            set_text(&hooked, "a", 0, &format!("saved {k}"));
+        }
+    })
+}
+
 #[test]
-fn save_during_replay_falls_back_and_keeps_both() {
+fn nothing_saved_means_no_commit_and_no_rebase_under_the_lock() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
     let e = env();
     let (mine, _theirs, session) = local_and_remote_commit(&e);
     let mut engine = GitEngine::new(e.git.clone());
-    let hooked = Arc::clone(&session);
-    engine.after_replay(Box::new(move || {
-        set_text(&hooked, "a", 0, "saved during replay");
+    // The seam runs only where the locked part commits and rebases.
+    let locked_rebase = Arc::new(AtomicUsize::new(0));
+    let n = Arc::clone(&locked_rebase);
+    engine.before_rebase(Box::new(move || {
+        n.fetch_add(1, Ordering::SeqCst);
     }));
     let step = engine.tick(&session, now(T0));
     let v = last_view(&engine, &step);
     assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert_eq!(locked_rebase.load(Ordering::SeqCst), 0);
+    assert!(last_move(&e, &mine).starts_with("pull (breccia)"));
+    assert_eq!(
+        read(&mine, "pages/B.md"),
+        "- b theirs
+"
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
+#[test]
+fn a_save_before_the_lock_is_committed_outside_it_and_the_move_still_applies() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let e = env();
+    let (mine, theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    // The first lock take misses (a save landed just before it); the lock is
+    // free while the second move is prepared.
+    let takes = Arc::new(AtomicUsize::new(0));
+    engine.before_lock(saving_on(&session, &[0], &takes));
+    let (hooked, free, rounds) = (
+        Arc::clone(&session),
+        Arc::new(AtomicUsize::new(0)),
+        Arc::new(AtomicUsize::new(0)),
+    );
+    let (f, r) = (Arc::clone(&free), Arc::clone(&rounds));
+    engine.after_replay(Box::new(move || {
+        r.fetch_add(1, Ordering::SeqCst);
+        if hooked.try_lock().is_ok() {
+            f.fetch_add(1, Ordering::SeqCst);
+        }
+    }));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert_eq!(takes.load(Ordering::SeqCst), 2, "the lock is taken twice");
+    assert_eq!(rounds.load(Ordering::SeqCst), 2);
+    assert_eq!(free.load(Ordering::SeqCst), 2, "free while preparing");
     assert!(
-        !last_move(&e, &mine).starts_with("pull (breccia)"),
-        "the fast path must not apply after a save"
+        last_move(&e, &mine).starts_with("pull (breccia)"),
+        "{}",
+        last_move(&e, &mine)
+    );
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/A.md"]), "- saved 0");
+    assert_eq!(
+        read(&mine, "pages/A.md"),
+        "- saved 0
+"
     );
     assert_eq!(
-        git(&e, &mine, &["show", "HEAD:pages/A.md"]),
-        "- saved during replay"
+        read(&mine, "pages/B.md"),
+        "- b theirs
+"
     );
-    assert_eq!(read(&mine, "pages/B.md"), "- b theirs\n");
+    assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
+    assert_eq!(
+        git(&e, &mine, &["rev-parse", "HEAD~2"]),
+        git(&e, &theirs, &["rev-parse", "HEAD"])
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+    assert_eq!(blocks(&session, "b")[0].1, "b theirs");
+    assert_eq!(blocks(&session, "a")[0].1, "saved 0");
+}
+
+#[test]
+fn a_save_between_the_release_and_the_retake_falls_back_and_keeps_both() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let e = env();
+    let (mine, _theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    let takes = Arc::new(AtomicUsize::new(0));
+    engine.before_lock(saving_on(&session, &[0, 1], &takes));
+    let rebases = Arc::new(AtomicUsize::new(0));
+    let n = Arc::clone(&rebases);
+    engine.before_rebase(Box::new(move || {
+        n.fetch_add(1, Ordering::SeqCst);
+    }));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert_eq!(takes.load(Ordering::SeqCst), 2, "no third attempt");
+    assert_eq!(rebases.load(Ordering::SeqCst), 1, "the locked rebase ran");
+    assert!(!last_move(&e, &mine).starts_with("pull (breccia)"));
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/A.md"]), "- saved 1");
+    assert_eq!(
+        read(&mine, "pages/B.md"),
+        "- b theirs
+"
+    );
     assert_eq!(git(&e, &mine, &["rev-list", "--merges", "HEAD"]), "");
     assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
     assert_eq!(blocks(&session, "b")[0].1, "b theirs");
+    assert_eq!(blocks(&session, "a")[0].1, "saved 1");
 }
 
 #[test]
