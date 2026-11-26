@@ -332,7 +332,7 @@ export class AppController {
         },
         selectWithNeighbour: (id, dir) => this.sel.selectWithNeighbour(id, dir),
         card: () => (this.area.is('board') ? cardBlocks(this.boards.card) : null),
-        quiet: (code, cmd) => this.recovery.quiet(code, cmd),
+        quiet: (code, cmd) => this.recovery.message(code, cmd, '') === null,
         mount: env.mountEditor,
         slot: (id) => env.dom.slot(id),
       },
@@ -509,14 +509,18 @@ export class AppController {
 
   notify(n: Notice): void {
     // Every view's refusals meet here: those an internal error caused say no more than its one notice.
-    if (n.kind === 'refused' && this.recovery.quietMessage(n.message)) return
+    if (n.kind === 'refused') {
+      const message = this.recovery.message(null, null, n.message)
+      if (message === null) return
+      n = { ...n, message }
+    }
     if (n.kind === 'conflict' && this.page?.key === n.page) this.noticeTitles.set(n.page, this.page.title)
     this.notices.notify(n)
   }
 
   refuse(e: unknown): void {
-    if (this.recovery.quiet(errorCode(e), null)) return
-    this.notify({ kind: 'refused', message: errorMessage(e) })
+    const message = this.recovery.message(errorCode(e), null, errorMessage(e))
+    if (message !== null) this.notify({ kind: 'refused', message })
   }
 
   exec(cmd: Command): Promise<void> {

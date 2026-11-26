@@ -1,5 +1,5 @@
 // After an internal error the core recovers its session and says so (`session:recovered`). This decides what the
-// window shows: one notice per error, one reload of the notes, and which refusals that error caused stay quiet.
+// window shows: one notice per error, one reload of the notes, and what the refusals that error caused say.
 import type { Command, Notice, RecoveredEvent } from './types'
 
 /** One notice of the same words, and at most one reload, per this many ms. */
@@ -13,9 +13,11 @@ const STALE_TEXT = 'request is for generation'
 
 /** Shown instead of a second reload within a minute: a reload did not help. */
 export const AGAIN = 'Breccia hit an internal error again. Please restart Breccia.'
+/** What a refusal of the old session says once a restart was asked for (`AGAIN`). */
+export const NEEDS_RESTART = 'Not done: Breccia needs a restart after an internal error.'
 
 export interface RecoveryEnv {
-  /** Shows a notice; never filtered by `quietMessage`. */
+  /** Shows a notice; never filtered by `message`. */
   notify(n: Notice): void
   /** Leaves the edited block: what was typed there becomes pending text. */
   leave(): void
@@ -43,6 +45,8 @@ export class Recovery {
   private running: Promise<void> | null = null
   /** Another error reopened the session while the reload ran: a restart is asked for when it ends. */
   private againDuringReload = false
+  /** A restart was asked for (`AGAIN`): the old session's refusals say so. */
+  private needsRestart = false
 
   constructor(private env: RecoveryEnv) {}
 
@@ -57,13 +61,14 @@ export class Recovery {
     }
     if (e.reopened && within(this.reloadAt, now, WINDOW_MS)) {
       // A reload a moment ago did not help; another could loop.
-      this.show({ kind: 'refused', message: AGAIN }, now)
+      this.restart(AGAIN, now)
       return Promise.resolve()
     }
     // The same words again within a minute stay quiet; something else that happened (reopened, closed) is shown.
     if (!within(this.noticeAt, now, WINDOW_MS) || e.notice.message !== this.noticeText) this.show(e.notice, now)
     if (!e.reopened) return Promise.resolve()
     this.reloadAt = now
+    this.needsRestart = false
     // At once, before anything waits: typed text first, then nothing of the old session stays clickable.
     this.env.leave()
     this.env.clear()
@@ -76,7 +81,7 @@ export class Recovery {
         this.reloadEnd = this.env.now()
         if (this.againDuringReload) {
           this.againDuringReload = false
-          this.show({ kind: 'refused', message: AGAIN }, this.reloadEnd)
+          this.restart(AGAIN, this.reloadEnd)
         }
       }
     })()
@@ -85,19 +90,24 @@ export class Recovery {
   }
 
   /**
-   * Whether a refusal with error `code` of `cmd` stays unshown: `recovered` (the event brings the notice), and `stale`
-   * around a reload. Typed text (`block.setText`) always keeps its notice.
+   * What a refusal with error `code` of `cmd` and text `raw` says, or null when it stays unshown: `recovered` (the event
+   * brings the notice), a repeat of the recovery notice, and `stale` around a reload; `stale` after a restart was asked
+   * for says so. Typed text (`block.setText`) always keeps its notice, unchanged.
    */
-  quiet(code: string | null, cmd: Command | null): boolean {
-    if (cmd?.type === 'block.setText') return false
-    if (code === 'recovered') return true
-    return code === 'stale' && this.reloading()
+  message(code: string | null, cmd: Command | null, raw: string): string | null {
+    if (cmd?.type === 'block.setText') return raw
+    if (code === 'recovered') return null
+    if (raw.startsWith(RECOVERY_TEXT) && within(this.noticeAt, this.env.now(), WINDOW_MS)) return null
+    if (code === 'stale' || raw.startsWith(STALE_TEXT)) {
+      if (this.inStaleWindow()) return null
+      if (this.needsRestart) return NEEDS_RESTART
+    }
+    return raw
   }
 
-  /** Whether a refusal notice with `message` stays unshown: it repeats the recovery notice, or is `stale` around a reload. */
-  quietMessage(message: string): boolean {
-    if (message.startsWith(RECOVERY_TEXT)) return within(this.noticeAt, this.env.now(), WINDOW_MS)
-    return message.startsWith(STALE_TEXT) && this.reloading()
+  private restart(message: string, now: number) {
+    this.needsRestart = true
+    this.show({ kind: 'refused', message }, now)
   }
 
   private show(n: Notice, now: number) {
@@ -106,7 +116,8 @@ export class Recovery {
     this.env.notify(n)
   }
 
-  private reloading(): boolean {
+  /** From the start of the reload until `STALE_MS` after its end: answers queued before it come back `stale`. */
+  private inStaleWindow(): boolean {
     return this.running !== null || (this.reloadEnd !== null && this.env.now() - this.reloadEnd <= STALE_MS)
   }
 }

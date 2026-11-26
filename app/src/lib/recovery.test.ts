@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { AGAIN, Recovery } from './recovery'
-import type { Notice, RecoveredEvent } from './types'
+import { AGAIN, NEEDS_RESTART, Recovery } from './recovery'
+import type { Command, Notice, RecoveredEvent } from './types'
 
 const RELOADED = 'Breccia hit an internal error and reloaded your notes from disk. Everything saved is safe; undo starts afresh.'
 const KEPT =
@@ -10,18 +10,23 @@ const STALE = 'request is for generation 3, the session is at 4'
 
 const reopened: RecoveredEvent = { reopened: true, notice: { kind: 'refused', message: RELOADED } }
 const kept: RecoveredEvent = { reopened: false, notice: { kind: 'refused', message: KEPT } }
+const typed: Command = { type: 'block.setText', id: 4, text: 'my words' }
 
-/** A fake env with a clock the test moves; `flush` and `reload` finish when the test says so. */
+/** A fake env with a clock the test moves; `flush` and `reload` finish when the test says so (`finish`), or fail (`fail`). */
 function setup() {
   const s = {
     clock: 1_000_000,
     notices: [] as Notice[],
     calls: [] as string[],
     finish: [] as (() => void)[],
+    fail: [] as ((e: Error) => void)[],
   }
   const step = (name: string) => () => {
     s.calls.push(name)
-    return new Promise<void>((resolve) => s.finish.push(resolve))
+    return new Promise<void>((resolve, reject) => {
+      s.finish.push(resolve)
+      s.fail.push(reject)
+    })
   }
   const recovery = new Recovery({
     notify: (n) => void s.notices.push(n),
@@ -35,10 +40,13 @@ function setup() {
   const settle = async () => {
     for (let i = 0; i < 10; i++) {
       s.finish.splice(0).forEach((f) => f())
+      s.fail.splice(0)
       await new Promise((r) => setTimeout(r, 0))
     }
   }
-  return { s, recovery, settle }
+  /** One step of the queue: the promises started so far settle their callbacks. */
+  const tick = () => new Promise((r) => setTimeout(r, 0))
+  return { s, recovery, settle, tick }
 }
 
 test('shows_the_notice_and_reloads_once', async () => {
@@ -126,36 +134,31 @@ test('a_second_reload_within_a_minute_asks_for_a_restart_instead', async () => {
   expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload', 'leave', 'clear', 'flush', 'reload'])
 })
 
-test('quiet_hides_recovered_always', () => {
+/** Whether a refusal with `code` of `cmd` stays unshown. */
+const quiet = (r: Recovery, code: string | null, cmd: Command | null) => r.message(code, cmd, 'raw') === null
+
+test('message_hides_recovered_always', () => {
   const { recovery } = setup()
-  expect(recovery.quiet('recovered', null)).toBe(true)
-  expect(recovery.quiet('recovered', { type: 'search.query', text: 'x' })).toBe(true)
-  expect(recovery.quiet('unknownPage', null)).toBe(false)
-  expect(recovery.quiet(null, null)).toBe(false)
+  expect(quiet(recovery, 'recovered', null)).toBe(true)
+  expect(quiet(recovery, 'recovered', { type: 'search.query', text: 'x' })).toBe(true)
+  expect(recovery.message('unknownPage', null, 'No such page')).toBe('No such page')
+  expect(recovery.message(null, null, 'raw')).toBe('raw')
 })
 
-test('quiet_hides_stale_only_around_a_reload', async () => {
-  const { s, recovery } = setup()
-  expect(recovery.quiet('stale', null)).toBe(false)
+test('message_hides_stale_only_around_a_reload', async () => {
+  const { s, recovery, tick } = setup()
+  expect(quiet(recovery, 'stale', null)).toBe(false)
   void recovery.recovered(reopened)
-  expect(recovery.quiet('stale', null)).toBe(true) // while it flushes
+  expect(quiet(recovery, 'stale', null)).toBe(true) // while it flushes
   s.finish.splice(0).forEach((f) => f())
-  await new Promise((r) => setTimeout(r, 0))
-  expect(recovery.quiet('stale', { type: 'page.get', key: 'p' })).toBe(true) // while it reloads
+  await tick()
+  expect(quiet(recovery, 'stale', { type: 'page.get', key: 'p' })).toBe(true) // while it reloads
   s.finish.splice(0).forEach((f) => f())
-  await new Promise((r) => setTimeout(r, 0))
+  await tick()
   s.clock += 2_000
-  expect(recovery.quiet('stale', null)).toBe(true) // just after it ended
+  expect(quiet(recovery, 'stale', null)).toBe(true) // just after it ended
   s.clock += 1
-  expect(recovery.quiet('stale', null)).toBe(false)
-})
-
-test('quiet_never_hides_typed_text', () => {
-  const { recovery } = setup()
-  void recovery.recovered(reopened)
-  const typed = { type: 'block.setText' as const, id: 4, text: 'my words' }
-  expect(recovery.quiet('stale', typed)).toBe(false)
-  expect(recovery.quiet('recovered', typed)).toBe(false)
+  expect(quiet(recovery, 'stale', null)).toBe(false)
 })
 
 test('an_event_with_no_failed_command_still_reloads', async () => {
@@ -165,43 +168,62 @@ test('an_event_with_no_failed_command_still_reloads', async () => {
   expect(s.notices).toEqual([reopened.notice])
 })
 
-test('quiet_message_hides_the_recovery_texts_while_the_notice_is_shown', async () => {
+test('message_hides_the_recovery_texts_while_the_notice_is_shown', async () => {
   const { s, recovery, settle } = setup()
-  expect(recovery.quietMessage(RELOADED)).toBe(false) // no recovery yet
+  expect(recovery.message(null, null, RELOADED)).toBe(RELOADED) // no recovery yet
   await Promise.all([recovery.recovered(reopened), settle()])
-  expect(recovery.quietMessage(RELOADED)).toBe(true) // a command that met it says the same
-  expect(recovery.quietMessage(AGAIN)).toBe(true)
-  expect(recovery.quietMessage('No such page')).toBe(false)
+  expect(recovery.message(null, null, RELOADED)).toBeNull() // a command that met it says the same
+  expect(recovery.message(null, null, AGAIN)).toBeNull()
+  expect(recovery.message(null, null, 'No such page')).toBe('No such page')
   s.clock += 60_000
-  expect(recovery.quietMessage(RELOADED)).toBe(false)
+  expect(recovery.message(null, null, RELOADED)).toBe(RELOADED)
 })
 
-test('quiet_message_hides_a_stale_answer_only_around_a_reload', async () => {
-  const { s, recovery } = setup()
-  expect(recovery.quietMessage(STALE)).toBe(false)
+test('message_hides_a_stale_answer_only_around_a_reload', async () => {
+  const { s, recovery, tick } = setup()
+  expect(recovery.message(null, null, STALE)).toBe(STALE)
   void recovery.recovered(reopened)
-  expect(recovery.quietMessage(STALE)).toBe(true)
+  expect(recovery.message(null, null, STALE)).toBeNull()
   for (let i = 0; i < 2; i++) {
     s.finish.splice(0).forEach((f) => f())
-    await new Promise((r) => setTimeout(r, 0))
+    await tick()
   }
   s.clock += 2_001
-  expect(recovery.quietMessage(STALE)).toBe(false)
+  expect(recovery.message(null, null, STALE)).toBe(STALE)
 })
 
-test('a_failed_reload_ends_the_reload_and_rejects', async () => {
-  const s = { clock: 0 }
-  const recovery = new Recovery({
-    notify: () => {},
-    leave: () => {},
-    clear: () => {},
-    flush: () => Promise.resolve(),
-    reload: () => Promise.reject(new Error('boom')),
-    now: () => s.clock,
-  })
-  await expect(recovery.recovered(reopened)).rejects.toThrow('boom')
-  s.clock += 2_001
-  expect(recovery.quiet('stale', null)).toBe(false)
+test('after_the_again_notice_a_stale_refusal_says_NEEDS_RESTART', async () => {
+  const { s, recovery, settle } = setup()
+  await Promise.all([recovery.recovered(reopened), settle()])
+  s.clock += 30_000
+  expect(recovery.message('stale', null, STALE)).toBe(STALE) // a reload that helped: the raw text, as before
+  await recovery.recovered(reopened)
+  expect(s.notices.at(-1)).toEqual({ kind: 'refused', message: AGAIN })
+  expect(recovery.message('stale', { type: 'page.show', key: 'p' }, STALE)).toBe(NEEDS_RESTART)
+  expect(recovery.message(null, null, STALE)).toBe(NEEDS_RESTART) // the same refusal, as a notice's text
+  expect(recovery.message('unknownPage', null, 'No such page')).toBe('No such page')
+  expect(NEEDS_RESTART).toBe('Not done: Breccia needs a restart after an internal error.')
+})
+
+test('typed_text_keeps_its_notice_in_every_case', async () => {
+  const { s, recovery, tick, settle } = setup()
+  const each = () => {
+    for (const code of ['recovered', 'stale', 'unknownBlock', null]) {
+      expect(recovery.message(code, typed, STALE)).toBe(STALE)
+      expect(recovery.message(code, typed, RELOADED)).toBe(RELOADED)
+    }
+  }
+  each() // before any error
+  const run = recovery.recovered(reopened)
+  each() // while it flushes
+  s.finish.splice(0).forEach((f) => f())
+  await tick()
+  each() // while it reloads
+  await Promise.all([run, settle()])
+  each() // just after it
+  s.clock += 30_000
+  await recovery.recovered(reopened)
+  each() // after the again notice
 })
 
 test('within_a_minute_a_reopened_session_after_a_kept_one_shows_its_notice_the_same_notice_twice_stays_quiet', async () => {
@@ -223,4 +245,19 @@ test('within_a_minute_a_closed_folder_after_a_kept_session_shows_its_notice', as
   const closed: RecoveredEvent = { reopened: true, notice: { kind: 'refused', message: CLOSED } }
   await Promise.all([recovery.recovered(closed), settle()])
   expect(s.notices).toEqual([kept.notice, closed.notice])
+})
+
+test('a_failed_reload_ends_the_reload_and_rejects', async () => {
+  const s = { clock: 0 }
+  const recovery = new Recovery({
+    notify: () => {},
+    leave: () => {},
+    clear: () => {},
+    flush: () => Promise.resolve(),
+    reload: () => Promise.reject(new Error('boom')),
+    now: () => s.clock,
+  })
+  await expect(recovery.recovered(reopened)).rejects.toThrow('boom')
+  s.clock += 2_001
+  expect(quiet(recovery, 'stale', null)).toBe(false)
 })

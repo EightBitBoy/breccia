@@ -1,9 +1,10 @@
 import { flushSync } from 'svelte'
 import { afterEach, expect, test, vi } from 'vitest'
 import { AppController } from './app.svelte'
-import { block, configView, fakeWindow, pageView, settle, type FakeWindow } from './appEnv.testing'
+import { block, configView, fakeWindow, pageView, refusal, settle, type FakeWindow } from './appEnv.testing'
 import { duePick } from './duePick.svelte'
 import { emptyOutput } from './emptyOutput.testing'
+import { AGAIN, NEEDS_RESTART } from './recovery'
 import type { BlockView, Command, GitView } from './types'
 
 let stop: (() => void) | null = null
@@ -388,4 +389,28 @@ test('while the startup folder opens only the help and the zoom keys work', asyn
   app.keyCapture(after)
   expect(after.defaultPrevented).toBe(true)
   expect(app.search.shown).toBe(true)
+})
+
+/** The core's event after an internal error that reopened the session. */
+const reopenedEvent = {
+  reopened: true,
+  notice: { kind: 'refused' as const, message: 'Breccia hit an internal error and reloaded your notes from disk.' },
+}
+
+test('after the again notice a refused click says a restart is needed', async () => {
+  const { app, w } = await withPage('p')
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+  w.clock += 30_000
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+  expect(app.notices.items.map((n) => n.text)).toContain(AGAIN)
+  w.clock += 3_000
+  w.core.on['page.show'] = () => {
+    throw refusal('stale', 'request is for generation 1, the session is at 3')
+  }
+  await app.exec({ type: 'page.show', key: 'p' })
+  await settle()
+  expect(app.notices.items.map((n) => n.text)).toContain(NEEDS_RESTART)
+  expect(app.notices.items.map((n) => n.text).join()).not.toContain('request is for generation')
 })

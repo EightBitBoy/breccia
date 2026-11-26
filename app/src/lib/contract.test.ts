@@ -92,7 +92,7 @@ test('the recovered error code matches', () => {
   expect(rust, 'the recovered answer in recovery.rs').not.toBeNull()
   // The variant's wire name is its camelCase spelling.
   const wire = rust![1][0].toLowerCase() + rust![1].slice(1)
-  const ts = /code === '([^']+)'\) return true/.exec(recoveryTs)
+  const ts = /code === '([^']+)'\) return null/.exec(recoveryTs)
   expect(ts, 'the recovered code in recovery.ts').not.toBeNull()
   expect(wire).toBe('recovered')
   expect(ts![1]).toBe(wire)
