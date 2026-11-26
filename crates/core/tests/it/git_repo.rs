@@ -1,7 +1,7 @@
 use crate::gitenv::*;
 use breccia_core::git::{
-    Busy, Discovered, Git, GitError, GitOut, HeadState, LOCAL_LIMIT, classify_discover, discover,
-    run_limited, without_auto_gc,
+    Busy, Discovered, Git, GitError, GitOut, HeadState, LOCAL_LIMIT, classify_discover, command_of,
+    discover, run_limited, without_auto_gc,
 };
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -225,6 +225,17 @@ fn the_cancel_flag_stops_network_commands_but_never_local_ones() {
         g.run(&work, &["push", "origin", "HEAD"], LOCAL_LIMIT),
         Err(GitError::TimedOut(_))
     ));
+}
+
+#[test]
+fn a_run_is_labelled_by_its_command_past_the_settings() {
+    assert_eq!(command_of(&["fetch", "-q"]), "fetch");
+    assert_eq!(
+        command_of(&["-c", "replay.refAction=print", "replay", "--onto", "x"]),
+        "replay"
+    );
+    assert_eq!(command_of(&["-c", "a=1", "-c", "b=2", "push"]), "push");
+    assert_eq!(command_of(&[]), "");
 }
 
 #[test]

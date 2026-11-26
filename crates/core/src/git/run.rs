@@ -36,6 +36,16 @@ const BASE_FLAGS: [&str; 2] = ["-c", "core.quotepath=off"];
 /// repository is still tidied now and then (Breccia makes most of its commits).
 const NO_AUTO_GC: [&str; 4] = ["-c", "gc.auto=0", "-c", "maintenance.auto=false"];
 
+/// The Git command of `args`, past any leading `-c key=value` pairs: the
+/// label of a time-out, and what decides whether a run can be cancelled.
+pub fn command_of<'a>(args: &[&'a str]) -> &'a str {
+    let mut rest = args;
+    while let ["-c", _, tail @ ..] = rest {
+        rest = tail;
+    }
+    rest.first().copied().unwrap_or("")
+}
+
 /// Whether a call runs without automatic `gc`: a `fetch` or any `rebase`.
 pub fn without_auto_gc(args: &[&str]) -> bool {
     args.first() == Some(&"fetch") || args.contains(&"rebase")
@@ -230,7 +240,7 @@ impl Git {
         cmd.env("GIT_TERMINAL_PROMPT", "0");
         // Some answers are matched by their text, so Git must answer in English.
         cmd.env("LANGUAGE", "C").env("LC_ALL", "C");
-        let what = args.first().copied().unwrap_or("");
+        let what = command_of(args);
         let cancel = self
             .cancel
             .as_deref()
