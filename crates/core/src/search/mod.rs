@@ -26,6 +26,11 @@ pub use store::Hit;
 pub const SCHEMA_VERSION: i32 = 3;
 /// How many pages the shell indexes in one step of the background build.
 pub const INDEX_CHUNK_PAGES: usize = 25;
+/// How many pages one step of the background build indexes while the shell holds
+/// the session lock: a keystroke waits for the step in progress, so a step has to
+/// stay under one frame (16 ms) at 5,000 pages. Smaller than [`INDEX_CHUNK_PAGES`],
+/// which only says when progress shows and when an outside change starts a build.
+pub const FIRST_BUILD_STEP_PAGES: usize = 10;
 
 #[derive(Debug, thiserror::Error)]
 pub enum SearchError {

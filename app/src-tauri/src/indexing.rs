@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 use std::time::Instant;
 
-use breccia_core::search::INDEX_CHUNK_PAGES;
+use breccia_core::search::{FIRST_BUILD_STEP_PAGES, INDEX_CHUNK_PAGES};
 use breccia_core::{CommandError, IndexProgress, Output};
 use tauri::{AppHandle, Emitter, Manager};
 
@@ -106,7 +106,7 @@ pub(crate) fn index_loop(handle: &AppHandle, generation: u64) {
             let (step, pages, wait, run) = match with_session(&state.session, |session| {
                 let wait = asked.elapsed();
                 let began = Instant::now();
-                let step = session.index_step(generation, INDEX_CHUNK_PAGES);
+                let step = session.index_step(generation, FIRST_BUILD_STEP_PAGES);
                 (step, session.index_step_pages(), wait, began.elapsed())
             }) {
                 Guarded::Ran(ran) => ran,
@@ -157,6 +157,13 @@ mod tests {
         assert!(!reports_progress(0));
         assert!(!reports_progress(INDEX_CHUNK_PAGES));
         assert!(reports_progress(INDEX_CHUNK_PAGES + 1));
+    }
+
+    #[test]
+    fn the_first_build_works_in_smaller_steps_than_the_chunk_size() {
+        use breccia_core::search::{FIRST_BUILD_STEP_PAGES, INDEX_CHUNK_PAGES};
+        const { assert!(FIRST_BUILD_STEP_PAGES > 0) };
+        const { assert!(FIRST_BUILD_STEP_PAGES < INDEX_CHUNK_PAGES) };
     }
 
     #[test]

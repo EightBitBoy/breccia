@@ -9,7 +9,7 @@
 use crate::support::{self, DAY, clock_on, put};
 use breccia_core::git::{Discovered, GitEngine, Now, discover};
 use breccia_core::index::LinkIndex;
-use breccia_core::search::INDEX_CHUNK_PAGES;
+use breccia_core::search::FIRST_BUILD_STEP_PAGES;
 use breccia_core::{Clock, IdGen, Output, Session, parse};
 use chrono::{Duration, NaiveDate};
 use serde_json::{Value, json};
@@ -149,7 +149,7 @@ fn scale_5000_pages() {
     let total = loop {
         let t0 = Instant::now();
         let p = s
-            .index_step(gen_, INDEX_CHUNK_PAGES)
+            .index_step(gen_, FIRST_BUILD_STEP_PAGES)
             .unwrap()
             .expect("folder is open");
         chunks.push(ms(t0));
@@ -160,9 +160,18 @@ fn scale_5000_pages() {
     let build_ms = ms(build_t0);
     let chunk_ms = median(chunks.clone());
     let chunk_max = chunks.iter().cloned().fold(0.0, f64::max);
+    let slow: Vec<String> = chunks
+        .iter()
+        .enumerate()
+        .filter(|(_, c)| **c > 40.0)
+        .map(|(i, c)| format!("#{i}={c:.0}"))
+        .collect();
+    println!("index chunks over 40 ms: {}", slow.join(" "));
+    let slowest = chunks.iter().position(|c| *c == chunk_max).unwrap_or(0);
     println!(
-        "index build: {total} pages in {} chunks, max chunk {chunk_max:.2} ms",
-        chunks.len()
+        "index build: {total} pages in {} chunks, max chunk {chunk_max:.2} ms (chunk #{slowest}), first chunk {:.2} ms",
+        chunks.len(),
+        chunks[0]
     );
 
     let mut q_words = (0, false, false);
@@ -774,7 +783,7 @@ fn scale_5000_extras() {
     let gen_ = s.generation();
     loop {
         let p = s
-            .index_step(gen_, INDEX_CHUNK_PAGES)
+            .index_step(gen_, FIRST_BUILD_STEP_PAGES)
             .unwrap()
             .expect("folder is open");
         if p.done == p.total {
