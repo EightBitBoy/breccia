@@ -151,3 +151,9 @@ Task 1: complete (commits 2c0681b..aba5014, review clean)
 - Task 2 implementer: DONE f4e59ef. Concern: placeOfView returns null for board kind with unknown name (out-of-range index only).
 - Task 2 review (sonnet): spec ✅, Approved. Concern (board null) judged unreachable-harmless. Minors (deferred): 2 stale test names, shownView untested (removed by Task 3), route.ts imports a type from a .svelte.ts module.
 Task 2: complete (commits fa3c98c..f4e59ef, review clean)
+- Task 3: dispatched (opus implementer ad363ec1f5c637400), BASE 1835d97
+- Task 3 implementer: DONE_WITH_CONCERNS 295c4e2 (journal.close kept in leaveMainView; apply reads route inputs before applyFeed; new folder leaves board/feed/page as brief asks).
+- Task 3 review (opus): spec ✅, Approved. Minors (deferred): viewsTake ignores changed()'s result (~App.svelte:1403); no test that journal.close() drops a pending feed answer / closing a shown feed sets area 'none'; route.ts:97 dead part and :78 stale comment.
+Ruling: a new folder leaves a shown board/feed/page (brief) — reachable only from Settings/Welcome, so nothing visible changes; also stops an old folder's day reappearing — cost if wrong: a view opened mid-switch blanks one round trip sooner.
+Ruling: journal.close() kept in leaveMainView (deviation from brief) — no-behaviour-change rule outranks the step list; a pending feed answer must not replace a newer screen — cost if wrong: none.
+Task 3: complete (commits 1835d97..295c4e2, review clean)
