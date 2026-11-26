@@ -100,7 +100,7 @@ old #59 are answered by these numbers.
   a folder opens:** see #104.
 - **The longest index step** (about 130 to 155 ms, twice per build, at the same two steps each run): the cause is
   SQLite's full-text segment merge, not the step size, the first-step check or the disk (a WAL checkpoint was ruled
-  out; with the merge turned off the spikes vanish, but queries then read more segments). The step is rare (2 of 500
+  out; with the merge turned off the worst step fell to about 80 ms, but ordinary steps got slower). The step is rare (2 of 500
   steps), so typing sees it as a single pause of about 0.15 s during the first build only. A fix would merge in small
   steps (`INSERT INTO blocks_fts(blocks_fts, rank) VALUES('merge', N)`) between index steps.
 - **Large folders in general** (was #54): at 5,000 pages typing takes about 13 ms of a 16 ms frame in the core;
