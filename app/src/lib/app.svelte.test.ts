@@ -325,3 +325,67 @@ test('the date picker closes when the close question opens and when no folder is
   app.togglePicker()
   expect(app.pickerOpen).toBe(false) // nothing opens without a folder
 })
+
+/** A key press as `installDom` hands it on; `prevented` says whether a handler took it. */
+function press(key: string, mods: { ctrl?: boolean; shift?: boolean; alt?: boolean } = {}) {
+  const e = {
+    key,
+    ctrlKey: mods.ctrl ?? false,
+    shiftKey: mods.shift ?? false,
+    altKey: mods.alt ?? false,
+    metaKey: false,
+    repeat: false,
+    isComposing: false,
+    defaultPrevented: false,
+    preventDefault() {
+      e.defaultPrevented = true
+    },
+    stopPropagation() {},
+  }
+  return e as typeof e & KeyboardEvent
+}
+
+test('while the startup folder opens only the help and the zoom keys work', async () => {
+  const { app, w } = start()
+  let opened = () => {}
+  w.env.shell.startupOpen = () => ({
+    opening: () => Promise.resolve('/notes'),
+    onOpened: (cb) => {
+      opened = cb
+      return () => {}
+    },
+  })
+  const started = app.start(Promise.resolve())
+  await settle()
+  expect(app.opening).toBe('/notes')
+  expect(app.ready).toBe(false)
+
+  const search = press('k', { ctrl: true })
+  app.keyCapture(search)
+  expect(search.defaultPrevented).toBe(false) // not taken: nothing to search yet
+  const settings = press(',', { ctrl: true })
+  app.keyCapture(settings)
+  expect(settings.defaultPrevented).toBe(false)
+  const back = press('ArrowLeft', { alt: true })
+  app.keyCapture(back)
+  expect(back.defaultPrevented).toBe(false)
+  const help = press('F1')
+  app.keyCapture(help)
+  expect(help.defaultPrevented).toBe(true) // F1 is taken, before WebView2's own help page
+  const zoom = press('=', { ctrl: true })
+  app.keyCapture(zoom)
+  expect(zoom.defaultPrevented).toBe(true)
+  await settle()
+  expect(app.zoom.percent).toBeGreaterThan(100)
+
+  opened()
+  await started
+  await settle()
+  expect(app.opening).toBeNull()
+  expect(app.ready).toBe(true)
+  expect(app.folder).toBe('/notes')
+  const after = press('k', { ctrl: true })
+  app.keyCapture(after)
+  expect(after.defaultPrevented).toBe(true)
+  expect(app.search.shown).toBe(true)
+})
