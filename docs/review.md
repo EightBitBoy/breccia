@@ -400,9 +400,9 @@ are its questions for you; each answer decides what a later plan does.
    starts. Typing pauses for a fraction of a second at most (no longer a full second when you typed just before the
    pull), and afterwards your text and the pulled page's text are both there, the history is one line with your
    commit on top, and the Git status is green. Known difference: a page you created in the last instant before the
-   pull goes in with the next regular commit (after the usual wait), not before the pull (the text is the same). Measured at 5,000 pages (`scale::`), the
-   time the notes are locked during a pull fell from 460 to about 360 ms (a save during the fetch), from 424 to about
-   360 ms (none) and from 1267 to about 350 ms (a save just before the lock). Still over the 100 ms goal (follow-up in
+   pull goes in with the next regular commit (after the usual wait), not before the pull (the text is the same).
+   Measured at 5,000 pages (`scale::`), the time the notes are locked during a pull fell from 460 to about 360 ms (a
+   save during the fetch), from 424 to about 360 ms (none) and from 1267 to about 350 ms (a save just before the lock). Still over the 100 ms goal (follow-up in
    backlog #85).
 
 155. [ ] **The Git history opens faster:** by hand, in a notes folder that is the top folder of its Git repository
@@ -410,7 +410,8 @@ are its questions for you; each answer decides what a later plan does.
    before and the "not pushed" marks are the same (a commit the remote lacks is marked, one it has is not; a remote
    never pushed to marks them all). Known difference: a commit that changed no file at all (made by hand with
    `git commit --allow-empty`, or the side of a merge that brought nothing new) now shows in the history; Breccia
-   itself never makes such commits. A notes folder inside a bigger repository still shows only the commits that
+   itself never makes such commits; after one, the history's top row is newer than the "last commit" time shown
+   elsewhere, which still counts only commits that change a notes file. A notes folder inside a bigger repository still shows only the commits that
    touch the notes folder. Measured at 5,000 pages (`scale::git_at_scale`, medians): `git.log` of 200 of 3,000
    commits 164 to 183 ms before, 181 to 193 after (no clear change on this machine's noise); with a remote never
    pushed to 247 to 287 before, 186 to 224 after. Both still over the 100 ms goal (the rest is in backlog #85: fewer

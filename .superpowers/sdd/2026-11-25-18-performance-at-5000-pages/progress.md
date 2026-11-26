@@ -54,3 +54,6 @@ Shared subagent rules: common.md (local).
 - Task 6a review (opus): APPROVE; I1 (tests pinning the new-untracked-page case) + M1-M4 docs/label; no text loss (read-tree refuses, conflict keeps both). Fix round sent to implementer.
 - Task 6a fix round: 5a8b8aa (pushed), 3 untracked-page tests + docs; git_engine 38 passed. Re-review dispatched (sonnet).
 - Task 6a re-review (sonnet): APPROVE, 38 passed; M4 partly (label only, cosmetic, accepted). Task 6a done.
+- Task 6b (fixes 3+5 = 2a+2b, Git history filter): dispatched (sonnet), BASE faf47c9.
+- Task 6b: implementer done, d7755bf (pushed); git.log 200/3000 ~same (noisy, 164-193), never-pushed 247-287 -> 186-224; still OVER (2c in #85). Review dispatched (sonnet).
+- Task 6b review (sonnet): APPROVE, git_commit 19 passed. M1 (last-commit time ignores empty commits) noted in review 155 by controller; M2 (unpushed() unfiltered in a big nested repo returns all hashes) deferred to final review; M3 cosmetic. Subject d7755bf mentions the empty-commit case; ruling: leave it (pushed; trim at release changelog edit) — cost if wrong: one odd changelog line. Task 6b done.
