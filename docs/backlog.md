@@ -70,39 +70,45 @@ Owner, 2026-11-24: still thinking; stays open.
 
 ## 85. Performance with very large folders (Performance)
 
-Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59), to be taken up when a folder grows past a few
-thousand pages or someone reports slowness. Nothing here is wrong at today's sizes. The measurements are from a test
-folder of 5,000 pages (`just graph-scale`, `crates/core/tests/it/scale.rs`); the graph's own numbers are in #83.
+Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59). Owner, 2026-11-24: measured and fixed as plan
+18 (`docs/plans/2026-11-25-18-performance-at-5000-pages.md`); numbers and decisions are in
+`docs/perf/2026-11-25-baseline.md`. This item is partly closed: what is left is below. Measure with `just perf-scale`
+and `cargo test --release -p breccia-core -- --ignored --nocapture scale::` (test folder of 5,000 pages).
 
-**Large folders** (was #54):
-At 5,000 pages typing takes about 13 ms of a 16 ms frame in the core; building the page tree, comparing a reloaded file
-and merging watcher events grow faster than the folder size; the journal feed keeps every loaded day and searches them
-one by one. Fine at today's sizes; measure with thousands of pages and days.
+**Closed by plan 18 (2026-11-26), within their bars at 5,000 pages:** the window shows (408 ms, bar 500; one launch of
+three 715 on a cold WebView2), typing during the first index build (wait p95 12.6 ms, bar 16), the index step (about
+7.5 ms for 10 pages, bar 16), caret down at 5,000 rows (12.9 ms, bar 16; the outline is not virtualised, which would
+be the fix if it grows), `pages.table` (96 ms, bar 100: at the bar), `page.setColor` on a page linked from 1,000
+(148 ms), the first `archive.auto` run (610 ms), `block.setText` (7 ms), the long Git history and archive lists (drawn
+by rows on screen), the blank first window (the folder opens inside the window), queued change messages to the Git
+thread (cost next to nothing: a step does Git work only when a commit or a pull is due). Plan 1 follow-ups 9 and 15 and
+old #59 are answered by these numbers.
 
-**Faster first start and first indexing on large folders** (was #55):
-At 5,000 pages: a search during the first index build waits about 3 s (answer from what is indexed so far, marked
-incomplete); the folder opens before the window shows, so a slow first open is a blank window (open after the window
-appears, with an "Opening..." state; Windows Defender adds about 8 ms per fresh file); the first background indexing
-step takes 100 to 120 ms against a 16 ms budget (one typing pause); typing during the first build was never measured
-with both threads running (`BRECCIA_TRACE=1`).
-
-**Git work that can make typing wait** (was #57):
-At 5,000 pages the notes lock is held about 577 ms (bar 500) when a pull brings changes and a save landed during the
-fetch; the cost is Git's rebase, and a fix would rebase outside the lock (for example in a scratch worktree). Git hooks
-(and Git LFS) also run while the notes are locked, and queued change messages to the Git thread are not merged.
-
-**Long lists are not virtualised** (was #58):
-The Git history (after many "Show more") and the Archive view (thousands of tasks) may get slow; the All pages
-virtualiser could be reused. The Git history also re-reads every shown row after each commit, and reads every
-not-pushed hash on each load for a remote never pushed to.
-
-**The first automatic archive run on a large old folder** (was #59):
-It changes many files in one command and is one slow answer, once.
-
-**Notes from plan 12 triage (2026-11-17):** three more measure-first items belong here. Plan 1 follow-up 9: nobody has measured a color pick on a page that many journal days link to (it re-sends every one of those days). Plan 1 follow-up 15: per keystroke on a journal, `PageView::of` parses the links of every top-level block again and `index_page` allocates a key for every colored page (measured within noise: `block.setText` median 11.95 ms against 12.37 ms). Plan 7 follow-up 19: the caret lookup is quadratic in the shown rows (one frame at about 4,000 to 5,000 rows).
-
-Owner, 2026-11-24: measure and fix now, as a plan (measure at 5,000 pages, then fix the worst points: the blank first
-window, the Git pause, long lists). Written after the backlog round.
+**Still open:**
+- **1c. The notes lock during a pull, under 100 ms.** About 350 to 360 ms after plan 18 task 6a (before: 424 to 1,267)
+  with a save during the fetch, none, or just before the lock. The rest is Git programs run under the notes lock
+  (rebase, status, hooks and Git LFS also run there). Fix: no Git program under the lock; apply the pulled change in
+  memory or in a scratch worktree. Big.
+- **2c. Fewer Git starts per history load.** `git.log` of 200 of 3,000 commits is about 181 to 193 ms (bar 100), with a
+  remote never pushed to 186 to 224 ms; the window opens the history in about 0.34 s (bar 200). Cause: five or six Git
+  programs started in a row. Fix: keep the found repository and remote between loads (drop them when the folder, branch
+  or remote changes), drop the separate HEAD check, run the "not pushed" check at the same time as the history read.
+- **2d. After a commit, reload only the newest 200 history rows** and merge them with the kept ones (a full reload when
+  they do not overlap, e.g. after a pull rewrote more than 200 commits). Today, after ten "Show more", each commit
+  re-reads all 2,200 rows (about 0.3 s of Git work, off the notes lock, so typing never waits).
+- **A search during the first build** waits for the whole index: see #103. **A counter or an early journal day while
+  a folder opens:** see #104.
+- **The longest index step** (about 130 to 155 ms, twice per build, at the same two steps each run): the cause is
+  SQLite's full-text segment merge, not the step size, the first-step check or the disk (a WAL checkpoint was ruled
+  out; with the merge turned off the spikes vanish, but queries then read more segments). The step is rare (2 of 500
+  steps), so typing sees it as a single pause of about 0.15 s during the first build only. A fix would merge in small
+  steps (`INSERT INTO blocks_fts(blocks_fts, rank) VALUES('merge', N)`) between index steps.
+- **Large folders in general** (was #54): at 5,000 pages typing takes about 13 ms of a 16 ms frame in the core;
+  building the page tree, comparing a reloaded file and merging watcher events grow faster than the folder size; the
+  journal feed keeps every loaded day and searches them one by one. Fine at today's sizes.
+- **`graph.get`** at 5,000 pages (about 120 ms, bar 100) belongs to #83.
+- Per keystroke on a journal, `PageView::of` parses the links of every top-level block again and `index_page`
+  allocates a key for every colored page (within noise: `block.setText` 7 ms).
 
 ## 89. Recovery after an internal error: edges left (Safety net)
 
@@ -149,3 +155,19 @@ anti-goal §2). It looks like a reproducible case of closed #1 (misplaced text w
 which said to reopen if it shows up. Steps are in `docs/perf/2026-11-25-baseline.md` and the plan 18 Task 2 notes; the
 measuring script now waits for each new row before typing on. To do: reproduce in an e2e step, find the cause (likely
 keys queued while a split is in flight), fix.
+
+## 103. Search answers from the partial index during the first build (Search)
+
+Plan 18 Q2 (b), owner 2026-11-25: a search typed while the first index build runs waits for the complete index (534 ms
+after the query in the window at 5,000 pages; 4,064 ms from the start of the build in the core; a few seconds on a
+slower machine). Idea: answer at once from the pages indexed so far, marked "Still indexing: N of M pages searched",
+and update the answer when the build ends. The window needs the marked state and a second answer; the core needs a
+query that does not flush the pending pages first (`search.query` does today). Not needed at today's numbers.
+
+## 104. A counter or an early journal day while a folder opens (Window)
+
+Plan 18 Q1 (a), owner 2026-11-25: later work. Today the window shows at 408 ms and says "Opening..."; the journal is
+usable at about 1.3 s (bar 2 s) at 5,000 pages, so neither is needed on this machine. For much bigger folders or slow
+disks there are two options: a count in the status bar ("Opening: 1,200 of 5,000 files"), or today's journal day first,
+typeable while the rest of the folder is read (this one needs the editor to accept edits before the folder is loaded,
+which is the larger change).

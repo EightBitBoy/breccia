@@ -416,3 +416,11 @@ are its questions for you; each answer decides what a later plan does.
    commits 164 to 183 ms before, 181 to 193 after (no clear change on this machine's noise); with a remote never
    pushed to 247 to 287 before, 186 to 224 after. Both still over the 100 ms goal (the rest is in backlog #85: fewer
    Git starts per load).
+
+156. [ ] **Typing pauses less while a large folder is indexed for the first time:** by hand (`just dev`, or open a
+   folder of a few thousand pages for the first time): while "Indexing" shows in the status bar, type in a journal day.
+   The text appears as usual; the pauses between keystrokes are shorter than before. Search still answers when the
+   index is complete, and the build ends as before. Measured at 5,000 pages (`scale::`): one step of the first build
+   went from 20.5 to about 7.5 ms (the goal is one frame, 16 ms); the whole build takes about 0.5 s longer (4.6 to
+   5.1 s, goal 10 s). Two steps per build, about 0.15 s each, are longer (SQLite's full-text merge); that is in
+   backlog #85.
