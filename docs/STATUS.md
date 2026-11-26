@@ -1,6 +1,6 @@
 # Breccia status
 
-Last updated: 2026-11-24. Keep this file current: update it when a plan starts, after each task while a plan is in
+Last updated: 2026-11-26. Keep this file current: update it when a plan starts, after each task while a plan is in
 progress, and when a plan finishes.
 
 ## Where the project stands
@@ -40,6 +40,7 @@ on 2026-11-06 (https://github.com/EightBitBoy/breccia/releases/tag/v1.0.0), and 
 | 15 | The contract (from the audit) | done 2026-11-20 | `docs/plans/2026-11-20-15-the-contract.md` | `docs/plans/2026-11-20-15-the-contract-followups.md` |
 | 16 | Task due dates | done 2026-11-23 | `docs/plans/2026-11-23-16-due-dates.md` | `docs/plans/2026-11-23-16-due-dates-followups.md` |
 | 17 | Due date follow-ups | done 2026-11-24 | `docs/plans/2026-11-24-17-due-date-follow-ups.md` | `docs/plans/2026-11-24-17-due-date-follow-ups-followups.md` |
+| 18 | Performance at 5,000 pages | done 2026-11-26 | `docs/plans/2026-11-25-18-performance-at-5000-pages.md` | `docs/plans/2026-11-25-18-performance-at-5000-pages-followups.md` |
 
 Plan 2's design is `docs/superpowers/specs/2026-11-07-custom-page-colors-design.md` (ledger
 `.superpowers/sdd/2026-11-07-02-custom-page-colors/progress.md`). Plan 1's design is `docs/superpowers/specs/2026-11-07-page-colors-design.md`; the owner's decisions are in the design
@@ -219,7 +220,24 @@ Backlog round continued 2026-11-25, from #87 to the end (#101). Built and pushed
 "nothing left to save", #98 cards with a due date first within a priority, #99 keyboard path to a card's menu,
 #101 a quick click outside the calendar closes it (review items 147 to 149). Closed: #87 (e2e stays local, before each
 release; no GitHub Actions run for it, owner's call), #88, #97 (for now), #100. Kept open: #89, #90, #95. The round
-is through; #81 was built after it (review item 150); #85 is still to build.
+is through; #81 was built after it (review item 150); #85 became plan 18.
+
+Plan 18 (performance at 5,000 pages, backlog #85) is done (2026-11-26; owner decisions Q1 to Q4, the "Settled
+2026-11-25" and "Owner, 2026-11-26" blocks and the pre-flight rulings in the plan, ledger
+`.superpowers/sdd/2026-11-25-18-performance-at-5000-pages/progress.md`). Built and pushed, unreleased:
+- `just perf-scale` measures the window at 5,000 pages; the baseline and the after numbers are in `docs/perf/`, and
+  the bars are in spec §8.
+- The window shows at once, with "Opening ‹folder›…" while the folder opens.
+- A Git pull prepares its rebase without the notes lock and holds the lock for about 0.4 s instead of 0.7 to 1.5 s.
+  It is safe with Git 2.53's changed `git replay`.
+- The Git history and the Archive draw only the shown rows, and the history keeps its place when a commit arrives.
+- The history drops two needless folder checks.
+- The first index build works in smaller steps, so typing pauses less.
+
+Still over their bars, in #85: the lock (bar 100 ms), the Git history's loads (fewer Git starts), and the full-text
+merge spike. Unsettled on a busy machine: caret down, `pages.table` and the window showing. New backlog items: #103
+(an early search answer) and #104 (a counter or an early journal while opening); #102 stays open. The owner checks
+review items 151 to 157.
 
 Candidates for the plan after it, to settle with the owner:
 
@@ -233,7 +251,7 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1390 tests) and cargo tests (core: lib 53, integration 901 with 2 ignored; shell 96) pass
+- `just test`: Vitest (1391 tests) and cargo tests (core: lib 53, integration 936 with 3 ignored; shell 102) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 290 PASS lines, the highest step is 168 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused

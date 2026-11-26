@@ -14,9 +14,10 @@ Plan 16's follow-ups 4, 12, 13 and 16 stay open in their own file. The owner che
 
 ## Code
 
-2. Changing a link's topic now re-sends every page that links to it (before: only journal days): a color change on a
+2. ~~Changing a link's topic now re-sends every page that links to it (before: only journal days): a color change on a
    page with many backlinks sends many page views in one answer. Measure at graph scale (`just graph-scale`); consider
-   sending only the shown page.
+   sending only the shown page.~~ Taken by plan 18: `page.setColor` on a page linked from 1,000 days measured 131 to
+   142 ms, within its 300 ms bar; closed.
 3. Focus edge cases in the right-click menu: the focus saved at a right press can go stale (harmless); a click outside
    the task menu while editing may give the focus back to an editor that is closing (it ends on the page body;
    untested).
