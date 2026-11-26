@@ -52,27 +52,18 @@
   import { isNewer } from './lib/treeVersion'
   import {
     addedText,
-    boardDialogAfterConfig,
     cardFromView,
     cardBlocks,
     cardOf,
     cardRoot,
-    defaultColumns,
-    moveBoardNamed,
-    settingsAfterSet,
-    settingsIndexAfterConfig,
     shownAfterDelete,
-    withBoard,
-    withoutBoard,
   } from './lib/board'
   import { Boards } from './lib/boards.svelte'
   import { HiddenColumns } from './lib/hiddenColumns.svelte'
-  import { AutoArchive, archiveShift, hourly } from './lib/autoArchive'
+  import { AutoArchive, hourly } from './lib/autoArchive'
   import { AllPages } from './lib/allPages.svelte'
   import { Archive } from './lib/archive.svelte'
   import { Dailies } from './lib/dailies.svelte'
-  import { RESET_KEY } from './lib/dailies'
-  import { REPLACED } from './lib/settingsForm'
   import { Network } from './lib/network.svelte'
   import { isNewFolder } from './lib/folder'
   import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
@@ -100,9 +91,7 @@
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
   import { MainArea } from './lib/mainArea.svelte'
-  import { statesSet } from './lib/stateEdit'
-  import { configShift, isNewerConfig } from './lib/configChange'
-  import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './lib/configWrite'
+  import { ConfigStore } from './lib/config.svelte'
   import { missingFolder, pickFolder, recentRows, switchCheck } from './lib/folderSwitch'
   import { watchThemeTokens } from './lib/themeTokens.svelte'
   import type {
@@ -112,15 +101,12 @@
     ConfigView,
     Command,
     DateView,
-    GitSettings,
     Notice,
     Output,
     PageView as Page,
     RecentFolder,
     RefsView,
     RenameView,
-    StateRename,
-    StateView,
     TreeView,
   } from './lib/types'
   import { EditorHost } from './editor/host.svelte'
@@ -167,25 +153,18 @@
   let opening = $state<string | null>(null)
   /** Session-only folding: never written to files. */
   const folded = new SvelteSet<number>()
-  /** The configured task states, from `config.get` (fetched once per folder). */
-  let states = $state.raw<StateView[]>([])
+  /** The folder's settings (`config.toml`) and the rules of their writes. */
+  const config: ConfigStore = new ConfigStore({
+    exec: (cmd, refused) => host.exec(cmd, refused),
+    leave: () => host.leave(),
+    flush: () => client.flush(),
+    notify: (n) => notify(n),
+  })
   /** The editor's caret menus while open: the slash menu and link completion (which wins). */
   let slashMenu = $state<MenuView | null>(null)
   let linkMenu = $state<MenuView | null>(null)
   /** `.main`, which scrolls the page or the feed. */
   let scroller = $state<HTMLElement | undefined>()
-  /** The configured boards, from `config.get`. */
-  let boardList = $state<BoardSummary[]>([])
-  /** `[board] archive_after_days`, from `config.get`. */
-  let archiveDays = $state(14)
-  /** `[board] auto_archive`, from `config.get`. */
-  let autoArchiveOn = $state(true)
-  /** `ConfigView.version` of the settings shown: the config writes carry it (the core refuses an older one). */
-  let configVersion = $state(0)
-  /** The file's `[dailies] reset` is no time and is read as 00:00 (`ConfigView.replaced`). */
-  let dailiesResetInvalid = $state(false)
-  /** The number keys whose value in the file is refused and read as the default (`ConfigView.replaced`). */
-  let numbersInvalid = $state({ delay: false, interval: false, archive: false })
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
   let appVersion = $state<string | null>(null)
   let appVersionAsked = false
@@ -198,24 +177,6 @@
   let inTray = false
   /** A block highlighted briefly after the jump from a card. */
   let flash = $state<BlockId | null>(null)
-  /** The board whose settings dialog is open ; null while closed. */
-  let settingsFor = $state<number | null>(null)
-  /** That board's name: the dialog follows its board by name when the config changes. */
-  let settingsForName = ''
-  /** The config version the dialog's values come from: its save carries it, so a hand edit meanwhile refuses it. */
-  let settingsForVersion = 0
-  /** A `boards.set` from the dialog is on its way: its own answer is not a change to follow. */
-  let boardSaving = false
-  /**
-   * The newest config version that came from a hand edit or pull (0: none in this folder). A board dialog opened
-   * before it saves with its old version, so the core refuses it (`dialogVersion`); own Settings changes never
-   * count, so they do not refuse the dialog.
-   */
-  let foreignVersion = 0
-  /** `[git]` of the open folder, from the config. */
-  let gitSettings = $state<GitSettings | null>(null)
-  /** The config last applied; null until a folder's first one. */
-  let lastConfig: ConfigView | null = null
   /** The theme chosen on this computer. */
   let theme = $state<ThemeChoice>('system')
   /** Where the sidebar lists Journals, chosen on this computer. */
@@ -262,7 +223,7 @@
       blocks: () => editableBlocks(editable(), folded),
       order: (id) => walkOrder(editable(), folded, id),
       pageOf: (id) => editablePageOf(editable(), id),
-      states: () => states,
+      states: () => config.states,
       tags: () => (tree?.tags ?? []).map((t) => ({ key: t.key, name: t.name, exists: !t.linkedOnly })),
       notify: (n) => notify(n),
       showMenu: (which, m) => (which === 'link' ? (linkMenu = m) : (slashMenu = m)),
@@ -294,7 +255,7 @@
         return p ? visible(p.blocks, folded).map((b) => b.id) : []
       },
       page: selectionPage,
-      states: () => states,
+      states: () => config.states,
       editing: () => host.editingId !== null,
       leave: () => host.leave(),
       run: (cmd) => void host.exec(cmd),
@@ -429,7 +390,7 @@
   const autoArchive = new AutoArchive({
     run: (cmd) => client.run(cmd),
     editing: () => host.editingId,
-    enabled: () => folder !== null && autoArchiveOn,
+    enabled: () => folder !== null && config.autoArchive,
   })
   /** The All pages table; a failed load or reload is a notice (AllPages reports it). */
   const allPages = new AllPages({ area: mainArea, run: (cmd) => client.run(cmd), notify })
@@ -497,7 +458,7 @@
   /** The place the main area shows; null between two views and for the untitled new page. */
   const here = $derived<NavPlace | null>(
     placeOfView(mainArea.view, {
-      board: boards.index === null ? null : (boardList[boards.index]?.name ?? null),
+      board: boards.index === null ? null : (config.boards[boards.index]?.name ?? null),
       feedDay: journal.at,
       page: page?.key ?? null,
     }),
@@ -603,7 +564,7 @@
         return true
       }
       case 'board': {
-        const i = boardList.findIndex((b) => b.name === p.name)
+        const i = config.boards.findIndex((b) => b.name === p.name)
         if (i < 0) return false
         await leaveMainView('board')
         await boards.open(i)
@@ -688,38 +649,17 @@
    * `foreign`: own writes never come that way).
    */
   function applyConfig(c: ConfigView, foreign = false) {
-    if (!isNewerConfig(configVersion, c.version)) return // a late event: newer settings are shown already
-    if (foreign) foreignVersion = Math.max(foreignVersion, c.version)
-    const shift = configShift(lastConfig, c)
-    const archiveNow = archiveShift(lastConfig, c)
-    lastConfig = c
-    states = c.states
-    host.setKeywords(states.map((s) => s.keyword))
-    // The open board dialog follows its board by name (a hand edit can rename or reorder boards).
-    if (settingsFor !== null && !boardSaving) {
-      const d = boardDialogAfterConfig({ index: settingsFor, name: settingsForName }, c.boards)
-      settingsFor = d.index
-      if (d.notice) notify({ kind: 'refused', message: d.notice })
-    }
-    boardList = c.boards
-    archiveDays = c.archiveAfterDays
-    autoArchiveOn = c.autoArchive
-    dailies.setReset(c.dailiesReset)
-    dailiesResetInvalid = c.replaced.includes(RESET_KEY)
-    numbersInvalid = {
-      delay: c.replaced.includes(REPLACED.commitDelay),
-      interval: c.replaced.includes(REPLACED.pullInterval),
-      archive: c.replaced.includes(REPLACED.archiveDays),
-    }
-    gitSettings = c.git
-    configVersion = c.version
+    const shift = config.apply(c, foreign)
+    if (shift === null) return // a late event: newer settings are shown already
+    host.setKeywords(config.states.map((s) => s.keyword))
+    dailies.setReset(config.dailiesReset)
     // Task states and board columns are computed when a view is built: what is shown loads again.
     if (shift.tasks) refreshTasks()
     if (shift.board && mainArea.is('board')) boards.refresh()
     // New states are counted at once, so their rows never show a count from before them.
     if (shift.tasks && settings.shown) void exec({ type: 'states.usage' })
     // Right after the setting changed (here or by hand), the due tasks are archived.
-    if (archiveNow) void autoArchive.run()
+    if (shift.archiveNow) void autoArchive.run()
   }
 
   /** The shown page, its references, the feed's loaded days and All pages load again, so new task states show. */
@@ -743,8 +683,7 @@
         tree = null
         boards.newFolder()
         status.clear('index') // the old folder's build; its final emit clears it too
-        lastConfig = null // the new folder's first config is not a change of what is shown
-        foreignVersion = 0
+        config.newFolder() // its first config is not a change of what is shown
         // Block ids start again: nothing keyed by the old folder's blocks or pages may carry over.
         host.newFolder()
         nav.clear() // the old folder's pages and boards
@@ -1143,37 +1082,10 @@
     }, 1500)
   }
 
-  /** Sends a command that writes config.toml; a refusal is a notice. Says whether it was accepted (and applied), else the refusal's code. */
-  async function sendConfig(cmd: Command): Promise<{ ok: boolean; code: string | null }> {
-    let ok = true
-    let refused: string | null = null
-    await host.exec(cmd, (code) => {
-      ok = false
-      refused = code
-      // The file changed on disk (a hand edit, a pull): the session read it again; show its settings. No
-      // `config:changed` follows for it, so every version from now on counts as foreign, unless the write
-      // carried an older version on purpose (a board dialog after a foreign change).
-      if (code === 'configChanged') {
-        foreignVersion = foreignAfterRefusal(foreignVersion, configVersion, 'version' in cmd ? cmd.version : undefined)
-        void exec({ type: 'config.get' })
-      }
-      return false
-    })
-    return { ok, code: refused }
-  }
-
-  /** Settings writes: typed text first, then the write with the version its values were taken from (`writeConfig`). */
-  const writes: WriteEnv = {
-    version: () => configVersion,
-    leave: () => host.leave(),
-    flush: () => client.flush(),
-    send: async (cmd) => (await sendConfig(cmd)).ok,
-  }
-
   /** The board's own settings dialog, from its title bar. */
   async function openBoardSettings() {
     await closeCard()
-    if (boards.index !== null) editBoard(boards.index)
+    if (boards.index !== null) config.editBoard(boards.index)
   }
 
   /** Hides column `keyword` of the shown board; an open card is closed first, with its text. */
@@ -1183,60 +1095,19 @@
     if (view) hiddenCols.hide(view.name, keyword, view.columns.map((c) => c.keyword))
   }
 
-  /** Opens the settings dialog of board `i`; it edits the values of this config version. */
-  function editBoard(i: number) {
-    settingsFor = i
-    settingsForName = boardList[i]?.name ?? ''
-    settingsForVersion = configVersion
-  }
-
-  /**
-   * A `boards.set` from the board dialog, queued after the other Settings writes (typed text is sent first). `edit`
-   * makes the list from the boards shown when it is sent and the dialog's board, found again by name (`at`, -1 when
-   * gone: nothing is sent). It carries the current version unless a hand edit or pull came since the dialog opened;
-   * then the version it opened on, so the core refuses it. An own state rename sent while the dialog was open is
-   * not foreign: the dialog's old columns are then saved over it and kept as unknown states (a known limit, accepted).
-   */
-  function setDialogBoards(edit: (list: BoardSummary[], at: number) => BoardSummary[]) {
-    return settingWrites.run(async () => {
-      let r: { ok: boolean; code: string | null } = { ok: false, code: null }
-      const at = settingsIndexAfterConfig({ index: 0, name: settingsForName }, boardList) ?? -1
-      if (at < 0) return { ...r, at }
-      boardSaving = true
-      try {
-        await writeConfig(
-          { ...writes, send: async (cmd) => (r = await sendConfig(cmd)).ok },
-          (version) => ({ type: 'boards.set', boards: edit(boardList, at), version }),
-          dialogVersion(settingsForVersion, configVersion, foreignVersion),
-        )
-      } finally {
-        boardSaving = false
-      }
-      return { ...r, at }
-    })
-  }
-
-  /**
-   * The saved board is loaded again, so its new name and columns show. After a hand edit since the dialog
-   * opened the core refuses it and the dialog closes. Any other refusal keeps the dialog and its edits.
-   */
+  /** The saved board is loaded again, so its new name and columns show; a rename carries the history and hidden columns along. */
   async function saveBoard(b: BoardSummary) {
-    const old = settingsForName
-    const r = await setDialogBoards((list, at) => withBoard(list, at, b))
-    if (r.at < 0) return
-    if (r.ok && old !== b.name) {
-      nav.boardRenamed(old, b.name) // the history follows the rename
-      hiddenCols.renamed(old, b.name) // its hidden columns go with it
+    const r = await config.saveBoard(b)
+    if (r.renamedFrom !== null) {
+      nav.boardRenamed(r.renamedFrom, b.name) // the history follows the rename
+      hiddenCols.renamed(r.renamedFrom, b.name) // its hidden columns go with it
     }
-    settingsFor = settingsAfterSet(settingsFor, r.at, r.ok, r.code)
     if (r.ok && boards.index === r.at) void boards.open(r.at)
   }
 
   /** Deleting the shown board goes to the journal; a board shown after it moves up one. */
   async function deleteBoard() {
-    const r = await setDialogBoards((list, at) => withoutBoard(list, at))
-    if (r.at < 0) return
-    settingsFor = settingsAfterSet(settingsFor, r.at, r.ok, r.code)
+    const r = await config.deleteBoard()
     if (!r.ok) return
     const next = shownAfterDelete(boards.index, r.at)
     if (next === 'feed') await openJournal()
@@ -1247,14 +1118,8 @@
   async function newBoard(name: string) {
     const stay = naming === 'settings'
     naming = null
-    let index = 0
-    const ok = await settingWrites.run(() =>
-      writeConfig(writes, (version) => {
-        index = boardList.length // taken before the answer is applied
-        return { type: 'boards.set', boards: [...boardList, { name, columns: defaultColumns(states) }], version }
-      }),
-    )
-    if (ok && !stay) await openBoard(index)
+    const index = await config.newBoard(name)
+    if (index !== null && !stay) await openBoard(index)
   }
 
   // ---- Settings (§7.12) ---------------------------------------------------------
@@ -1264,7 +1129,7 @@
     return (
       !folder ||
       naming !== null ||
-      settingsFor !== null ||
+      config.dialog !== null ||
       flows.dialog !== null ||
       closing !== null ||
       settingUpGit ||
@@ -1313,63 +1178,6 @@
           resolve(yes)
         },
       }
-    })
-  }
-
-  /**
-   * Settings writes run one at a time (`WriteQueue`): each is made once the previous answer is applied and carries
-   * its version, so two quick changes are never refused as "changed on disk".
-   */
-  const settingWrites = new WriteQueue()
-
-  /** Settles once every Settings write sent before is answered and applied. */
-  const settingsReady = () => settingWrites.run(async () => {})
-
-  /** As `settingsReady`, then the states' blocks are counted again (a rename or remove decides on fresh counts). */
-  const countUsage = () => settingWrites.run(() => exec({ type: 'states.usage' }))
-
-  /** `list` was made from the states of `version` (taken before any question); the usage is counted again after any answer. */
-  function setStates(list: StateView[], renames: StateRename[], version: number) {
-    return settingWrites.run(async () => {
-      await writeConfig(writes, (v) => statesSet(list, renames, v), version)
-      await exec({ type: 'states.usage' })
-    })
-  }
-
-  /** Only what the user changed changes, over the Git settings shown when it is sent. */
-  function setGit(patch: Partial<GitSettings>) {
-    return settingWrites.run(async () => {
-      const shown = gitSettings
-      if (shown !== null) await writeConfig(writes, (version) => gitCommand(gitSettings ?? shown, patch, version))
-    })
-  }
-
-  /** `[dailies] reset`, as `HH:MM`. */
-  function setDailiesReset(reset: string) {
-    return settingWrites.run(async () => {
-      await writeConfig(writes, (version) => ({ type: 'config.setDailies', reset, version }))
-    })
-  }
-
-  /** `[board]`: only what the user changed changes, over the values shown when it is sent. */
-  function setBoardSettings(patch: { archiveAfterDays?: number; autoArchive?: boolean }) {
-    return settingWrites.run(async () => {
-      await writeConfig(writes, (version) => ({
-        type: 'config.setBoard',
-        archiveAfterDays: patch.archiveAfterDays ?? archiveDays,
-        autoArchive: patch.autoArchive ?? autoArchiveOn,
-        version,
-      }))
-    })
-  }
-
-  /** ↑ / ↓ on a board: it moves the board with that name in the list shown when it is sent (↑ ↑ moves it twice). */
-  function moveBoardTo(i: number, dir: -1 | 1) {
-    const name = boardList[i]?.name
-    if (name === undefined) return Promise.resolve()
-    return settingWrites.run(async () => {
-      const list = moveBoardNamed(boardList, name, dir)
-      if (list !== null) await writeConfig(writes, (version) => ({ type: 'boards.set', boards: list, version }))
     })
   }
 
@@ -1923,21 +1731,21 @@
       {@const q = question}
       <ConfirmDialog message={q.message} ok={q.ok} onok={() => q.answer(true)} oncancel={() => q.answer(false)} />
     {/if}
-    {#if settingsFor !== null && boardList[settingsFor]}
-      {@const i = settingsFor}
+    {#if config.dialog !== null && config.boards[config.dialog.index]}
+      {@const i = config.dialog.index}
       <BoardSettings
-        board={boardList[i]}
-        {states}
+        board={config.boards[i]}
+        states={config.states}
         onsave={(b) => void saveBoard(b)}
         ondelete={() => void deleteBoard()}
-        oncancel={() => (settingsFor = null)}
+        oncancel={() => config.closeBoardDialog()}
       />
     {/if}
     {#if search.shown}
-      <SearchDialog {search} {states} onchoose={chooseRow} />
+      <SearchDialog {search} states={config.states} onchoose={chooseRow} />
     {/if}
     {#if helpShown}
-      <ShortcutsDialog {mac} states={states.map((s) => s.keyword)} onclose={() => (helpShown = false)} />
+      <ShortcutsDialog {mac} states={config.states.map((s) => s.keyword)} onclose={() => (helpShown = false)} />
     {/if}
     {#if settings.changelog}
       <ChangelogDialog version={appVersion} onclose={() => settings.hideChangelog()} />
@@ -1978,7 +1786,7 @@
             width={sidebarWidth}
             onopen={(name) => void openPage(name)}
             onjournal={() => void openJournal()}
-            boards={boardList}
+            boards={config.boards}
             boardShown={boards.index}
             archiveShown={archiveView.shown}
             onarchive={() => void openArchive()}
@@ -2021,35 +1829,35 @@
                 {folder}
                 recent={recentRows(recent, folder)}
                 section={settings.section}
-                {states}
+                states={config.states}
                 usage={settings.usage}
                 skipped={settings.skipped}
-                boards={boardList}
-                {archiveDays}
-                archiveInvalid={numbersInvalid.archive}
-                autoArchive={autoArchiveOn}
-                git={gitSettings}
-                delayInvalid={numbersInvalid.delay}
-                intervalInvalid={numbersInvalid.interval}
+                boards={config.boards}
+                archiveDays={config.archiveDays}
+                archiveInvalid={config.numbersInvalid.archive}
+                autoArchive={config.autoArchive}
+                git={config.git}
+                delayInvalid={config.numbersInvalid.delay}
+                intervalInvalid={config.numbersInvalid.interval}
                 {theme}
                 {mac}
-                version={configVersion}
+                version={config.version}
                 {appVersion}
                 {hasGit}
                 logFolder={logDir}
-                onstates={setStates}
+                onstates={(list, renames, version) => config.setStates(list, renames, version)}
                 onconfirm={confirmAsk}
-                onready={settingsReady}
-                onusage={countUsage}
-                onboard={editBoard}
-                onmoveboard={(i, dir) => void moveBoardTo(i, dir)}
+                onready={() => config.ready()}
+                onusage={() => config.countUsage()}
+                onboard={(i) => config.editBoard(i)}
+                onmoveboard={(i, dir) => void config.moveBoard(i, dir)}
                 onnewboard={() => (naming = 'settings')}
-                onarchivedays={(archiveAfterDays) => setBoardSettings({ archiveAfterDays })}
-                onautoarchive={(on) => setBoardSettings({ autoArchive: on })}
-                ongit={setGit}
+                onarchivedays={(archiveAfterDays) => config.setBoardSettings({ archiveAfterDays })}
+                onautoarchive={(on) => config.setBoardSettings({ autoArchive: on })}
+                ongit={(patch) => config.setGit(patch)}
                 dailiesReset={dailies.reset}
-                {dailiesResetInvalid}
-                ondailiesreset={setDailiesReset}
+                dailiesResetInvalid={config.dailiesResetInvalid}
+                ondailiesreset={(reset) => config.setDailiesReset(reset)}
                 onhelp={toggleHelp}
                 ontheme={chooseTheme}
                 {journalsAt}
@@ -2084,7 +1892,7 @@
                   onjump={(c) => void jumpTo(c.page, c.id)}
                   onadd={(column) => void addCard(column)}
                   onclosecard={() => void closeCard()}
-                  {archiveDays}
+                  archiveDays={config.archiveDays}
                   oncommand={(cmd) =>
                     // A drop refused because the column changed since it was shown: the notice says so, the board reloads.
                     void host.exec(cmd, (code) => {
