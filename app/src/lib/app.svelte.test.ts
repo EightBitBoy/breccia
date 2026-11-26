@@ -1,9 +1,10 @@
+import { flushSync } from 'svelte'
 import { afterEach, expect, test, vi } from 'vitest'
 import { AppController } from './app.svelte'
 import { block, configView, fakeWindow, pageView, settle, type FakeWindow } from './appEnv.testing'
 import { duePick } from './duePick.svelte'
 import { emptyOutput } from './emptyOutput.testing'
-import type { Command } from './types'
+import type { BlockView, Command, GitView } from './types'
 
 let stop: (() => void) | null = null
 
@@ -11,6 +12,7 @@ afterEach(() => {
   stop?.()
   stop = null
   duePick.close()
+  vi.useRealTimers()
 })
 
 /** A controller over a fake window, built inside an effect root as App.svelte builds it during setup. */
@@ -160,4 +162,166 @@ test('a reload closes the search, the date picker and the due calendar', async (
   expect(app.pickerOpen).toBe(false)
   expect(duePick.open).toBe(false)
   await settle()
+})
+
+/** `session.dirty` names page `title` as unsaved. */
+function dirty(w: FakeWindow, title = 'Pea') {
+  w.core.on['session.dirty'] = () => emptyOutput({ answer: { kind: 'dirty', value: [{ key: 'p', title }] } })
+}
+
+/** The window's close button, as Tauri sends it. */
+const closeEvent = () => ({ preventDefault: vi.fn() })
+
+test('Back sends the typed text before the step is shown', async () => {
+  const { app, w } = await withPage('a')
+  w.core.pages.set('b', pageView('b', [block(2, 'beta')]))
+  await app.openPage('b')
+  await settle()
+  expect(app.page?.key).toBe('b')
+  await app.host.edit(2, 4)
+  app.host.editor!.ed.insert(' typed')
+  const from = w.core.sent.length
+
+  await app.go('back')
+  await settle()
+
+  const sent = since(w, from)
+  const typed = sent.findIndex((c) => c.type === 'block.setText' && c.text === 'beta typed')
+  const shown = sent.findIndex((c) => c.type === 'page.show' && c.key === 'a')
+  expect(typed).toBeGreaterThanOrEqual(0)
+  expect(shown).toBeGreaterThan(typed)
+  expect(app.page?.key).toBe('a')
+})
+
+test('Back skips a page removed meanwhile', async () => {
+  const { app, w } = await withPage('a')
+  w.core.pages.set('b', pageView('b', [block(2, 'beta')]))
+  w.core.pages.set('c', pageView('c', [block(3, 'gamma')]))
+  await app.openPage('b')
+  await settle()
+  await app.openPage('c')
+  await settle()
+  w.core.pages.delete('b') // removed without the window hearing of it yet
+
+  await app.go('back')
+  await settle()
+
+  expect(app.page?.key).toBe('a')
+  expect(app.notices.items).toEqual([])
+  expect(app.nav.canBackFrom(app.here)).toBe(false)
+})
+
+test('a folder switch is refused while a page is unsaved', async () => {
+  const { app, w } = await withPage('p', 'Pea')
+  dirty(w)
+  const from = w.core.sent.length
+
+  await app.switchFolder('folder.open', '/other')
+
+  expect(since(w, from).map((c) => c.type)).not.toContain('folder.open')
+  expect(app.folder).toBe('/notes')
+  expect(app.notices.items).toHaveLength(1)
+  expect(app.notices.items[0].text).toContain('Pea')
+})
+
+test('the close question shows over an open dialog', async () => {
+  const { app, w } = await withPage('p', 'Pea')
+  app.overlays.open({ kind: 'newBoard', from: 'sidebar' })
+  dirty(w)
+  const event = closeEvent()
+
+  await app.closeRequested(event)
+
+  expect(event.preventDefault).toHaveBeenCalled()
+  expect(app.closing).toContain('Pea')
+  expect(app.overlays.current).toEqual({ kind: 'newBoard', from: 'sidebar' }) // still open under the question
+  app.cancelClose()
+  expect(app.closing).toBeNull()
+  expect(app.overlays.current).toEqual({ kind: 'newBoard', from: 'sidebar' }) // given back unchanged
+  expect(w.windowCalls).toEqual([])
+})
+
+test('closing with nothing unsaved closes at once', async () => {
+  const { app, w } = await withPage('p')
+  const event = closeEvent()
+
+  await app.closeRequested(event)
+  expect(event.preventDefault).not.toHaveBeenCalled() // the window closes
+  expect(app.closing).toBeNull()
+
+  await app.exitFromTray()
+  expect(app.closing).toBeNull()
+  expect(w.windowCalls).toEqual(['destroy'])
+})
+
+test('the Git set-up question does not open over another dialog', async () => {
+  const { app } = await withPage('p')
+  const notRepo: GitView = {
+    state: 'notRepo',
+    top: null,
+    remote: null,
+    ahead: 0,
+    lastCommit: null,
+    lastSync: null,
+    head: null,
+    problem: null,
+  }
+  app.git.set(notRepo)
+  app.overlays.open({ kind: 'newBoard', from: 'sidebar' })
+
+  await app.clickGit()
+  expect(app.overlays.current?.kind).toBe('newBoard')
+
+  app.overlays.close('newBoard')
+  await app.clickGit()
+  expect(app.overlays.current?.kind).toBe('confirm')
+})
+
+test('jumpTo unfolds the ancestors and flashes the block for 1.5 s', async () => {
+  const { app, w } = await withPage('a')
+  const nested: BlockView[] = [
+    { ...block(2, 'parent'), hasChildren: true },
+    { ...block(3, 'middle'), depth: 1, hasChildren: true },
+    { ...block(4, 'child'), depth: 2 },
+  ]
+  w.core.pages.set('b', pageView('b', nested))
+  app.folded.add(2)
+  app.folded.add(3)
+  vi.useFakeTimers()
+
+  const jump = app.jumpTo('b', 4)
+  await vi.advanceTimersByTimeAsync(0)
+  await jump
+
+  expect(app.page?.key).toBe('b')
+  expect([...app.folded]).toEqual([])
+  expect(w.scrolledTo).toEqual([4])
+  expect(app.flash).toBe(4)
+  vi.advanceTimersByTime(1499)
+  expect(app.flash).toBe(4)
+  vi.advanceTimersByTime(1)
+  expect(app.flash).toBeNull()
+})
+
+test('the date picker closes when the close question opens and when no folder is open', async () => {
+  const { app, w } = await withPage('p')
+  app.sidebarHidden = true
+  app.togglePicker()
+  expect(app.pickerOpen).toBe(true)
+  expect(app.sidebarHidden).toBe(false) // a hidden sidebar is shown first
+
+  app.closing = 'Close anyway?'
+  flushSync()
+  expect(app.pickerOpen).toBe(false)
+
+  app.cancelClose()
+  app.togglePicker()
+  expect(app.pickerOpen).toBe(true)
+  w.core.folder = { path: null, generation: 2 }
+  await app.exec({ type: 'folder.status' })
+  flushSync()
+  expect(app.folder).toBeNull()
+  expect(app.pickerOpen).toBe(false)
+  app.togglePicker()
+  expect(app.pickerOpen).toBe(false) // nothing opens without a folder
 })

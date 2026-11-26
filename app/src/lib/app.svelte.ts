@@ -2,18 +2,21 @@
 // outside the window does (`shellHandlers`). App.svelte builds its `AppEnv` from Tauri and the DOM and renders it.
 import { untrack } from 'svelte'
 import { SvelteSet } from 'svelte/reactivity'
-import { errorCode, errorMessage, type hiddenColumns, type setHiddenColumns, type setZoom } from '../api'
+import type { Window } from '@tauri-apps/api/window'
+import type * as Api from '../api'
+import { errorCode, errorMessage } from '../api'
 import type { mountEditor } from '../editor/blockEditor'
 import { EditorHost } from '../editor/host.svelte'
 import type { MenuView } from '../editor/menu'
 import { MultiSelect } from '../editor/multiSelect.svelte'
 import { AllPages } from './allPages.svelte'
 import { answerOf } from './answer'
-import { createClient, type Client } from './api'
+import { createClient, flushBeforeClose, type Client } from './api'
 import { Archive } from './archive.svelte'
 import { AutoArchive } from './autoArchive'
-import { addedText, cardBlocks, cardOf, cardRoot } from './board'
+import { addedText, cardBlocks, cardFromView, cardOf, cardRoot, shownAfterDelete } from './board'
 import { Boards } from './boards.svelte'
+import { closeCheck } from './close'
 import { ConfigStore } from './config.svelte'
 import { Dailies } from './dailies.svelte'
 import { NOT_A_TASK } from './due'
@@ -22,36 +25,72 @@ import { duePick } from './duePick.svelte'
 import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './editable'
 import { InFlight, Refreshes } from './external'
 import { isNewFolder } from './folder'
+import { missingFolder, pickFolder, switchCheck } from './folderSwitch'
 import { JustRenamed, followRename, removalFor } from './followRename'
+import { gitClick } from './git'
 import { GitStatus } from './git.svelte'
 import { historyItem, historyStale } from './gitLog'
 import { GitLog } from './gitLog.svelte'
 import { HiddenColumns } from './hiddenColumns.svelte'
 import { Journal } from './journal.svelte'
+import { historyKey, isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './keys'
+import type { LinkDisplay } from './linkDisplay'
+import { linkDisplay } from './linkDisplay.svelte'
+import { linkDrop, type LinkSpot } from './linkDrop'
+import { headingBlock, linkClick, linkHeading } from './links'
 import { MainArea } from './mainArea.svelte'
 import { placeOfView, type NavFocus, type NavPlace } from './nav'
-import { Nav } from './nav.svelte'
+import { Nav, type NavEntry } from './nav.svelte'
 import { Network } from './network.svelte'
 import { NoticeCenter } from './noticeCenter.svelte'
 import { Overlays } from './overlay.svelte'
 import { PageFlows } from './pageFlows.svelte'
+import { folderOf } from './pageOps'
 import { isMac } from './platform'
 import { Recovery } from './recovery'
 import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './refs'
-import { route, selectionPageOf, type Route } from './route'
+import { extendsTo, route, selectionPageOf, type Route } from './route'
 import { saveItem } from './saveStatus'
 import type { SearchRow } from './search'
 import { Search } from './search.svelte'
-import { SettingsScreen } from './settings.svelte'
+import { SettingsScreen, type SettingsSection } from './settings.svelte'
 import type { ShellHandlers } from './shellEvents'
-import { helpItem, indexItem } from './status'
+import { helpItem, indexItem, statusAction, themeItem, type StatusAction } from './status'
+import { clampWidth, loadLayout } from './sidebarLayout'
+import { startupSequence } from './startup'
 import { StatusItems } from './status.svelte'
-import { visible } from './tree'
+import { applyTheme, storedTheme, type ThemeChoice } from './theme'
+import { wheelTheme } from './themeWheel'
+import { ancestorsOf, visible } from './tree'
+import type { JournalsAt, Row } from './treeRows'
 import { isNewer } from './treeVersion'
-import type { BlockId, Command, ConfigView, Notice, Output, PageView, RefsView, RenameView, Request, TreeView } from './types'
+import type { BlockId, BoardSummary, CardView, Command, ConfigView, DateView, Notice, Output } from './types'
+import type { PageView, RecentFolder, RefsView, RenameView, Request, TreeView } from './types'
 import { ViewUndo } from './viewUndo'
-import { zoomItem } from './zoom'
+import { WheelSteps, zoomItem, zoomKey } from './zoom'
 import { Zoom } from './zoom.svelte'
+
+/** The machine-settings and shell calls of `app/src/api.ts` the controller makes. */
+type ShellCalls = Pick<
+  typeof Api,
+  | 'setZoom'
+  | 'hiddenColumns'
+  | 'setHiddenColumns'
+  | 'uiState'
+  | 'setUiState'
+  | 'setTheme'
+  | 'setJournalsAt'
+  | 'setLinkDisplay'
+  | 'recentFolders'
+  | 'forgetFolder'
+  | 'getAppVersion'
+  | 'logFolder'
+  | 'openLogFolder'
+  | 'gitInstalled'
+  | 'trayEnabled'
+  | 'startupOpen'
+  | 'startupNotices'
+>
 
 /** What the controller takes from the window: Tauri, the DOM and the timers, injected so tests run without them. */
 export interface AppEnv {
@@ -64,6 +103,7 @@ export interface AppEnv {
     scroller(): HTMLElement | undefined
     /** The feed's day at the top of the main area (`topDayOf` over the rendered days). */
     topDay(): string | null
+    /** Block `id` scrolled into the middle of the view, when it is rendered. */
     scrollToBlock(id: BlockId): void
     /** Svelte's `tick`: the DOM has caught up with the state. */
     tick(): Promise<void>
@@ -71,6 +111,10 @@ export interface AppEnv {
     setBusy(busy: boolean): void
     /** The editor's slot in block `id` (`[data-block-id="…"] .editor-slot`). */
     slot(id: BlockId): HTMLElement | null
+    /** `<html>`: its `data-theme` is the theme shown. */
+    root(): { dataset: DOMStringMap }
+    /** Key `e` belongs to a text field, a dialog or a menu (it has the key, or one is shown): not to the view. */
+    keyTaken(e: KeyboardEvent): boolean
   }
   /** Bound: WebView2 refuses the window's timer functions called as methods of another object. */
   timers: {
@@ -81,20 +125,14 @@ export interface AppEnv {
   }
   /** The time in ms (`Date.now`). */
   now(): number
-  /** The shell's calls the controller's classes make (`app/src/api.ts`). */
-  shell: {
-    /** The webview's own zoom factor (1 is 100 %). */
-    webviewZoom(factor: number): Promise<void>
-    setZoom: typeof setZoom
-    hiddenColumns: typeof hiddenColumns
-    setHiddenColumns: typeof setHiddenColumns
-  }
-  /** Flows of the window that are not in the controller yet: the search box's chosen row, and showing the sidebar. */
-  ui: {
-    chooseRow(row: SearchRow): void
-    /** The date picker sits in the sidebar: a hidden sidebar is shown first. */
-    showSidebar(): void
-  }
+  /** The shell's calls (`app/src/api.ts`), and the webview's own zoom factor (1 is 100 %). */
+  shell: ShellCalls & { webviewZoom(factor: number): Promise<void> }
+  /** The window itself (`getCurrentWindow()`). */
+  window: Pick<Window, 'show' | 'unminimize' | 'setFocus' | 'hide' | 'destroy' | 'setTheme'>
+  /** The system's folder dialog; null when cancelled. */
+  pickFolder(): Promise<string | null>
+  /** Opens a web address in the browser. */
+  openUrl(url: string): Promise<void>
 }
 
 /** The views `leaveMainView` leaves the main area for. */
@@ -130,6 +168,37 @@ export class AppController {
   pressFocus: NavFocus | null = null
   /** The generation of the folder the last `folder` answer named; null before the first. */
   lastGeneration: number | null = null
+  /** The sidebar's width in px, and whether it is hidden; kept on this computer with the board's column width. */
+  sidebarWidth = $state(clampWidth(null))
+  sidebarHidden = $state(false)
+  /** The board's column width in px; null lets the columns fill the window. */
+  boardColumn = $state<number | null>(null)
+  /** The startup sequence is over (`start`). */
+  ready = $state(false)
+  /** The folder the shell opens at startup, while the window waits for it ("Opening ‹folder›…"); null otherwise. */
+  opening = $state<string | null>(null)
+  /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
+  appVersion = $state<string | null>(null)
+  private appVersionAsked = false
+  /** The log file's folder (the tooltip of Settings' "Open log folder"), fetched when Settings first opens. */
+  logDir = $state<string | null>(null)
+  private logDirAsked = false
+  /** Whether the `git` command exists on this computer, checked at startup; null until known. */
+  hasGit = $state<boolean | null>(null)
+  /** Whether the app lives in the tray (Windows): the close button hides the window, "Exit" in the tray quits. */
+  private inTray = false
+  /** The theme chosen on this computer. */
+  theme = $state<ThemeChoice>('system')
+  /** Where the sidebar lists Journals, chosen on this computer. */
+  journalsAt = $state<JournalsAt>('bottom')
+  /** The recent folders, newest first; loaded when Settings or the Welcome screen shows and after a switch. */
+  recent = $state.raw<RecentFolder[]>([])
+  /** A Back or Forward is under way (from the first await on), so a key repeat waits for nothing. */
+  private going = false
+  /** A folder switch is on its way: a second click waits for nothing and does nothing. */
+  private switching = false
+  /** The wheel over the status bar's theme button: one notch, one theme (as the Ctrl+wheel zoom counts notches). */
+  private readonly themeSteps = new WheelSteps()
 
   /**
    * The dialog open over the window (the search box too); nothing opens without a folder or under the close question,
@@ -203,6 +272,8 @@ export class AppController {
   readonly days = $derived.by(() => this.journal.loaded())
   /** The place the main area shows; null between two views and for the untitled new page. */
   readonly here = $derived.by(() => this.place())
+  /** The open folder's name, for the sidebar. */
+  readonly folderName = $derived(this.folder ? (this.folder.split(/[\\/]/).filter(Boolean).pop() ?? this.folder) : '')
 
   constructor(private env: AppEnv) {
     const run = (cmd: Command) => this.client.run(cmd)
@@ -247,7 +318,7 @@ export class AppController {
         showMenu: (which, m) => (which === 'link' ? (this.linkMenu = m) : (this.slashMenu = m)),
         pickDate: (onpick) => {
           if (!this.overlays.may('pickDate')) return
-          env.ui.showSidebar()
+          if (this.sidebarHidden) this.toggleSidebar() // the picker sits in the sidebar
           this.pickerInsert = onpick
           this.pickerOpen = true
         },
@@ -369,7 +440,7 @@ export class AppController {
       overlays: this.overlays,
       run,
       notify,
-      choose: (row) => env.ui.chooseRow(row),
+      choose: (row) => this.chooseRow(row),
       back: (id) => this.host.editAtEnd(id), // nothing when the block is gone
     })
 
@@ -415,6 +486,12 @@ export class AppController {
     $effect(() => {
       if (!this.folder || this.closing !== null) untrack(() => (this.pickerOpen = false))
     })
+    // The list is read again whenever the Notes folder section or the Welcome screen comes into view.
+    $effect(() => {
+      if (this.ready && (this.settings.shown || !this.folder)) untrack(() => void this.loadRecent())
+    })
+    /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
+    this.status.bind('theme', () => (this.folder ? themeItem(this.theme) : null))
   }
 
   private place(): NavPlace | null {
@@ -547,6 +624,707 @@ export class AppController {
     await this.exec({ type: 'folder.tree' })
     // Once the folder is loaded, the tasks due are archived (the first run may archive many).
     void this.autoArchive.run()
+  }
+
+  // ---- keys -------------------------------------------------------------------
+
+  /** The bubble phase's keys: the multi-select's, then `Ctrl Z` for the view (`viewHistoryKey`). */
+  key(e: KeyboardEvent): void {
+    this.sel.onKey(e)
+    this.viewHistoryKey(e)
+  }
+
+  /**
+   * `Ctrl Z` / `Ctrl Shift Z` (`Ctrl Y`) with no block edited or selected: on a page its last change, on a board or in
+   * the journal the last change made there (spec §7.2). Never in a text field, a dialog, a menu or the search box.
+   */
+  private viewHistoryKey(e: KeyboardEvent): void {
+    if (e.defaultPrevented || e.isComposing || this.host.editingId !== null || this.sel.ids.length) return
+    const a = historyKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, isMac)
+    if (a === null || !this.overlays.may('historyKey') || this.slashMenu || this.linkMenu) return
+    if (this.env.dom.keyTaken(e)) return
+    const view = this.undoView()
+    if (view === null) return
+    e.preventDefault()
+    const type = a === 'undo' ? 'history.undo' : 'history.redo'
+    const cmds: Command[] = view.startsWith('page:') ? [{ type, page: this.page!.key }] : this.viewUndo.step(view, a)
+    for (const cmd of cmds) void this.exec(cmd)
+  }
+
+  /** Keys before anyone else (the editor included) sees them: the app-wide shortcuts. */
+  keyCapture(e: KeyboardEvent): void {
+    this.pressFocus = null
+    const k = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }
+    const take = () => {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    if (isHelpKey(k)) {
+      // Before the editor and before WebView2's own F1 (its help page).
+      take()
+      if (!e.repeat) this.toggleHelp()
+      return
+    }
+    // While the startup folder opens, only the help and the zoom keys work: there is nothing to open yet.
+    if (this.opening !== null && !zoomKey(k, isMac)) return
+    if (isDatePickerKey(k, isMac)) {
+      // Before the editor, so it works while a block is edited.
+      take()
+      if (!e.repeat) this.togglePicker()
+      return
+    }
+    const n = navKey(k, isMac)
+    if (n) {
+      // Before the editor (its Alt ← moves by syntax unit), so it works while a block is edited.
+      take()
+      void this.go(n)
+      return
+    }
+    const z = zoomKey(k, isMac)
+    if (z) {
+      take()
+      if (z === 'reset') void this.zoom.reset()
+      else void this.zoom.step(z === 'in' ? 1 : -1)
+      return
+    }
+    const searchKey = isSearchKey(k, isMac)
+    const newPageKey = isNewPageKey(k, isMac)
+    if (!searchKey && !newPageKey && !isSettingsKey(k, isMac)) return
+    take()
+    if (searchKey) this.openSearch()
+    else if (newPageKey) void this.startNewPage()
+    else void this.openSettings()
+  }
+
+  /** The F1 list of keyboard shortcuts: F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
+  toggleHelp(): void {
+    if (this.overlays.is('help')) this.overlays.close('help')
+    else if (this.overlays.may('toggleHelp')) this.overlays.open({ kind: 'help' })
+  }
+
+  /** A click on a status bar item (`statusAction` says which, and when a folder is still opening). */
+  clickStatus(id: string): void {
+    const action = statusAction(id, this.opening !== null)
+    if (action) this.statusClicks[action]()
+  }
+
+  /** What a click on each status bar item with an action does. */
+  private readonly statusClicks: Record<StatusAction, () => void> = {
+    git: () => void this.clickGit(),
+    gitLog: () => void this.toggleGitLog(),
+    dailies: () => void this.openDailies(),
+    zoom: () => void this.zoom.reset(),
+    help: () => this.toggleHelp(),
+  }
+
+  // ---- back and forward -------------------------------------------------------
+
+  /**
+   * Back or Forward: the edited block's text is sent first, then the step's view is shown again. A step
+   * whose page or board is gone is dropped and the next one is tried. Nothing over a dialog, the search box, F1
+   * or the date picker, nor while a restore is still loading.
+   */
+  async go(dir: 'back' | 'forward'): Promise<void> {
+    if (this.going || this.nav.busy || !this.overlays.may('go') || this.pickerOpen) return
+    this.going = true
+    try {
+      const focus = this.focusHere() // before the editor and the selection close
+      await this.closeCard() // with the card's own text, as any navigation closes it
+      this.host.leave()
+      this.sel.clear()
+      // The typed text's answer lands first: while a restore has the main area empty, it would show its page again.
+      await this.client.flush()
+      this.rememberHere(focus)
+      const step = () => (dir === 'back' ? this.nav.back(this.here) : this.nav.forward(this.here))
+      let e = step()
+      while (e && !(await this.restore(e))) {
+        this.nav.drop()
+        e = step()
+      }
+      if (e?.focus) await this.refocus(e.focus)
+    } catch (e) {
+      this.refuse(e)
+    } finally {
+      this.nav.settle()
+      this.going = false
+    }
+  }
+
+  /** The block edited or selected when the step was left, again; nothing when it is no longer shown. */
+  private async refocus(f: NavFocus): Promise<void> {
+    await this.env.dom.tick()
+    if (f.kind === 'select') return this.sel.restore(f.anchor, f.head)
+    const b = this.host.blockOf(f.id)
+    if (b) await this.host.edit(f.id, Math.min(f.at, b.text.length))
+  }
+
+  /** Shows step `e` again, at its scroll position; false when its page or board is gone. */
+  async restore(e: NavEntry): Promise<boolean> {
+    const p = e.place
+    switch (p.kind) {
+      case 'page': {
+        await this.closeCard()
+        let gone = false
+        await this.host.exec({ type: 'page.show', key: p.key }, (code) => code === 'unknownPage' && (gone = true))
+        if (gone) return false
+        break
+      }
+      case 'feed': {
+        await this.leaveMainView('feed')
+        const day = e.top ?? p.day
+        await (day === null ? this.journal.open() : this.journal.openAt(day, p.day))
+        return true
+      }
+      case 'board': {
+        const i = this.config.boards.findIndex((b) => b.name === p.name)
+        if (i < 0) return false
+        await this.leaveMainView('board')
+        await this.boards.open(i)
+        break
+      }
+      case 'allPages':
+        await this.leaveMainView('allPages')
+        await this.allPages.open()
+        break
+      case 'archive':
+        await this.leaveMainView('archive')
+        await this.archiveView.open()
+        break
+      case 'dailies':
+        await this.leaveMainView('dailies')
+        await this.dailies.open()
+        break
+      case 'gitLog':
+        await this.leaveMainView('gitLog')
+        await this.gitLog.open()
+        break
+      case 'graph':
+        await this.leaveMainView('graph')
+        await this.network.open()
+        return true
+      case 'settings':
+        await this.leaveMainView('settings')
+        this.settings.open()
+        await this.exec({ type: 'states.usage' })
+        break
+    }
+    await this.env.dom.tick()
+    const scroller = this.env.dom.scroller()
+    if (scroller) scroller.scrollTop = e.scroll
+    return true
+  }
+
+  // ---- page actions -----------------------------------------------------------
+
+  /** A click on a rendered block: Shift extends from the edited or selected block, else edit. */
+  clickBlock(id: BlockId, shift: boolean): void {
+    const from = this.host.editingId ?? this.sel.anchor
+    // Multi-select stays within the page's own outline, or within one day of the feed.
+    if (shift && from !== null && extendsTo(this.journal.feed, this.page, from, id)) this.sel.select(from, id)
+    else this.host.editAtEnd(id)
+  }
+
+  /** A page dragged from the sidebar was dropped on a block or an empty page: its link goes in (spec §7.2). */
+  dropLink(link: string, spot: LinkSpot, x: number, y: number): void {
+    const d = linkDrop(spot, link, this.host.editingId, (id) => editablePageOf(this.editable(), id))
+    if (d?.kind === 'caret') this.host.dropText(x, y, d.text)
+    else if (d?.kind === 'command') void this.exec(d.cmd)
+  }
+
+  /** Folds or unfolds block `id` (for this session only). */
+  toggleFold(id: BlockId): void {
+    if (this.folded.has(id)) this.folded.delete(id)
+    else this.folded.add(id)
+  }
+
+  /** The first block of the shown empty page. */
+  startWriting(): void {
+    if (this.page) void this.exec({ type: 'block.insert', page: this.page.key, after: null, text: '' })
+  }
+
+  /**
+   * `Ctrl N` or the "+" by Pages: an untitled page opens in the folder of the page shown. Nothing is created until
+   * it has a title (the file itself only appears once the user types, as for any new page).
+   */
+  async startNewPage(): Promise<void> {
+    if (!this.overlays.may('startNewPage')) return
+    const inFolder = this.tree && this.page ? folderOf(this.tree, this.page.key) : ''
+    await this.leaveMainView('newPage')
+    this.area.show({ kind: 'newPage', folder: inFolder })
+  }
+
+  async createUntitled(name: string): Promise<void> {
+    const v = this.area.view
+    if (v.kind !== 'newPage') return
+    try {
+      await this.host.exec({ type: 'page.create', name, folder: v.folder })
+    } catch (e) {
+      this.refuse(e)
+    }
+  }
+
+  /** Jump to a date: a day the feed lists is shown in the feed; any other day opens as its page, created only when the user types. */
+  async goToDay(d: DateView): Promise<void> {
+    if (d.inFeed) {
+      await this.leaveMainView('feed')
+      await this.journal.openAt(d.key)
+    } else {
+      await this.openPage(d.key)
+    }
+  }
+
+  /**
+   * `Ctrl Shift D` opens the date picker (a hidden sidebar is shown first), a second press closes it; not over a
+   * dialog.
+   */
+  togglePicker(): void {
+    if (this.pickerOpen) this.pickerOpen = false
+    else if (this.overlays.may('togglePicker')) {
+      if (this.sidebarHidden) this.toggleSidebar()
+      this.pickerOpen = true
+    }
+  }
+
+  /** A picked day jumps as a typed date does; the edited block's text is sent first. Nothing is written. */
+  async pickDay(key: string): Promise<void> {
+    if (this.pickerInsert) {
+      const insert = this.pickerInsert
+      this.pickerInsert = null
+      insert(key)
+      return
+    }
+    this.host.leave()
+    this.sel.clear()
+    try {
+      const d = answerOf(await this.client.run({ type: 'journal.day', key }), 'day')
+      if (d) await this.goToDay(d)
+    } catch (e) {
+      this.refuse(e)
+    }
+  }
+
+  /**
+   * `Ctrl K` or the sidebar box: only with a folder open and not over another dialog; the edited block's text is
+   * sent first, and Esc edits it again. The card stays open underneath.
+   */
+  openSearch(): void {
+    if (!this.overlays.may('openSearch')) return
+    const editing = this.host.editingId
+    this.host.leave()
+    this.sel.clear()
+    this.search.show(editing)
+  }
+
+  /** A chosen row: the dialog closes, then the day, the page (made in memory) or the block is shown. */
+  chooseRow(row: SearchRow): void {
+    this.search.close()
+    if (row.kind === 'date') void this.goToDay(row)
+    else if (row.kind === 'page' || row.kind === 'create') void this.openPage(row.name)
+    else if (row.kind === 'hit') void this.jumpTo(row.page, row.id)
+  }
+
+  async openBoard(i: number): Promise<void> {
+    await this.leaveMainView('board')
+    void this.boards.open(i)
+  }
+
+  /** The All pages table in the main area (§7.7); sort and switch stay, the filter empties. */
+  async openAllPages(): Promise<void> {
+    await this.leaveMainView('allPages')
+    void this.allPages.open()
+  }
+
+  /** Every archived task in the main area; the filter empties. A row jumps to its block (`jumpTo`). */
+  async openArchive(): Promise<void> {
+    await this.leaveMainView('archive')
+    void this.archiveView.open()
+  }
+
+  /** The Dailies view in the main area; the list is asked again. */
+  async openDailies(): Promise<void> {
+    await this.leaveMainView('dailies')
+    void this.dailies.open()
+  }
+
+  /** The Graph screen in the main area (§7.11); the filters stay as they were. */
+  async openGraph(): Promise<void> {
+    if (!this.overlays.may('openGraph')) return
+    await this.leaveMainView('graph')
+    void this.network.open()
+  }
+
+  /** The status bar button opens the Git history in the main area; a second click is Back. */
+  async toggleGitLog(): Promise<void> {
+    if (this.gitLog.shown) return this.go('back')
+    if (!this.overlays.may('toggleGitLog')) return
+    await this.leaveMainView('gitLog')
+    void this.gitLog.open()
+  }
+
+  /** A sidebar row was dragged onto `folder`: the edited block's text goes first, then the move. */
+  async dropRow(row: Row, folder: string): Promise<void> {
+    this.host.leave()
+    await this.client.flush()
+    await this.flows.moveTo(row, folder)
+  }
+
+  /**
+   * Opens page `name`, closing an open card first. A clicked `link` target `Page#Heading` opens `Page` and jumps to
+   * its block with that heading (`reveal`); with no such heading the page opens at the top.
+   */
+  async openPage(name: string, link = false): Promise<void> {
+    await this.closeCard()
+    await this.exec({ type: 'page.open', name, link: link || undefined })
+    const heading = link ? linkHeading(name) : null
+    if (heading === null || !this.page) return
+    const id = headingBlock(this.page.blocks, heading)
+    if (id !== null) await this.reveal(id)
+  }
+
+  /** A link clicked in a block: a page opens here, a web address in the browser. */
+  followLink(what: ReturnType<typeof linkClick>): void {
+    if (what.kind === 'page') void this.openPage(what.name, what.link)
+    else if (what.kind === 'external') this.env.openUrl(what.url).catch((e) => this.refuse(e))
+  }
+
+  async openCard(c: CardView, column: string): Promise<void> {
+    await this.closeCard()
+    this.boards.openCard(cardFromView(c), column)
+    await this.env.dom.tick()
+    this.host.editAtEnd(c.id)
+  }
+
+  /** "+ Add": a new `KEYWORD` block at the end of today's journal; its answer opens it as a card (`openAdded`). */
+  async addCard(column: string): Promise<void> {
+    await this.closeCard()
+    await this.exec({ type: 'journal.append', text: column })
+  }
+
+  /** Jump to block `id` of page `key` (a card, a search match): the page shown, the block's ancestors unfolded, the block in the middle of the view and highlighted. */
+  async jumpTo(key: string, id: BlockId): Promise<void> {
+    await this.closeCard()
+    await this.exec({ type: 'page.show', key })
+    if (!this.page?.blocks.some((b) => b.id === id)) return
+    await this.reveal(id)
+  }
+
+  /** Block `id` of the shown page: its ancestors unfolded, the block in the middle of the view and highlighted. */
+  async reveal(id: BlockId): Promise<void> {
+    if (!this.page) return
+    for (const a of ancestorsOf(this.page.blocks, id)) this.folded.delete(a)
+    await this.env.dom.tick()
+    this.env.dom.scrollToBlock(id)
+    this.flash = id
+    this.env.timers.setTimeout(() => {
+      if (this.flash === id) this.flash = null
+    }, 1500)
+  }
+
+  // ---- boards -----------------------------------------------------------------
+
+  /** The board's own settings dialog, from its title bar. */
+  async openBoardSettings(): Promise<void> {
+    await this.closeCard()
+    if (this.boards.index !== null) this.config.editBoard(this.boards.index)
+  }
+
+  /** Hides column `keyword` of the shown board; an open card is closed first, with its text. */
+  async hideColumn(keyword: string): Promise<void> {
+    if (this.boards.card !== null) await this.closeCard()
+    const view = this.boards.view
+    if (view) this.hiddenCols.hide(view.name, keyword, view.columns.map((c) => c.keyword))
+  }
+
+  /** The saved board is loaded again, so its new name and columns show; a rename carries the history and hidden columns along. */
+  async saveBoard(b: BoardSummary): Promise<void> {
+    const r = await this.config.saveBoard(b)
+    if (r.renamedFrom !== null) {
+      this.nav.boardRenamed(r.renamedFrom, b.name) // the history follows the rename
+      this.hiddenCols.renamed(r.renamedFrom, b.name) // its hidden columns go with it
+    }
+    if (r.ok && this.boards.index === r.at) void this.boards.open(r.at)
+  }
+
+  /** Deleting the shown board goes to the journal; a board shown after it moves up one. */
+  async deleteBoard(): Promise<void> {
+    const r = await this.config.deleteBoard()
+    if (!r.ok) return
+    const next = shownAfterDelete(this.boards.index, r.at)
+    if (next === 'feed') await this.openJournal()
+    else if (next !== null) void this.boards.open(next)
+  }
+
+  /** A new board with the default columns, shown once the answer is applied (from Settings, Settings stays). */
+  async newBoard(name: string): Promise<void> {
+    const o = this.overlays.current
+    const stay = o?.kind === 'newBoard' && o.from === 'settings'
+    this.overlays.close('newBoard')
+    const index = await this.config.newBoard(name)
+    if (index !== null && !stay) await this.openBoard(index)
+  }
+
+  // ---- Settings (§7.12) and the choices kept on this computer ------------------
+
+  /** The Settings screen in the main area, at `section` if given; it counts the states' blocks. */
+  async openSettings(section?: SettingsSection): Promise<void> {
+    if (!this.overlays.may('openSettings')) return
+    await this.leaveMainView('settings')
+    this.settings.open(section)
+    const shell = this.env.shell
+    if (!this.appVersionAsked) {
+      this.appVersionAsked = true
+      shell.getAppVersion().then(
+        (v) => void (this.appVersion = v),
+        () => void (this.appVersionAsked = false), // the line shows the name alone; asked again when Settings opens next
+      )
+    }
+    if (!this.logDirAsked) {
+      this.logDirAsked = true
+      shell.logFolder().then(
+        (dir) => void (this.logDir = dir),
+        () => void (this.logDirAsked = false), // the button has no tooltip; asked again when Settings opens next
+      )
+    }
+    await this.exec({ type: 'states.usage' })
+  }
+
+  /** Settings' "Open log folder"; a failure becomes a notice. */
+  openLogs(): void {
+    this.env.shell.openLogFolder().catch((e) => this.refuse(e))
+  }
+
+  /** Asks a question (from Settings, or before deleting a daily); false when another dialog is open. */
+  confirmAsk(message: string, ok: string): Promise<boolean> {
+    if (!this.overlays.may('confirmAsk')) return Promise.resolve(false)
+    return new Promise((resolve) => this.overlays.open({ kind: 'confirm', message, ok, answer: resolve }))
+  }
+
+  /** Applies at once; the choice is kept on this computer. */
+  chooseJournalsAt(at: JournalsAt): void {
+    this.journalsAt = at
+    this.env.shell.setJournalsAt(at).catch((e) => this.refuse(e))
+  }
+
+  /** Applies at once; the choices are kept on this computer. */
+  chooseLinkDisplay(d: LinkDisplay): void {
+    linkDisplay.hideScheme = d.hideScheme
+    linkDisplay.shorten = d.shorten
+    linkDisplay.trimSlash = d.trimSlash
+    this.env.shell.setLinkDisplay(d).catch((e) => this.refuse(e))
+  }
+
+  chooseTheme(c: ThemeChoice): void {
+    this.theme = c
+    applyTheme(c, this.env.dom.root(), (t) => this.env.window.setTheme(t))
+    this.env.shell.setTheme(storedTheme(c)).catch((e) => this.refuse(e))
+  }
+
+  /** The wheel over the status bar's theme button: one notch, one theme. */
+  themeWheel(dy: number): void {
+    const c = wheelTheme(this.theme, this.themeSteps, dy, this.zoom.percent)
+    if (c !== null) this.chooseTheme(c)
+  }
+
+  saveLayout(): void {
+    const { sidebarWidth, sidebarHidden, boardColumn: boardColumnWidth } = this
+    this.env.shell.setUiState({ sidebarWidth, sidebarHidden, boardColumnWidth }).catch((e) => this.refuse(e))
+  }
+
+  toggleSidebar(): void {
+    this.sidebarHidden = !this.sidebarHidden
+    this.saveLayout()
+  }
+
+  // ---- Git ----------------------------------------------------------------------
+
+  /** Typed text goes first (§2), then Git commits and syncs at once. */
+  async syncGit(): Promise<void> {
+    this.host.leave()
+    await this.client.flush()
+    await this.client.run({ type: 'git.sync' }).catch((e) => this.refuse(e))
+  }
+
+  /** A click on the Git status: sync, offer set-up, or explain a problem and try again. */
+  async clickGit(): Promise<void> {
+    const v = this.git.view
+    if (!v) return
+    switch (gitClick(v)) {
+      case 'sync':
+        return this.syncGit()
+      case 'init':
+        // Not over another dialog, as with the search box.
+        if (!this.overlays.may('gitSetUp')) return
+        this.overlays.open({
+          kind: 'confirm',
+          message: 'Keep this notes folder in Git? Breccia runs git init here and adds a .gitignore and a .gitattributes file.',
+          ok: 'Set up Git',
+          answer: (yes) => void (yes && this.setUpGit()),
+        })
+        return
+      case 'explain':
+        this.notify({
+          kind: 'refused',
+          message: v.problem?.message ?? 'Breccia uses the installed git command. Install Git, then restart Breccia.',
+        })
+        if (v.state === 'problem') return this.syncGit()
+    }
+  }
+
+  /** The first commit holds text typed a moment before (§2). */
+  async setUpGit(): Promise<void> {
+    this.host.leave()
+    await this.client.flush()
+    await this.client.run({ type: 'git.init' }).catch((e) => this.refuse(e))
+  }
+
+  // ---- closing ------------------------------------------------------------------
+
+  /** "Exit" in the tray menu: the normal close, with its question about unsaved pages shown in the window. */
+  async exitFromTray(): Promise<void> {
+    this.host.leave()
+    const message = await closeCheck(this.client, () => this.notices.unsent())
+    if (message === null) return this.closeAnyway()
+    const w = this.env.window
+    await w.show().catch(() => {})
+    await w.unminimize().catch(() => {})
+    await w.setFocus().catch(() => {})
+    this.closing = message
+  }
+
+  /**
+   * The window's close button. Text typed in the last moment before closing is still in the typing pause; pages that
+   * still could not be saved, and text shown in unsent notices, are named before closing. In the tray it only hides.
+   */
+  async closeRequested(event: { preventDefault(): void }): Promise<void> {
+    if (this.inTray) {
+      // The close button only hides the window; the text typed a moment ago is saved first.
+      event.preventDefault()
+      this.host.leave()
+      await flushBeforeClose(this.client)
+      await this.env.window.hide().catch((e) => console.error('could not hide the window', e))
+      return
+    }
+    // The editor closes first, so a state typed by hand gets its lines before the queue is flushed.
+    this.host.leave()
+    const message = await closeCheck(this.client, () => this.notices.unsent())
+    if (message === null) return
+    event.preventDefault()
+    this.closing = message
+  }
+
+  closeAnyway(): void {
+    this.closing = null
+    this.env.window.destroy().catch((e) => console.error('could not close the window', e))
+  }
+
+  /** Cancel in the close question: the window stays, any dialog under it as it was. */
+  cancelClose(): void {
+    this.closing = null
+  }
+
+  // ---- folders ------------------------------------------------------------------
+
+  /**
+   * Opens or creates the notes folder at `path`. With a folder open, typed text is sent first and the
+   * switch is refused while anything is unsaved; the core refuses it too (`unsaved`, shown as its notice).
+   */
+  async switchFolder(type: 'folder.open' | 'folder.create', path: string): Promise<void> {
+    if (this.switching) return
+    this.switching = true
+    try {
+      if (this.folder) {
+        await this.closeCard()
+        this.host.leave()
+        const message = await switchCheck(this.client, () => ({
+          unsent: this.notices.unsent(),
+          unresolved: this.notices.unresolved().map((key) => this.pageTitle(key)),
+        }))
+        if (message !== null) {
+          this.notify({ kind: 'refused', message })
+          return
+        }
+      }
+      let ok = true
+      await this.host.exec({ type, path }, () => ((ok = false), false))
+      if (ok && this.folder) await this.openFolder()
+    } finally {
+      this.switching = false
+      void this.loadRecent()
+    }
+  }
+
+  /** "Open folder…" or "New folder…": the system dialog, then the switch. */
+  async pickAndSwitch(type: 'folder.open' | 'folder.create'): Promise<void> {
+    const path = await pickFolder(
+      () => this.env.pickFolder(),
+      (m) => this.notify({ kind: 'refused', message: m }),
+    )
+    if (path !== null) await this.switchFolder(type, path)
+  }
+
+  loadRecent(): Promise<void> {
+    return this.env.shell.recentFolders().then(
+      (l) => void (this.recent = l),
+      (e) => this.refuse(e),
+    )
+  }
+
+  /** Remove: the entry leaves the list; the folder itself is never touched. */
+  async forgetRecent(path: string): Promise<void> {
+    await this.env.shell.forgetFolder(path).catch((e) => this.refuse(e))
+    await this.loadRecent()
+  }
+
+  /** A click on a folder that no longer exists explains it; Breccia never removes it by itself. */
+  recentMissing(path: string): void {
+    this.notify({ kind: 'refused', message: missingFolder(path) })
+  }
+
+  // ---- startup ------------------------------------------------------------------
+
+  /**
+   * The window's start: the layout and the choices kept on this computer, then (once the shell's listeners are
+   * registered, `shellReady`) the startup open and the folder's views.
+   */
+  async start(shellReady: Promise<void>): Promise<void> {
+    const shell = this.env.shell
+    try {
+      // A layout that cannot be read is the default one; the folder still opens.
+      const layout = await loadLayout(() => shell.uiState())
+      this.sidebarWidth = layout.width
+      this.sidebarHidden = layout.hidden
+      this.boardColumn = layout.boardColumn
+      this.zoom.restore(layout.zoom)
+      this.theme = layout.theme
+      this.journalsAt = layout.journalsAt
+      shell.uiState().then(
+        (ui) => linkDisplay.restore(ui),
+        () => {},
+      )
+      applyTheme(layout.theme, this.env.dom.root(), (t) => this.env.window.setTheme(t))
+      shell.gitInstalled().then(
+        (ok) => void (this.hasGit = ok),
+        () => {},
+      )
+      this.inTray = await shell.trayEnabled().catch(() => false)
+      await shellReady
+      await startupSequence({
+        ...shell.startupOpen(),
+        show: (path) => (this.opening = path),
+        folderStatus: async () => {
+          await this.exec({ type: 'folder.status' })
+          return this.folder !== null
+        },
+        gitStatus: async () => void (await this.exec({ type: 'git.status' })),
+        openFolder: () => this.openFolder(),
+        notices: () => shell.startupNotices(),
+        notify: (n) => this.notify(n),
+      })
+    } catch (e) {
+      this.refuse(e)
+    }
+    this.opening = null
+    this.ready = true
   }
 
   // ---- outputs: the one place an Output is applied --------------------------
@@ -802,8 +1580,8 @@ export class AppController {
     return this.page?.key === key ? this.page.title : (this.noticeTitles.get(key) ?? key)
   }
 
-  /** The handlers `listenShell` takes (`lib/shellEvents.ts`); the trayExit and the close button stay the window's. */
-  shellHandlers(): Omit<ShellHandlers, 'trayExit' | 'closeRequested'> {
+  /** The handlers `listenShell` takes (`lib/shellEvents.ts`). */
+  shellHandlers(): ShellHandlers {
     const idle = this.inFlight.idle
     return {
       // Other programs and Git change pages too (§9); the window's own commands send no events.
@@ -861,6 +1639,8 @@ export class AppController {
         else this.status.clear('index')
       },
       recovered: (e) => void this.recovery.recovered(e).catch((err) => this.refuse(err)),
+      trayExit: () => void this.exitFromTray(),
+      closeRequested: (e) => this.closeRequested(e),
     }
   }
 }

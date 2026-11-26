@@ -1,11 +1,10 @@
-// A fake window for `AppController` tests: a scripted core answering `invoke`, the in-memory editor, real timers
-// (bound, as App passes them) and DOM hooks that record what they are asked.
+// A fake window for `AppController` tests: a scripted core answering `invoke`, the in-memory editor, the timers of the
+// moment (so a test may fake them) and DOM, window and shell hooks that record what they are asked.
 import { flushSync } from 'svelte'
 import { fakeMount } from '../editor/mount.testing'
 import type { AppEnv } from './app.svelte'
 import { emptyOutput } from './emptyOutput.testing'
-import type { SearchRow } from './search'
-import type { BlockView, Command, ConfigView, Output, PageView, Request } from './types'
+import type { BlockView, Command, ConfigView, Output, PageView, Request, UiState } from './types'
 
 export function block(id: number, text: string): BlockView {
   return { id, depth: 0, text, html: '', state: null, finished: false, hasChildren: false }
@@ -52,10 +51,10 @@ export interface FakeCore {
 export interface FakeWindow {
   env: AppEnv
   core: FakeCore
-  /** The rows the search box chose (`ui.chooseRow`). */
-  chosen: SearchRow[]
-  /** How often the sidebar was asked to show (`ui.showSidebar`). */
-  sidebarShown: number
+  /** The window's calls (`show`, `unminimize`, `setFocus`, `hide`, `destroy`), in order. */
+  windowCalls: string[]
+  /** The layouts saved (`setUiState`). */
+  layouts: UiState[]
   /** The blocks scrolled to (`dom.scrollToBlock`). */
   scrolledTo: number[]
   /** The fake `.main`: its scroll position. */
@@ -106,8 +105,8 @@ export function fakeWindow(): FakeWindow {
   }
   const w: FakeWindow = {
     core,
-    chosen: [],
-    sidebarShown: 0,
+    windowCalls: [],
+    layouts: [],
     scrolledTo: [],
     scroller: { scrollTop: 0, scrollLeft: 0 },
     clock: 1_000_000,
@@ -126,12 +125,15 @@ export function fakeWindow(): FakeWindow {
       tick: () => Promise.resolve(),
       setBusy() {},
       slot: () => ({}) as HTMLElement,
+      root: () => ({ dataset: {} }),
+      keyTaken: () => false,
     },
+    // Looked up at each call, so `vi.useFakeTimers` after the window is built still takes effect.
     timers: {
-      setTimeout: globalThis.setTimeout.bind(globalThis),
-      clearTimeout: globalThis.clearTimeout.bind(globalThis),
-      setInterval: globalThis.setInterval.bind(globalThis),
-      clearInterval: globalThis.clearInterval.bind(globalThis),
+      setTimeout: ((f: () => void, ms?: number) => globalThis.setTimeout(f, ms)) as typeof setTimeout,
+      clearTimeout: (t) => globalThis.clearTimeout(t),
+      setInterval: ((f: () => void, ms?: number) => globalThis.setInterval(f, ms)) as typeof setInterval,
+      clearInterval: (t) => globalThis.clearInterval(t),
     },
     now: () => w.clock,
     shell: {
@@ -139,11 +141,31 @@ export function fakeWindow(): FakeWindow {
       setZoom: () => Promise.resolve(),
       hiddenColumns: () => Promise.resolve({}),
       setHiddenColumns: () => Promise.resolve(),
+      uiState: () => Promise.resolve({ sidebarWidth: null, sidebarHidden: false }),
+      setUiState: async (s) => void w.layouts.push(s),
+      setTheme: () => Promise.resolve(),
+      setJournalsAt: () => Promise.resolve(),
+      setLinkDisplay: () => Promise.resolve(),
+      recentFolders: () => Promise.resolve([]),
+      forgetFolder: () => Promise.resolve(),
+      getAppVersion: () => Promise.resolve('0.0.0'),
+      logFolder: () => Promise.resolve(null),
+      openLogFolder: () => Promise.resolve(),
+      gitInstalled: () => Promise.resolve(true),
+      trayEnabled: () => Promise.resolve(false),
+      startupOpen: () => ({ opening: () => Promise.resolve(null), onOpened: () => () => {} }),
+      startupNotices: () => Promise.resolve([]),
     },
-    ui: {
-      chooseRow: (row) => void w.chosen.push(row),
-      showSidebar: () => void w.sidebarShown++,
+    window: {
+      show: async () => void w.windowCalls.push('show'),
+      unminimize: async () => void w.windowCalls.push('unminimize'),
+      setFocus: async () => void w.windowCalls.push('setFocus'),
+      hide: async () => void w.windowCalls.push('hide'),
+      destroy: async () => void w.windowCalls.push('destroy'),
+      setTheme: () => Promise.resolve(),
     },
+    pickFolder: () => Promise.resolve(null),
+    openUrl: () => Promise.resolve(),
   }
   return w
 }
