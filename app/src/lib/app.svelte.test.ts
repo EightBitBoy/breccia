@@ -415,6 +415,9 @@ test('a shortcut while reloading does nothing', async () => {
   const back = press('ArrowLeft', { alt: true })
   app.keyCapture(back)
   app.key(press('z', { ctrl: true }))
+  const altF4 = press('F4', { alt: true })
+  app.keyCapture(altF4)
+  expect(altF4.defaultPrevented).toBe(false) // not taken: the window still closes
   await settle()
   expect(app.search.shown).toBe(false)
   expect(app.overlays.current).toBeNull()
@@ -430,6 +433,22 @@ test('a shortcut while reloading does nothing', async () => {
   const after = press('k', { ctrl: true })
   app.keyCapture(after)
   expect(app.search.shown).toBe(true)
+})
+
+test('a reload after an internal error closes an open dialog and a question answers no', async () => {
+  const { app, w } = await withPage('p')
+  const answers: boolean[] = []
+  app.overlays.open({ kind: 'confirm', message: 'Delete?', ok: 'Delete', answer: (yes) => void answers.push(yes) })
+  expect(app.overlays.current).not.toBeNull()
+
+  w.core.folder = { ...w.core.folder, generation: 2 } // the core reopened the session
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+
+  expect(app.reloading).toBe(false)
+  expect(app.folder).toBe('/notes')
+  expect(app.overlays.current).toBeNull()
+  expect(answers).toEqual([false]) // the question answered no, never left waiting
 })
 
 test('a shortcut while reloading reaches the close question', async () => {
