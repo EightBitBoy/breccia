@@ -674,18 +674,21 @@ Targets *(my call)*: a notes folder with 5,000 pages / 100,000 blocks opens with
 (index refresh continues in the background); typing never waits for the index; the board and All pages update within a
 few hundred milliseconds of a change.
 
-Bars at 5,000 pages *(owner, 2026-11-25; measured by `just perf-scale` and the core's `scale::` tests, results in
-`docs/perf/`)*, all medians on a modern laptop:
+Bars at 5,000 pages, measured by `just perf-scale` and the core's `scale::` tests (results in `docs/perf/`), all
+medians on a modern laptop. The owner's bars *(owner, 2026-11-25, plan 18 Q3)*:
 
-- Typing: a save (`block.setText`, `block.split`) 16 ms or less, also while the search index is first built (one
-  index step 16 ms or less) and while the notes lock is held by a Git pull (100 ms or less).
-- Start: the window shows within 500 ms, the journal is usable within 2 seconds, the first search index build ends
-  within 10 seconds.
-- Lists and views: the page tree, All pages and the graph 100 ms or less; the board 200 ms or less; a changed file
-  reloads within 50 ms (100 files within 500 ms); a search answers within 100 ms (once the index is built).
-- Long lists: the Git history (200 commits) and the archive open within 200 ms, and every "Show more" within 200 ms;
-  scrolling any list keeps a frame (95th percentile) within 20 ms; the caret moves down a 5,000-row page within 16 ms.
+- Typing: a save (`block.setText`, `block.split`) 16 ms or less, and a keystroke waits 16 ms or less for the notes
+  lock, also while the search index is first built (one index step 16 ms or less).
+- Git: a pull holds the notes lock 100 ms or less (500 ms when a save lands just before the lock).
+- Start: the window shows within 500 ms, and the journal is usable within 2 seconds.
+- Long lists: the Git history (200 commits) and the archive open within 200 ms; scrolling them keeps a frame (95th
+  percentile) within 20 ms; the caret moves down a 5,000-row page within 16 ms.
 - First automatic archive 2 seconds or less; picking a page colour 300 ms or less.
+
+The bars of the scale tests that were there before *(my call)*: the page tree, All pages and the graph 100 ms or
+less; the board 200 ms or less; a changed file reloads within 50 ms (100 files within 500 ms); a search answers within
+100 ms (once the index is built); the first search index build ends within 10 seconds; every "Show more" of the Git
+history within 200 ms.
 
 ## 9. Room for plugins later
 
