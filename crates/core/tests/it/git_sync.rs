@@ -875,6 +875,29 @@ fn a_replay_that_moves_the_branch_itself_is_put_back_and_not_used() {
     assert_eq!(read(&mine, "pages/A.md"), "- a2\n");
 }
 
+/// A file the user staged (for example outside a nested notes folder) keeps
+/// the index off the base; the moved branch must still be put back.
+#[test]
+fn a_replay_that_moves_the_branch_is_put_back_also_with_a_staged_file() {
+    let e = env();
+    let (mine, _theirs, _r, _t) = diverged(&e);
+    std::fs::write(mine.join("staged.txt"), "staged\n").unwrap();
+    git(&e, &mine, &["add", "staged.txt"]);
+    let r = open(&e.git.clone().with_replay_moving_the_branch(), &mine);
+    let t = target(&r);
+    let before = state(&e, &mine);
+    assert_eq!(r.prepare_integrate(&t).unwrap(), None);
+    assert_eq!(state(&e, &mine), before);
+    assert!(
+        git(
+            &e,
+            &mine,
+            &["reflog", "-1", "--format=%gs", "refs/heads/main"]
+        )
+        .contains("put back"),
+    );
+}
+
 #[test]
 fn a_prepared_pull_gives_what_a_rebase_gives() {
     let e = env();

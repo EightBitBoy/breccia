@@ -495,28 +495,32 @@ impl Repo {
     }
 
     /// Checks that `git replay` left the branch at `base`. If it moved the
-    /// branch while the index is still at the base (the files were not
-    /// moved with it), the branch is put back, so a commit cannot undo the
-    /// pulled changes; `Err(None)` then lets the locked rebase decide. A move
-    /// that came with the index (the user's own Git command) is left alone,
-    /// also `Err(None)`. `Err(Some(_))`: the branch could not be put back.
+    /// branch and the index did not move with it (the files are still at the
+    /// base), the branch is put back, so a commit cannot undo the pulled
+    /// changes; `Err(None)` then lets the locked rebase decide. A move that
+    /// came with the index (the user's own Git command: the index matches the
+    /// branch's new commit) is left alone, also `Err(None)`. `Err(Some(_))`:
+    /// where the branch is could not be read, or it could not be put back; the
+    /// pull stops before any commit.
     fn branch_still_at(&self, branch_ref: &str, base: &str) -> Result<(), Option<Problem>> {
-        let now_at = self
-            .text_of(&["rev-parse", "-q", "--verify", branch_ref])
-            .ok_or(None)?;
+        let Some(now_at) = self.text_of(&["rev-parse", "-q", "--verify", branch_ref]) else {
+            return Err(Some(Problem::Failed {
+                message: "after git replay, Git could not say where the branch is".into(),
+            }));
+        };
         if now_at == base {
             return Ok(());
         }
-        let index_at_base = self
+        let index_at_new = self
             .git
             .run(
                 &self.folder,
-                &["diff-index", "--cached", "--quiet", base, "--"],
+                &["diff-index", "--cached", "--quiet", &now_at, "--"],
                 LOCAL_LIMIT,
             )
             .map(|o| o.code == 0)
             .unwrap_or(false);
-        if !index_at_base {
+        if index_at_new {
             return Err(None);
         }
         let put_back = self
