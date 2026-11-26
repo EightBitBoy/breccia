@@ -161,3 +161,7 @@ Task 3: complete (commits 1835d97..295c4e2, review clean)
 - Task 4 implementer: DONE_WITH_CONCERNS 772baee (refused typed string|null; setDialogBoards takes name/version at click time; explicit ConfigStore type in App.svelte).
 - Task 4 review (opus): spec ✅, Approved. Concerns accepted (click-time dialog read is a fix for Cancel-then-other-board). Minors (deferred): duplicated Dailies reset copy in the store; one test depends on microtask count after an unawaited config.get.
 Task 4: complete (commits 4b266ce..772baee, review clean)
+- Task 5: dispatched (opus implementer a7cdc04d3cba625e9), BASE e615f3e
+- Task 5 implementer: DONE_WITH_CONCERNS 5064c0a. Step 3 note: e2e step 50 opens no dialog, no e2e check added; Review Focus 4 (close question over an open dialog) to be pinned by Task 8's test. F3 picker cases for closing/no-folder stay a 2-line $effect (no $effect under Vitest). F9 via SettingsEnv.overlays. Confirm buttons answer whichever confirm is open. closeAll() unused until Task 9.
+- Task 5 review (opus): spec ✅, Approved. Late-Cancel concern: unreachable. Carry to Task 8: M1 (test the picker closing on the close question and on no folder once closing is behind a controller method) and Review Focus 4 test. Minors (deferred): M2 bind the rendered question in onok/oncancel (optional); M3 rename confirm after page.renameReach opens without a guard and replaces an F1 list/search opened meanwhile (follow-up); M4 search box state not cleared when another overlay replaces it.
+Task 5: complete (commits e615f3e..5064c0a, review clean)
