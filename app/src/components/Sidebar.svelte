@@ -1,10 +1,10 @@
 <script lang="ts">
   import { SvelteSet } from 'svelte/reactivity'
-  import { reveal, rows as makeRows, tagRows, type JournalsAt, type Row } from '../lib/treeRows'
+  import { reveal, rows as makeRows, tagRows, type Row } from '../lib/treeRows'
   import { baseName, joinPath, type Op } from '../lib/pageOps'
   import TreeMenu from './TreeMenu.svelte'
   import { clampWidth } from '../lib/sidebarLayout'
-  import type { BoardSummary, TreeView } from '../lib/types'
+  import type { AppController } from '../lib/app.svelte'
   import PageTree from './PageTree.svelte'
   import DatePicker from './DatePicker.svelte'
   import { journalKeys } from '../lib/calendar'
@@ -12,95 +12,58 @@
   import { dropFolder, PAGES, type Over } from '../lib/treeDrop'
 
   let {
-    folder,
-    folderName,
-    tree,
-    shown,
-    journalShown,
-    dailiesShown,
-    allPagesShown,
-    settingsShown,
-    graphShown,
-    boards,
-    boardShown,
-    archiveShown,
+    app,
     width,
-    onopen,
-    onjournal,
-    ondailies,
-    onallpages,
-    onsearch,
-    onsettings,
-    onnewpage,
-    ongraph,
-    onfolder,
-    onboard,
-    onnewboard,
-    onarchive,
-    onop,
-    onresize,
-    onresized,
     pickerOpen = $bindable(false),
-    journalsAt = 'bottom',
-    onpickday,
-    ondrop,
   }: {
-    folder: string
-    folderName: string
-    /** Where the Journals row sits among the pages. */
-    journalsAt?: JournalsAt
-    tree: TreeView | null
-    /** The key of the page shown; null while the journal feed is shown. */
-    shown: string | null
-    /** Whether the journal feed is shown. */
-    journalShown: boolean
-    /** Whether the Dailies view is shown. */
-    dailiesShown: boolean
-    /** Whether the All pages table is shown. */
-    allPagesShown: boolean
-    /** Whether the Settings screen is shown. */
-    settingsShown: boolean
-    /** Whether the Graph screen is shown. */
-    graphShown: boolean
-    /** The configured boards, in order. */
-    boards: BoardSummary[]
-    /** The index of the board shown, or null. */
-    boardShown: number | null
-    /** Whether the Archive view is shown. */
-    archiveShown: boolean
+    /** The window: the sidebar shows its folder, tree and views, and its rows call it. */
+    app: AppController
     width: number
-    onopen: (name: string) => void
-    onjournal: () => void
-    /** "Dailies", under Journal: the things to tick each day. */
-    ondailies: () => void
-    onallpages: () => void
-    /** The search box was clicked. */
-    onsearch: () => void
-    /** The footer's Settings entry. */
-    onsettings: () => void
-    /** The "+" by Pages: start an untitled page. */
-    onnewpage: () => void
-    /** The footer's Graph entry. */
-    ongraph: () => void
-    /** The folder name was clicked: Settings at the Notes folder section. */
-    onfolder: () => void
-    onboard: (i: number) => void
-    onnewboard: () => void
-    /** "Archive" in the Boards section: every archived task. */
-    onarchive: () => void
-    /** A context menu operation on a row (null: the empty tree area). */
-    onop: (op: Op, row: Row | null) => void
-    /** The width while dragging. */
-    onresize: (w: number) => void
-    /** The drag is over. */
-    onresized: () => void
     /** The date picker by the Journal row is open (its icon, or `Ctrl Shift D`). */
     pickerOpen: boolean
-    /** A day was picked in the date picker. */
-    onpickday: (key: string) => void
-    /** A page or folder row was dropped onto `folder` ('' is the top level); resolves once the tree is back. */
-    ondrop: (row: Row, folder: string) => Promise<void>
   } = $props()
+
+  const folder = $derived(app.folder ?? '')
+  const folderName = $derived(app.folderName)
+  /** Where the Journals row sits among the pages. */
+  const journalsAt = $derived(app.journalsAt)
+  const tree = $derived(app.tree)
+  /** The key of the page shown; null while the journal feed is shown. */
+  const shown = $derived(app.page?.key ?? null)
+  const journalShown = $derived(app.area.is('feed'))
+  const dailiesShown = $derived(app.dailies.shown)
+  const allPagesShown = $derived(app.allPages.shown)
+  const settingsShown = $derived(app.settings.shown)
+  const graphShown = $derived(app.network.shown)
+  /** The configured boards, in order. */
+  const boards = $derived(app.config.boards)
+  /** The index of the board shown, or null. */
+  const boardShown = $derived(app.boards.index)
+  const archiveShown = $derived(app.archiveView.shown)
+
+  const onopen = (name: string) => void app.openPage(name)
+  const onjournal = () => void app.openJournal()
+  /** "Dailies", under Journal: the things to tick each day. */
+  const ondailies = () => void app.openDailies()
+  const onallpages = () => void app.openAllPages()
+  /** The search box was clicked. */
+  const onsearch = () => app.openSearch()
+  /** The footer's Settings entry. */
+  const onsettings = () => void app.openSettings()
+  /** The "+" by Pages: start an untitled page. */
+  const onnewpage = () => void app.startNewPage()
+  /** The footer's Graph entry. */
+  const ongraph = () => void app.openGraph()
+  /** The folder name was clicked: Settings at the Notes folder section. */
+  const onfolder = () => void app.openSettings('folder')
+  const onboard = (i: number) => void app.openBoard(i)
+  const onnewboard = () => app.overlays.open({ kind: 'newBoard', from: 'sidebar' })
+  /** "Archive" in the Boards section: every archived task. */
+  const onarchive = () => void app.openArchive()
+  /** A context menu operation on a row (null: the empty tree area). */
+  const onop = (op: Op, row: Row | null) => app.flows.start(op, row)
+  /** A day was picked in the date picker. */
+  const onpickday = (key: string) => void app.pickDay(key)
 
   /** Session-only folding; all folders start closed. */
   const open = new SvelteSet<string>()
@@ -130,7 +93,7 @@
     const folder = t && dropFolder(t, over)
     if (folder === null || folder === undefined) return
     const wasOpen = row.kind === 'folder' && row.open === true
-    await ondrop(row, folder)
+    await app.dropRow(row, folder)
     if (folder !== '') open.add(`f:${folder}`)
     // A folder that was open stays open at its new path.
     if (wasOpen && row.path) open.add(`f:${joinPath(folder, baseName(row.path))}`)
@@ -149,12 +112,12 @@
   function drag(e: PointerEvent) {
     const el = e.currentTarget as HTMLElement
     el.setPointerCapture(e.pointerId)
-    const move = (m: PointerEvent) => onresize(clampWidth(m.clientX))
+    const move = (m: PointerEvent) => (app.sidebarWidth = clampWidth(m.clientX))
     const up = () => {
       el.removeEventListener('pointermove', move)
       el.removeEventListener('pointerup', up)
       el.removeEventListener('pointercancel', up)
-      onresized()
+      app.saveLayout()
     }
     el.addEventListener('pointermove', move)
     el.addEventListener('pointerup', up)

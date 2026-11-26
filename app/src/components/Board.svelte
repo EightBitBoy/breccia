@@ -6,84 +6,72 @@
   import { duePick } from '../lib/duePick.svelte'
   import { canHide, hideDuration, markerTitle, PEEK_MS } from '../lib/hiddenColumns'
   import { refBlocks } from '../lib/refs'
-  import type { BlockId, BoardView, CardView, Command, RefsView } from '../lib/types'
+  import type { AppController } from '../lib/app.svelte'
+  import type { Boards } from '../lib/boards.svelte'
+  import type { HiddenColumns } from '../lib/hiddenColumns.svelte'
+  import type { BlockId, Command } from '../lib/types'
   import BlockRow from './BlockRow.svelte'
   import BoardCard from './BoardCard.svelte'
 
   let {
-    board,
-    card,
-    cardColumn,
+    app,
+    boards,
+    hiddenCols,
     folded,
-    editingId,
-    flash,
-    expanded,
-    onmore,
-    onopencard,
-    onedit,
-    ontoggle,
-    onjump,
-    onadd,
-    onclosecard,
-    archiveDays,
-    oncommand,
-    onsettings,
     columnWidth,
-    oncolumnwidth,
-    hidden,
-    peek,
-    onhide,
-    onshow,
-    onpeek,
-    onpeekend,
   }: {
-    board: BoardView
-    /** The open card, edited in place; null while none is open. */
-    card: RefsView | null
-    /** The column the open card is shown in. */
-    cardColumn: string | null
+    /** The window: the board's clicks call it. */
+    app: AppController
+    /** The shown board (`boards.view`, never null while this is shown), its open card and its expanded cards. */
+    boards: Boards
+    /** The columns each board hides, and those a card drag has opened. */
+    hiddenCols: HiddenColumns
     folded: ReadonlySet<number>
-    editingId: BlockId | null
-    /** A block to highlight briefly. */
-    flash: BlockId | null
-    /** Cards whose "show more" was pressed (kept for the session). */
-    expanded: ReadonlySet<BlockId>
-    /** "show more" on card `id`. */
-    onmore: (id: BlockId) => void
-    onopencard: (c: CardView, column: string) => void
-    onedit: (id: BlockId, shift: boolean) => void
-    ontoggle: (id: BlockId) => void
-    onjump: (c: CardView) => void
-    /** "+ Add" in column `column` (its keyword). */
-    onadd: (column: string) => void
-    /** Esc while a card is open and no block is edited. */
-    onclosecard: () => void
-    /** `[board] archive_after_days`. */
-    archiveDays: number
-    /** A drop, "Move to", "Archive" or "Archive finished …". */
-    oncommand: (cmd: Command) => void
-    /** The title was clicked: board settings. */
-    onsettings: () => void
     /** The column width in px, or null while the columns fill the window. */
     columnWidth: number | null
-    /** A new width; `final` once the slider is let go or a button pressed (then it is saved). */
-    oncolumnwidth: (w: number, final: boolean) => void
-    /** The columns this board hides. */
-    hidden: ReadonlySet<string>
-    /** Hidden columns a card drag has opened for the rest of the drag. */
-    peek: ReadonlySet<string>
-    onhide: (keyword: string) => void
-    onshow: (keyword: string) => void
-    /** A dragged card rested on the marker of `keyword`. */
-    onpeek: (keyword: string) => void
-    /** The card drag ended. */
-    onpeekend: () => void
   } = $props()
+
+  const board = $derived(boards.view!)
+  /** The open card, edited in place; null while none is open. */
+  const card = $derived(boards.card)
+  /** The column the open card is shown in. */
+  const cardColumn = $derived(boards.cardColumn)
+  /** Cards whose "show more" was pressed (kept for the session). */
+  const expanded = $derived(boards.expanded)
+  const editingId = $derived(app.host.editingId)
+  /** A block to highlight briefly. */
+  const flash = $derived(app.flash)
+  /** `[board] archive_after_days`. */
+  const archiveDays = $derived(app.config.archiveDays)
+  /** Hidden columns a card drag has opened for the rest of the drag. */
+  const peek = $derived(hiddenCols.peek)
+
+  const onedit = (id: BlockId, shift: boolean) => app.clickBlock(id, shift)
+  const ontoggle = (id: BlockId) => app.toggleFold(id)
+  /** Esc while a card is open and no block is edited. */
+  const onclosecard = () => void app.closeCard()
+  /** The title was clicked: board settings. */
+  const onsettings = () => void app.openBoardSettings()
+  /** A drop, "Move to", "Archive" or "Archive finished …". */
+  function oncommand(cmd: Command) {
+    // A drop refused because the column changed since it was shown: the notice says so, the board reloads.
+    void app.host.exec(cmd, (code) => {
+      if (code === 'boardChanged') boards.refresh()
+      return false
+    })
+  }
+  /** A new width; `final` once the slider is let go or a button pressed (then it is saved). */
+  function oncolumnwidth(w: number, final: boolean) {
+    app.boardColumn = w
+    if (final) app.saveLayout()
+  }
 
   const openId = $derived(cardRoot(card))
   const openBlocks = $derived(card ? refBlocks(card, folded) : [])
 
   const keywords = $derived(board.columns.map((c) => c.keyword))
+  /** The columns this board hides. */
+  const hidden = $derived(hiddenCols.of(board.name, keywords))
 
   // A drop puts the card at its place in the column; the core sets the state and `priority::`.
   $effect(() =>
@@ -96,14 +84,14 @@
   )
 
   // A dragged card resting on a hidden column's marker opens the column until the drag ends.
-  $effect(() => watchPeek((k) => onpeek(k), () => onpeekend(), PEEK_MS))
+  $effect(() => watchPeek((k) => hiddenCols.peekOpen(k), () => hiddenCols.endPeek(), PEEK_MS))
 
   /** Columns shown again from their marker: they widen (CSS `.col.widen`) until the animation ends. A column a card
    *  drag opens appears at once. */
   let widening = $state(new Set<string>())
   function showColumn(keyword: string) {
     widening = new Set([...widening, keyword])
-    onshow(keyword)
+    if (boards.view) hiddenCols.show(boards.view.name, keyword)
   }
   function widened(keyword: string) {
     if (!widening.has(keyword)) return
@@ -260,7 +248,7 @@
                 data-testid="hide-column"
                 aria-label="Hide {col.keyword}"
                 title="Hide column"
-                onclick={() => onhide(col.keyword)}
+                onclick={() => void app.hideColumn(col.keyword)}
               >
                 <svg viewBox="0 0 16 16" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M1.5 8s2.4-4.5 6.5-4.5S14.5 8 14.5 8 12.1 12.5 8 12.5 1.5 8 1.5 8Z" />
@@ -303,9 +291,9 @@
               menu={cardMenu(col.keyword, keywords)}
               draggable={card === null}
               expanded={expanded.has(c.id)}
-              onmore={() => onmore(c.id)}
-              onopen={() => onopencard(c, col.keyword)}
-              onjump={() => onjump(c)}
+              onmore={() => boards.expand(c.id)}
+              onopen={() => void app.openCard(c, col.keyword)}
+              onjump={() => void app.jumpTo(c.page, c.id)}
               onmove={(k) => oncommand({ type: 'blocks.setState', ids: [c.id], keyword: k })}
               onarchive={() => oncommand({ type: 'blocks.setArchived', ids: [c.id], archived: true })}
               onsetdue={(anchor) =>
@@ -316,7 +304,7 @@
         {#if card && col.keyword === cardColumn && !col.cards.some((c) => c.id === openId)}
           {@render openCard()}
         {/if}
-        <button class="add-card" data-testid="add-card" onclick={() => onadd(col.keyword)}>+ Add</button>
+        <button class="add-card" data-testid="add-card" onclick={() => void app.addCard(col.keyword)}>+ Add</button>
       </div>
       {/if}
     {/each}

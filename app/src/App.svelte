@@ -296,40 +296,7 @@
     {:else if app.folder}
       <div class="body">
         {#if !app.sidebarHidden}
-          <Sidebar
-            folder={app.folder}
-            folderName={app.folderName}
-            tree={app.tree}
-            journalsAt={app.journalsAt}
-            shown={app.page?.key ?? null}
-            journalShown={mainArea.is('feed')}
-            dailiesShown={dailies.shown}
-            ondailies={() => void app.openDailies()}
-            allPagesShown={allPages.shown}
-            onallpages={() => void app.openAllPages()}
-            settingsShown={settings.shown}
-            onsettings={() => void app.openSettings()}
-            graphShown={network.shown}
-            ongraph={() => void app.openGraph()}
-            onfolder={() => void app.openSettings('folder')}
-            onsearch={() => app.openSearch()}
-            width={app.sidebarWidth}
-            onopen={(name) => void app.openPage(name)}
-            onjournal={() => void app.openJournal()}
-            boards={config.boards}
-            boardShown={boards.index}
-            archiveShown={archiveView.shown}
-            onarchive={() => void app.openArchive()}
-            onboard={(i) => void app.openBoard(i)}
-            onnewboard={() => overlays.open({ kind: 'newBoard', from: 'sidebar' })}
-            onop={(op, row) => flows.start(op, row)}
-            ondrop={(row, folder) => app.dropRow(row, folder)}
-            onnewpage={() => void app.startNewPage()}
-            onresize={(w) => (app.sidebarWidth = w)}
-            onresized={() => app.saveLayout()}
-            bind:pickerOpen={app.pickerOpen}
-            onpickday={(key) => void app.pickDay(key)}
-          />
+          <Sidebar {app} width={app.sidebarWidth} bind:pickerOpen={app.pickerOpen} />
         {/if}
         <div class="main-wrap">
           <button class="toggle-side" aria-label="Toggle sidebar" onclick={() => app.toggleSidebar()}>☰</button>
@@ -356,49 +323,13 @@
               <NewPageView onsubmit={(name) => void app.createUntitled(name)} oncancel={() => void app.openJournal()} />
             {:else if mainArea.view.kind === 'settings'}
               <SettingsView
-                folder={app.folder}
+                {app}
+                {config}
+                {settings}
                 recent={recentRows(app.recent, app.folder)}
-                section={settings.section}
-                states={config.states}
-                usage={settings.usage}
-                skipped={settings.skipped}
-                boards={config.boards}
-                archiveDays={config.archiveDays}
-                archiveInvalid={config.numbersInvalid.archive}
-                autoArchive={config.autoArchive}
-                git={config.git}
-                delayInvalid={config.numbersInvalid.delay}
-                intervalInvalid={config.numbersInvalid.interval}
                 theme={app.theme}
-                {mac}
-                version={config.version}
-                appVersion={app.appVersion}
-                hasGit={app.hasGit}
-                logFolder={app.logDir}
-                onstates={(list, renames, version) => config.setStates(list, renames, version)}
-                onconfirm={(message, ok) => app.confirmAsk(message, ok)}
-                onready={() => config.ready()}
-                onusage={() => config.countUsage()}
-                onboard={(i) => config.editBoard(i)}
-                onmoveboard={(i, dir) => void config.moveBoard(i, dir)}
-                onnewboard={() => overlays.open({ kind: 'newBoard', from: 'settings' })}
-                onarchivedays={(archiveAfterDays) => config.setBoardSettings({ archiveAfterDays })}
-                onautoarchive={(on) => config.setBoardSettings({ autoArchive: on })}
-                ongit={(patch) => config.setGit(patch)}
-                dailiesReset={dailies.reset}
-                dailiesResetInvalid={config.dailiesResetInvalid}
-                ondailiesreset={(reset) => config.setDailiesReset(reset)}
-                onhelp={() => app.toggleHelp()}
-                ontheme={(c) => app.chooseTheme(c)}
                 journalsAt={app.journalsAt}
-                onjournalsat={(at) => app.chooseJournalsAt(at)}
-                onlinkdisplay={(d) => app.chooseLinkDisplay(d)}
-                onpickfolder={(type) => void app.pickAndSwitch(type)}
-                onopenfolder={(path) => void app.switchFolder('folder.open', path)}
-                onforgetfolder={(path) => void app.forgetRecent(path)}
-                onmissingfolder={(path) => app.recentMissing(path)}
-                onopenlogs={() => app.openLogs()}
-                onchangelog={() => settings.showChangelog()}
+                {mac}
               />
             {:else if mainArea.view.kind === 'graph'}
               <!-- Loaded the first time the graph opens: the main bundle stays small. -->
@@ -407,41 +338,7 @@
               {/await}
             {:else if mainArea.view.kind === 'board'}
               {#if boards.view}
-                <Board
-                  board={boards.view}
-                  card={boards.card}
-                  cardColumn={boards.cardColumn}
-                  folded={app.folded}
-                  editingId={host.editingId}
-                  flash={app.flash}
-                  expanded={boards.expanded}
-                  onmore={(id) => boards.expand(id)}
-                  onopencard={(c, column) => void app.openCard(c, column)}
-                  onedit={(id, shift) => app.clickBlock(id, shift)}
-                  ontoggle={(id) => app.toggleFold(id)}
-                  onjump={(c) => void app.jumpTo(c.page, c.id)}
-                  onadd={(column) => void app.addCard(column)}
-                  onclosecard={() => void app.closeCard()}
-                  archiveDays={config.archiveDays}
-                  oncommand={(cmd) =>
-                    // A drop refused because the column changed since it was shown: the notice says so, the board reloads.
-                    void host.exec(cmd, (code) => {
-                      if (code === 'boardChanged') boards.refresh()
-                      return false
-                    })}
-                  onsettings={() => void app.openBoardSettings()}
-                  hidden={hiddenCols.of(boards.view.name, boards.view.columns.map((c) => c.keyword))}
-                  peek={hiddenCols.peek}
-                  onhide={(k) => void app.hideColumn(k)}
-                  onshow={(k) => boards.view && hiddenCols.show(boards.view.name, k)}
-                  onpeek={(k) => hiddenCols.peekOpen(k)}
-                  onpeekend={() => hiddenCols.endPeek()}
-                  columnWidth={app.boardColumn}
-                  oncolumnwidth={(w, final) => {
-                    app.boardColumn = w
-                    if (final) app.saveLayout()
-                  }}
-                />
+                <Board {app} {boards} {hiddenCols} folded={app.folded} columnWidth={app.boardColumn} />
               {/if}
             {:else if mainArea.view.kind === 'gitLog' && scroller}
               <!-- Loaded the first time the history opens, like the graph: the main bundle stays small. -->

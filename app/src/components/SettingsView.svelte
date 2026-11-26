@@ -1,10 +1,12 @@
 <script lang="ts">
   import { tick } from 'svelte'
-  import type { SettingsSection } from '../lib/settings.svelte'
+  import type { AppController } from '../lib/app.svelte'
+  import type { ConfigStore } from '../lib/config.svelte'
+  import type { SettingsScreen } from '../lib/settings.svelte'
   import type { ThemeChoice } from '../lib/theme'
   import type { JournalsAt } from '../lib/treeRows'
   import type { LinkDisplay } from '../lib/linkDisplay'
-  import type { BoardSummary, GitSettings, RecentFolder, StateRename, StateUsage, StateView } from '../lib/types'
+  import type { GitSettings, RecentFolder, StateRename, StateView } from '../lib/types'
   import appIcon from '../../src-tauri/icons/icon.svg'
   import RecentFolders from './RecentFolders.svelte'
   import StatesSection from './settings/StatesSection.svelte'
@@ -16,111 +18,76 @@
   import DailiesSection from './settings/DailiesSection.svelte'
 
   let {
-    folder,
+    app,
+    config,
+    settings,
     recent,
-    section,
-    states,
-    version,
-    usage,
-    skipped,
-    boards,
-    archiveDays,
-    archiveInvalid,
-    autoArchive,
-    git,
-    delayInvalid,
-    intervalInvalid,
-    dailiesReset,
-    dailiesResetInvalid,
     theme,
     journalsAt,
     mac,
-    appVersion,
-    hasGit,
-    logFolder,
-    onstates,
-    onconfirm,
-    onready,
-    onusage,
-    onboard,
-    onmoveboard,
-    onnewboard,
-    onarchivedays,
-    onautoarchive,
-    ongit,
-    ondailiesreset,
-    onhelp,
-    ontheme,
-    onjournalsat,
-    onlinkdisplay,
-    onpickfolder,
-    onopenfolder,
-    onforgetfolder,
-    onmissingfolder,
-    onopenlogs,
-    onchangelog,
   }: {
-    folder: string
+    /** The window: the screen's buttons call it. */
+    app: AppController
+    /** The settings in `breccia/config.toml`, and their writes. */
+    config: ConfigStore
+    /** The asked-for section, and the states' usage counts. */
+    settings: SettingsScreen
     /** The recent folders other than the open one. */
     recent: RecentFolder[]
-    /** The section asked for when Settings opened; scrolled into view once. */
-    section: SettingsSection | null
-    states: StateView[]
-    /** `ConfigView.version` of the settings shown. */
-    version: number
-    usage: StateUsage[]
-    skipped: number
-    boards: BoardSummary[]
-    archiveDays: number
-    autoArchive: boolean
-    /** The `[git]` settings; null until the config is loaded. */
-    git: GitSettings | null
-    /** The file's value of that number is refused and read as the default: saving any valid number writes it. */
-    archiveInvalid: boolean
-    delayInvalid: boolean
-    intervalInvalid: boolean
-    /** `[dailies] reset` as `HH:MM`. */
-    dailiesReset: string
-    /** The file's `[dailies] reset` is no time (read as 00:00): saving any time writes it. */
-    dailiesResetInvalid: boolean
     theme: ThemeChoice
     journalsAt: JournalsAt
     mac: boolean
-    /** The running program's version (not the config's `version`); null until known or if it is not. */
-    appVersion: string | null
-    /** Whether the git command exists on this computer; null while not yet known. */
-    hasGit: boolean | null
-    /** The log file's folder, shown as the button's tooltip; null until known or if there is none. */
-    logFolder: string | null
-    onstates: (states: StateView[], renames: StateRename[], version: number) => Promise<void>
-    onconfirm: (message: string, ok: string) => Promise<boolean>
-    /** Settles once every config write sent before is answered and applied. */
-    onready: () => Promise<void>
-    /** As `onready`, then the states' blocks are counted again. */
-    onusage: () => Promise<void>
-    onboard: (i: number) => void
-    onmoveboard: (i: number, dir: -1 | 1) => void
-    onnewboard: () => void
-    onarchivedays: (n: number) => Promise<void>
-    onautoarchive: (on: boolean) => Promise<void>
-    /** The Keyboard section's link to the F1 list. */
-    onhelp: () => void
-    ongit: (patch: Partial<GitSettings>) => Promise<void>
-    /** Settles once answered. */
-    ondailiesreset: (reset: string) => Promise<void>
-    ontheme: (c: ThemeChoice) => void
-    onjournalsat: (at: JournalsAt) => void
-    onlinkdisplay: (d: LinkDisplay) => void
-    /** "Open folder…" or "New folder…": the parent asks for the folder and switches. */
-    onpickfolder: (type: 'folder.open' | 'folder.create') => void
-    onopenfolder: (path: string) => void
-    onforgetfolder: (path: string) => void
-    onmissingfolder: (path: string) => void
-    /** "Open log folder": the parent opens it and tells the user if that fails. */
-    onopenlogs: () => void
-    /** "Show changelog": the parent opens the changelog overlay over Settings. */
-    onchangelog: () => void
   } = $props()
+
+  const folder = $derived(app.folder ?? '')
+  /** The section asked for when Settings opened; scrolled into view once. */
+  const section = $derived(settings.section)
+  const states = $derived(config.states)
+  /** `ConfigView.version` of the settings shown. */
+  const version = $derived(config.version)
+  const usage = $derived(settings.usage)
+  const skipped = $derived(settings.skipped)
+  const boards = $derived(config.boards)
+  const archiveDays = $derived(config.archiveDays)
+  const autoArchive = $derived(config.autoArchive)
+  /** The `[git]` settings; null until the config is loaded. */
+  const git = $derived(config.git)
+  /** The file's value of that number is refused and read as the default: saving any valid number writes it. */
+  const archiveInvalid = $derived(config.numbersInvalid.archive)
+  const delayInvalid = $derived(config.numbersInvalid.delay)
+  const intervalInvalid = $derived(config.numbersInvalid.interval)
+  /** `[dailies] reset` as `HH:MM`. */
+  const dailiesReset = $derived(app.dailies.reset)
+  /** The file's `[dailies] reset` is no time (read as 00:00): saving any time writes it. */
+  const dailiesResetInvalid = $derived(config.dailiesResetInvalid)
+  /** The running program's version (not the config's `version`); null until known or if it is not. */
+  const appVersion = $derived(app.appVersion)
+  /** Whether the git command exists on this computer; null while not yet known. */
+  const hasGit = $derived(app.hasGit)
+  /** The log file's folder, shown as the button's tooltip; null until known or if there is none. */
+  const logFolder = $derived(app.logDir)
+
+  const onstates = (list: StateView[], renames: StateRename[], v: number) => config.setStates(list, renames, v)
+  const onconfirm = (message: string, ok: string) => app.confirmAsk(message, ok)
+  /** Settles once every config write sent before is answered and applied. */
+  const onready = () => config.ready()
+  /** As `onready`, then the states' blocks are counted again. */
+  const onusage = () => config.countUsage()
+  const onboard = (i: number) => config.editBoard(i)
+  const onmoveboard = (i: number, dir: -1 | 1) => void config.moveBoard(i, dir)
+  const onnewboard = () => app.overlays.open({ kind: 'newBoard', from: 'settings' })
+  const onarchivedays = (archiveAfterDays: number) => config.setBoardSettings({ archiveAfterDays })
+  const onautoarchive = (on: boolean) => config.setBoardSettings({ autoArchive: on })
+  const ongit = (patch: Partial<GitSettings>) => config.setGit(patch)
+  /** Settles once answered. */
+  const ondailiesreset = (reset: string) => config.setDailiesReset(reset)
+  /** The Keyboard section's link to the F1 list. */
+  const onhelp = () => app.toggleHelp()
+  const ontheme = (c: ThemeChoice) => app.chooseTheme(c)
+  const onlinkdisplay = (d: LinkDisplay) => app.chooseLinkDisplay(d)
+  const onopenfolder = (path: string) => void app.switchFolder('folder.open', path)
+  const onforgetfolder = (path: string) => void app.forgetRecent(path)
+  const onmissingfolder = (path: string) => app.recentMissing(path)
 
   let root = $state<HTMLElement | undefined>()
 
@@ -138,8 +105,8 @@
     <h2>Notes folder</h2>
     <p class="settings-path" title={folder}>{folder}</p>
     <div class="settings-folder-actions">
-      <button onclick={() => onpickfolder('folder.open')}>Open folder…</button>
-      <button onclick={() => onpickfolder('folder.create')}>New folder…</button>
+      <button onclick={() => void app.pickAndSwitch('folder.open')}>Open folder…</button>
+      <button onclick={() => void app.pickAndSwitch('folder.create')}>New folder…</button>
     </div>
     {#if recent.length}
       <h3 class="settings-sub">Recent folders</h3>
@@ -179,7 +146,7 @@
           aria-checked={journalsAt === v}
           data-testid="journals-at-option"
           data-journals-at={v}
-          onclick={() => onjournalsat(v as JournalsAt)}
+          onclick={() => app.chooseJournalsAt(v as JournalsAt)}
         >
           <span class="theme-name">{name}</span>
         </button>
@@ -219,14 +186,14 @@
       <dd data-testid="app-source"><a class="ext" href="https://github.com/EightBitBoy/breccia">github.com/EightBitBoy/breccia</a></dd>
     </dl>
     <div class="settings-folder-actions">
-      <button data-testid="show-changelog" onclick={onchangelog}>Show changelog</button>
+      <button data-testid="show-changelog" onclick={() => settings.showChangelog()}>Show changelog</button>
     </div>
   </section>
   <section data-section="troubleshooting">
     <h2>Troubleshooting</h2>
     <p class="settings-hint">Breccia writes warnings and errors to a log file. It holds no note text.</p>
     <div class="settings-folder-actions">
-      <button data-testid="open-log-folder" title={logFolder ?? undefined} onclick={onopenlogs}>Open log folder</button>
+      <button data-testid="open-log-folder" title={logFolder ?? undefined} onclick={() => app.openLogs()}>Open log folder</button>
     </div>
   </section>
 </div>
