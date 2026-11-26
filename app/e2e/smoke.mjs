@@ -2320,18 +2320,18 @@ try {
     await waitFor('167 third page', async () => /^(newest )?600 commits$/.test(await count167.innerText()), true)
     const drawn167 = await rows167.count()
     assert(drawn167 <= 80, `167 the history draws ${drawn167} rows for 600 commits, not at most 80`)
-    // The row under the sticky header, or null when nothing is drawn there (a gap).
-    const topRow = (rowSel, headSel) =>
+    // The row under the sticky header (or `below` px further down), or null when nothing is drawn there (a gap).
+    const topRow = (rowSel, headSel, below = 0) =>
       page.evaluate(
-        ([rowSel, headSel]) => {
-          const y = document.querySelector(headSel).getBoundingClientRect().bottom + 1
+        ([rowSel, headSel, below]) => {
+          const y = document.querySelector(headSel).getBoundingClientRect().bottom + 1 + below
           const hit = [...document.querySelectorAll(rowSel)].find((e) => {
             const b = e.getBoundingClientRect()
             return b.top <= y && b.bottom > y
           })
           return hit ? (hit.getAttribute('data-hash') ?? hit.getAttribute('data-id')) : null
         },
-        [rowSel, headSel],
+        [rowSel, headSel, below],
       )
     const top167 = () => topRow('[data-testid="log-row"]', '.log-table .phead')
     const main167 = page.locator('.main')
@@ -2348,31 +2348,29 @@ try {
     const at167 = hashes167.indexOf(before167)
     assert(at167 > 0, `167 row under the header: ${before167}`)
     const scroll167 = await scrollTop167()
+    const rowAt = (hash) =>
+      page.locator(`[data-testid="log-row"][data-hash="${hash}"]`).evaluate((e) => Math.round(e.getBoundingClientRect().top))
+    const screen167 = await rowAt(before167)
     // The Git item commits the typed text; the history reloads with the new commit on top.
     await page.locator('[data-testid="status-item"][data-id="git"]').click()
     await waitFor('167 commit', () => git(folder167, 'rev-list', '--count', 'HEAD'), '601')
     const head167 = git(folder167, 'rev-parse', 'HEAD')
     assert(git(folder167, 'show', 'HEAD:pages/Log.md') + '\n' === '- entry 600 typed 167\n', '167 commit lacks the typed text')
-    // Every row moved down by one: the row under the header is the next newer one, the old one is still shown, the
-    // scroll position is the same, and nothing is blank.
-    await waitFor('167 rows moved by one', top167, hashes167[at167 - 1])
-    assert((await scrollTop167()) === scroll167, `167 scroll moved: ${scroll167} -> ${await scrollTop167()}`)
-    const oldShown = await page
-      .locator(`[data-testid="log-row"][data-hash="${before167}"]`)
-      .evaluate((e) => {
-        const b = e.getBoundingClientRect()
-        const m = document.querySelector('.main').getBoundingClientRect()
-        return b.top >= m.top && b.bottom <= m.bottom
-      })
-    assert(oldShown, '167 the row shown before the commit is no longer on screen')
+    // The rows on screen stay where they are: the scroll position goes down by the one new row above them, the same
+    // row is under the header at the same place, and nothing is blank.
+    await waitFor('167 scroll follows the new row', async () => Math.abs((await scrollTop167()) - (scroll167 + 33)) <= 1, true)
+    assert((await top167()) === before167, `167 the row under the header moved: ${await top167()}, was ${before167}`)
+    const screenAfter167 = await rowAt(before167)
+    assert(Math.abs(screenAfter167 - screen167) <= 1, `167 the shown row moved on screen: ${screen167} -> ${screenAfter167}`)
     // Scrolled up: the new commit is on top.
     await scrollTo(0)
     await waitFor('167 new commit on top', () => rows167.first().getAttribute('data-hash'), head167)
     assert(readAt(log167) === '- entry 600 typed 167\n', `167 Log.md bytes: ${JSON.stringify(readAt(log167))}`)
     console.log('PASS 167 a long Git history draws only the shown rows and keeps its place when a commit arrives')
 
-    // 168: an Archive of 1,500 tasks draws only the rows on screen; typing in the filter shows the first match at the
-    // top, also from the end of the list; a click opens its page at the block
+    // 168: an Archive of 1,500 tasks draws only the rows on screen; Back from a page opened there brings its scroll
+    // position back; typing in the filter shows the first match at the top, also from the end of the list; a click
+    // opens its page at the block
     const archiveRows168 = page.locator('[data-testid="archive-row"]')
     await page.locator('[data-testid="nav-archive"]').click()
     await page.locator('[data-testid="archive"]').waitFor()
@@ -2380,26 +2378,44 @@ try {
     const drawn168 = await archiveRows168.count()
     assert(drawn168 <= 80, `168 the Archive draws ${drawn168} rows for 1,500 tasks, not at most 80`)
     const top168 = () => topRow('[data-testid="archive-row"]', '.archive-table .phead')
+    const old168Path = join(folder167, 'pages', 'Old.md')
+    const taskOf = (id) => page.locator(`[data-testid="archive-row"][data-id="${id}"] [data-cell="task"]`).innerText()
+    // A flashed block with exactly this task text (`task 14` must not match `task 140`).
+    const flashed = (text) => page.locator('.block.flash', { hasText: new RegExp(`${text}(?!\\d)`) })
+    // Back: open a row from the middle of the list (one well below the header, so the click scrolls nothing), then
+    // Alt Left.
+    const below168 = () => topRow('[data-testid="archive-row"]', '.archive-table .phead', 100)
+    await scrollTo(5000)
+    await waitFor('168 middle drawn', async () => (await below168()) !== null, true)
+    const mid168 = await below168()
+    const midScroll168 = await scrollTop167()
+    const midTask168 = await taskOf(mid168)
+    await page.locator(`[data-testid="archive-row"][data-id="${mid168}"]`).click()
+    await title.filter({ hasText: 'Old' }).waitFor()
+    await flashed(midTask168).waitFor({ timeout: 5000 })
+    await kb.press('Alt+ArrowLeft')
+    await page.locator('[data-testid="archive"]').waitFor()
+    await waitFor('168 Back restores the scroll position', async () => Math.abs((await scrollTop167()) - midScroll168) <= 1, true)
+    await waitFor('168 Back shows the same row', below168, mid168)
+    // The filter from the end of the list: the list goes to its top, with the first match under the header.
     await scrollTo('end')
     await waitFor('168 end drawn', async () => (await top168()) !== null && (await scrollTop167()) > 10_000, true)
     // The filter keeps the keyboard while the list scrolls; typing does not scroll it into view first.
     const focused168 = await page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
     assert(focused168 === 'archive-filter', `168 focus: ${focused168}`)
-    await kb.type('task 1499')
-    await waitFor('168 filtered', () => page.locator('[data-testid="archive-count"]').innerText(), '1 of 1500 tasks')
+    await kb.type('task 14')
+    // Every task with 14 in its number (14, 114, 140 to 149, 1400 to 1499, …): more than the window holds.
+    await waitFor('168 filtered', () => page.locator('[data-testid="archive-count"]').innerText(), '134 of 1500 tasks')
     const match168 = archiveRows168.first()
-    await waitFor('168 match at the top', async () => {
-      const id = await top168()
-      return id !== null && id === (await match168.getAttribute('data-id'))
-    }, true)
-    assert((await match168.locator('[data-cell="task"]').innerText()) === 'task 1499', '168 the match is not task 1499')
-    const old168Path = join(folder167, 'pages', 'Old.md')
+    await waitFor('168 first match at the top', async () => (await scrollTop167()) === 0 && (await top168()) === (await match168.getAttribute('data-id')), true)
+    const matchTask168 = await match168.locator('[data-cell="task"]').innerText()
+    assert(/^task \d*14\d*$/.test(matchTask168), `168 the first match is ${matchTask168}`)
     await match168.click()
     await title.filter({ hasText: 'Old' }).waitFor()
-    await page.locator('.block.flash', { hasText: 'task 1499' }).waitFor({ timeout: 5000 })
+    await flashed(matchTask168).waitFor({ timeout: 5000 })
     await page.locator('[data-testid="archive"]').waitFor({ state: 'detached' })
     assert(readAt(old168Path) === old168, '168 the Archive view wrote to Old.md')
-    console.log('PASS 168 a long Archive draws only the shown rows; the filter shows the first match at the top')
+    console.log('PASS 168 a long Archive draws only the shown rows, Back keeps its place, the filter shows the first match on top')
 
     // Back to the main folder.
     await page.locator('[data-testid="folder-name"]').click()

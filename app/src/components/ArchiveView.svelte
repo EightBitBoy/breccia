@@ -50,8 +50,10 @@
       if (visible.length) onopen(visible[0])
     } else if (e.key === 'Escape') {
       e.preventDefault()
-      archive.filter = ''
-      toTop()
+      if (archive.filter !== '') {
+        archive.filter = ''
+        toTop()
+      }
     }
   }
 </script>

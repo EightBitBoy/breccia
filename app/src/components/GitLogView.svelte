@@ -1,6 +1,8 @@
 <script lang="ts">
   // The Git history: the notes folder's commits, newest first, read-only.
+  import { tick, untrack } from 'svelte'
   import { formatWhen, formatWhenFull } from '../lib/gitLog'
+  import { firstShown, rowsMoved } from '../lib/keepRows'
   import { fixedRows } from '../lib/fixedRows.svelte'
   import type { GitLog } from '../lib/gitLog.svelte'
   import type { LogEntry } from '../lib/types'
@@ -23,8 +25,7 @@
 
   let rowsEl: HTMLDivElement | undefined = $state()
   let headEl: HTMLDivElement | undefined = $state()
-  // Only the rows on screen are drawn; a row keeps its element by its hash, so a new commit on top moves the rows
-  // down by one and the scroll position stays.
+  // Only the rows on screen are drawn; a row keeps its element by its hash.
   const list = fixedRows({
     scroller: () => scroller,
     rows: () => entries,
@@ -32,6 +33,22 @@
     rowHeight: ROW,
     rowsEl: () => rowsEl,
     headEl: () => headEl,
+  })
+
+  // A new commit on top (or a pull's commits) while the history is scrolled down: the scroll position goes down by the
+  // rows that came in above, so the rows on screen stay where they are. At the top it stays, and the new commit shows.
+  let shownKeys: string[] = []
+  $effect.pre(() => {
+    const next = entries.map((e) => e.hash)
+    const before = shownKeys
+    shownKeys = next
+    if (before.length === 0) return
+    const moved = untrack(() => rowsMoved(before, next, firstShown(scroller.scrollTop, list.margin, ROW)))
+    if (moved !== 0) {
+      void tick().then(() => {
+        scroller.scrollTop += moved * ROW
+      })
+    }
   })
 </script>
 

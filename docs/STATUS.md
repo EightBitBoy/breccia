@@ -233,7 +233,7 @@ Candidates for the plan after it, to settle with the owner:
 
 ## Test baseline
 
-- `just test`: Vitest (1385 tests) and cargo tests (core: lib 53, integration 901 with 2 ignored; shell 96) pass
+- `just test`: Vitest (1390 tests) and cargo tests (core: lib 53, integration 901 with 2 ignored; shell 96) pass
   (git-cliff 2.14.2 must be on PATH). `just lint` is clean.
 - `just e2e`: 290 PASS lines, the highest step is 168 (`expectFile` prints its own PASS lines besides a step's). e2e uses its own WebView2
   folder, so an open Breccia does not disturb it. The app window starts off-screen and unfocused
