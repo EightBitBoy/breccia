@@ -669,6 +669,19 @@ Targets *(my call)*: a notes folder with 5,000 pages / 100,000 blocks opens with
 (index refresh continues in the background); typing never waits for the index; the board and All pages update within a
 few hundred milliseconds of a change.
 
+Bars at 5,000 pages *(owner, 2026-11-25; measured by `just perf-scale` and the core's `scale::` tests, results in
+`docs/perf/`)*, all medians on a modern laptop:
+
+- Typing: a save (`block.setText`, `block.split`) 16 ms or less, also while the search index is first built (one
+  index step 16 ms or less) and while the notes lock is held by a Git pull (100 ms or less).
+- Start: the window shows within 500 ms, the journal is usable within 2 seconds, the first search index build ends
+  within 10 seconds.
+- Lists and views: the page tree, All pages and the graph 100 ms or less; the board 200 ms or less; a changed file
+  reloads within 50 ms (100 files within 500 ms); a search answers within 100 ms (once the index is built).
+- Long lists: the Git history (200 commits) and the archive open within 200 ms, and every "Show more" within 200 ms;
+  scrolling any list keeps a frame (95th percentile) within 20 ms; the caret moves down a 5,000-row page within 16 ms.
+- First automatic archive 2 seconds or less; picking a page colour 300 ms or less.
+
 ## 9. Room for plugins later
 
 No plugin API in the first version, but: every user action goes through a named **command** (e.g. `block.setState`,

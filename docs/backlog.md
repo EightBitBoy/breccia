@@ -75,7 +75,11 @@ Owner, 2026-11-13: parked as one item (it was #54, #55, #57, #58 and #59). Owner
 `docs/perf/2026-11-25-baseline.md`. This item is partly closed: what is left is below. Measure with `just perf-scale`
 and `cargo test --release -p breccia-core -- --ignored --nocapture scale::` (test folder of 5,000 pages).
 
-**Closed by plan 18 (2026-11-26), within their bars at 5,000 pages:** the window shows (408 ms, bar 500; one launch of
+**Task 7's runs (`docs/perf/2026-11-25-plan-18-after.md`, two runs) did not all confirm this list:** caret down was 19
+to 27 ms (bar 16), `pages.table` 122 and 203 ms (bar 100), the window shows 476 to 525 ms (bar 500), so those three
+stay open in #85 until a quiet-machine run settles them.
+
+**Closed by plan 18 (2026-11-26), within their bars at 5,000 pages, as measured by Task 6:** the window shows (408 ms, bar 500; one launch of
 three 715 on a cold WebView2), typing during the first index build (wait p95 12.6 ms, bar 16), the index step (about
 7.5 ms for 10 pages, bar 16), caret down at 5,000 rows (12.9 ms, bar 16; the outline is not virtualised, which would
 be the fix if it grows), `pages.table` (96 ms, bar 100: at the bar), `page.setColor` on a page linked from 1,000
