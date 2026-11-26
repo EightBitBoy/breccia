@@ -438,7 +438,7 @@ are its questions for you; each answer decides what a later plan does.
 ## The frontend controller (plan 19)
 
 The window's code moved into a tested controller; nothing else changes but the recovery after an internal error
-(backlog #89, the owner's answers Q1 to Q5). Saving the typed text before the reload can no longer fail in a way you
+(backlog #89, the owner's answers Q1 to Q5). Saving the typed text before the reload cannot fail in a way you
 could reach, so the reload going ahead after such a failure has no item of its own. Each item below is covered by unit
 tests; by hand only with `BRECCIA_TEST_PANIC` (CLAUDE.md), and the slow-save cases not at all, as nothing makes the
 core hang on purpose.
@@ -471,6 +471,12 @@ core hang on purpose.
    within a minute stays quiet, as before; a notice with other words is now shown, for example "your notes were not
    reloaded" followed within the minute by "reloaded your notes from disk", or by "closed the notes folder". Unit tests
    only.
+
+162. [ ] **An open dialog closes when the notes reload after an internal error (and when another notes folder
+   opens):** in 1.9.1 the reload closed only the search box. Now help, the changelog, a Move, Rename or New board
+   dialog, the board settings and a question all close too, as they name the old notes. A question counts as Cancel,
+   and a name typed into a dialog is not kept. Covered by unit tests; by hand with `BRECCIA_TEST_PANIC` only if a
+   dialog can be open at the panic (it cannot from step 127's search), so unit tests only.
 
 The empty card that "+ Add" makes on a board is left in today's journal (as its bare keyword, for example `TODO`) if
 an internal error hits while it is open; delete it by hand (owner, Q5 a).
