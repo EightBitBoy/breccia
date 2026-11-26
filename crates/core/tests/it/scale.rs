@@ -538,7 +538,7 @@ fn git_at_scale() {
         }
     };
     // One round: `theirs` pushes a changed page, then `mine` ticks; returns
-    // (lock held ms, whole tick ms).
+    // (longest single lock hold of the pull in ms, whole tick ms).
     let mut round_no = 0;
     let mut round = |engine: &mut GitEngine| -> (f64, f64) {
         round_no += 1;

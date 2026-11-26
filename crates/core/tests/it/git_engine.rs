@@ -1177,6 +1177,135 @@ fn a_save_between_the_release_and_the_retake_falls_back_and_keeps_both() {
     assert_eq!(blocks(&session, "a")[0].1, "saved 1");
 }
 
+/// A hook that writes a NEW page (not tracked yet) on its first call only.
+fn new_page_on_first_take(
+    dir: &Path,
+    rel: &'static str,
+    text: &'static str,
+) -> Box<dyn FnMut() + Send> {
+    let (dir, done) = (dir.to_path_buf(), std::sync::atomic::AtomicBool::new(false));
+    Box::new(move || {
+        if !done.swap(true, std::sync::atomic::Ordering::SeqCst) {
+            std::fs::write(dir.join(rel), text).unwrap();
+        }
+    })
+}
+
+#[test]
+fn a_new_page_just_before_the_lock_that_the_remote_also_has_ends_in_a_conflict() {
+    let e = env();
+    let (mine, theirs, session) = local_and_remote_commit(&e);
+    commit_file(
+        &e,
+        &theirs,
+        "pages/N.md",
+        "- n theirs
+",
+    );
+    git(&e, &theirs, &["push", "-q", "origin", "main"]);
+    let mut engine = GitEngine::new(e.git.clone());
+    engine.before_lock(new_page_on_first_take(
+        &mine,
+        "pages/N.md",
+        "- n mine
+",
+    ));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(problem_kind(&v), Some("conflict"), "{v:?}");
+    assert!(format!("{:?}", v.problem).contains("pages/N.md"));
+    // The local bytes stay; the new page is in a local commit, not lost.
+    assert_eq!(
+        read(&mine, "pages/N.md"),
+        "- n mine
+"
+    );
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/N.md"]), "- n mine");
+    assert_eq!(
+        read(&mine, "pages/A.md"),
+        "- a local
+"
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
+#[test]
+fn a_new_page_just_before_the_lock_stays_untracked_until_the_next_commit() {
+    let e = env();
+    let (mine, _theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    // The move ignores untracked files: it applies, and the page stays on disk.
+    engine.before_lock(new_page_on_first_take(
+        &mine,
+        "pages/N.md",
+        "- n mine
+",
+    ));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert!(last_move(&e, &mine).starts_with("pull (breccia)"));
+    assert_eq!(
+        read(&mine, "pages/B.md"),
+        "- b theirs
+"
+    );
+    assert_eq!(
+        read(&mine, "pages/N.md"),
+        "- n mine
+"
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "?? pages/N.md");
+    engine.sync_now(&session, now(T0 + 10 * MIN));
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/N.md"]), "- n mine");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
+#[test]
+fn a_new_page_landing_in_the_gap_stays_untracked_until_the_next_commit() {
+    use std::sync::atomic::{AtomicUsize, Ordering};
+    let e = env();
+    let (mine, _theirs, session) = local_and_remote_commit(&e);
+    let mut engine = GitEngine::new(e.git.clone());
+    // The second take is the one that sees a page created after the retry's
+    // commit: the move applies, and the page is left for the next commit.
+    let (dir, takes) = (mine.clone(), AtomicUsize::new(0));
+    engine.before_lock(Box::new(move || {
+        match takes.fetch_add(1, Ordering::SeqCst) {
+            0 => std::fs::write(
+                dir.join("pages/A.md"),
+                "- a saved
+",
+            )
+            .unwrap(),
+            _ => std::fs::write(
+                dir.join("pages/N.md"),
+                "- n mine
+",
+            )
+            .unwrap(),
+        }
+    }));
+    let step = engine.tick(&session, now(T0));
+    let v = last_view(&engine, &step);
+    assert_eq!(v.state, GitState::Ready, "{:?}", v.problem);
+    assert!(last_move(&e, &mine).starts_with("pull (breccia)"));
+    assert_eq!(
+        read(&mine, "pages/B.md"),
+        "- b theirs
+"
+    );
+    assert_eq!(
+        read(&mine, "pages/N.md"),
+        "- n mine
+"
+    );
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "?? pages/N.md");
+    engine.sync_now(&session, now(T0 + 10 * MIN));
+    assert_eq!(git(&e, &mine, &["show", "HEAD:pages/N.md"]), "- n mine");
+    assert_eq!(git(&e, &mine, &["status", "--porcelain"]), "");
+}
+
 #[test]
 fn conflict_after_replay_is_reported_as_before() {
     let e = env();

@@ -528,7 +528,7 @@ by default, with a "Show journal pages" switch. Multi-select for delete/move is 
   unusual (a conflict, a merge commit, a commit the remote already has, signed commits, an
   older Git) Breccia runs the plain rebase under the lock as before. A save that lands just before the
   lock is committed and the rebase prepared again outside it, once; only a second save in that gap sends the pull to
-  the plain rebase. A conflict is handled as described below.
+  the plain rebase. A page created in that last instant goes in with the next regular commit instead. A conflict is handled as described below.
 - **Conflicts:** if a pull cannot be applied cleanly, Breccia stops syncing, leaves the repository in a state the user can
   resolve with normal Git tools (or aborts the rebase so local work is untouched — builder's choice, but no automatic
   resolution) and shows a red status with an explanation. It never discards text.

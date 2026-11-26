@@ -383,7 +383,7 @@ are its questions for you; each answer decides what a later plan does.
    rebase. Measured at 5,000 pages (`scale::`): the time the notes are locked during a pull fell from 855 to about 500
    ms (a save during the fetch) and from 703 to about 470 ms (none); the rest is two scans of the folder by Git
    (about 100 ms each) plus the move of the files. Open question: is that enough, or should the locked commit step
-   be skipped when nothing was saved since the unlocked one (Task 6)?
+   be skipped when nothing was saved since the unlocked one (Task 6)? Done in item 154.
 
 153. [ ] **Long Git histories and archives open and scroll without stutter:** by hand, in a notes folder with a long
    history (thousands of commits) open the Git history and press "Show more" several times, then scroll from top to
@@ -400,7 +400,7 @@ are its questions for you; each answer decides what a later plan does.
    starts. Typing pauses for a fraction of a second at most (no longer a full second when you typed just before the
    pull), and afterwards your text and the pulled page's text are both there, the history is one line with your
    commit on top, and the Git status is green. Known difference: a page you created in the last instant before the
-   pull is committed right after it, not before it (the text is the same). Measured at 5,000 pages (`scale::`), the
+   pull goes in with the next regular commit (after the usual wait), not before the pull (the text is the same). Measured at 5,000 pages (`scale::`), the
    time the notes are locked during a pull fell from 460 to about 360 ms (a save during the fetch), from 424 to about
    360 ms (none) and from 1267 to about 350 ms (a save just before the lock). Still over the 100 ms goal (follow-up in
    backlog #85).
