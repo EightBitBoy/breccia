@@ -390,6 +390,9 @@ export class AppController {
         this.pickerOpen = false // a pick after the reload would name a block of the old session
         duePick.close() // likewise
         this.area.leave('page')
+        // A card just added with "+ Add" (its bare keyword only) is not deleted when it closes here, as it would be
+        // when closed by hand: the line stays in today's journal (owner, plan 19 Q5). Finding it again after the
+        // reload means matching its text, which could hit a line the user wrote (spec §2).
       },
       flush: () => this.client.flush(),
       reload: async () => {

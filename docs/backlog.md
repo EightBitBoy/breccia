@@ -115,21 +115,24 @@ follow-ups 9 and 15 and old #59 are answered by these numbers.
 
 ## 89. Recovery after an internal error: edges left (Safety net)
 
-From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Four edges of the recovery that plan 6 built:
+From plan 12 triage (plan 6 follow-ups 4, 5, 9, 10). Owner, 2026-11-25: keep open; do it together with the controller
+move (M39). This item is partly closed: what is left is the two Git edges below.
 
+**Closed by plan 19 (2026-11-26, `docs/plans/2026-11-26-19-the-frontend-controller.md`, owner's Q1 b to Q5):** the
+window's reload goes ahead when saving the typed text fails, and after 10 s when the save does not answer (the text is
+shown to copy as "may not have been saved"); a reload that is refused or does not answer in 10 s asks for a restart;
+after a restart has been asked for, refused actions say so instead of the raw "request is for generation" text; the
+window is greyed out and takes no input while the notes reload, so no click is dropped; within a minute a second
+notice with other words (a reopened session after a kept one, a closed folder) is shown, the same words stay quiet.
+The empty "+ Add" card left by a reload is accepted (Q5 a): the bare keyword line stays in today's journal and is
+deleted by hand, as deleting it after the reload could hit a line the user wrote (spec §2).
+
+**Still open:**
 - A Git step that fails mid-rebase leaves a rebase that the fresh Git engine treats as the user's, so sync stays stuck
   until the user resolves it.
 - After a Git failure the fresh engine's pull is due at once; if it keeps failing, every save recovers and reloads the
   window (user-paced). Edits made before the failure are not scheduled for a commit until the next change or sync click
   (closing the app still commits them); no test records this.
-- The 60-second rule can hide a more serious notice: a recovery that keeps the session within a minute of a reload, or a
-  closed folder after a kept session, shows no new notice.
-- The window's reload (`clear()` in `App.svelte`): a flush that never settles keeps the quiet window open; after the
-  "again" notice other commands show the raw "request is for generation" text; an error during the flush ends with the
-  sidebar's actions dropped; an empty "+ Add" card can be left. Best done with the audit's move M39 (the controller into
-  `lib/`).
-
-Owner, 2026-11-25: keep open; do it together with the controller move (M39).
 
 ## 90. Log Git failures, and maybe window errors (Safety net)
 

@@ -192,6 +192,11 @@ properties). The frontend gets parsed structure from the core and only adds synt
   (§7.13). The window shows at once; while the folder opens it says "Opening ‹folder name›…" in the main area, and
   only the help, the theme and the zoom work. The journal shows as soon as the folder is open; a folder that fails to
   open shows the Welcome screen with the reason.
+- **After an internal error** Breccia reloads the notes from disk and one notice says so. While they reload the window
+  is greyed out and takes no input (only the zoom works, and the question on closing the window shows above it).
+  Typed text is sent first; text whose save has not answered after 10 seconds is shown in a notice to copy, as it may
+  not have been saved, and the reload goes ahead. A reload that is refused or does not answer within 10 seconds ends
+  in a notice asking to restart Breccia; after a restart has been asked for, actions that are refused say so.
 - **The frontend never writes files.** It sends intents to the core: "set this block's text", "set this block's state to
   DOING", "insert block after", "indent", "move", "create page", "rename page", and so on. The core applies the intent to
   its model, writes the file (atomically: write a temporary file, then rename), updates the index and answers with what

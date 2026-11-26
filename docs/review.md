@@ -434,3 +434,41 @@ are its questions for you; each answer decides what a later plan does.
    This machine has Git 2.45, so the new behaviour was only imitated in a test. By hand, if a Git 2.53 or newer is at
    hand (for example a portable Git on `PATH` for `just dev`): do item 152's steps; afterwards both texts are there,
    the history is one line with your commit on top, and no "notes:" commit undoes the pulled page.
+
+## The frontend controller (plan 19)
+
+The window's code moved into a tested controller; nothing else changes but the recovery after an internal error
+(backlog #89, the owner's answers Q1 to Q5). Saving the typed text before the reload can no longer fail in a way you
+could reach, so the reload going ahead after such a failure has no item of its own. Each item below is covered by unit
+tests; by hand only with `BRECCIA_TEST_PANIC` (CLAUDE.md), and the slow-save cases not at all, as nothing makes the
+core hang on purpose.
+
+158. [ ] **The notes reload after 10 s if Breccia stops answering, keeping your text:** after an internal error the
+   window first saves what you just typed. If that save has not answered after 10 seconds, the window stops waiting:
+   the text shows in a notice "Breccia did not answer, so this text may not have been saved. Copy it from here:" with
+   the text to copy, and the notes reload as soon as the stuck save ends. If the reload is refused or has not answered
+   10 seconds later either, a notice says "Breccia is not answering. Please restart Breccia." and the window can be
+   used again (it may show nothing until you restart). Closing the window while such a notice is shown asks first.
+   Pasting the text back after a slow save that did land can repeat it; the notice says "may".
+
+159. [ ] **Refused clicks after an internal error say a restart is needed:** once Breccia has said "Breccia hit an
+   internal error again. Please restart Breccia." (or "Breccia is not answering…"), a click that the core refuses says
+   "Not done: Breccia needs a restart after an internal error." instead of "request is for generation 3, …". Typed text
+   still keeps its own notice with the text to copy. Unit tests only: `BRECCIA_TEST_PANIC` panics once per run, and the
+   "again" case needs a second error within a minute.
+
+160. [ ] **The window is greyed out while the notes reload:** after an internal error, for the moment the notes take to
+   reload, a grey layer covers the whole window with "Reloading the notes…" in the middle; clicks, typing and shortcuts
+   do nothing (only the zoom keys work), so no click is lost. A reload that ends normally shows no notice but the one
+   saying the notes were reloaded. Look at it in a light and a dark theme: the grey is the one behind dialogs, the text
+   box reads like a menu. The notices stay under the layer until it goes. If you close the window while it shows, the
+   "Close anyway?" question shows above the layer and works. By hand: `BRECCIA_TEST_PANIC=zz` and search for `zz` (the
+   layer may flash by too fast to see; e2e step 127 checks it is there).
+
+161. [ ] **A second, different error notice within a minute is shown:** after an internal error, the same notice again
+   within a minute stays quiet, as before; a notice with other words is now shown, for example "your notes were not
+   reloaded" followed within the minute by "reloaded your notes from disk", or by "closed the notes folder". Unit tests
+   only.
+
+The empty card that "+ Add" makes on a board is left in today's journal (as its bare keyword, for example `TODO`) if
+an internal error hits while it is open; delete it by hand (owner, Q5 a).
