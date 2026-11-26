@@ -181,6 +181,11 @@
     host.leave()
   }
 
+  /** The reload layer takes the keyboard focus, unless the close question is up (it stays above the layer). */
+  function holdFocus(node: HTMLElement, closing: boolean) {
+    if (!closing) node.focus()
+    return { update: (c: boolean) => void (c || node.focus()) }
+  }
 
   onMount(() => {
     const stopThemeTokens = watchThemeTokens(document.documentElement)
@@ -276,7 +281,7 @@
     {/if}
     <!-- The close question: its own layer above every dialog (mounted last, so on top); Cancel gives the dialog back. -->
     {#if app.closing}
-      <ConfirmDialog message={app.closing} ok="Close anyway" onok={() => app.closeAnyway()} oncancel={() => app.cancelClose()} />
+      <ConfirmDialog message={app.closing} ok="Close anyway" top onok={() => app.closeAnyway()} oncancel={() => app.cancelClose()} />
     {/if}
     {#if app.opening !== null}
       <!-- The folder opens in the shell: nothing to click yet but the status bar's theme and help. -->
@@ -346,7 +351,7 @@
               onclick={() => void app.go('forward')}>→</button
             >
           </div>
-          <div class="main" use:autoHideScrollbar bind:this={scroller}>
+          <div class="main" aria-busy={app.reloading} use:autoHideScrollbar bind:this={scroller}>
             {#if mainArea.view.kind === 'newPage'}
               <NewPageView onsubmit={(name) => void app.createUntitled(name)} oncancel={() => void app.openJournal()} />
             {:else if mainArea.view.kind === 'settings'}
@@ -513,5 +518,11 @@
       ontheme={(c) => app.chooseTheme(c)}
       onthemewheel={(dy) => app.themeWheel(dy)}
     />
+    {#if app.reloading}
+      <!-- After an internal error, while the notes reload: over everything (the notices too) but the close question. -->
+      <div class="reload-layer" data-testid="reload-layer" role="status" tabindex="-1" use:holdFocus={app.closing !== null}>
+        <span>Reloading the notes…</span>
+      </div>
+    {/if}
   </div>
 {/if}

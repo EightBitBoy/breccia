@@ -3708,7 +3708,9 @@ try {
   console.log("PASS 126 the log file is in the app's data folder, and Settings offers to open its folder")
 
   // 127: after an internal error the notes reload from disk and one notice says so; text typed just before it is
-  // saved, the search box that met it is gone, typing saves again, and the log names the panic but no note text.
+  // saved, the search box that met it is gone, typing saves again, and the log names the panic but no note text. While
+  // the notes reload the window is greyed out: a layer over it all, the main area busy, a click on a sidebar row lands
+  // on the layer. The reload is too fast to click into, so an observer notes what the layer covered when it came.
   // BRECCIA_TEST_PANIC makes the first search for `zz-panic-127` panic inside the core.
   const RELOADED127 = 'Breccia hit an internal error and reloaded your notes from disk. Everything saved is safe; undo starts afresh.'
   const notices127 = page.locator('[data-testid="notice"]')
@@ -3734,14 +3736,27 @@ try {
   await kb.type(' typed before the error')
   // The old journal must go before the reload shows the new one (the new session reuses block ids): noted the moment
   // no day is in the page any more.
-  await page.evaluate(() => {
+  const annaBox127 = await side.locator('[data-row="p:anna"]').boundingBox()
+  await page.evaluate((box) => {
     window.__e2eFeedGone127 = false
     new MutationObserver((_, o) => {
       if (document.querySelector('[data-testid="day"]')) return
       window.__e2eFeedGone127 = true
       o.disconnect()
     }).observe(document.body, { childList: true, subtree: true })
-  })
+    window.__e2eLayer127 = null
+    new MutationObserver((_, o) => {
+      const layer = document.querySelector('[data-testid="reload-layer"]')
+      if (!layer) return
+      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+      window.__e2eLayer127 = {
+        busy: document.querySelector('.main')?.getAttribute('aria-busy') ?? null,
+        rowCovered: hit !== null && (hit === layer || layer.contains(hit)),
+        focused: document.activeElement === layer,
+      }
+      o.disconnect()
+    }).observe(document.body, { childList: true, subtree: true })
+  }, annaBox127)
   // At once: opening the search box sends the typed text first, so the core has it before the error. The case "typed
   // but not yet sent when the error hits" cannot be reached from here: the panic needs a search query, a search needs
   // the box open, and opening it always sends the typed text first (a query invoked behind the UI's back would test a
@@ -3756,6 +3771,13 @@ try {
   await side.locator('[data-row="p:anna"]:not([data-e2e-before])').waitFor({ timeout: 10_000 })
   await page.locator(`[data-testid="day"][data-day="${today}"]:not([data-e2e-before])`).waitFor({ timeout: 10_000 })
   assert(await page.evaluate(() => window.__e2eFeedGone127), '127 the old journal stayed shown and clickable during the reload')
+  await page.locator('[data-testid="reload-layer"]').waitFor({ state: 'detached', timeout: 10_000 })
+  const layer127 = await page.evaluate(() => window.__e2eLayer127)
+  assert(layer127 !== null, '127 no layer greyed the window out during the reload')
+  assert(layer127.busy === 'true', `127 the main area was not busy during the reload: ${JSON.stringify(layer127)}`)
+  assert(layer127.rowCovered, `127 a click on a sidebar row would have reached the row during the reload: ${JSON.stringify(layer127)}`)
+  assert(layer127.focused, `127 the layer did not take the keyboard focus: ${JSON.stringify(layer127)}`)
+  assert((await page.locator('.main').getAttribute('aria-busy')) === 'false', '127 the main area stayed busy after the reload')
   await waitFor('127 the text typed before the error is on disk', () => readAt(journal), typedIn127(' typed before the error'))
   await clickRow(firstRow127())
   await page.locator('.cm-content').waitFor()
@@ -3770,7 +3792,7 @@ try {
   await recovery127.first().locator('button.close').click()
   await waitFor('127 the notice dismissed', () => notices127.count(), 0)
   await kb.press('Escape')
-  console.log('PASS 127 after an internal error the notes reload, one notice says so, and typing saves again')
+  console.log('PASS 127 after an internal error the notes reload under a grey layer, one notice says so, and typing saves again')
 
   // 128: no line shows between the rows of a wash band (#75). For each theme and zoom, one capture of the window at
   // device scale; for the inner boundaries of a named and a custom band, the largest per-channel difference between

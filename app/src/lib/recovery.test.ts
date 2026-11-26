@@ -24,6 +24,8 @@ function setup() {
     calls: [] as string[],
     finish: [] as (() => void)[],
     fail: [] as ((e: Error) => void)[],
+    /** What `reloading` was told, in order. */
+    layer: [] as boolean[],
     /** The timers started and not yet run or cleared, by id, with the clock time they are due at. */
     timers: new Map<number, { f: () => void; due: number }>(),
     /** The sent `block.setText` texts with no answer yet. */
@@ -44,6 +46,7 @@ function setup() {
     flush: step('flush'),
     reload: step('reload'),
     now: () => s.clock,
+    reloading: (on) => void s.layer.push(on),
     unanswered: () => s.unanswered,
     setTimeout: (f, ms) => {
       const id = nextTimer++
@@ -228,6 +231,7 @@ test('a_failed_flush_still_reloads', async () => {
   expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
   await Promise.all([run, settle()])
   expect(s.notices).toEqual([reopened.notice])
+  expect(s.layer).toEqual([true, false])
 })
 
 test('a_flush_that_does_not_answer_in_10_s_reloads_anyway_and_keeps_the_text_to_copy', async () => {
@@ -248,6 +252,7 @@ test('a_flush_that_does_not_answer_in_10_s_reloads_anyway_and_keeps_the_text_to_
   expect(s.notices).toEqual([reopened.notice, copy(4, 'my words'), copy(7, 'more words')])
   expect(UNANSWERED).toBe('Breccia did not answer, so this text may not have been saved. Copy it from here:')
   await Promise.all([run, settle()])
+  expect(s.layer).toEqual([true, false])
   expect(s.timers.size).toBe(0) // the reload answered: its timer is gone
 })
 
@@ -271,6 +276,7 @@ test('a_reload_that_is_refused_shows_NOT_ANSWERING', async () => {
   await run // it ends; the notice says what to do
   expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: NOT_ANSWERING }])
   expect(NOT_ANSWERING).toBe('Breccia is not answering. Please restart Breccia.')
+  expect(s.layer).toEqual([true, false])
   s.clock += 2_001
   expect(quiet(recovery, 'stale', null)).toBe(false)
 })
@@ -283,9 +289,11 @@ test('a_reload_that_does_not_answer_shows_NOT_ANSWERING_after_10_s', async () =>
   await tick()
   s.finish.splice(0) // the reload never answers
   await pass(RELOAD_WAIT_MS - 1)
+  expect(s.layer).toEqual([true])
   await pass(1)
   await run
   expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: NOT_ANSWERING }])
+  expect(s.layer).toEqual([true, false])
 })
 
 test('a_flush_and_a_reload_that_both_hang_end_in_the_restart_notice_after_20_s', async () => {
@@ -298,6 +306,7 @@ test('a_flush_and_a_reload_that_both_hang_end_in_the_restart_notice_after_20_s',
   await pass(RELOAD_WAIT_MS)
   await run
   expect(s.notices.map((n) => n.message)).toEqual([RELOADED, UNANSWERED, NOT_ANSWERING])
+  expect(s.layer).toEqual([true, false])
 })
 
 test('after_the_again_notice_a_stale_refusal_says_NEEDS_RESTART', async () => {
@@ -323,6 +332,40 @@ test('after_NOT_ANSWERING_a_stale_refusal_says_NEEDS_RESTART', async () => {
   await run
   s.clock += 2_001
   expect(recovery.message('stale', null, STALE)).toBe(NEEDS_RESTART)
+})
+
+test('reloading_is_true_from_the_start_of_the_reload_until_it_ends', async () => {
+  const { s, recovery, tick } = setup()
+  expect(s.layer).toEqual([])
+  const run = recovery.recovered(reopened)
+  expect(s.layer).toEqual([true]) // at once, with the view cleared
+  s.finish.splice(0).forEach((f) => f()) // the flush answers
+  await tick()
+  expect(s.layer).toEqual([true]) // the reload runs
+  s.finish.splice(0).forEach((f) => f())
+  await run
+  expect(s.layer).toEqual([true, false])
+})
+
+test('a_kept_session_shows_no_layer', async () => {
+  const { s, recovery } = setup()
+  await recovery.recovered(kept)
+  expect(s.layer).toEqual([])
+})
+
+test('a_reload_that_ends_normally_shows_no_extra_notice', async () => {
+  const { s, recovery, settle } = setup()
+  await Promise.all([recovery.recovered(reopened), settle()])
+  expect(s.notices).toEqual([reopened.notice])
+})
+
+test('a_second_error_during_the_reload_ends_the_layer_with_the_restart_notice', async () => {
+  const { s, recovery, settle } = setup()
+  const first = recovery.recovered(reopened)
+  void recovery.recovered(reopened)
+  await Promise.all([first, settle()])
+  expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: AGAIN }])
+  expect(s.layer).toEqual([true, false])
 })
 
 test('typed_text_keeps_its_notice_in_every_case', async () => {

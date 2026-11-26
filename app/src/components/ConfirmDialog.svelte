@@ -4,12 +4,15 @@
   let {
     message,
     ok = 'OK',
+    top = false,
     onok,
     oncancel,
   }: {
     message: string
     /** The label of the button that goes ahead. */
     ok?: string
+    /** Above everything, the reload layer included (the close question). */
+    top?: boolean
     onok: () => void
     oncancel: () => void
   } = $props()
@@ -17,8 +20,8 @@
 
 <AlertDialog.Root open onOpenChange={(o) => !o && oncancel()}>
   <AlertDialog.Portal>
-    <AlertDialog.Overlay class="overlay" />
-    <AlertDialog.Content class="dialog" aria-describedby={undefined} data-testid="confirm-dialog">
+    <AlertDialog.Overlay class={top ? 'overlay top' : 'overlay'} />
+    <AlertDialog.Content class={top ? 'dialog top' : 'dialog'} aria-describedby={undefined} data-testid="confirm-dialog">
       <AlertDialog.Title class="dialog-title">{message}</AlertDialog.Title>
       <div class="dialog-actions">
         <AlertDialog.Cancel type="button">Cancel</AlertDialog.Cancel>

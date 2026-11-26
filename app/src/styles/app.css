@@ -353,6 +353,18 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
   padding: 16px; background: var(--card); color: var(--text); border: 1px solid var(--line);
   border-radius: 10px; box-shadow: 0 10px 30px var(--shadow-strong);
 }
+/* The close question: above the reload layer too. */
+.overlay.top { z-index: 50; }
+.dialog.top { z-index: 51; }
+/* While the notes reload after an internal error: the window greyed out, taking no input; only the close question is above. */
+.reload-layer {
+  position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center;
+  background: var(--overlay); cursor: progress; outline: none;
+}
+.reload-layer span {
+  padding: 8px 16px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+  box-shadow: 0 6px 20px var(--shadow); font-size: 13.5px;
+}
 .dialog-title { margin: 0 0 12px; font-size: 15px; font-weight: 600; }
 .dialog input { width: 100%; box-sizing: border-box; padding: 6px 8px; font: inherit; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--text); }
 .dialog-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; }

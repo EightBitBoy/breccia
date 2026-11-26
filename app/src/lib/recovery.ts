@@ -1,5 +1,6 @@
 // After an internal error the core recovers its session and says so (`session:recovered`). This decides what the
-// window shows: one notice per error, one reload of the notes, and what the refusals that error caused say.
+// window shows: one notice per error, one reload of the notes, the layer over the window while it runs, and what the
+// refusals that error caused say.
 import { UNANSWERED } from './notices'
 import type { BlockId, Command, Notice, RecoveredEvent } from './types'
 
@@ -37,6 +38,8 @@ export interface RecoveryEnv {
   reload(): Promise<void>
   /** The time in ms. */
   now(): number
+  /** The reload started (true: the window takes no input) or ended (false). */
+  reloading(on: boolean): void
   /** The typed text sent to the core and not answered yet (`client.unanswered()`). */
   unanswered(): { id: BlockId; text: string }[]
   /** Bound timer functions (WebView2 refuses them called as methods). */
@@ -82,6 +85,7 @@ export class Recovery {
     // At once, before anything waits: typed text first, then nothing of the old session stays clickable.
     this.env.leave()
     this.env.clear()
+    this.env.reloading(true)
     const run = (async () => {
       let reloaded = false
       try {
@@ -95,6 +99,7 @@ export class Recovery {
         if (!reloaded) this.restart(NOT_ANSWERING, this.reloadEnd)
         else if (this.againDuringReload) this.restart(AGAIN, this.reloadEnd)
         this.againDuringReload = false
+        this.env.reloading(false)
       }
     })()
     this.running = run

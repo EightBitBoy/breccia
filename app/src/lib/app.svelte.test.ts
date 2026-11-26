@@ -398,6 +398,51 @@ const reopenedEvent = {
   notice: { kind: 'refused' as const, message: 'Breccia hit an internal error and reloaded your notes from disk.' },
 }
 
+test('a shortcut while reloading does nothing', async () => {
+  const { app, w } = await withPage('p')
+  let answer = () => {}
+  w.core.on['folder.status'] = () =>
+    new Promise((resolve) => (answer = () => resolve(emptyOutput({ answer: { kind: 'folder', value: { ...w.core.folder } } }))))
+
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+  expect(app.reloading).toBe(true) // the reload waits for folder.status
+  const from = w.core.sent.length
+  for (const k of [press('k', { ctrl: true }), press(',', { ctrl: true }), press('n', { ctrl: true }), press('F1')]) {
+    app.keyCapture(k)
+    expect(k.defaultPrevented).toBe(true) // taken, so neither the views nor WebView2 get it
+  }
+  const back = press('ArrowLeft', { alt: true })
+  app.keyCapture(back)
+  app.key(press('z', { ctrl: true }))
+  await settle()
+  expect(app.search.shown).toBe(false)
+  expect(app.overlays.current).toBeNull()
+  expect(since(w, from)).toEqual([]) // no Back, no undo, no new page
+  const zoom = press('=', { ctrl: true })
+  app.keyCapture(zoom) // the zoom still works
+  await settle()
+  expect(app.zoom.percent).toBeGreaterThan(100)
+
+  answer()
+  await settle()
+  expect(app.reloading).toBe(false)
+  const after = press('k', { ctrl: true })
+  app.keyCapture(after)
+  expect(app.search.shown).toBe(true)
+})
+
+test('a shortcut while reloading reaches the close question', async () => {
+  const { app, w } = await withPage('p')
+  w.core.on['folder.status'] = () => new Promise(() => {})
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+  app.closing = 'Close anyway?'
+  const esc = press('Escape')
+  app.keyCapture(esc)
+  expect(esc.defaultPrevented).toBe(false) // its dialog handles it
+})
+
 test('a refused reload says Breccia is not answering', async () => {
   const { app, w } = await withPage('p')
   w.core.on['folder.status'] = () => {
@@ -407,6 +452,7 @@ test('a refused reload says Breccia is not answering', async () => {
   await settle()
   expect(app.notices.items.map((n) => n.text)).toContain(NOT_ANSWERING)
   expect(app.notices.items.map((n) => n.text)).not.toContain('boom')
+  expect(app.reloading).toBe(false)
 })
 
 test('a save that does not answer in 10 s is shown to copy, then a reload that does not answer asks for a restart', async () => {
@@ -418,6 +464,7 @@ test('a save that does not answer in 10 s is shown to copy, then a reload that d
 
   app.shellHandlers().recovered(reopenedEvent)
   await vi.advanceTimersByTimeAsync(9_999)
+  expect(app.reloading).toBe(true)
   expect(app.notices.items.map((n) => n.text)).not.toContain(UNANSWERED)
   await vi.advanceTimersByTimeAsync(1)
   const copy = app.notices.items.find((n) => n.text === UNANSWERED)
@@ -426,6 +473,7 @@ test('a save that does not answer in 10 s is shown to copy, then a reload that d
   expect(w.core.sent.filter((c) => c.type === 'folder.status')).toHaveLength(1) // the reload waits behind the save
   await vi.advanceTimersByTimeAsync(10_000)
   expect(app.notices.items.map((n) => n.text)).toContain(NOT_ANSWERING)
+  expect(app.reloading).toBe(false)
 })
 
 test('after the again notice a refused click says a restart is needed', async () => {

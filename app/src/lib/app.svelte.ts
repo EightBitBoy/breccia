@@ -177,6 +177,8 @@ export class AppController {
   ready = $state(false)
   /** The folder the shell opens at startup, while the window waits for it ("Opening ‹folder›…"); null otherwise. */
   opening = $state<string | null>(null)
+  /** The notes reload after an internal error (`Recovery`): the window is greyed out and takes no input but the zoom. */
+  reloading = $state(false)
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
   appVersion = $state<string | null>(null)
   private appVersionAsked = false
@@ -398,6 +400,7 @@ export class AppController {
         if (this.folder) await this.openFolder()
       },
       now: () => env.now(),
+      reloading: (on) => void (this.reloading = on),
       unanswered: () => this.client.unanswered(),
       setTimeout: (f, ms) => env.timers.setTimeout(f, ms),
       clearTimeout: (t) => env.timers.clearTimeout(t as ReturnType<typeof setTimeout>),
@@ -639,6 +642,7 @@ export class AppController {
 
   /** The bubble phase's keys: the multi-select's, then `Ctrl Z` for the view (`viewHistoryKey`). */
   key(e: KeyboardEvent): void {
+    if (this.reloading && !this.closing) return // `keyCapture` took it already
     this.sel.onKey(e)
     this.viewHistoryKey(e)
   }
@@ -668,6 +672,9 @@ export class AppController {
       e.preventDefault()
       e.stopPropagation()
     }
+    // While the notes reload only the zoom works: the views are greyed out, and the help would open under the layer.
+    // The close question takes its keys; Alt F4 still closes the window.
+    if (this.reloading && !this.closing && !zoomKey(k, isMac) && !(k.alt && k.key === 'F4')) return take()
     if (isHelpKey(k)) {
       // Before the editor and before WebView2's own F1 (its help page).
       take()
