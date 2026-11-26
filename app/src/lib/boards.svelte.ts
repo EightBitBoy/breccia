@@ -3,10 +3,12 @@
 import { SvelteSet } from 'svelte/reactivity'
 import { errorCode, errorMessage } from '../api'
 import { cardRoot, isBareKeyword } from './board'
+import type { MainArea } from './mainArea.svelte'
 import { patchRefs, RefsRefresh } from './refs'
 import type { BlockId, BoardView, Command, Notice, Output, PageView, RefsView } from './types'
 
 export interface BoardsEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands the board back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
@@ -17,7 +19,7 @@ export interface BoardsEnv {
 }
 
 export class Boards {
-  /** The shown board's index; null while no board is shown. */
+  /** The shown board's index; null while the area shows no board. */
   index = $state<number | null>(null)
   view = $state<BoardView | null>(null)
   /** The open card; null while none is open. */
@@ -43,10 +45,13 @@ export class Boards {
       busy: () => this.card !== null,
       run: (k) => this.get(Number(k)),
     })
+    // The open card's typed text is sent before the board is left (App's `leaveMainView` closes the card first).
+    env.area.register('board', { left: () => this.forget() })
   }
 
   /** Shows board `index`: runs `board.get` (a failure is a notice). */
   async open(index: number): Promise<void> {
+    this.env.area.show({ kind: 'board' })
     if (this.index !== index) {
       this.view = null
       this.forgetCard()
@@ -83,8 +88,12 @@ export class Boards {
     return this.env.run(cmd)
   }
 
-  /** No board is shown any more. */
+  /** No board is shown any more: it leaves the area. */
   close(): void {
+    this.env.area.leave('board')
+  }
+
+  private forget(): void {
     this.index = null
     this.view = null
     this.forgetCard()

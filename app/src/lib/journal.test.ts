@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { Journal } from './journal.svelte'
+import { MainArea } from './mainArea.svelte'
 import type { Command, FeedView, Notice, Output, PageView } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
@@ -21,7 +22,9 @@ const tick = () => new Promise((r) => setTimeout(r, 0))
 function setup(fail: (cmd: Command) => boolean = () => false) {
   const sent: Command[] = []
   const notices: Notice[] = []
+  const area = new MainArea()
   const j = new Journal({
+    area,
     run: async (cmd) => {
       sent.push(cmd)
       if (fail(cmd)) throw { code: 'internal', message: 'boom' }
@@ -30,7 +33,7 @@ function setup(fail: (cmd: Command) => boolean = () => false) {
     notify: (n) => notices.push(n),
   })
   const types = () => sent.map((c) => c.type)
-  return { j, sent, notices, types }
+  return { j, area, sent, notices, types }
 }
 
 async function shown() {
@@ -48,6 +51,28 @@ test('open asks for the feed and its answer shows it', async () => {
   expect(j.applyFeed(view)).toBe(true)
   expect(j.feed?.today).toBe(keys[0])
   expect(j.loaded()).toEqual(new Set())
+})
+
+test('open shows the feed and the page part leaves', async () => {
+  const { j, area } = setup()
+  let pageLeft = 0
+  area.register('page', { left: () => void pageLeft++ })
+  area.show({ kind: 'page' })
+  await j.open()
+  expect(j.applyFeed(view)).toBe(true)
+  expect(area.view).toEqual({ kind: 'feed' })
+  expect(pageLeft).toBe(1)
+})
+
+test('leaving the feed drops it', async () => {
+  const { j, area, types } = await shown()
+  j.applyPages([page(keys[0])])
+  area.show({ kind: 'allPages' })
+  expect(j.feed).toBeNull()
+  expect(j.loaded()).toBeNull()
+  expect(j.applyFeed(view)).toBe(false)
+  expect(area.is('allPages')).toBe(true)
+  expect(types()).toEqual([])
 })
 
 test('a feed answer nobody asked for is ignored while a page is shown', () => {

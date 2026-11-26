@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { cardOf } from './board'
 import { Boards } from './boards.svelte'
+import { MainArea } from './mainArea.svelte'
 import { refBlocks } from './refs'
 import type { BlockView, BoardView, Command, Notice, Output, PageView } from './types'
 import { emptyOutput } from './emptyOutput.testing'
@@ -23,7 +24,9 @@ function setup(
   const sent: Command[] = []
   const notices: Notice[] = []
   let home = 0
+  const area = new MainArea()
   const b: Boards = new Boards({
+    area,
     run: async (cmd) => {
       sent.push(cmd)
       if (fail(cmd)) throw { code, message: 'boom' }
@@ -33,7 +36,7 @@ function setup(
     flush: () => flush(b),
     home: () => void home++,
   })
-  return { b, sent, notices, homes: () => home }
+  return { b, area, sent, notices, homes: () => home }
 }
 const gets = (sent: Command[]) => sent.filter((c) => c.type === 'board.get')
 
@@ -45,6 +48,33 @@ test('open runs board.get and shows only the shown board', async () => {
   expect(b.view).toBeNull()
   b.applyBoard(bv(0))
   expect(b.view?.index).toBe(0)
+})
+test('open shows the board', async () => {
+  const { b, area } = setup()
+  let pageLeft = 0
+  area.register('page', { left: () => void pageLeft++ })
+  area.show({ kind: 'page' })
+  const opening = b.open(0)
+  expect(area.view).toEqual({ kind: 'board' })
+  expect(pageLeft).toBe(1)
+  await opening
+  expect(b.index).toBe(0)
+})
+test('another view shown drops the index and the card', async () => {
+  const { b, area } = setup()
+  await b.open(0)
+  b.applyBoard(bv(0))
+  b.openCard(cardOf(pg('p', [blk(5, 'TODO Buy', 0, 'TODO')]), 5)!, 'TODO')
+  area.show({ kind: 'feed' })
+  expect([b.index, b.view, b.card, b.cardColumn]).toEqual([null, null, null, null])
+  b.applyBoard(bv(0))
+  expect(b.view).toBeNull()
+})
+test('close leaves the board', async () => {
+  const { b, area } = setup()
+  await b.open(0)
+  b.close()
+  expect(area.view).toEqual({ kind: 'none' })
 })
 test('a failed board.get is shown', async () => {
   const { b, notices } = setup(() => true)
@@ -214,6 +244,7 @@ test('closing a bare added card settles once its delete is answered, so leaving 
   let answer!: () => void
   const sent: Command[] = []
   const b = new Boards({
+    area: new MainArea(),
     run: (cmd) => {
       sent.push(cmd)
       if (cmd.type !== 'blocks.delete') return Promise.resolve(empty)

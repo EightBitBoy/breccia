@@ -99,7 +99,7 @@
   import { Nav, type NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
-  import { MainArea, type MainView } from './lib/mainArea.svelte'
+  import { MainArea } from './lib/mainArea.svelte'
   import { statesSet } from './lib/stateEdit'
   import { configShift, isNewerConfig } from './lib/configChange'
   import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './lib/configWrite'
@@ -192,8 +192,6 @@
   /** The log file's folder (the tooltip of Settings' "Open log folder"), fetched when Settings first opens. */
   let logDir = $state<string | null>(null)
   let logDirAsked = false
-  /** The folder of a new, still untitled page (shown instead of the main view); null when none is being made. */
-  let newPageFolder = $state<string | null>(null)
   /** Whether the `git` command exists on this computer, checked at startup; null until known. */
   let hasGit = $state<boolean | null>(null)
   /** Whether the app lives in the tray (Windows): the close button hides the window, "Exit" in the tray quits. */
@@ -222,8 +220,16 @@
   let theme = $state<ThemeChoice>('system')
   /** Where the sidebar lists Journals, chosen on this computer. */
   let journalsAt = $state<JournalsAt>('bottom')
-  /** Which screen the main area shows; the six views below register with it. */
+  /** Which screen the main area shows; the page, the feed, the board and the six screens register with it. */
   const mainArea = new MainArea()
+  // The page's part: leaving it drops the page and its references.
+  mainArea.register('page', {
+    left: () => {
+      page = null
+      refs = null
+      madeInRefs.clear()
+    },
+  })
   /** The Settings screen in the main area (§7.12). */
   const settings = new SettingsScreen({ area: mainArea })
   /** A question from Settings (rename or remove a used state), while open. */
@@ -248,7 +254,7 @@
   document.documentElement.dataset.busy = 'false'
 
   /** What the editor may touch: the open card on a board, the feed's loaded days, or the page and its references. */
-  const editable = (): EditableView => ({ board: boards.index !== null, card: boards.card, feed: journal.feed, page, refs })
+  const editable = (): EditableView => ({ board: mainArea.is('board'), card: boards.card, feed: journal.feed, page, refs })
 
   const host = new EditorHost(
     {
@@ -275,7 +281,7 @@
         else if (act.kind === 'open') duePick.show(act.due, caret, (due) => void host.setDue(id, due))
       },
       selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
-      card: () => (boards.index !== null ? cardBlocks(boards.card) : null),
+      card: () => (mainArea.is('board') ? cardBlocks(boards.card) : null),
       quiet: (code, cmd) => recovery.quiet(code, cmd),
     },
     folded,
@@ -348,9 +354,7 @@
       journal.close()
       pickerOpen = false // a pick after the reload would name a block of the old session
       duePick.close() // likewise
-      page = null
-      refs = null
-      madeInRefs.clear()
+      mainArea.leave('page')
     },
     flush: () => client.flush(),
     reload: async () => {
@@ -376,11 +380,16 @@
 
   /** The view `Ctrl Z` and `Ctrl Shift Z` step while no block is edited: a board, the journal or a page; none elsewhere. */
   function undoView(): string | null {
-    if (newPageFolder !== null || settings.shown || network.shown) return null
-    if (boards.index !== null) return `board:${boards.index}`
-    if (gitLog.shown || archiveView.shown || dailies.shown || allPages.shown) return null
-    if (journal.feed) return 'journal'
-    return page ? `page:${page.key}` : null
+    switch (mainArea.view.kind) {
+      case 'board':
+        return boards.index === null ? null : `board:${boards.index}`
+      case 'feed':
+        return 'journal'
+      case 'page':
+        return page ? `page:${page.key}` : null
+      default:
+        return null
+    }
   }
 
   /**
@@ -402,11 +411,12 @@
     for (const cmd of cmds) void exec(cmd)
   }
 
-  const journal = new Journal({ run: (cmd) => client.run(cmd), notify })
+  const journal = new Journal({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The shown board and its open card. */
   /** Hidden board columns of the open folder, kept on this PC. */
   const hiddenCols = new HiddenColumns({ load: hiddenColumns, save: setHiddenColumns })
   const boards = new Boards({
+    area: mainArea,
     run: (cmd) => client.run(cmd),
     notify,
     flush: () => client.flush(),
@@ -482,26 +492,11 @@
 
   // ---- back and forward -------------------------------------------------------
 
-  /**
-   * What the main area shows, built from the area and the flags still outside it; in the order the template picks a
-   * view. Temporary: the area takes the rest of them.
-   */
-  function shownView(): MainView {
-    const k = mainArea.view.kind
-    if (newPageFolder !== null) return { kind: 'newPage', folder: newPageFolder }
-    if (k === 'settings' || k === 'graph') return mainArea.view
-    if (boards.index !== null) return { kind: 'board' }
-    if (k !== 'none') return mainArea.view
-    if (journal.feed !== null) return { kind: 'feed' }
-    if (page !== null) return { kind: 'page' }
-    return { kind: 'none' }
-  }
-
   /** The views shown this session, for Back and Forward; cleared with a new folder. */
   const nav = new Nav()
   /** The place the main area shows; null between two views and for the untitled new page. */
   const here = $derived<NavPlace | null>(
-    placeOfView(shownView(), {
+    placeOfView(mainArea.view, {
       board: boards.index === null ? null : (boardList[boards.index]?.name ?? null),
       feedDay: journal.at,
       page: page?.key ?? null,
@@ -593,41 +588,52 @@
   /** Shows step `e` again, at its scroll position; false when its page or board is gone. */
   async function restore(e: NavEntry): Promise<boolean> {
     const p = e.place
-    if (p.kind === 'page') {
-      await closeCard()
-      let gone = false
-      await host.exec({ type: 'page.show', key: p.key }, (code) => code === 'unknownPage' && (gone = true))
-      if (gone) return false
-    } else if (p.kind === 'feed') {
-      await leaveMainView('feed')
-      const day = e.top ?? p.day
-      await (day === null ? journal.open() : journal.openAt(day, p.day))
-      return true
-    } else if (p.kind === 'board') {
-      const i = boardList.findIndex((b) => b.name === p.name)
-      if (i < 0) return false
-      await leaveMainView('board')
-      await boards.open(i)
-    } else if (p.kind === 'allPages') {
-      await leaveMainView('allPages')
-      await allPages.open()
-    } else if (p.kind === 'archive') {
-      await leaveMainView('archive')
-      await archiveView.open()
-    } else if (p.kind === 'dailies') {
-      await leaveMainView('dailies')
-      await dailies.open()
-    } else if (p.kind === 'gitLog') {
-      await leaveMainView('gitLog')
-      await gitLog.open()
-    } else if (p.kind === 'graph') {
-      await leaveMainView('graph')
-      await network.open()
-      return true
-    } else {
-      await leaveMainView('settings')
-      settings.open()
-      await exec({ type: 'states.usage' })
+    switch (p.kind) {
+      case 'page': {
+        await closeCard()
+        let gone = false
+        await host.exec({ type: 'page.show', key: p.key }, (code) => code === 'unknownPage' && (gone = true))
+        if (gone) return false
+        break
+      }
+      case 'feed': {
+        await leaveMainView('feed')
+        const day = e.top ?? p.day
+        await (day === null ? journal.open() : journal.openAt(day, p.day))
+        return true
+      }
+      case 'board': {
+        const i = boardList.findIndex((b) => b.name === p.name)
+        if (i < 0) return false
+        await leaveMainView('board')
+        await boards.open(i)
+        break
+      }
+      case 'allPages':
+        await leaveMainView('allPages')
+        await allPages.open()
+        break
+      case 'archive':
+        await leaveMainView('archive')
+        await archiveView.open()
+        break
+      case 'dailies':
+        await leaveMainView('dailies')
+        await dailies.open()
+        break
+      case 'gitLog':
+        await leaveMainView('gitLog')
+        await gitLog.open()
+        break
+      case 'graph':
+        await leaveMainView('graph')
+        await network.open()
+        return true
+      case 'settings':
+        await leaveMainView('settings')
+        settings.open()
+        await exec({ type: 'states.usage' })
+        break
     }
     await tick()
     if (scroller) scroller.scrollTop = e.scroll
@@ -709,7 +715,7 @@
     configVersion = c.version
     // Task states and board columns are computed when a view is built: what is shown loads again.
     if (shift.tasks) refreshTasks()
-    if (shift.board && boards.index !== null) boards.refresh()
+    if (shift.board && mainArea.is('board')) boards.refresh()
     // New states are counted at once, so their rows never show a count from before them.
     if (shift.tasks && settings.shown) void exec({ type: 'states.usage' })
     // Right after the setting changed (here or by hand), the due tasks are archived.
@@ -742,10 +748,7 @@
         // Block ids start again: nothing keyed by the old folder's blocks or pages may carry over.
         host.newFolder()
         nav.clear() // the old folder's pages and boards
-        settings.close()
-        gitLog.close()
-        archiveView.close() // its rows name the old folder's blocks
-        dailies.close()
+        mainArea.show({ kind: 'none' }) // whatever it shows names the old folder's pages and blocks
         dailies.forget() // the old folder's dailies; `openFolder` lists the new ones
         network.newFolder()
         search.close()
@@ -781,6 +784,10 @@
     out.notices.forEach(notify)
     // The edited block's text in the view about to be replaced (a refresh compares it).
     const before = host.editingId === null ? null : (host.blockOf(host.editingId)?.text ?? null)
+    // What the route reads of the page, taken before an applied feed answer shows the feed (and the page leaves).
+    const shownPage = page?.key ?? null
+    const groups = new Set(refs?.groups.map((g) => g.page))
+    const editingInRefs = inRefs(host.editingId)
     // An applied feed answer is shown: the editor closes if it replaced the page or dropped the edited day.
     const feed = answerOf(out, 'feed')
     const feedShown = feed !== null && journal.applyFeed(feed)
@@ -790,11 +797,11 @@
       out,
       cmd,
       {
-        page: page?.key ?? null,
+        page: shownPage,
         days,
-        groups: new Set(refs?.groups.map((g) => g.page)),
-        editingInRefs: inRefs(host.editingId),
-        main: shownView().kind,
+        groups,
+        editingInRefs,
+        main: mainArea.view.kind,
         card: boards.card?.key ?? null,
       },
       feedShown,
@@ -806,10 +813,7 @@
       nav.renamed(cmd.key, out.page.key)
     }
     out.removed.forEach((k) => nav.removed(k))
-    if (r.leave) {
-      mainArea.leave(mainArea.view.kind)
-      boards.close()
-    }
+    if (r.leave) mainArea.leave(mainArea.view.kind)
     const table = answerOf(out, 'table')
     if (table) allPages.applyTable(table)
     const archived = answerOf(out, 'archive')
@@ -819,14 +823,14 @@
     if (found) search.applySearch(found)
     const names = answerOf(out, 'names')
     if (names) search.applyNames(names)
-    if (r.leavePage) {
-      page = null
-      refs = null
-    }
+    if (r.leavePage) mainArea.leave('page')
     if (r.clearSelection) sel.clear()
     if (r.closeFeed) journal.close()
     if (r.resetScroll && scroller) scroller.scrollTop = scroller.scrollLeft = 0
-    if (r.show) page = r.show
+    if (r.show) {
+      mainArea.show({ kind: 'page' }) // first: the view it replaces leaves before the page is set
+      page = r.show
+    }
     if (r.moved) {
       refs = null
       madeInRefs.clear()
@@ -905,7 +909,7 @@
 
   /**
    * Leaves whatever the main area shows for view `keep`: closes the open card (a bare added card is deleted),
-   * leaves the editor, closes every other view, clears the page, refs and selection, and scrolls to the top.
+   * leaves the editor, leaves the shown view unless it is `keep`, clears the selection, and scrolls to the top.
    */
   async function leaveMainView(
     keep: 'feed' | 'board' | 'allPages' | 'archive' | 'dailies' | 'settings' | 'graph' | 'gitLog' | 'newPage',
@@ -913,16 +917,9 @@
     rememberHere() // before the scroll goes to the top
     await closeCard() // a card closing (Esc, a click outside) finishes on the board it belongs to
     host.leave()
-    if (keep !== 'board') boards.close()
-    if (keep !== 'allPages') allPages.close()
-    if (keep !== 'archive') archiveView.close()
-    if (keep !== 'dailies') dailies.close()
+    mainArea.leaveFor(keep)
+    // The feed shows only with its answer: one asked for and not yet answered is not wanted any more.
     if (keep !== 'feed') journal.close()
-    if (keep !== 'settings') settings.close()
-    if (keep !== 'graph') network.close()
-    if (keep !== 'gitLog') gitLog.close()
-    page = null
-    refs = null
     sel.clear()
     if (scroller) scroller.scrollTop = scroller.scrollLeft = 0
   }
@@ -935,32 +932,18 @@
     if (dialogOpen() || search.shown) return
     const inFolder = tree && page ? folderOf(tree, page.key) : ''
     await leaveMainView('newPage')
-    newPageFolder = inFolder
+    mainArea.show({ kind: 'newPage', folder: inFolder })
   }
 
   async function createUntitled(name: string) {
-    if (newPageFolder === null) return
+    const v = mainArea.view
+    if (v.kind !== 'newPage') return
     try {
-      await host.exec({ type: 'page.create', name, folder: newPageFolder })
+      await host.exec({ type: 'page.create', name, folder: v.folder })
     } catch (e) {
       refuse(e)
     }
   }
-
-  // Any other view or page shown ends the untitled page.
-  $effect(() => {
-    const view =
-      boards.index !== null ||
-      allPages.shown ||
-      archiveView.shown ||
-      dailies.shown ||
-      settings.shown ||
-      network.shown ||
-      gitLog.shown
-    if (page || journal.feed || view) {
-      untrack(() => (newPageFolder = null))
-    }
-  })
 
   /** The home view: the journal feed, scrolled to today. */
   async function openJournal() {
@@ -1417,21 +1400,28 @@
    * Page `p` changed outside the window, or beside what a command applied (`Route.others`): the shown view takes it.
    */
   function viewsTake(p: Page) {
-    // The table reloads for another program's change (§6).
-    if (allPages.changed()) return
-    // The Archive view too: an automatic archive or another program's change shows.
-    if (archiveView.changed()) return
-    // The graph reloads the same way (§6).
-    if (network.changed()) return
-    if (boards.index !== null) {
+    switch (mainArea.view.kind) {
+      // The table reloads for another program's change (§6).
+      case 'allPages':
+        allPages.changed()
+        return
+      // The Archive view too: an automatic archive or another program's change shows.
+      case 'archive':
+        archiveView.changed()
+        return
+      // The graph reloads the same way (§6).
+      case 'graph':
+        network.changed()
+        return
       // The board reloads (held while a card is open); the open card follows its page.
-      if (boards.changed(p)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
-      return
+      case 'board':
+        if (boards.changed(p)) host.reconcile(null).catch((err) => console.error('editor update failed', err))
+        return
     }
     pageChanged(
       {
         shows: (key) => key === page?.key || (days?.has(key) ?? false),
-        active: () => page !== null || journal.feed !== null,
+        active: () => mainArea.is('page') || mainArea.is('feed'),
         isGroup,
         reload: (key) => reloads.request(key),
         patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
@@ -1448,7 +1438,7 @@
     allPages.refresh()
     archiveView.refresh()
     journal.removed([key])
-    if (boards.index !== null) boards.removed([key])
+    if (mainArea.is('board')) boards.removed([key])
     if (isGroup(key)) refreshRefs.request()
     // The shown page renamed a moment ago is on its way to its new key.
     if (!page || removalFor(page.key, key, justRenamed) !== 'removed') return
@@ -1974,7 +1964,7 @@
             {tree}
             {journalsAt}
             shown={page?.key ?? null}
-            journalShown={journal.feed !== null}
+            journalShown={mainArea.is('feed')}
             dailiesShown={dailies.shown}
             ondailies={() => void openDailies()}
             allPagesShown={allPages.shown}
@@ -2024,9 +2014,9 @@
             >
           </div>
           <div class="main" use:autoHideScrollbar bind:this={scroller}>
-            {#if newPageFolder !== null}
+            {#if mainArea.view.kind === 'newPage'}
               <NewPageView onsubmit={(name) => void createUntitled(name)} oncancel={() => void openJournal()} />
-            {:else if settings.shown}
+            {:else if mainArea.view.kind === 'settings'}
               <SettingsView
                 {folder}
                 recent={recentRows(recent, folder)}
@@ -2072,12 +2062,12 @@
                 onopenlogs={openLogs}
                 onchangelog={() => settings.showChangelog()}
               />
-            {:else if network.shown}
+            {:else if mainArea.view.kind === 'graph'}
               <!-- Loaded the first time the graph opens: the main bundle stays small. -->
               {#await import('./components/NetworkView.svelte') then { default: NetworkView }}
                 <NetworkView {network} onopen={(name) => void openPage(name)} />
               {/await}
-            {:else if boards.index !== null}
+            {:else if mainArea.view.kind === 'board'}
               {#if boards.view}
                 <Board
                   board={boards.view}
@@ -2115,26 +2105,26 @@
                   }}
                 />
               {/if}
-            {:else if gitLog.shown && scroller}
+            {:else if mainArea.view.kind === 'gitLog' && scroller}
               <!-- Loaded the first time the history opens, like the graph: the main bundle stays small. -->
               {#await import('./components/GitLogView.svelte') then { default: GitLogView }}
                 <GitLogView log={gitLog} {scroller} />
               {/await}
-            {:else if archiveView.shown && scroller}
+            {:else if mainArea.view.kind === 'archive' && scroller}
               <!-- Loaded the first time the Archive opens, like the Git history: the main bundle stays small. -->
               {#await import('./components/ArchiveView.svelte') then { default: ArchiveView }}
                 <ArchiveView archive={archiveView} {scroller} onopen={(r) => void jumpTo(r.page, r.id)} />
               {/await}
-            {:else if dailies.shown}
+            {:else if mainArea.view.kind === 'dailies'}
               <DailiesView {dailies} onconfirm={confirmAsk} />
-            {:else if allPages.shown && scroller}
+            {:else if mainArea.view.kind === 'allPages' && scroller}
               <AllPagesView
                 pages={allPages}
                 {scroller}
                 onopen={(r) =>
                   void exec(r.linkedOnly ? { type: 'page.open', name: r.name } : { type: 'page.show', key: r.key })}
               />
-            {:else if journal.feed && scroller}
+            {:else if mainArea.view.kind === 'feed' && journal.feed && scroller}
               <JournalFeed
                 feed={journal.feed}
                 {scroller}
@@ -2151,7 +2141,7 @@
                 onsetcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
                 onsetdue={(id, due) => void exec({ type: 'block.setDue', id, due })}
               />
-            {:else if page}
+            {:else if mainArea.view.kind === 'page' && page}
               <PageView
                 {page}
                 {refs}

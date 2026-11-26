@@ -3,15 +3,18 @@
 import { errorMessage } from '../api'
 import { Refreshes } from './external'
 import { isNewDay, missingDays, openFeed, withPages, type Feed } from './feed'
+import type { MainArea } from './mainArea.svelte'
 import type { Command, FeedView, Notice, Output, PageView } from './types'
 
 export interface JournalEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands the feed parts back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }
 
 export class Journal {
+  /** The feed's data; non-null only while the area shows the feed. */
   feed = $state<Feed | null>(null)
   /** The day the feed should scroll to once (jump to a date), or null. */
   target = $state<string | null>(null)
@@ -25,6 +28,7 @@ export class Journal {
 
   constructor(private env: JournalEnv) {
     this.reloads = new Refreshes(() => this.env.run({ type: 'journal.feed' }))
+    env.area.register('feed', { left: () => this.forget() })
   }
 
   /** The day the feed was last opened at (`openAt`), null for the plain journal: its place in the history. */
@@ -63,8 +67,14 @@ export class Journal {
     this.target = null
   }
 
-  /** A page is shown instead: the feed and what it loaded go. */
+  /** The feed is not wanted any more (a page is shown instead): it leaves the area, and an awaited answer is ignored. */
   close(): void {
+    this.forget()
+    this.env.area.leave('feed')
+  }
+
+  /** The feed and what it loaded go. */
+  private forget(): void {
     this.wanted = false
     this.target = null
     this.at = null
@@ -74,12 +84,14 @@ export class Journal {
   }
 
   /**
-   * A `journal.feed` answer: applied only while the feed is shown or was asked for. Returns whether it is shown.
+   * A `journal.feed` answer: applied only while the feed is shown or was asked for; it shows the feed in the area.
+   * Returns whether it is shown.
    * Days it no longer lists are forgotten, and days it puts inside the last range are loaded: the rows on screen
    * keep their indexes, so the feed view reports no new range for them.
    */
   applyFeed(view: FeedView): boolean {
     if (!this.wanted && this.feed === null) return false
+    this.env.area.show({ kind: 'feed' })
     this.wanted = true
     this.feed = openFeed(this.feed, view)
     const listed = new Set(view.days.map((d) => d.key))
