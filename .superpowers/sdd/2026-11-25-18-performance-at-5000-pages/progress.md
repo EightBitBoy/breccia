@@ -38,3 +38,6 @@ Shared subagent rules: common.md (local).
 - Task 4: fix round 1 implemented 9c453b7 (hooks fallback, diff-tree before the lock, guard tests). Lock now: save during fetch 461, no save 392 (bar 100), worst 1248 (bar 500): all OVER → Task 6. Re-review dispatched (sonnet).
 - Task 4: fix round 1/5 (all addressed — I1 hooks fallback, M1, guard tests; commits 08b0611..9c453b7). Nit (deferred): the hook check tests only that the file exists (conservative).
 - Task 4: complete (commits 82fef09..9c453b7, review clean; lock bars routed to Task 6)
+- Task 5: dispatched (opus), BASE b32e8d4.
+- Task 5: resumed after the session ended (uncommitted: e2e steps 167/168, spec line).
+- Task 5: implemented 6a393a1, 6d6a79b (opus). After (ms, bar): git history open 224.5 (200) OVER (was 336), show more x10 270.1 (200) OVER (was 508), archive open 38.1 (was 92.5), scrolls 7.1. Rest is core git.log → Task 6. e2e 290 PASS.
