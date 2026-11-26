@@ -1,37 +1,19 @@
 import { expect, test } from 'vitest'
-import { placeHere, samePlace, topDayOf } from './nav'
+import { placeOfView, samePlace, topDayOf } from './nav'
 
-const none = {
-  newPage: false,
-  settings: false,
-  graph: false,
-  board: null,
-  gitLog: false,
-  archive: false,
-  dailies: false,
-  allPages: false,
-  feed: false,
-  feedDay: null,
-  page: null,
-}
-
-test('placeHere follows the order the main area shows views in', () => {
-  expect(placeHere({ ...none, newPage: true, settings: true, page: 'Anna' })).toBeNull()
-  expect(placeHere({ ...none, settings: true, board: 'Tasks' })).toEqual({ kind: 'settings' })
-  expect(placeHere({ ...none, graph: true, board: 'Tasks' })).toEqual({ kind: 'graph' })
-  expect(placeHere({ ...none, board: 'Tasks', gitLog: true })).toEqual({ kind: 'board', name: 'Tasks' })
-  expect(placeHere({ ...none, gitLog: true, archive: true })).toEqual({ kind: 'gitLog' })
-  expect(placeHere({ ...none, archive: true, dailies: true })).toEqual({ kind: 'archive' })
-  expect(placeHere({ ...none, dailies: true, allPages: true, page: 'Anna' })).toEqual({ kind: 'dailies' })
-  expect(placeHere({ ...none, archive: true, allPages: true })).toEqual({ kind: 'archive' })
-  expect(placeHere({ ...none, allPages: true, feed: true })).toEqual({ kind: 'allPages' })
-  expect(placeHere({ ...none, feed: true, feedDay: '2026-03-12', page: 'Anna' })).toEqual({
-    kind: 'feed',
-    day: '2026-03-12',
-  })
-  expect(placeHere({ ...none, feed: true })).toEqual({ kind: 'feed', day: null })
-  expect(placeHere({ ...none, page: 'Anna' })).toEqual({ kind: 'page', key: 'Anna' })
-  expect(placeHere(none)).toBeNull()
+test('placeOfView gives the same places as placeHere did', () => {
+  const ctx = { board: 'Tasks', feedDay: '2026-03-12', page: 'Anna' }
+  expect(placeOfView({ kind: 'newPage', folder: '' }, ctx)).toBeNull()
+  expect(placeOfView({ kind: 'none' }, ctx)).toBeNull()
+  expect(placeOfView({ kind: 'board' }, ctx)).toEqual({ kind: 'board', name: 'Tasks' })
+  expect(placeOfView({ kind: 'board' }, { ...ctx, board: null })).toBeNull()
+  expect(placeOfView({ kind: 'feed' }, ctx)).toEqual({ kind: 'feed', day: '2026-03-12' })
+  expect(placeOfView({ kind: 'feed' }, { ...ctx, feedDay: null })).toEqual({ kind: 'feed', day: null })
+  expect(placeOfView({ kind: 'page' }, ctx)).toEqual({ kind: 'page', key: 'Anna' })
+  expect(placeOfView({ kind: 'page' }, { ...ctx, page: null })).toBeNull()
+  for (const kind of ['allPages', 'archive', 'dailies', 'gitLog', 'graph', 'settings'] as const) {
+    expect(placeOfView({ kind }, ctx)).toEqual({ kind })
+  }
 })
 
 test('samePlace compares kind and what the place names', () => {

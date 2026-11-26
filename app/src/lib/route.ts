@@ -3,6 +3,7 @@ import { answerOf } from './answer'
 import { cardOf, isBareKeyword } from './board'
 import { dayOfBlock, sameDay, type Feed } from './feed'
 import { pageOfBlock } from './refs'
+import type { MainKind } from './mainArea.svelte'
 import { placeOf, type Place } from './view'
 import type { BlockId, Command, Output, PageView } from './types'
 
@@ -15,20 +16,8 @@ export interface ShownView {
   groups: ReadonlySet<string>
   /** Whether the editor is inside the linked references. */
   editingInRefs: boolean
-  /** Whether a board is shown. */
-  board: boolean
-  /** Whether the All pages table is shown. */
-  allPages: boolean
-  /** Whether the Settings screen is shown. */
-  settings: boolean
-  /** Whether the Graph screen is shown. */
-  graph: boolean
-  /** Whether the Git history is shown. */
-  gitLog: boolean
-  /** Whether the Archive view is shown. */
-  archive: boolean
-  /** Whether the Dailies view is shown. */
-  dailies: boolean
+  /** What the main area shows. */
+  main: MainKind
   /** The open card's page key, or null. */
   card: string | null
 }
@@ -55,20 +44,8 @@ export interface Route {
   refreshRefs: boolean
   /** For `EditorHost.apply`: whether the output's view is shown. */
   shown: boolean
-  /** A navigation or an applied feed answer leaves the board. */
-  leaveBoard: boolean
-  /** A navigation or an applied feed answer leaves the table. */
-  leaveAllPages: boolean
-  /** A navigation or an applied feed answer leaves Settings. */
-  leaveSettings: boolean
-  /** A navigation or an applied feed answer leaves the Graph screen. */
-  leaveGraph: boolean
-  /** A navigation or an applied feed answer leaves the Git history. */
-  leaveGitLog: boolean
-  /** A navigation or an applied feed answer leaves the Archive view. */
-  leaveArchive: boolean
-  /** A navigation or an applied feed answer leaves the Dailies view. */
-  leaveDailies: boolean
+  /** A navigation or an applied feed answer leaves the shown board or screen. */
+  leave: boolean
   /** The table stays shown and the output changed pages or the tree: reload it. */
   refreshAllPages: boolean
   /** Pages the open card follows: out.page when place is 'none', and out.changed, with key === view.card. */
@@ -98,6 +75,9 @@ export interface Route {
   others: PageView[]
 }
 
+/** The kinds a navigation or an applied feed answer leaves: the board and every screen. */
+const LEAVABLE: ReadonlySet<MainKind> = new Set(['board', 'allPages', 'settings', 'graph', 'gitLog', 'archive', 'dailies'])
+
 /** Call after `journal.applyFeed`; `feedShown` is its result (false when there is no `feed` answer). */
 export function route(out: Output, cmd: Command | undefined, view: ShownView, feedShown: boolean): Route {
   const leavePage = feedShown && view.page !== null
@@ -110,23 +90,11 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
           {
             page,
             days: view.days,
-            board: view.board,
-            allPages: view.allPages,
-            settings: view.settings,
-            graph: view.graph,
-            gitLog: view.gitLog,
-            archive: view.archive,
-            dailies: view.dailies,
+            main: view.main,
           },
           out.page.key,
         )
-  const leaveBoard = view.board && (place === 'navigate' || feedShown)
-  const leaveAllPages = view.allPages && (place === 'navigate' || feedShown)
-  const leaveSettings = view.settings && (place === 'navigate' || feedShown)
-  const leaveGraph = view.graph && (place === 'navigate' || feedShown)
-  const leaveGitLog = view.gitLog && (place === 'navigate' || feedShown)
-  const leaveArchive = view.archive && (place === 'navigate' || feedShown)
-  const leaveDailies = view.dailies && (place === 'navigate' || feedShown)
+  const leave = LEAVABLE.has(view.main) && (place === 'navigate' || feedShown)
   const r: Route = {
     leavePage,
     place,
@@ -141,13 +109,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     madeInRefs: null,
     refreshRefs: false,
     shown: false,
-    leaveBoard,
-    leaveAllPages,
-    leaveSettings,
-    leaveGraph,
-    leaveGitLog,
-    leaveArchive,
-    leaveDailies,
+    leave,
     refreshAllPages: false,
     cardPages: [],
     refreshBoard: false,
@@ -197,7 +159,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
   r.refreshRefs =
     r.moved || held || r.patch.length > 0 || cmd?.type === 'page.rename' || out.removed.some((k) => groups.has(k))
   // On the board: it takes its outputs' pages (it reloads), the open card follows its page.
-  if (view.board && !leaveBoard) {
+  if (view.main === 'board' && !leave) {
     const touched = [place === 'none' ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null)
     applied.push(...touched)
     r.cardPages = touched.filter((p) => p.key === view.card)
@@ -214,7 +176,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
     }
   }
   // On the table: it takes its outputs' pages too; it reloads on any page or tree change.
-  if (view.allPages && !leaveAllPages) {
+  if (view.main === 'allPages' && !leave) {
     applied.push(...[place === 'none' ? out.page : null, ...out.changed].filter((p): p is PageView => p !== null))
     r.refreshAllPages = out.page !== null || out.changed.length > 0 || out.removed.length > 0 || out.tree !== null
   }
@@ -223,7 +185,7 @@ export function route(out: Output, cmd: Command | undefined, view: ShownView, fe
   const pages = [out.page, ...out.changed].filter((p): p is PageView => p !== null)
   r.refreshSearch = pages.length > 0 || out.removed.length > 0 || out.tree !== null
   r.refreshNames = out.tree !== null
-  r.refreshGraph = view.graph && !leaveGraph && (out.tree !== null || out.removed.length > 0)
+  r.refreshGraph = view.main === 'graph' && !leave && (out.tree !== null || out.removed.length > 0)
   r.journalChanged = pages
   // A page applied nowhere above (one `archive.auto` or a rename rewrote) is news, as if changed elsewhere.
   const taken = new Set(applied)

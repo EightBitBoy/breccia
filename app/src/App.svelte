@@ -95,11 +95,11 @@
   import type { SearchRow } from './lib/search'
   import { historyKey, isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './lib/keys'
   import { ViewUndo } from './lib/viewUndo'
-  import { placeHere, topDayOf, type NavFocus, type NavPlace } from './lib/nav'
+  import { placeOfView, topDayOf, type NavFocus, type NavPlace } from './lib/nav'
   import { Nav, type NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
-  import { MainArea } from './lib/mainArea.svelte'
+  import { MainArea, type MainView } from './lib/mainArea.svelte'
   import { statesSet } from './lib/stateEdit'
   import { configShift, isNewerConfig } from './lib/configChange'
   import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './lib/configWrite'
@@ -482,20 +482,27 @@
 
   // ---- back and forward -------------------------------------------------------
 
+  /**
+   * What the main area shows, built from the area and the flags still outside it; in the order the template picks a
+   * view. Temporary: the area takes the rest of them.
+   */
+  function shownView(): MainView {
+    const k = mainArea.view.kind
+    if (newPageFolder !== null) return { kind: 'newPage', folder: newPageFolder }
+    if (k === 'settings' || k === 'graph') return mainArea.view
+    if (boards.index !== null) return { kind: 'board' }
+    if (k !== 'none') return mainArea.view
+    if (journal.feed !== null) return { kind: 'feed' }
+    if (page !== null) return { kind: 'page' }
+    return { kind: 'none' }
+  }
+
   /** The views shown this session, for Back and Forward; cleared with a new folder. */
   const nav = new Nav()
   /** The place the main area shows; null between two views and for the untitled new page. */
   const here = $derived<NavPlace | null>(
-    placeHere({
-      newPage: newPageFolder !== null,
-      settings: settings.shown,
-      graph: network.shown,
+    placeOfView(shownView(), {
       board: boards.index === null ? null : (boardList[boards.index]?.name ?? null),
-      gitLog: gitLog.shown,
-      archive: archiveView.shown,
-      dailies: dailies.shown,
-      allPages: allPages.shown,
-      feed: journal.feed !== null,
       feedDay: journal.at,
       page: page?.key ?? null,
     }),
@@ -787,13 +794,7 @@
         days,
         groups: new Set(refs?.groups.map((g) => g.page)),
         editingInRefs: inRefs(host.editingId),
-        allPages: allPages.shown,
-        settings: settings.shown,
-        graph: network.shown,
-        gitLog: gitLog.shown,
-        archive: archiveView.shown,
-        dailies: dailies.shown,
-        board: boards.index !== null,
+        main: shownView().kind,
         card: boards.card?.key ?? null,
       },
       feedShown,
@@ -805,13 +806,10 @@
       nav.renamed(cmd.key, out.page.key)
     }
     out.removed.forEach((k) => nav.removed(k))
-    if (r.leaveBoard) boards.close()
-    if (r.leaveAllPages) allPages.close()
-    if (r.leaveSettings) settings.close()
-    if (r.leaveGraph) network.close()
-    if (r.leaveGitLog) gitLog.close()
-    if (r.leaveArchive) archiveView.close()
-    if (r.leaveDailies) dailies.close()
+    if (r.leave) {
+      mainArea.leave(mainArea.view.kind)
+      boards.close()
+    }
     const table = answerOf(out, 'table')
     if (table) allPages.applyTable(table)
     const archived = answerOf(out, 'archive')

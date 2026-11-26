@@ -1,4 +1,5 @@
 // Back and forward between views: what a place in the history is, and which one the main area shows.
+import type { MainView } from './mainArea.svelte'
 import type { BlockId } from './types'
 
 /** A view the main area can show, as the history keeps it. */
@@ -33,33 +34,26 @@ export function samePlace(a: NavPlace | null, b: NavPlace | null): boolean {
 }
 
 /**
- * The place the main area shows, in the order App's template picks a view; null for the untitled new page
- * and between two views.
+ * The place a main-area view is, as the history keeps it; null for the untitled new page, for no view, and for a
+ * board, feed or page whose name, day or key is not known.
  */
-export function placeHere(shown: {
-  newPage: boolean
-  settings: boolean
-  graph: boolean
-  board: string | null
-  gitLog: boolean
-  archive: boolean
-  dailies: boolean
-  allPages: boolean
-  feed: boolean
-  feedDay: string | null
-  page: string | null
-}): NavPlace | null {
-  if (shown.newPage) return null
-  if (shown.settings) return { kind: 'settings' }
-  if (shown.graph) return { kind: 'graph' }
-  if (shown.board !== null) return { kind: 'board', name: shown.board }
-  if (shown.gitLog) return { kind: 'gitLog' }
-  if (shown.archive) return { kind: 'archive' }
-  if (shown.dailies) return { kind: 'dailies' }
-  if (shown.allPages) return { kind: 'allPages' }
-  if (shown.feed) return { kind: 'feed', day: shown.feedDay }
-  if (shown.page !== null) return { kind: 'page', key: shown.page }
-  return null
+export function placeOfView(
+  v: MainView,
+  ctx: { board: string | null; feedDay: string | null; page: string | null },
+): NavPlace | null {
+  switch (v.kind) {
+    case 'newPage':
+    case 'none':
+      return null
+    case 'board':
+      return ctx.board === null ? null : { kind: 'board', name: ctx.board }
+    case 'feed':
+      return { kind: 'feed', day: ctx.feedDay }
+    case 'page':
+      return ctx.page === null ? null : { kind: 'page', key: ctx.page }
+    default:
+      return { kind: v.kind }
+  }
 }
 
 /** The feed's day at the top of the window: the first one whose bottom is below `viewTop`. */
