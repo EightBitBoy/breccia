@@ -13,11 +13,14 @@ import { archiveShift } from './autoArchive'
 import { configShift, isNewerConfig } from './configChange'
 import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './configWrite'
 import { DEFAULT_RESET, RESET_KEY } from './dailies'
+import type { Overlays } from './overlay.svelte'
 import { REPLACED } from './settingsForm'
 import { statesSet } from './stateEdit'
 import type { BoardSummary, Command, ConfigView, GitSettings, Notice, StateRename, StateView } from './types'
 
 export interface ConfigEnv {
+  /** The board dialog is open while the `boardSettings` overlay is. */
+  overlays: Overlays
   /**
    * host.exec: runs the command; its answer's config reaches `apply` before it settles. `refused(code)` returns
    * true to keep the refusal quiet (else it is a notice).
@@ -63,8 +66,13 @@ export class ConfigStore {
   dailiesResetInvalid = $state(false)
   /** The number keys whose value in the file is refused and read as the default (`ConfigView.replaced`). */
   numbersInvalid = $state({ delay: false, interval: false, archive: false })
+  /** The board settings dialog's data; it is open while the `boardSettings` overlay is. */
+  private dialogData = $state<BoardDialog | null>(null)
+
   /** The board settings dialog while open; null while closed. */
-  dialog = $state<BoardDialog | null>(null)
+  get dialog(): BoardDialog | null {
+    return this.env.overlays.is('boardSettings') ? this.dialogData : null
+  }
 
   /** The config last applied; null until a folder's first one. */
   private last: ConfigView | null = null
@@ -248,7 +256,10 @@ export class ConfigStore {
 
   /** Every open and close of the board dialog comes through here. */
   private setDialog(d: BoardDialog | null): void {
-    this.dialog = d
+    const was = this.dialog !== null
+    this.dialogData = d
+    if (d === null) this.env.overlays.close('boardSettings')
+    else if (!was) this.env.overlays.open({ kind: 'boardSettings' })
   }
 
   /** The dialog after its `boards.set` was answered (`settingsAfterSet`). */

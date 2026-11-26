@@ -91,6 +91,7 @@
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
   import { MainArea } from './lib/mainArea.svelte'
+  import { Overlays } from './lib/overlay.svelte'
   import { ConfigStore } from './lib/config.svelte'
   import { missingFolder, pickFolder, recentRows, switchCheck } from './lib/folderSwitch'
   import { watchThemeTokens } from './lib/themeTokens.svelte'
@@ -153,8 +154,14 @@
   let opening = $state<string | null>(null)
   /** Session-only folding: never written to files. */
   const folded = new SvelteSet<number>()
+  /**
+   * The dialog open over the window (the search box too); nothing opens without a folder or under the close question,
+   * which is its own layer above every dialog.
+   */
+  const overlays = new Overlays(() => !folder || closing !== null)
   /** The folder's settings (`config.toml`) and the rules of their writes. */
   const config: ConfigStore = new ConfigStore({
+    overlays,
     exec: (cmd, refused) => host.exec(cmd, refused),
     leave: () => host.leave(),
     flush: () => client.flush(),
@@ -192,11 +199,7 @@
     },
   })
   /** The Settings screen in the main area (§7.12). */
-  const settings = new SettingsScreen({ area: mainArea })
-  /** A question from Settings (rename or remove a used state), while open. */
-  let question = $state<{ message: string; ok: string; answer: (yes: boolean) => void } | null>(null)
-  /** Where the "New board" name dialog was opened from, while it is open. */
-  let naming = $state<'sidebar' | 'settings' | null>(null)
+  const settings = new SettingsScreen({ area: mainArea, overlays })
   /** The recent folders, newest first; loaded when Settings or the Welcome screen shows and after a switch. */
   let recent = $state.raw<RecentFolder[]>([])
 
@@ -228,7 +231,7 @@
       notify: (n) => notify(n),
       showMenu: (which, m) => (which === 'link' ? (linkMenu = m) : (slashMenu = m)),
       pickDate: (onpick) => {
-        if (dialogOpen() || search.shown) return
+        if (!overlays.may('pickDate')) return
         if (sidebarHidden) toggleSidebar()
         pickerInsert = onpick
         pickerOpen = true
@@ -237,7 +240,7 @@
       // while the search or a dialog is open, as Ctrl Shift D (`dueKeyAction`). Esc writes nothing and the calendar
       // gives the focus back to the editor, the caret where it was; a click outside leaves the focus to that click.
       pickDue: (id, caret) => {
-        const act = dueKeyAction(host.blockOf(id), dialogOpen() || search.shown)
+        const act = dueKeyAction(host.blockOf(id), !overlays.may('pickDue'))
         if (act.kind === 'refuse') notify({ kind: 'refused', message: NOT_A_TASK })
         else if (act.kind === 'open') duePick.show(act.due, caret, (due) => void host.setDue(id, due))
       },
@@ -288,8 +291,6 @@
     })
     untrack(() => (item ? status.set(item) : status.clear('save')))
   })
-  /** Whether the "Set up Git" question is open. */
-  let settingUpGit = $state(false)
 
   const notices = new NoticeCenter({
     typingMark: () => host.typingMark(),
@@ -360,7 +361,7 @@
   function viewHistoryKey(e: KeyboardEvent) {
     if (e.defaultPrevented || e.isComposing || host.editingId !== null || sel.ids.length) return
     const a = historyKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, mac)
-    if (a === null || dialogOpen() || search.shown || slashMenu || linkMenu) return
+    if (a === null || !overlays.may('historyKey') || slashMenu || linkMenu) return
     const t = e.target instanceof Element ? e.target : null
     if (t?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"], [role="menu"]')) return
     if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]')) return
@@ -413,15 +414,13 @@
     const item = folder ? dailies.item : null
     untrack(() => (item ? status.set(item) : status.clear('dailies')))
   })
-  /** The F1 list of keyboard shortcuts is open. */
-  let helpShown = $state(false)
-  /** F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
+  /** The F1 list of keyboard shortcuts: F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
   function toggleHelp() {
-    if (helpShown) helpShown = false
-    else if (!dialogOpen() && !search.shown) helpShown = true
+    if (overlays.is('help')) overlays.close('help')
+    else if (overlays.may('toggleHelp')) overlays.open({ kind: 'help' })
   }
   $effect(() => {
-    const item = folder ? helpItem(helpShown) : null
+    const item = folder ? helpItem(overlays.is('help')) : null
     untrack(() => (item ? status.set(item) : status.clear('help')))
   })
   /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
@@ -442,6 +441,7 @@
   const network = new Network({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The quick search box (§7.8). */
   const search = new Search({
+    overlays,
     run: (cmd) => client.run(cmd),
     notify,
     choose: (row) => chooseRow(row),
@@ -513,7 +513,7 @@
   /** A Back or Forward is under way (from the first await on), so a key repeat waits for nothing. */
   let going = false
   async function go(dir: 'back' | 'forward') {
-    if (going || nav.busy || dialogOpen() || search.shown || pickerOpen) return
+    if (going || nav.busy || !overlays.may('go') || pickerOpen) return
     going = true
     try {
       const focus = focusHere() // before the editor and the selection close
@@ -635,6 +635,7 @@
   })
 
   const flows = new PageFlows({
+    overlays,
     run: (cmd) => client.run(cmd),
     tree: () => tree,
     shown: () => page?.key ?? null,
@@ -868,7 +869,7 @@
    * it has a title (the file itself only appears once the user types, as for any new page).
    */
   async function startNewPage() {
-    if (dialogOpen() || search.shown) return
+    if (!overlays.may('startNewPage')) return
     const inFolder = tree && page ? folderOf(tree, page.key) : ''
     await leaveMainView('newPage')
     mainArea.show({ kind: 'newPage', folder: inFolder })
@@ -914,15 +915,16 @@
   /** `Ctrl Shift D` opens it (a hidden sidebar is shown first), a second press closes it; not over a dialog. */
   function togglePicker() {
     if (pickerOpen) pickerOpen = false
-    else if (!dialogOpen() && !search.shown) {
+    else if (overlays.may('togglePicker')) {
       if (sidebarHidden) toggleSidebar()
       pickerOpen = true
     }
   }
 
-  // A dialog or the search box coming up closes the picker.
+  // A dialog or the search box coming up closes the picker; so do the close question and no folder.
+  overlays.onOpen(() => (pickerOpen = false))
   $effect(() => {
-    if (dialogOpen() || search.shown) untrack(() => (pickerOpen = false))
+    if (!folder || closing !== null) untrack(() => (pickerOpen = false))
   })
 
   /** A picked day jumps as a typed date does; the edited block's text is sent first. Nothing is written. */
@@ -950,7 +952,7 @@
    * sent first, and Esc edits it again. The card stays open underneath.
    */
   function openSearch() {
-    if (dialogOpen()) return
+    if (!overlays.may('openSearch')) return
     const editing = host.editingId
     host.leave()
     sel.clear()
@@ -1014,7 +1016,7 @@
 
   /** The Graph screen in the main area (§7.11); the filters stay as they were. */
   async function openGraph() {
-    if (dialogOpen() || search.shown) return
+    if (!overlays.may('openGraph')) return
     await leaveMainView('graph')
     void network.open()
   }
@@ -1024,7 +1026,7 @@
   /** The status bar button opens the history in the main area; a second click is Back. */
   async function toggleGitLog() {
     if (gitLog.shown) return go('back')
-    if (dialogOpen() || search.shown) return
+    if (!overlays.may('toggleGitLog')) return
     await leaveMainView('gitLog')
     void gitLog.open()
   }
@@ -1116,32 +1118,18 @@
 
   /** A new board with the default columns, shown once the answer is applied (from Settings, Settings stays). */
   async function newBoard(name: string) {
-    const stay = naming === 'settings'
-    naming = null
+    const o = overlays.current
+    const stay = o?.kind === 'newBoard' && o.from === 'settings'
+    overlays.close('newBoard')
     const index = await config.newBoard(name)
     if (index !== null && !stay) await openBoard(index)
   }
 
   // ---- Settings (§7.12) ---------------------------------------------------------
 
-  /** Whether no folder is open or a dialog is: then no other dialog or screen opens over it. */
-  function dialogOpen(): boolean {
-    return (
-      !folder ||
-      naming !== null ||
-      config.dialog !== null ||
-      flows.dialog !== null ||
-      closing !== null ||
-      settingUpGit ||
-      question !== null ||
-      helpShown ||
-      settings.changelog
-    )
-  }
-
   /** The Settings screen in the main area, at `section` if given; it counts the states' blocks. */
   async function openSettings(section?: SettingsSection) {
-    if (dialogOpen() || search.shown) return
+    if (!overlays.may('openSettings')) return
     await leaveMainView('settings')
     settings.open(section)
     if (!appVersionAsked) {
@@ -1168,17 +1156,8 @@
 
   /** Asks a question (from Settings, or before deleting a daily); false when another dialog is open. */
   function confirmAsk(message: string, ok: string): Promise<boolean> {
-    if (dialogOpen() || search.shown) return Promise.resolve(false)
-    return new Promise((resolve) => {
-      question = {
-        message,
-        ok,
-        answer: (yes) => {
-          question = null
-          resolve(yes)
-        },
-      }
-    })
+    if (!overlays.may('confirmAsk')) return Promise.resolve(false)
+    return new Promise((resolve) => overlays.open({ kind: 'confirm', message, ok, answer: resolve }))
   }
 
   /** Applies at once; the choice is kept on this computer. */
@@ -1288,8 +1267,13 @@
         return syncGit()
       case 'init':
         // Not over another dialog, as with the search box.
-        if (dialogOpen() || search.shown) return
-        settingUpGit = true
+        if (!overlays.may('gitSetUp')) return
+        overlays.open({
+          kind: 'confirm',
+          message: 'Keep this notes folder in Git? Breccia runs git init here and adds a .gitignore and a .gitattributes file.',
+          ok: 'Set up Git',
+          answer: (yes) => void (yes && setUpGit()),
+        })
         return
       case 'explain':
         notify({
@@ -1302,7 +1286,6 @@
 
   /** The first commit holds text typed a moment before (§2). */
   async function setUpGit() {
-    settingUpGit = false
     host.leave()
     await client.flush()
     await client.run({ type: 'git.init' }).catch(refuse)
@@ -1457,7 +1440,7 @@
     // The date picker too: a press on it leaves the edited block alone, so Esc can go back to it. The theme menu
     // likewise: a pick gives the focus back to the edited block. The task menu too: the due date calendar it opens
     // gives the focus back to the edited block, and a press on it leaves a multi-block selection as it is.
-    if (search.shown || helpShown || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-due-picker]') || t.closest('[data-theme-menu]') || t.closest('[data-task-menu]')) return
+    if (search.shown || overlays.is('help') || !t?.closest || t.closest('.slash-menu') || t.closest('[data-date-picker]') || t.closest('[data-due-picker]') || t.closest('[data-theme-menu]') || t.closest('[data-task-menu]')) return
     // The ? button opens the list, and the theme button its menu, without taking the focus (or the editing) from
     // the block.
     if (t.closest('[data-testid="status-item"]:is([data-id="help"], [data-id="theme"])')) {
@@ -1716,20 +1699,9 @@
       <CaretMenu menu={slashMenu} testid="slash-menu" onchoose={(i) => host.chooseMenu('slash', i)} />
     {/if}
     <FlowDialog {flows} />
-    {#if settingUpGit}
-      <ConfirmDialog
-        message="Keep this notes folder in Git? Breccia runs git init here and adds a .gitignore and a .gitattributes file."
-        ok="Set up Git"
-        onok={() => void setUpGit()}
-        oncancel={() => (settingUpGit = false)}
-      />
-    {/if}
-    {#if closing}
-      <ConfirmDialog message={closing} ok="Close anyway" onok={closeAnyway} oncancel={() => (closing = null)} />
-    {/if}
-    {#if question}
-      {@const q = question}
-      <ConfirmDialog message={q.message} ok={q.ok} onok={() => q.answer(true)} oncancel={() => q.answer(false)} />
+    {#if overlays.current?.kind === 'confirm'}
+      {@const q = overlays.current}
+      <ConfirmDialog message={q.message} ok={q.ok} onok={() => overlays.answer(true)} oncancel={() => overlays.answer(false)} />
     {/if}
     {#if config.dialog !== null && config.boards[config.dialog.index]}
       {@const i = config.dialog.index}
@@ -1744,14 +1716,18 @@
     {#if search.shown}
       <SearchDialog {search} states={config.states} onchoose={chooseRow} />
     {/if}
-    {#if helpShown}
-      <ShortcutsDialog {mac} states={config.states.map((s) => s.keyword)} onclose={() => (helpShown = false)} />
+    {#if overlays.is('help')}
+      <ShortcutsDialog {mac} states={config.states.map((s) => s.keyword)} onclose={() => overlays.close('help')} />
     {/if}
-    {#if settings.changelog}
-      <ChangelogDialog version={appVersion} onclose={() => settings.hideChangelog()} />
+    {#if overlays.is('changelog')}
+      <ChangelogDialog version={appVersion} onclose={() => overlays.close('changelog')} />
     {/if}
-    {#if naming !== null}
-      <NameDialog title="New board" initial="" onok={(name) => void newBoard(name)} oncancel={() => (naming = null)} />
+    {#if overlays.is('newBoard')}
+      <NameDialog title="New board" initial="" onok={(name) => void newBoard(name)} oncancel={() => overlays.close('newBoard')} />
+    {/if}
+    <!-- The close question: its own layer above every dialog (mounted last, so on top); Cancel gives the dialog back. -->
+    {#if closing}
+      <ConfirmDialog message={closing} ok="Close anyway" onok={closeAnyway} oncancel={() => (closing = null)} />
     {/if}
     {#if opening !== null}
       <!-- The folder opens in the shell: nothing to click yet but the status bar's theme and help. -->
@@ -1791,7 +1767,7 @@
             archiveShown={archiveView.shown}
             onarchive={() => void openArchive()}
             onboard={(i) => void openBoard(i)}
-            onnewboard={() => (naming = 'sidebar')}
+            onnewboard={() => overlays.open({ kind: 'newBoard', from: 'sidebar' })}
             onop={(op, row) => flows.start(op, row)}
             ondrop={dropRow}
             onnewpage={() => void startNewPage()}
@@ -1851,7 +1827,7 @@
                 onusage={() => config.countUsage()}
                 onboard={(i) => config.editBoard(i)}
                 onmoveboard={(i, dir) => void config.moveBoard(i, dir)}
-                onnewboard={() => (naming = 'settings')}
+                onnewboard={() => overlays.open({ kind: 'newBoard', from: 'settings' })}
                 onarchivedays={(archiveAfterDays) => config.setBoardSettings({ archiveAfterDays })}
                 onautoarchive={(on) => config.setBoardSettings({ autoArchive: on })}
                 ongit={(patch) => config.setGit(patch)}

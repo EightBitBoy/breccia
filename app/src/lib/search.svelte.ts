@@ -1,9 +1,12 @@
 // The state of the quick search box: its text, the last answer and the selected row.
 import { errorMessage } from '../api'
+import type { Overlays } from './overlay.svelte'
 import { firstSelectable, moveSelection, rowKey, searchRows, selectable, type SearchRow } from './search'
 import type { BlockId, Command, NameView, Notice, Output, SearchView } from './types'
 
 export interface SearchEnv {
+  /** The box is open while it is the open overlay. */
+  overlays: Overlays
   /** Queues a command; its output reaches App.apply, which hands the `search` and `names` answers back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
@@ -14,7 +17,9 @@ export interface SearchEnv {
 }
 
 export class Search {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.overlays.is('search')
+  }
   text = $state('')
   view = $state.raw<SearchView | null>(null)
   names = $state.raw<NameView[]>([])
@@ -34,7 +39,7 @@ export class Search {
   /** Opens the box empty and asks for the page names; showing again changes nothing. `from`: the block being edited. */
   show(from: BlockId | null = null): void {
     if (this.shown) return
-    this.shown = true
+    this.env.overlays.open({ kind: 'search' })
     this.from = from
     this.text = ''
     this.view = null
@@ -44,7 +49,7 @@ export class Search {
   }
 
   close(): void {
-    this.shown = false
+    this.env.overlays.close('search')
     this.waitingEnter = false
     this.pending = null
     this.from = null

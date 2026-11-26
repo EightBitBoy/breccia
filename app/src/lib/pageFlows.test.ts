@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { PageFlows } from './pageFlows.svelte'
+import { Overlays } from './overlay.svelte'
 import type { Command, Notice, Output, TreeView } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
@@ -10,6 +11,7 @@ function setup(shown: string | null, removed: string[]) {
   const notices: Notice[] = []
   let homes = 0
   const flows = new PageFlows({
+    overlays: new Overlays(() => false),
     run: async (cmd: Command) => {
       ran.push(cmd.type)
       return out(cmd.type === 'page.delete' || cmd.type === 'dir.delete' ? removed : [])
@@ -52,6 +54,7 @@ test('deleting another page leaves the view alone', async () => {
 function renameSetup(reach: number) {
   const ran: Command[] = []
   const flows = new PageFlows({
+    overlays: new Overlays(() => false),
     run: async (cmd: Command) => {
       ran.push(cmd)
       return cmd.type === 'page.renameReach' ? { ...out(), answer: { kind: 'reach', value: reach } } : out()
@@ -94,6 +97,7 @@ test('moving a page only linked to offers only the folders and sends page.move',
     version: 0,
   }
   const flows = new PageFlows({
+    overlays: new Overlays(() => false),
     run: async (cmd: Command) => {
       ran.push(cmd)
       return out()
@@ -127,6 +131,7 @@ function dropSetup(fail: string | null = null) {
     version: 0,
   }
   const flows = new PageFlows({
+    overlays: new Overlays(() => false),
     run: async (cmd: Command) => {
       ran.push(cmd)
       if (cmd.type === fail) throw { code: 'folderExists', message: 'A folder “Projects” already exists' }
@@ -173,6 +178,7 @@ function createSetup(fail: string | null = null) {
     version: 0,
   }
   const flows = new PageFlows({
+    overlays: new Overlays(() => false),
     run: async (cmd: Command) => {
       ran.push(cmd)
       if (cmd.type === fail) throw { code: 'pageExists', message: 'A page “Idea” already exists' }
@@ -260,4 +266,32 @@ test('a refused rename question is a notice and renames nothing', async () => {
   await flows.rename('a', 'A', 'B')
   expect(notices.map((n) => n.kind)).toEqual(['refused'])
   expect(ran.map((c) => c.type)).toEqual(['page.renameReach'])
+})
+
+test('the flow dialog opens as the flow overlay', async () => {
+  const overlays = new Overlays(() => false)
+  const flows = new PageFlows({
+    overlays,
+    run: async (cmd: Command) =>
+      cmd.type === 'page.renameReach' ? { ...out(), answer: { kind: 'reach', value: 2 } } : out(),
+    tree: () => null,
+    shown: () => null,
+    notify: () => {},
+    home: async () => {},
+  })
+  flows.askRename('a', 'A')
+  expect(overlays.current).toEqual({ kind: 'flow' })
+  expect(flows.dialog).toMatchObject({ kind: 'name' })
+  // The name answered: the dialog closes, then its follow-up (links change) opens as the flow overlay again.
+  flows.answer('B')
+  expect(overlays.current).toBeNull()
+  await settle()
+  expect(overlays.current).toEqual({ kind: 'flow' })
+  expect(flows.dialog).toMatchObject({ kind: 'confirm' })
+  flows.close()
+  expect([overlays.current, flows.dialog]).toEqual([null, null])
+  // Another dialog in its place: the flow's own dialog is no longer shown.
+  flows.askRename('a', 'A')
+  overlays.open({ kind: 'help' })
+  expect(flows.dialog).toBeNull()
 })

@@ -1,5 +1,6 @@
 import { expect, test, vi } from 'vitest'
 import { Search } from './search.svelte'
+import { Overlays } from './overlay.svelte'
 import * as rowsModule from './search'
 import type { SearchRow } from './search'
 import type { Command, NameView, Notice, Output, SearchView } from './types'
@@ -24,7 +25,9 @@ function setup(fail = false) {
   const pending: Array<() => void> = []
   const back: number[] = []
   let hold = false
+  const overlays = new Overlays(() => false)
   const s = new Search({
+    overlays,
     run: (cmd) => {
       sent.push(cmd)
       if (fail && cmd.type === 'search.query') return Promise.reject({ code: 'internal', message: 'boom' })
@@ -35,7 +38,7 @@ function setup(fail = false) {
     choose: (row) => chosen.push(row),
     back: (id) => back.push(id),
   })
-  return { s, sent, notices, chosen, pending, back, hold: () => (hold = true) }
+  return { s, overlays, sent, notices, chosen, pending, back, hold: () => (hold = true) }
 }
 const tick = () => new Promise((r) => setTimeout(r, 0))
 const queries = (sent: Command[]) => sent.filter((c) => c.type === 'search.query').map((c) => (c as { text: string }).text)
@@ -354,4 +357,16 @@ test('a refresh while a query is in flight is sent once after it', async () => {
   await tick()
   expect(queries(sent)).toEqual(['abc', 'abc'])
   expect(s.busy).toBe(false)
+})
+
+test('the search box opens and closes as the search overlay', () => {
+  const { s, overlays } = setup()
+  s.show()
+  expect(overlays.current).toEqual({ kind: 'search' })
+  s.close()
+  expect([overlays.current, s.shown]).toEqual([null, false])
+  // A dialog opened in its place: the box is no longer shown.
+  s.show()
+  overlays.open({ kind: 'help' })
+  expect(s.shown).toBe(false)
 })

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { ConfigStore } from './config.svelte'
+import { Overlays } from './overlay.svelte'
 import { RESET_KEY } from './dailies'
 import { REPLACED } from './settingsForm'
 import type { BoardSummary, Command, ConfigView, Notice, StateView } from './types'
@@ -33,7 +34,9 @@ function setup(start: ConfigView = view()) {
   const sent: Command[] = []
   const shownRefusals: string[] = []
   const notices: Notice[] = []
+  const overlays = new Overlays(() => false)
   const store: ConfigStore = new ConfigStore({
+    overlays,
     exec: async (cmd, refused) => {
       sent.push(cmd)
       await Promise.resolve()
@@ -57,6 +60,7 @@ function setup(start: ConfigView = view()) {
   store.apply(file)
   return {
     store,
+    overlays,
     sent,
     shownRefusals,
     notices,
@@ -132,6 +136,7 @@ test('a board dialog opened before a hand edit is refused and closes', async () 
   const t = setup()
   t.store.editBoard(1)
   expect(t.store.dialog).toEqual({ index: 1, name: 'B', version: 1 })
+  expect(t.overlays.current).toEqual({ kind: 'boardSettings' })
   t.handEdit({ boards: [board('A'), { name: 'B', columns: ['TODO'] }] }) // by hand, in config.toml
   const r = await t.store.saveBoard({ name: 'B', columns: ['DONE'] })
   const set = t.sent.find((c) => c.type === 'boards.set')
@@ -139,6 +144,7 @@ test('a board dialog opened before a hand edit is refused and closes', async () 
   expect(r).toEqual({ at: 1, ok: false, renamedFrom: null })
   expect(t.shownRefusals).toEqual(['configChanged'])
   expect(t.store.dialog).toBeNull()
+  expect(t.overlays.current).toBeNull()
   // The hand edit stays in the file.
   expect(t.file().boards[1]).toEqual({ name: 'B', columns: ['TODO'] })
   expect(t.file().version).toBe(2)
@@ -152,6 +158,7 @@ test('an own Settings change while the dialog is open does not refuse it', async
   expect(versionOf(t.sent.at(-1))).toBe(2)
   expect(r).toEqual({ at: 1, ok: true, renamedFrom: 'B' })
   expect(t.store.dialog).toBeNull()
+  expect(t.overlays.current).toBeNull()
   expect(t.file().boards.map((b) => b.name)).toEqual(['A', 'C'])
   expect(t.file().git.enabled).toBe(true)
 })
@@ -161,6 +168,7 @@ test('the dialog follows its board by name when a hand edit reorders the boards'
   t.store.editBoard(1)
   t.handEdit({ boards: [board('b'), board('A')] })
   expect(t.store.dialog?.index).toBe(0)
+  expect(t.overlays.current).toEqual({ kind: 'boardSettings' })
   expect(t.notices).toEqual([])
   // Its save is still refused (a hand edit came since it opened), but names the board where it is now.
   const r = await t.store.saveBoard(board('B'))
@@ -172,6 +180,7 @@ test("the dialog's board removed by hand: a notice and the dialog closes", () =>
   t.store.editBoard(1)
   t.handEdit({ boards: [board('A')] })
   expect(t.store.dialog).toBeNull()
+  expect(t.overlays.current).toBeNull()
   expect(t.notices).toEqual([{ kind: 'refused', message: 'The board B changed in breccia/config.toml.' }])
 })
 
@@ -233,4 +242,17 @@ test('moveBoard moves the board by name in the list shown when it is sent', asyn
   const b = t.store.moveBoard(2, -1) // ↑ ↑ on C, both named before the first answer
   await Promise.all([a, b])
   expect(t.file().boards.map((x) => x.name)).toEqual(['C', 'A', 'B'])
+})
+
+test('the board dialog is open while its overlay is: Cancel or another dialog closes it', () => {
+  const t = setup()
+  t.store.editBoard(0)
+  t.store.closeBoardDialog()
+  expect([t.store.dialog, t.overlays.current]).toEqual([null, null])
+  t.store.editBoard(0)
+  t.overlays.open({ kind: 'help' })
+  expect(t.store.dialog).toBeNull()
+  // Its board then changes by hand: nothing reopens it.
+  t.handEdit({ boards: [board('B'), board('A')] })
+  expect(t.overlays.current).toEqual({ kind: 'help' })
 })

@@ -1,6 +1,7 @@
 // The flows behind the page operations: which dialog is open and what each answer runs.
 import { errorMessage } from '../api'
 import { answerOf } from './answer'
+import type { Overlays } from './overlay.svelte'
 import { baseName, deleteConfirm, folderOf, joinPath, moveTargets, parentOf, renameConfirm, type Op } from './pageOps'
 import { dropCommand } from './treeDrop'
 import type { Row } from './treeRows'
@@ -12,6 +13,8 @@ export type Dialog =
   | { kind: 'confirm'; message: string; ok: () => void }
 
 export interface FlowEnv {
+  /** The dialog is open while the `flow` overlay is. */
+  overlays: Overlays
   /** Runs a command; the output is applied by the app. Rejects with the core's error. */
   run(cmd: Command): Promise<Output>
   tree(): TreeView | null
@@ -23,8 +26,13 @@ export interface FlowEnv {
 }
 
 export class PageFlows {
+  /** The dialog's data; it is on screen while the `flow` overlay is open. */
+  private data = $state.raw<Dialog | null>(null)
+
   /** The dialog on screen, or null. */
-  dialog = $state<Dialog | null>(null)
+  get dialog(): Dialog | null {
+    return this.env.overlays.is('flow') ? this.data : null
+  }
 
   constructor(private env: FlowEnv) {}
 
@@ -66,7 +74,7 @@ export class PageFlows {
       const message = renameConfirm(old, name, reach ?? 0)
       const go = () => void this.go({ type: 'page.rename', key, name })
       if (message === null) go()
-      else this.dialog = { kind: 'confirm', message, ok: go }
+      else this.setDialog({ kind: 'confirm', message, ok: go })
     } catch (e) {
       this.refuse(e)
     }
@@ -78,21 +86,21 @@ export class PageFlows {
     if (row.kind === 'folder' && row.path !== undefined) {
       const path = row.path
       const targets = moveTargets(tree, { kind: 'folder', path })
-      this.dialog = {
+      this.setDialog({
         kind: 'move',
         title: `Move folder “${row.label}”`,
         targets,
         ok: (to) => void this.go({ type: 'dir.rename', path, to: joinPath(to, baseName(path)) }),
-      }
+      })
     } else if (row.kind === 'page' && row.key) {
       const key = row.key
       const targets = moveTargets(tree, { kind: 'page', folder: folderOf(tree, key) })
-      this.dialog = {
+      this.setDialog({
         kind: 'move',
         title: `Move page “${row.label}”`,
         targets,
         ok: (folder) => void this.go({ type: 'page.move', key, folder }),
-      }
+      })
     }
   }
 
@@ -107,23 +115,23 @@ export class PageFlows {
     if (!row) return
     if (row.kind === 'folder' && row.path !== undefined) {
       const path = row.path
-      this.dialog = {
+      this.setDialog({
         kind: 'confirm',
         message: deleteConfirm(row.label, true),
         ok: () => void this.go({ type: 'dir.delete', path }),
-      }
+      })
     } else if (row.key && (row.kind === 'page' || row.kind === 'day')) {
       const key = row.key
-      this.dialog = {
+      this.setDialog({
         kind: 'confirm',
         message: deleteConfirm(row.kind === 'day' ? row.key : row.label, false),
         ok: () => void this.go({ type: 'page.delete', key }),
-      }
+      })
     }
   }
 
   private ask(title: string, initial: string, ok: (name: string) => void) {
-    this.dialog = { kind: 'name', title, initial, ok }
+    this.setDialog({ kind: 'name', title, initial, ok })
   }
 
   /** Runs a changing command; if it removed the shown page, the home view is shown instead. */
@@ -148,12 +156,19 @@ export class PageFlows {
   /** The dialog was answered: it closes first, so the action may open a follow-up dialog. */
   answer(value: string) {
     const d = this.dialog
-    this.dialog = null
+    this.setDialog(null)
     if (d?.kind === 'confirm') d.ok()
     else d?.ok(value)
   }
 
   close() {
-    this.dialog = null
+    this.setDialog(null)
+  }
+
+  /** Every open and close of the dialog comes through here. */
+  private setDialog(d: Dialog | null) {
+    this.data = d
+    if (d === null) this.env.overlays.close('flow')
+    else this.env.overlays.open({ kind: 'flow' })
   }
 }
