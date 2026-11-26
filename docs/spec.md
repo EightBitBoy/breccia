@@ -60,7 +60,7 @@ never disagree.
 | Block editor | **CodeMirror 6**, one instance for the block being edited | edits the Markdown text directly, so the file stays the truth (rich-text editors such as ProseMirror/Tiptap keep their own model and lose detail on the way back to Markdown) |
 | Network view | **sigma.js + graphology**, layout (ForceAtlas2) in a web worker | WebGL, handles tens of thousands of nodes; layout off the main thread avoids stutter |
 | Board drag and drop | **pragmatic-drag-and-drop** (Atlassian) | framework-independent, used by Trello/Jira |
-| Long lists | **TanStack Virtual** | journal feed, All pages, search results |
+| Long lists | **TanStack Virtual** | journal feed, All pages, Git history, Archive, search results: only the rows on screen are drawn |
 | Menus, dialogs | **bits-ui** (unstyled, accessible Svelte components) | |
 | Styling | plain CSS with CSS variables (tokens) | themes are token sets; no Tailwind |
 | Index and search | **SQLite** via rusqlite with **FTS5** full-text search | a rebuildable cache, never the source of truth |

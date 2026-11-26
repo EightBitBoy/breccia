@@ -123,7 +123,9 @@ named.
   states, never sleeps. Cost: a hook in the shipped exe that does nothing unless set.
 - **R8. The virtualiser is shared through one helper**, `app/src/lib/fixedRows.svelte.ts`, used by All pages, Git
   history and Archive (fixed row heights; nothing is measured). The journal feed keeps its own (measured rows). Cost:
-  All pages is touched by a refactor; its e2e steps cover it.
+  All pages is touched by a refactor; its e2e steps cover it. The search dialog keeps its own fixed-row virtualiser too
+  (pre-flight F14): it scrolls its own list with nothing above the rows, while the helper is built around `.main`;
+  moving it onto the helper is a possible follow-up.
 
 ## Items not taken (go to the follow-ups or Task 6)
 

@@ -2112,15 +2112,15 @@
                   }}
                 />
               {/if}
-            {:else if gitLog.shown}
+            {:else if gitLog.shown && scroller}
               <!-- Loaded the first time the history opens, like the graph: the main bundle stays small. -->
               {#await import('./components/GitLogView.svelte') then { default: GitLogView }}
-                <GitLogView log={gitLog} />
+                <GitLogView log={gitLog} {scroller} />
               {/await}
-            {:else if archiveView.shown}
+            {:else if archiveView.shown && scroller}
               <!-- Loaded the first time the Archive opens, like the Git history: the main bundle stays small. -->
               {#await import('./components/ArchiveView.svelte') then { default: ArchiveView }}
-                <ArchiveView archive={archiveView} onopen={(r) => void jumpTo(r.page, r.id)} />
+                <ArchiveView archive={archiveView} {scroller} onopen={(r) => void jumpTo(r.page, r.id)} />
               {/await}
             {:else if dailies.shown}
               <DailiesView {dailies} onconfirm={confirmAsk} />

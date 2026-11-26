@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte'
-  import { Virtualizer, elementScroll, observeElementOffset, observeElementRect, type VirtualItem } from '@tanstack/virtual-core'
   import { COLUMNS, countLabel, folderLabel, formatDay, formatDayTime } from '../lib/allPages'
   import type { AllPages } from '../lib/allPages.svelte'
+  import { fixedRows } from '../lib/fixedRows.svelte'
   import type { PageRowView } from '../lib/types'
 
   let {
@@ -27,53 +27,13 @@
   let filterEl: HTMLInputElement | undefined = $state()
   let rowsEl: HTMLDivElement | undefined = $state()
   let headEl: HTMLDivElement | undefined = $state()
-  let items = $state<VirtualItem[]>([])
-  let height = $state(0)
-  /** Where the rows start inside the scroller's content. */
-  let margin = $state(0)
-
-  function options(count: number, scrollMargin: number) {
-    return {
-      count,
-      getItemKey: (i: number) => visible[i]?.key ?? i,
-      estimateSize: () => ROW,
-      overscan: 10,
-      scrollMargin,
-      getScrollElement: () => scroller,
-      scrollToFn: elementScroll,
-      observeElementRect,
-      observeElementOffset,
-      onChange: (v: Virtualizer<HTMLElement, HTMLElement>) => {
-        items = [...v.getVirtualItems()]
-        height = v.getTotalSize()
-      },
-    }
-  }
-
-  const virtualizer = new Virtualizer<HTMLElement, HTMLElement>(options(0, 0))
-
-  // The rows' offset in the scroller's content: the padding, title, filter bar and header.
-  // Measured again when the header block changes size (a theme or font change, a narrow window).
-  $effect(() => {
-    if (!rowsEl || !headEl) return
-    const read = () => {
-      if (!rowsEl) return
-      const r = rowsEl.getBoundingClientRect().top - scroller.getBoundingClientRect().top
-      margin = Math.round(r + scroller.scrollTop)
-    }
-    read()
-    const ro = new ResizeObserver(read)
-    ro.observe(headEl)
-    return () => ro.disconnect()
-  })
-
-  $effect(() => virtualizer._didMount())
-
-  $effect(() => {
-    virtualizer.setOptions(options(visible.length, margin))
-    virtualizer._willUpdate()
-    items = [...virtualizer.getVirtualItems()]
-    height = virtualizer.getTotalSize()
+  const list = fixedRows({
+    scroller: () => scroller,
+    rows: () => visible,
+    key: (r) => r.key,
+    rowHeight: ROW,
+    rowsEl: () => rowsEl,
+    headEl: () => headEl,
   })
 
   onMount(() => filterEl?.focus())
@@ -131,11 +91,11 @@
         {/each}
       </div>
     </div>
-    <div class="prows" role="rowgroup" bind:this={rowsEl} style:height="{height}px">
-      {#each items as it (it.key)}
+    <div class="prows" role="rowgroup" bind:this={rowsEl} style:height="{list.height}px">
+      {#each list.items as it (it.key)}
         {@const r = visible[it.index]}
         {#if r}
-          <div class="prow" role="row" data-testid="page-row" data-key={r.key} style="transform: translateY({it.start - margin}px)">
+          <div class="prow" role="row" data-testid="page-row" data-key={r.key} style="transform: translateY({it.start - list.margin}px)">
             <div role="cell" data-cell="name" class="name">
               <button
                 class="name"

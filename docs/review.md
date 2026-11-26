@@ -384,3 +384,12 @@ are its questions for you; each answer decides what a later plan does.
    ms (a save during the fetch) and from 703 to about 470 ms (none); the rest is two scans of the folder by Git
    (about 100 ms each) plus the move of the files. Open question: is that enough, or should the locked commit step
    be skipped when nothing was saved since the unlocked one (Task 6)?
+
+153. [ ] **Long Git histories and archives open and scroll without stutter:** by hand, in a notes folder with a long
+   history (thousands of commits) open the Git history and press "Show more" several times, then scroll from top to
+   bottom and back; open the Archive with many archived tasks and do the same. Scrolling stays smooth, and the rows,
+   their hover and a click on an Archive row work as before. With the history scrolled down, make a commit (type in a
+   page, click the Git status): the rows you look at stay in place, nothing goes blank, and the new commit is on top
+   when you scroll up. In the Archive, scroll down, then type in the filter: the list jumps to its top and shows the
+   first match. Back (`Alt ←`) from a page opened in either view brings its scroll position back (the Git history
+   reloads only its newest 200 commits, as before). Only the rows on screen are drawn now, as in All pages.

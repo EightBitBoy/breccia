@@ -3,16 +3,45 @@
   import { onMount } from 'svelte'
   import { countLabel, formatDate } from '../lib/archive'
   import type { Archive } from '../lib/archive.svelte'
+  import { fixedRows } from '../lib/fixedRows.svelte'
   import type { ArchivedView } from '../lib/types'
 
-  let { archive, onopen }: { archive: Archive; onopen: (row: ArchivedView) => void } = $props()
+  let {
+    archive,
+    scroller,
+    onopen,
+  }: {
+    archive: Archive
+    /** The `.main` element, which scrolls. */
+    scroller: HTMLElement
+    onopen: (row: ArchivedView) => void
+  } = $props()
+
+  /** Every row is this tall (CSS `.prow` agrees), so nothing is measured. */
+  const ROW = 33
 
   const visible = $derived(archive.visible())
   const total = $derived(archive.total())
   const filtered = $derived(archive.filter.trim() !== '')
 
   let filterEl: HTMLInputElement | undefined = $state()
+  let rowsEl: HTMLDivElement | undefined = $state()
+  let headEl: HTMLDivElement | undefined = $state()
+  // Only the rows on screen are drawn.
+  const list = fixedRows({
+    scroller: () => scroller,
+    rows: () => visible,
+    key: (r) => r.id,
+    rowHeight: ROW,
+    rowsEl: () => rowsEl,
+    headEl: () => headEl,
+  })
   onMount(() => filterEl?.focus())
+
+  /** A changed filter shows its rows from the first one, not a window below where the longer list was scrolled to. */
+  function toTop() {
+    scroller.scrollTop = 0
+  }
 
   /** Enter opens the first row; Escape empties the filter (as in All pages). */
   function onFilterKey(e: KeyboardEvent) {
@@ -22,11 +51,13 @@
     } else if (e.key === 'Escape') {
       e.preventDefault()
       archive.filter = ''
+      toTop()
     }
   }
 </script>
 
 <section class="archive" data-testid="archive">
+  <div class="top" bind:this={headEl}>
   <div class="ptitle">
     <h1>Archive</h1>
     {#if archive.rows !== null}
@@ -41,8 +72,10 @@
       spellcheck="false"
       bind:this={filterEl}
       bind:value={archive.filter}
+      oninput={toTop}
       onkeydown={onFilterKey}
     />
+  </div>
   </div>
   {#if archive.rows !== null && total === 0}
     <p class="pempty" data-testid="archive-empty">No archived tasks yet.</p>
@@ -61,11 +94,13 @@
           <div role="columnheader">Page</div>
         </div>
       </div>
-      <div class="arows" role="rowgroup">
-        {#each visible as r (r.id)}
+      <div class="arows prows" role="rowgroup" bind:this={rowsEl} style:height="{list.height}px">
+        {#each list.items as it (it.key)}
+          {@const r = visible[it.index]}
+          {#if r}
           <!-- The task's button takes the keyboard; a click anywhere on the row opens the page at the block. -->
           <!-- svelte-ignore a11y_click_events_have_key_events -->
-          <div class="prow" role="row" tabindex="-1" data-testid="archive-row" data-id={r.id} onclick={() => onopen(r)}>
+          <div class="prow" role="row" tabindex="-1" data-testid="archive-row" data-id={r.id} style="transform: translateY({it.start - list.margin}px)" onclick={() => onopen(r)}>
             <div role="cell" data-cell="task" class="name">
               <button class="name" title={r.text}>{r.text || '(no text)'}</button>
             </div>
@@ -76,6 +111,7 @@
             <div role="cell" data-cell="archived" class="dim">{formatDate(r.archived)}</div>
             <div role="cell" data-cell="page" class="dim" title={r.source}>{r.source}</div>
           </div>
+          {/if}
         {/each}
       </div>
     </div>

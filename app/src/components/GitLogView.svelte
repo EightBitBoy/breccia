@@ -1,14 +1,42 @@
 <script lang="ts">
   // The Git history: the notes folder's commits, newest first, read-only.
   import { formatWhen, formatWhenFull } from '../lib/gitLog'
+  import { fixedRows } from '../lib/fixedRows.svelte'
   import type { GitLog } from '../lib/gitLog.svelte'
+  import type { LogEntry } from '../lib/types'
 
-  let { log }: { log: GitLog } = $props()
+  let {
+    log,
+    scroller,
+  }: {
+    log: GitLog
+    /** The `.main` element, which scrolls. */
+    scroller: HTMLElement
+  } = $props()
 
-  const count = $derived(log.entries?.length ?? 0)
+  /** Every row is this tall (CSS `.prow` agrees), so nothing is measured. */
+  const ROW = 33
+  const NONE: LogEntry[] = []
+
+  const entries = $derived(log.entries ?? NONE)
+  const count = $derived(entries.length)
+
+  let rowsEl: HTMLDivElement | undefined = $state()
+  let headEl: HTMLDivElement | undefined = $state()
+  // Only the rows on screen are drawn; a row keeps its element by its hash, so a new commit on top moves the rows
+  // down by one and the scroll position stays.
+  const list = fixedRows({
+    scroller: () => scroller,
+    rows: () => entries,
+    key: (e) => e.hash,
+    rowHeight: ROW,
+    rowsEl: () => rowsEl,
+    headEl: () => headEl,
+  })
 </script>
 
 <section class="git-log" data-testid="git-log">
+  <div class="top" bind:this={headEl}>
   <div class="ptitle">
     <h1>Git history</h1>
     {#if log.entries !== null && count > 0}
@@ -18,6 +46,7 @@
   {#if log.error !== null}
     <p class="pempty warning" data-testid="log-error">Could not read the history: {log.error}</p>
   {/if}
+  </div>
   {#if log.entries !== null && count === 0 && log.error === null}
     <p class="pempty" data-testid="log-empty">No commits yet</p>
   {:else if log.entries !== null && count > 0}
@@ -30,9 +59,11 @@
           <div role="columnheader">Commit</div>
         </div>
       </div>
-      <div class="lrows" role="rowgroup">
-        {#each log.entries as e (e.hash)}
-          <div class="prow" role="row" data-testid="log-row" data-hash={e.hash}>
+      <div class="lrows prows" role="rowgroup" bind:this={rowsEl} style:height="{list.height}px">
+        {#each list.items as it (it.key)}
+          {@const e = entries[it.index]}
+          {#if e}
+          <div class="prow" role="row" data-testid="log-row" data-hash={e.hash} style="transform: translateY({it.start - list.margin}px)">
             <div role="cell" data-cell="when" title={formatWhenFull(e.timeMs)}>{formatWhen(e.timeMs)}</div>
             <div role="cell" data-cell="message" class="message">
               <span class="subject" title={e.subject}>{e.subject}</span>
@@ -43,6 +74,7 @@
             <div role="cell" data-cell="author" class="dim" title={e.author}>{e.author}</div>
             <div role="cell" data-cell="commit" class="dim hash" title={e.hash}>{e.short}</div>
           </div>
+          {/if}
         {/each}
       </div>
     </div>

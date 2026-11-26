@@ -85,6 +85,8 @@ pull_interval_minutes = 5
 
 let folder = ''
 let folder2 = ''
+// Steps 167 and 168: a scratch folder with a long Git history and a long Archive.
+let folder167 = ''
 let journal = ''
 let app = null
 // Step 166's own Breccia, its notes folder and config dir.
@@ -112,7 +114,7 @@ function cleanup() {
       closeSync(logFd)
     } catch {}
   }
-  for (const p of [folder, folder2, configDir, gitHome, folder166, config166, logPath]) {
+  for (const p of [folder, folder2, folder167, configDir, gitHome, folder166, config166, logPath]) {
     if (!p) continue
     try {
       rmSync(p, { recursive: true, force: true, maxRetries: 10 })
@@ -232,7 +234,8 @@ try {
   mkdirSync(join(folder2, 'pages'))
   writeFileSync(join(folder2, 'pages', 'Other.md'), '- other folder\n')
   const goneFolder = join(tmp, `breccia-e2e-gone-${process.pid}`) // never created, so it needs no cleanup
-  writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ recent_folders: [folder2, goneFolder] }))
+  folder167 = mkdtempSync(join(tmp, 'breccia-e2e-long-')) // filled by step 167, reached through the recent list
+  writeFileSync(join(configDir, 'settings.json'), JSON.stringify({ recent_folders: [folder2, goneFolder, folder167] }))
   gitHome = mkdtempSync(join(tmp, 'breccia-e2e-git-')) // also holds remote.git and the second clone
   mkdirSync(join(folder, 'journals'))
   mkdirSync(join(folder, 'pages'))
@@ -2251,6 +2254,158 @@ try {
   unlinkSync(join(pagesDir, 'Due order.md'))
   await cardTitled('Due soon').waitFor({ state: 'detached', timeout: 10_000 })
   console.log('PASS 162 within a priority the cards with a due date come first, soonest first')
+
+  // 167: a Git history of 600 commits draws only the rows on screen; its last row is the first commit; a commit made
+  // while it is scrolled down keeps the shown rows in place (no gap) and shows on top once scrolled up
+  {
+    // The scratch folder: one fast-import stream of 600 commits, each changing pages/Log.md; the first also holds
+    // the config, Git's two files as Breccia's set-up writes them, and pages/Old.md with 1,500 archived tasks (168).
+    const config167 = CONFIG_TOML
+    const ignore167 = "# Breccia's temporary files while saving\n.*.breccia-tmp\n# System files\n.DS_Store\nThumbs.db\ndesktop.ini\n"
+    const attrs167 = '# Breccia saves every file with LF line endings\n* text=auto eol=lf\n'
+    let old168 = ''
+    for (let i = 1; i <= 1500; i++) {
+      old168 += `- DONE task ${i}\n  done:: [[2026-01-01]] 10:00:00\n  archived:: 2026-01-15 10:00:00\n`
+    }
+    const blob = (path, text) => `M 100644 inline ${path}\ndata ${Buffer.byteLength(text)}\n${text}\n`
+    let stream = ''
+    for (let i = 1; i <= 600; i++) {
+      const msg = `log ${i}`
+      const who = `E2E <e2e@example.invalid> ${1_700_000_000 + i * 60} +0000`
+      stream += `commit refs/heads/main\nauthor ${who}\ncommitter ${who}\ndata ${msg.length}\n${msg}\n`
+      if (i === 1) {
+        stream += blob('breccia/config.toml', config167) + blob('.gitignore', ignore167) + blob('.gitattributes', attrs167)
+        stream += blob('pages/Old.md', old168)
+      }
+      stream += blob('pages/Log.md', `- entry ${i}\n`)
+    }
+    git(folder167, 'init', '-q', '-b', 'main')
+    const imported = spawnSync('git', ['-C', folder167, 'fast-import', '--quiet'], {
+      env: { ...process.env, ...gitEnv },
+      input: stream,
+      encoding: 'utf8',
+    })
+    assert(imported.status === 0, `167 fast-import: ${imported.stderr}`)
+    git(folder167, 'checkout', '-q', '-f', 'main')
+    assert(git(folder167, 'rev-list', '--count', 'HEAD') === '600', '167 not 600 commits')
+    assert(readAt(join(folder167, 'pages', 'Log.md')) === '- entry 600\n', '167 Log.md not checked out')
+    const hashes167 = git(folder167, 'log', '--format=%H').split('\n') // newest first
+    const first167 = git(folder167, 'rev-list', '--max-parents=0', 'HEAD')
+    assert(hashes167[599] === first167, '167 the oldest hash is not the root commit')
+
+    // Into the scratch folder through the recent list, as step 57 does.
+    await page.locator('[data-testid="folder-name"]').click()
+    await screen.locator(`[data-testid="recent-folder"][data-path="${folder167.replaceAll('\\', '\\\\')}"]`).click()
+    await waitFor('167 scratch folder', () => page.locator('[data-testid="folder-name"]').innerText(), basename(folder167))
+
+    // Text typed in a page, committed later by a click on the Git item while the history is shown.
+    if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
+    await side.getByText('Log', { exact: true }).click()
+    await title.filter({ hasText: 'Log' }).waitFor()
+    await page.locator('.block .content', { hasText: 'entry 600' }).click()
+    await kb.press('End')
+    await kb.type(' typed 167')
+    const log167 = join(folder167, 'pages', 'Log.md')
+    await expectFile('167 typed text saved', '- entry 600 typed 167\n', log167)
+
+    const historyButton167 = page.locator('[data-testid="status-item"][data-id="gitLog"]')
+    const rows167 = page.locator('[data-testid="log-row"]')
+    const count167 = page.locator('[data-testid="log-count"]')
+    await historyButton167.click()
+    await page.locator('[data-testid="git-log"]').waitFor()
+    await waitFor('167 first page', () => count167.innerText(), 'newest 200 commits')
+    await page.locator('[data-testid="log-more"]').click()
+    await waitFor('167 second page', () => count167.innerText(), 'newest 400 commits')
+    await page.locator('[data-testid="log-more"]').click()
+    await waitFor('167 third page', async () => /^(newest )?600 commits$/.test(await count167.innerText()), true)
+    const drawn167 = await rows167.count()
+    assert(drawn167 <= 80, `167 the history draws ${drawn167} rows for 600 commits, not at most 80`)
+    // The row under the sticky header, or null when nothing is drawn there (a gap).
+    const topRow = (rowSel, headSel) =>
+      page.evaluate(
+        ([rowSel, headSel]) => {
+          const y = document.querySelector(headSel).getBoundingClientRect().bottom + 1
+          const hit = [...document.querySelectorAll(rowSel)].find((e) => {
+            const b = e.getBoundingClientRect()
+            return b.top <= y && b.bottom > y
+          })
+          return hit ? (hit.getAttribute('data-hash') ?? hit.getAttribute('data-id')) : null
+        },
+        [rowSel, headSel],
+      )
+    const top167 = () => topRow('[data-testid="log-row"]', '.log-table .phead')
+    const main167 = page.locator('.main')
+    const scrollTo = (y) => main167.evaluate((e, y) => (e.scrollTop = y === 'end' ? e.scrollHeight : y), y)
+    const scrollTop167 = () => main167.evaluate((e) => e.scrollTop)
+    // The end: the last row is the first commit.
+    await scrollTo('end')
+    await waitFor('167 last row', () => rows167.last().getAttribute('data-hash'), first167)
+    assert((await rows167.count()) <= 80, `167 ${await rows167.count()} rows drawn at the end`)
+    // Somewhere in the middle: the row under the header and the scroll position.
+    await scrollTo(Math.round((await main167.evaluate((e) => e.scrollHeight)) / 2))
+    await waitFor('167 middle drawn', async () => (await top167()) !== null, true)
+    const before167 = await top167()
+    const at167 = hashes167.indexOf(before167)
+    assert(at167 > 0, `167 row under the header: ${before167}`)
+    const scroll167 = await scrollTop167()
+    // The Git item commits the typed text; the history reloads with the new commit on top.
+    await page.locator('[data-testid="status-item"][data-id="git"]').click()
+    await waitFor('167 commit', () => git(folder167, 'rev-list', '--count', 'HEAD'), '601')
+    const head167 = git(folder167, 'rev-parse', 'HEAD')
+    assert(git(folder167, 'show', 'HEAD:pages/Log.md') + '\n' === '- entry 600 typed 167\n', '167 commit lacks the typed text')
+    // Every row moved down by one: the row under the header is the next newer one, the old one is still shown, the
+    // scroll position is the same, and nothing is blank.
+    await waitFor('167 rows moved by one', top167, hashes167[at167 - 1])
+    assert((await scrollTop167()) === scroll167, `167 scroll moved: ${scroll167} -> ${await scrollTop167()}`)
+    const oldShown = await page
+      .locator(`[data-testid="log-row"][data-hash="${before167}"]`)
+      .evaluate((e) => {
+        const b = e.getBoundingClientRect()
+        const m = document.querySelector('.main').getBoundingClientRect()
+        return b.top >= m.top && b.bottom <= m.bottom
+      })
+    assert(oldShown, '167 the row shown before the commit is no longer on screen')
+    // Scrolled up: the new commit is on top.
+    await scrollTo(0)
+    await waitFor('167 new commit on top', () => rows167.first().getAttribute('data-hash'), head167)
+    assert(readAt(log167) === '- entry 600 typed 167\n', `167 Log.md bytes: ${JSON.stringify(readAt(log167))}`)
+    console.log('PASS 167 a long Git history draws only the shown rows and keeps its place when a commit arrives')
+
+    // 168: an Archive of 1,500 tasks draws only the rows on screen; typing in the filter shows the first match at the
+    // top, also from the end of the list; a click opens its page at the block
+    const archiveRows168 = page.locator('[data-testid="archive-row"]')
+    await page.locator('[data-testid="nav-archive"]').click()
+    await page.locator('[data-testid="archive"]').waitFor()
+    await waitFor('168 count', () => page.locator('[data-testid="archive-count"]').innerText(), '1500 tasks')
+    const drawn168 = await archiveRows168.count()
+    assert(drawn168 <= 80, `168 the Archive draws ${drawn168} rows for 1,500 tasks, not at most 80`)
+    const top168 = () => topRow('[data-testid="archive-row"]', '.archive-table .phead')
+    await scrollTo('end')
+    await waitFor('168 end drawn', async () => (await top168()) !== null && (await scrollTop167()) > 10_000, true)
+    // The filter keeps the keyboard while the list scrolls; typing does not scroll it into view first.
+    const focused168 = await page.evaluate(() => document.activeElement?.getAttribute('data-testid') ?? null)
+    assert(focused168 === 'archive-filter', `168 focus: ${focused168}`)
+    await kb.type('task 1499')
+    await waitFor('168 filtered', () => page.locator('[data-testid="archive-count"]').innerText(), '1 of 1500 tasks')
+    const match168 = archiveRows168.first()
+    await waitFor('168 match at the top', async () => {
+      const id = await top168()
+      return id !== null && id === (await match168.getAttribute('data-id'))
+    }, true)
+    assert((await match168.locator('[data-cell="task"]').innerText()) === 'task 1499', '168 the match is not task 1499')
+    const old168Path = join(folder167, 'pages', 'Old.md')
+    await match168.click()
+    await title.filter({ hasText: 'Old' }).waitFor()
+    await page.locator('.block.flash', { hasText: 'task 1499' }).waitFor({ timeout: 5000 })
+    await page.locator('[data-testid="archive"]').waitFor({ state: 'detached' })
+    assert(readAt(old168Path) === old168, '168 the Archive view wrote to Old.md')
+    console.log('PASS 168 a long Archive draws only the shown rows; the filter shows the first match at the top')
+
+    // Back to the main folder.
+    await page.locator('[data-testid="folder-name"]').click()
+    await screen.locator(`[data-testid="recent-folder"][data-path="${folder.replaceAll('\\', '\\\\')}"]`).click()
+    await waitFor('168 back', () => page.locator('[data-testid="folder-name"]').innerText(), basename(folder))
+  }
 
   // 57: switching folders sends just-typed text first, then shows the other folder; and back
   await page.locator('[data-testid="nav-journal"]').click()
