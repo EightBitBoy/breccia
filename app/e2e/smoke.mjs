@@ -2298,6 +2298,8 @@ try {
     await screen.locator(`[data-testid="recent-folder"][data-path="${folder167.replaceAll('\\', '\\\\')}"]`).click()
     await waitFor('167 scratch folder', () => page.locator('[data-testid="folder-name"]').innerText(), basename(folder167))
     // The first Git step of a folder commits what is there: let it end before typing, or it takes the typed text.
+    // That step shows no "Saving to Git…" (the folder is not known as a repository until the step finds it), and the
+    // folder before this one is not in Git, so "Saved to Git …" first shows when the step has ended.
     const gitItem167 = page.locator('[data-testid="status-item"][data-id="git"]')
     await waitFor('167 first Git step', async () => /^Saved to Git /.test(await gitItem167.innerText()), true, 30_000)
 
