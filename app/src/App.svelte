@@ -99,6 +99,7 @@
   import { Nav, type NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
   import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
+  import { MainArea } from './lib/mainArea.svelte'
   import { statesSet } from './lib/stateEdit'
   import { configShift, isNewerConfig } from './lib/configChange'
   import { dialogVersion, foreignAfterRefusal, gitCommand, WriteQueue, writeConfig, type WriteEnv } from './lib/configWrite'
@@ -221,8 +222,10 @@
   let theme = $state<ThemeChoice>('system')
   /** Where the sidebar lists Journals, chosen on this computer. */
   let journalsAt = $state<JournalsAt>('bottom')
+  /** Which screen the main area shows; the six views below register with it. */
+  const mainArea = new MainArea()
   /** The Settings screen in the main area (§7.12). */
-  const settings = new SettingsScreen()
+  const settings = new SettingsScreen({ area: mainArea })
   /** A question from Settings (rename or remove a used state), while open. */
   let question = $state<{ message: string; ok: string; answer: (yes: boolean) => void } | null>(null)
   /** Where the "New board" name dialog was opened from, while it is open. */
@@ -419,11 +422,12 @@
     enabled: () => folder !== null && autoArchiveOn,
   })
   /** The All pages table; a failed load or reload is a notice (AllPages reports it). */
-  const allPages = new AllPages({ run: (cmd) => client.run(cmd), notify })
+  const allPages = new AllPages({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The Archive view; a failed load or reload is a notice. */
-  const archiveView = new Archive({ run: (cmd) => client.run(cmd), notify })
+  const archiveView = new Archive({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The Dailies: the list (for the view and the status bar) and the timers that start each day afresh. */
   const dailies = new Dailies({
+    area: mainArea,
     run: (cmd) => client.run(cmd),
     notify,
     now: () => new Date(),
@@ -456,6 +460,7 @@
   })
   /** The Git history; `git.log` skips the command queue, so a slow log never holds typed text up. */
   const gitLog = new GitLog({
+    area: mainArea,
     log: (skip, limit) => invokeRun({ generation: 0, command: { type: 'git.log', skip, limit } }),
   })
   $effect(() => {
@@ -463,7 +468,7 @@
     untrack(() => (item ? status.set(item) : status.clear('gitLog')))
   })
   /** The Graph screen (§7.11); a failed load is a notice. */
-  const network = new Network({ run: (cmd) => client.run(cmd), notify })
+  const network = new Network({ area: mainArea, run: (cmd) => client.run(cmd), notify })
   /** The quick search box (§7.8). */
   const search = new Search({
     run: (cmd) => client.run(cmd),

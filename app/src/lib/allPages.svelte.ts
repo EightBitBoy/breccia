@@ -2,17 +2,21 @@
 // command that keeps the rows up to date.
 import { errorMessage } from '../api'
 import { DEFAULT_SORT, nextSort, shownRows, type ColumnKey, type Sort } from './allPages'
+import type { MainArea } from './mainArea.svelte'
 import { RefsRefresh } from './refs'
 import type { Command, Notice, Output, PageRowView } from './types'
 
 export interface AllPagesEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands the `table` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }
 
 export class AllPages {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.area.is('allPages')
+  }
   /** The last `pages.table` answer; null until it arrives and after `close`. */
   rows = $state.raw<PageRowView[] | null>(null)
   sort = $state<Sort>(DEFAULT_SORT)
@@ -30,11 +34,12 @@ export class AllPages {
         (e) => this.env.notify({ kind: 'refused', message: errorMessage(e) }),
       ),
     })
+    env.area.register('allPages', { left: () => (this.rows = null) })
   }
 
   /** Shows the table (the filter empties; sort and switch stay) and runs `pages.table`; a failure is a notice. */
   async open(): Promise<void> {
-    this.shown = true
+    this.env.area.show({ kind: 'allPages' })
     this.filter = ''
     try {
       await this.env.run({ type: 'pages.table' })
@@ -45,8 +50,7 @@ export class AllPages {
 
   /** Hides the table and forgets its rows. */
   close(): void {
-    this.shown = false
-    this.rows = null
+    this.env.area.leave('allPages')
   }
 
   /** A `pages.table` answer: applied only while shown. */

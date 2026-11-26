@@ -1,17 +1,21 @@
 // The state of the Archive view: its rows, the filter, and the command that keeps them up to date.
 import { errorMessage } from '../api'
 import { shownRows } from './archive'
+import type { MainArea } from './mainArea.svelte'
 import { RefsRefresh } from './refs'
 import type { ArchivedView, Command, Notice, Output } from './types'
 
 export interface ArchiveEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands the `archive` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }
 
 export class Archive {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.area.is('archive')
+  }
   /** The last `archive.list` answer; null until it arrives and after `close`. */
   rows = $state.raw<ArchivedView[] | null>(null)
   filter = $state('')
@@ -27,11 +31,12 @@ export class Archive {
         (e) => this.env.notify({ kind: 'refused', message: errorMessage(e) }),
       ),
     })
+    env.area.register('archive', { left: () => (this.rows = null) })
   }
 
   /** Shows the view with an empty filter and runs `archive.list`; a failure is a notice. */
   async open(): Promise<void> {
-    this.shown = true
+    this.env.area.show({ kind: 'archive' })
     this.filter = ''
     try {
       await this.env.run({ type: 'archive.list' })
@@ -42,8 +47,7 @@ export class Archive {
 
   /** Hides the view and forgets its rows. */
   close(): void {
-    this.shown = false
-    this.rows = null
+    this.env.area.leave('archive')
   }
 
   /** An `archive.list` answer: applied only while shown. */

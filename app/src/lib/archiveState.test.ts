@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { Archive } from './archive.svelte'
+import { MainArea } from './mainArea.svelte'
 import type { ArchivedView, Command, Notice, Output } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
@@ -8,12 +9,13 @@ const row = (id: number, text: string): ArchivedView => ({
   id, page: 'p', pageName: 'P', pageKind: 'page', source: 'P', text, state: 'DONE', color: 'green', done: null, archived: null, created: null, took: null,
 })
 
-function setup(fail = false) {
+function setup(fail = false, area = new MainArea()) {
   const sent: Command[] = []
   const notices: Notice[] = []
   const pending: Array<() => void> = []
   let hold = false
   const a = new Archive({
+    area,
     run: (cmd) => {
       sent.push(cmd)
       if (fail) return Promise.reject({ code: 'internal', message: 'boom' })
@@ -22,7 +24,7 @@ function setup(fail = false) {
     },
     notify: (n) => notices.push(n),
   })
-  return { a, sent, notices, pending, holdAnswers: () => (hold = true) }
+  return { a, area, sent, notices, pending, holdAnswers: () => (hold = true) }
 }
 const tick = () => new Promise((r) => setTimeout(r, 0))
 
@@ -68,4 +70,14 @@ test("another program's change reloads it, once at a time; hidden, it takes noth
   await tick()
   await tick()
   expect(sent.length).toBe(3)
+})
+
+test('showing another screen drops the rows and ends the reloads', async () => {
+  const { a, area, sent } = setup()
+  await a.open()
+  a.applyArchive([row(1, 'a')])
+  area.show({ kind: 'graph' })
+  expect([a.shown, a.rows]).toEqual([false, null])
+  a.refresh()
+  expect(sent.length).toBe(1)
 })

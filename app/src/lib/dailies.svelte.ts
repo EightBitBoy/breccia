@@ -1,10 +1,12 @@
 // The window's Dailies: the list, the reset time, `now`, and the timers that redraw it.
 import { errorMessage } from '../api'
+import type { MainArea } from './mainArea.svelte'
 import { DEFAULT_RESET, dailiesItem, groups, isChecked, nextReset } from './dailies'
 import type { StatusItem } from './status'
 import type { BlockId, Command, DailyView, Notice, Output } from './types'
 
 export interface DailiesEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands `out.dailies` to `apply`. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
@@ -19,7 +21,9 @@ export interface DailiesEnv {
 const TICK_MS = 60_000
 
 export class Dailies {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.area.is('dailies')
+  }
   /** The dailies in file order; null until the first answer and after `forget`. */
   list = $state.raw<DailyView[] | null>(null)
   reset = $state(DEFAULT_RESET)
@@ -32,6 +36,8 @@ export class Dailies {
 
   constructor(private env: DailiesEnv) {
     this.now = env.now()
+    // The list stays for the status bar, so there is nothing to drop when the area shows another screen.
+    env.area.register('dailies', { left: () => {} })
   }
 
   get groups(): { open: DailyView[]; checked: DailyView[] } {
@@ -66,13 +72,13 @@ export class Dailies {
   }
 
   async open(): Promise<void> {
-    this.shown = true
+    this.env.area.show({ kind: 'dailies' })
     await this.load()
   }
 
   /** Hides the view; the list stays for the status bar. */
   close(): void {
-    this.shown = false
+    this.env.area.leave('dailies')
   }
 
   /** Folder switch: the old folder's rows go; the timers serve the new folder too. */

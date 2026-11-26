@@ -144,3 +144,4 @@ text in a copy notice (spec §2) provided F1's wording says "may not have been s
 in plain words except the R2 one (F15).
 
 Task -> findings to carry: T1 F9; T2 F12; T3 F6 F11; T4 F10; T5 F3 F5 F8 F9 F10 F14; T7 F7 F13; T8 F2; T9 F1 F2 F4 F15 F16 F17 F18 F19.
+- Task 1: dispatched (sonnet implementer ad43efcc348ca841a), BASE 2c0681b

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { Network } from './network.svelte'
+import { MainArea } from './mainArea.svelte'
 import { DEFAULT_FILTERS } from './graph'
 import type { Command, GraphView, Notice, Output } from './types'
 import { emptyOutput } from './emptyOutput.testing'
@@ -7,12 +8,13 @@ import { emptyOutput } from './emptyOutput.testing'
 const empty: Output = emptyOutput()
 const view = (o: Partial<GraphView> = {}): GraphView => ({ nodes: [], links: [], ...o }) as unknown as GraphView
 
-function setup(fail: 'none' | 'all' = 'none') {
+function setup(fail: 'none' | 'all' = 'none', area = new MainArea()) {
   const sent: Command[] = []
   const notices: Notice[] = []
   const pending: Array<() => void> = []
   let hold = false
   const n = new Network({
+    area,
     run: (cmd) => {
       sent.push(cmd)
       if (fail === 'all') return Promise.reject({ code: 'internal', message: 'boom' })
@@ -21,7 +23,7 @@ function setup(fail: 'none' | 'all' = 'none') {
     },
     notify: (x) => notices.push(x),
   })
-  return { n, sent, notices, pending, hold: () => (hold = true) }
+  return { n, area, sent, notices, pending, hold: () => (hold = true) }
 }
 const tick = () => new Promise((r) => setTimeout(r, 0))
 
@@ -113,4 +115,15 @@ test('a failed graph.get is a refused notice; a failed save is not', async () =>
   }
   expect(sent.at(-1)?.type).toBe('graph.saveLayout')
   expect(notices.length).toBe(1)
+})
+
+test('showing another screen drops the graph but keeps the filters', async () => {
+  const { n, area } = setup()
+  await n.open()
+  n.applyGraph(view())
+  n.setFilters({ limit: null, hideTagOnly: true })
+  const filters = { ...n.filters }
+  area.show({ kind: 'archive' })
+  expect([n.shown, n.view]).toEqual([false, null])
+  expect(n.filters).toEqual(filters)
 })

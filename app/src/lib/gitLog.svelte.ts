@@ -2,15 +2,19 @@
 import { errorMessage } from '../api'
 import { answerOf } from './answer'
 import { PAGE_SIZE } from './gitLog'
+import type { MainArea } from './mainArea.svelte'
 import type { LogEntry, Output } from './types'
 
 export interface GitLogEnv {
+  area: MainArea
   /** Sends `git.log`; the shell answers it outside the command queue and the session lock. */
   log(skip: number, limit: number): Promise<Output>
 }
 
 export class GitLog {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.area.is('gitLog')
+  }
   /** Newest first; null until the first answer and after `close`. */
   entries = $state.raw<LogEntry[] | null>(null)
   /** Whether older commits follow. */
@@ -27,11 +31,21 @@ export class GitLog {
   /** Loads from the top still on their way; "Show more" waits for them. */
   #reloading = 0
 
-  constructor(private env: GitLogEnv) {}
+  constructor(private env: GitLogEnv) {
+    env.area.register('gitLog', {
+      left: () => {
+        this.entries = null
+        this.more = false
+        this.error = null
+        this.loadingMore = false
+        this.#epoch++
+      },
+    })
+  }
 
   /** Shows the view and loads the newest commits. */
   async open(): Promise<void> {
-    this.shown = true
+    this.env.area.show({ kind: 'gitLog' })
     this.entries = null
     this.more = false
     this.error = null
@@ -40,12 +54,7 @@ export class GitLog {
 
   /** Hides the view and forgets what it loaded; answers on their way are dropped. */
   close(): void {
-    this.shown = false
-    this.entries = null
-    this.more = false
-    this.error = null
-    this.loadingMore = false
-    this.#epoch++
+    this.env.area.leave('gitLog')
   }
 
   /** Loads again from the top, as many rows as are shown (at least a page), so a new commit shows at the top. */

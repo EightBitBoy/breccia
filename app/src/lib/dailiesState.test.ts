@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { Dailies, type DailiesEnv } from './dailies.svelte'
+import { MainArea } from './mainArea.svelte'
 import type { Command, DailyView, Notice, Output } from './types'
 
 const daily = (id: number, checked: string | null = null): DailyView => ({ id, text: `d${id}`, checked, nested: false })
@@ -12,7 +13,9 @@ function setup(start: Date, refuse: boolean | 'all' = false) {
   const notices: Notice[] = []
   const timers = new Map<number, { f: () => void; ms: number; every: boolean }>()
   let next = 1
+  const area = new MainArea()
   const env: DailiesEnv = {
+    area,
     run: (cmd) => {
       sent.push(cmd)
       if (refuse === 'all' && cmd.type === 'dailies.list') return Promise.reject({ code: 'internal', message: 'No list.' })
@@ -33,7 +36,7 @@ function setup(start: Date, refuse: boolean | 'all' = false) {
     if (!t.every) timers.delete(h)
     t.f()
   }
-  return { d, sent, notices, timers, once, fire, setClock: (c: Date) => (clock = c) }
+  return { d, area, sent, notices, timers, once, fire, setClock: (c: Date) => (clock = c) }
 }
 
 test('the_timer_fires_at_the_reset', () => {
@@ -203,4 +206,16 @@ test('open shows and loads; close hides and keeps the list', async () => {
 test('add answers whether the daily was added, so the field can keep refused text', async () => {
   expect(await setup(at(8)).d.add('Check emails')).toBe(true)
   expect(await setup(at(8), true).d.add('Check emails')).toBe(false)
+})
+
+test('showing another screen hides the Dailies but keeps the list', async () => {
+  const { d, area } = setup(at(8))
+  d.apply([daily(1)])
+  await d.open()
+  expect([d.shown, area.is('dailies')]).toEqual([true, true])
+  area.show({ kind: 'archive' })
+  expect(d.shown).toBe(false)
+  expect(d.list).toEqual([daily(1)])
+  d.close() // a close while another screen shows leaves it alone
+  expect(area.is('archive')).toBe(true)
 })

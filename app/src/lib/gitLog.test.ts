@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { PAGE_SIZE, formatWhen, formatWhenFull, historyItem, historyStale } from './gitLog'
 import { GitLog } from './gitLog.svelte'
+import { MainArea } from './mainArea.svelte'
 import type { GitLogView, GitView, LogEntry, Output } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
@@ -82,7 +83,7 @@ describe('historyStale', () => {
 describe('GitLog', () => {
   it('open shows the newest page; close forgets it', async () => {
     const s = shell(3)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     expect(g.shown).toBe(true)
     expect(g.entries).toBeNull()
@@ -97,7 +98,7 @@ describe('GitLog', () => {
 
   it('an answer that comes after close is dropped', async () => {
     const s = shell(3)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     g.close()
     s.calls[0].resolve()
@@ -105,9 +106,22 @@ describe('GitLog', () => {
     expect(g.entries).toBeNull()
   })
 
+  it('showing another screen forgets the history and drops answers on their way', async () => {
+    const s = shell(3)
+    const area = new MainArea()
+    const g = new GitLog({ area, log: s.log })
+    const opened = g.open()
+    expect(area.is('gitLog')).toBe(true)
+    area.show({ kind: 'graph' })
+    expect([g.shown, g.entries]).toEqual([false, null])
+    s.calls[0].resolve()
+    await opened
+    expect(g.entries).toBeNull()
+  })
+
   it('Show more appends the next page', async () => {
     const s = shell(PAGE_SIZE + 5)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -130,7 +144,7 @@ describe('GitLog', () => {
 
   it('refresh puts a new commit at the top and keeps the rows already shown', async () => {
     const s = shell(PAGE_SIZE + 50)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -150,14 +164,14 @@ describe('GitLog', () => {
 
   it('refresh does nothing while the view is closed', () => {
     const s = shell(1)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     g.refresh()
     expect(s.calls.length).toBe(0)
   })
 
   it('a Show more answer that a refresh overtook is dropped: no row twice, none lost', async () => {
     const s = shell(PAGE_SIZE + 10)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -181,7 +195,7 @@ describe('GitLog', () => {
 
   it('Show more waits while a refresh is on its way', async () => {
     const s = shell(PAGE_SIZE + 10)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -192,7 +206,7 @@ describe('GitLog', () => {
 
   it('of two refreshes the later answer wins, whatever order they come in', async () => {
     const s = shell(2)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -210,7 +224,7 @@ describe('GitLog', () => {
 
   it('a failed load shows its message; a later answer clears it', async () => {
     const s = shell(1)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].reject({ code: 'git', message: 'The notes folder is not in a Git repository.' })
     await opened
@@ -225,7 +239,7 @@ describe('GitLog', () => {
 
   it('a failed Show more keeps the rows and lets the user try again', async () => {
     const s = shell(PAGE_SIZE + 1)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened
@@ -238,7 +252,7 @@ describe('GitLog', () => {
 
   it('no commits yet: an empty list, not null', async () => {
     const s = shell(0)
-    const g = new GitLog({ log: s.log })
+    const g = new GitLog({ area: new MainArea(), log: s.log })
     const opened = g.open()
     s.calls[0].resolve()
     await opened

@@ -2,17 +2,21 @@
 // filters, which outlast closing the view and reset with a new folder.
 import { errorMessage } from '../api'
 import { DEFAULT_FILTERS, limitValid, type GraphFilters } from './graph'
+import type { MainArea } from './mainArea.svelte'
 import { RefsRefresh } from './refs'
 import type { Command, GraphView, NodePosition, Notice, Output } from './types'
 
 export interface NetworkEnv {
+  area: MainArea
   /** Queues a command; its output reaches App.apply, which hands the `graph` answer back. */
   run(cmd: Command): Promise<Output>
   notify(n: Notice): void
 }
 
 export class Network {
-  shown = $state(false)
+  get shown(): boolean {
+    return this.env.area.is('graph')
+  }
   /** The last `graph.get` answer; null until it arrives and after `close`. */
   view = $state.raw<GraphView | null>(null)
   /** A copy, never the shared constant. */
@@ -29,11 +33,12 @@ export class Network {
         (e) => this.env.notify({ kind: 'refused', message: errorMessage(e) }),
       ),
     })
+    env.area.register('graph', { left: () => (this.view = null) })
   }
 
   /** Shows the view and runs `graph.get`; a failure is a notice. */
   async open(): Promise<void> {
-    this.shown = true
+    this.env.area.show({ kind: 'graph' })
     try {
       await this.env.run({ type: 'graph.get' })
     } catch (e) {
@@ -43,8 +48,7 @@ export class Network {
 
   /** Hides the view and forgets its data; the filters stay. */
   close(): void {
-    this.shown = false
-    this.view = null
+    this.env.area.leave('graph')
   }
 
   /** A `graph.get` answer: applied only while shown; a limit that no longer exists resets to everything. */

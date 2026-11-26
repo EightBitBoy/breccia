@@ -1,5 +1,7 @@
 import { expect, test } from 'vitest'
 import { AllPages } from './allPages.svelte'
+import { Archive } from './archive.svelte'
+import { MainArea } from './mainArea.svelte'
 import type { Command, Notice, Output, PageRowView } from './types'
 import { emptyOutput } from './emptyOutput.testing'
 
@@ -9,12 +11,13 @@ const row = (o: Partial<PageRowView>): PageRowView => ({
   created: null, edited: null, linkedFrom: 0, linksOut: 0, linkedOnly: false, ...o,
 })
 
-function setup(fail = false) {
+function setup(fail = false, area = new MainArea()) {
   const sent: Command[] = []
   const notices: Notice[] = []
   const pending: Array<() => void> = []
   let hold = false
   const a = new AllPages({
+    area,
     run: (cmd) => {
       sent.push(cmd)
       if (fail) return Promise.reject({ code: 'internal', message: 'boom' })
@@ -23,7 +26,7 @@ function setup(fail = false) {
     },
     notify: (n) => notices.push(n),
   })
-  return { a, sent, notices, pending, holdAnswers: () => (hold = true) }
+  return { a, area, sent, notices, pending, holdAnswers: () => (hold = true) }
 }
 const tick = () => new Promise((r) => setTimeout(r, 0))
 
@@ -99,6 +102,7 @@ test('a failed refresh is a notice too', async () => {
   let fail = false
   const notices: Notice[] = []
   const a = new AllPages({
+    area: new MainArea(),
     run: () =>
       fail
         ? Promise.reject({ code: 'internal', message: 'boom' })
@@ -131,4 +135,16 @@ test('sortBy returns true when the order changed: a new key, a reversal', async 
   expect(a.sortBy('edited')).toBe(true)
   expect(a.sort).toEqual({ key: 'edited', dir: 'asc' })
   expect(a.sortBy('name')).toBe(true)
+})
+
+test('opening All pages closes the Archive and drops its rows', async () => {
+  const area = new MainArea()
+  const { a } = setup(false, area)
+  const archive = new Archive({ area, run: () => Promise.resolve(empty), notify: () => {} })
+  await archive.open()
+  archive.applyArchive([])
+  await a.open()
+  expect([archive.shown, archive.rows, a.shown]).toEqual([false, null, true])
+  await archive.open()
+  expect([a.shown, a.rows, archive.shown]).toEqual([false, null, true])
 })
