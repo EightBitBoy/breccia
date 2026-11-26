@@ -157,3 +157,7 @@ Task 2: complete (commits fa3c98c..f4e59ef, review clean)
 Ruling: a new folder leaves a shown board/feed/page (brief) — reachable only from Settings/Welcome, so nothing visible changes; also stops an old folder's day reappearing — cost if wrong: a view opened mid-switch blanks one round trip sooner.
 Ruling: journal.close() kept in leaveMainView (deviation from brief) — no-behaviour-change rule outranks the step list; a pending feed answer must not replace a newer screen — cost if wrong: none.
 Task 3: complete (commits 1835d97..295c4e2, review clean)
+- Task 4: dispatched (opus implementer a75dc907acd80151a), BASE 4b266ce
+- Task 4 implementer: DONE_WITH_CONCERNS 772baee (refused typed string|null; setDialogBoards takes name/version at click time; explicit ConfigStore type in App.svelte).
+- Task 4 review (opus): spec ✅, Approved. Concerns accepted (click-time dialog read is a fix for Cancel-then-other-board). Minors (deferred): duplicated Dailies reset copy in the store; one test depends on microtask count after an unawaited config.get.
+Task 4: complete (commits 4b266ce..772baee, review clean)
