@@ -448,7 +448,9 @@ core hang on purpose.
    the text shows in a notice "Breccia did not answer, so this text may not have been saved. Copy it from here:" with
    the text to copy, and the notes reload as soon as the stuck save ends. If the reload is refused or has not answered
    10 seconds later either, a notice says "Breccia is not answering. Please restart Breccia." and the window can be
-   used again (it may show nothing until you restart). Closing the window while such a notice is shown asks first.
+   used again (it may show nothing until you restart). If a second internal error hit during the reload, the notice
+   says "Breccia hit an internal error again. Please restart Breccia." instead, even when the reload also failed (unit
+   tests only: it needs two errors). Closing the window while such a notice is shown asks first.
    Pasting the text back after a slow save that did land can repeat it; the notice says "may".
 
 159. [ ] **Refused clicks after an internal error say a restart is needed:** once Breccia has said "Breccia hit an

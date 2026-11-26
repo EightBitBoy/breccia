@@ -281,6 +281,22 @@ test('a_reload_that_is_refused_shows_NOT_ANSWERING', async () => {
   expect(quiet(recovery, 'stale', null)).toBe(false)
 })
 
+test('a_second_error_during_a_reload_that_then_fails_says_AGAIN', async () => {
+  const { s, recovery, tick } = setup()
+  const run = recovery.recovered(reopened)
+  s.finish.splice(0).forEach((f) => f()) // the flush answers
+  s.fail.splice(0)
+  await tick()
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  const second = recovery.recovered(reopened) // the reload met an internal error, which reopened the session again
+  s.finish.splice(0)
+  s.fail.splice(0).forEach((f) => f(new Error('recovered'))) // and the reload is refused
+  await Promise.all([run, second])
+  // The true cause is the second internal error: one restart notice, with its words.
+  expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: AGAIN }])
+  expect(s.layer).toEqual([true, false])
+})
+
 test('a_reload_that_does_not_answer_shows_NOT_ANSWERING_after_10_s', async () => {
   const { s, recovery, tick, pass } = setup()
   const run = recovery.recovered(reopened)

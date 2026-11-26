@@ -99,8 +99,9 @@ export class Recovery {
       } finally {
         this.running = null
         this.reloadEnd = this.env.now()
-        if (!reloaded) this.restart(NOT_ANSWERING, this.reloadEnd)
-        else if (this.againDuringReload) this.restart(AGAIN, this.reloadEnd)
+        // A second error that reopened the session is the true cause, even when it also made the reload fail.
+        if (this.againDuringReload) this.restart(AGAIN, this.reloadEnd)
+        else if (!reloaded) this.restart(NOT_ANSWERING, this.reloadEnd)
         this.againDuringReload = false
         this.env.reloading(false)
       }
