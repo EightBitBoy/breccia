@@ -2,7 +2,7 @@
 // window shows: one notice per error, one reload of the notes, and which refusals that error caused stay quiet.
 import type { Command, Notice, RecoveredEvent } from './types'
 
-/** One notice, and at most one reload, per this many ms. */
+/** One notice of the same words, and at most one reload, per this many ms. */
 const WINDOW_MS = 60_000
 /** Answers queued before the reload come back `stale` until this long after it ended. */
 const STALE_MS = 2_000
@@ -33,8 +33,9 @@ export interface RecoveryEnv {
 }
 
 export class Recovery {
-  /** When the last recovery notice was shown. */
+  /** When the last recovery notice was shown, and its words. */
   private noticeAt: number | null = null
+  private noticeText: string | null = null
   /** When the last reload started and ended. */
   private reloadAt: number | null = null
   private reloadEnd: number | null = null
@@ -59,7 +60,8 @@ export class Recovery {
       this.show({ kind: 'refused', message: AGAIN }, now)
       return Promise.resolve()
     }
-    if (!within(this.noticeAt, now, WINDOW_MS)) this.show(e.notice, now)
+    // The same words again within a minute stay quiet; something else that happened (reopened, closed) is shown.
+    if (!within(this.noticeAt, now, WINDOW_MS) || e.notice.message !== this.noticeText) this.show(e.notice, now)
     if (!e.reopened) return Promise.resolve()
     this.reloadAt = now
     // At once, before anything waits: typed text first, then nothing of the old session stays clickable.
@@ -100,6 +102,7 @@ export class Recovery {
 
   private show(n: Notice, now: number) {
     this.noticeAt = now
+    this.noticeText = n.message
     this.env.notify(n)
   }
 

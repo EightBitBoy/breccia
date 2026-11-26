@@ -5,6 +5,7 @@ import type { Notice, RecoveredEvent } from './types'
 const RELOADED = 'Breccia hit an internal error and reloaded your notes from disk. Everything saved is safe; undo starts afresh.'
 const KEPT =
   "Breccia hit an internal error. Some changes are not saved yet, so your notes were not reloaded. Copy what you need from the 'could not be saved' notices, then restart Breccia."
+const CLOSED = 'Breccia hit an internal error and closed the notes folder. Open it again with Open folder… or from Recent folders.'
 const STALE = 'request is for generation 3, the session is at 4'
 
 const reopened: RecoveredEvent = { reopened: true, notice: { kind: 'refused', message: RELOADED } }
@@ -201,4 +202,25 @@ test('a_failed_reload_ends_the_reload_and_rejects', async () => {
   await expect(recovery.recovered(reopened)).rejects.toThrow('boom')
   s.clock += 2_001
   expect(recovery.quiet('stale', null)).toBe(false)
+})
+
+test('within_a_minute_a_reopened_session_after_a_kept_one_shows_its_notice_the_same_notice_twice_stays_quiet', async () => {
+  const { s, recovery, settle } = setup()
+  await recovery.recovered(kept)
+  s.clock += 10_000
+  await recovery.recovered(kept)
+  expect(s.notices).toEqual([kept.notice]) // the same words again: quiet
+  s.clock += 10_000
+  await Promise.all([recovery.recovered(reopened), settle()])
+  expect(s.notices).toEqual([kept.notice, reopened.notice]) // something else happened: shown
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+})
+
+test('within_a_minute_a_closed_folder_after_a_kept_session_shows_its_notice', async () => {
+  const { s, recovery, settle } = setup()
+  await recovery.recovered(kept)
+  s.clock += 10_000
+  const closed: RecoveredEvent = { reopened: true, notice: { kind: 'refused', message: CLOSED } }
+  await Promise.all([recovery.recovered(closed), settle()])
+  expect(s.notices).toEqual([kept.notice, closed.notice])
 })
