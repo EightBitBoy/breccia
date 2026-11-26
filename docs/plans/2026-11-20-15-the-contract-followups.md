@@ -9,8 +9,9 @@ Nothing a user sees changed, so there are no owner checks.
 
 1. **The shell's command names are listed by hand** next to their serde renames (`app/src-tauri/src/commands.rs`), so
    a fifth shell command could be missed in that list.
-2. **The window's refreshes now run at the end of `apply`** (`App.svelte`). If `apply` throws first, they are skipped;
-   the old events ran them separately.
+2. ~~**The window's refreshes now run at the end of `apply`** (`App.svelte`). If `apply` throws first, they are skipped;
+   the old events ran them separately.~~ Done in plan 19 (the search, name list and graph refreshes run in a `finally`
+   once the route is known; `app.svelte.test.ts` checks it).
 3. **`ts(optional = nullable)` on two `bool` fields** of a command reads as "null accepted", though serde refuses null
    there. The generated types are correct (`link?: boolean`, `keepOne?: boolean`); use `ts(optional)` next time
    `command.rs` is touched.

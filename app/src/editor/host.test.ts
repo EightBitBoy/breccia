@@ -1,5 +1,3 @@
-import { EditorSelection, EditorState } from '@codemirror/state'
-import type { EditorView } from '@codemirror/view'
 import { beforeEach, expect, test } from 'vitest'
 import { createClient, type Client } from '../lib/api'
 import { emptyOutput } from '../lib/emptyOutput.testing'
@@ -7,6 +5,7 @@ import { patchRefs, refBlocks } from '../lib/refs'
 import type { BlockView, Command, Notice, Output, PageView, RefsView } from '../lib/types'
 import type { EditorHooks, mountEditor } from './blockEditor'
 import { EditorHost } from './host.svelte'
+import { fakeMount } from './mount.testing'
 import type { MenuView } from './menu'
 
 function block(id: number, text: string): BlockView {
@@ -38,38 +37,14 @@ let dues: { id: number; caret: { left: number; top: number; right: number; botto
 /** True: the fake view cannot place the caret (`coordsAtPos` answers null), as CodeMirror does off-screen. */
 let noCaretBox = false
 
-/** An in-memory editor: the text and a caret, no selection. */
-const mount: typeof mountEditor = (_parent, text, cursor16, h, opts = {}) => {
-  hooks = h
-  let t = text
-  let c = Math.min(cursor16, text.length)
-  return (lastEd = {
-    destroy() {},
-    text: () => t,
-    setText(next, at) {
-      t = next
-      c = Math.max(0, Math.min(at, next.length))
-    },
-    insert(s) {
-      t = t.slice(0, c) + s + t.slice(c)
-      c += s.length
-      h.onChange(t)
-    },
-    cursor16: () => c,
-    selection: () => ({ from: c, to: c }),
-    deleteChar() {},
-    setEditable() {},
-    focus() {},
-    // A view holding the text now, with the editor's extensions (the caret menus).
-    run(f) {
-      const state = EditorState.create({ doc: t, selection: EditorSelection.cursor(c), extensions: opts.extensions ?? [] })
-      // The caret's box: the caret offset as its left edge, one line high.
-      const coordsAtPos = (pos: number) => (noCaretBox ? null : { left: pos, right: pos, top: 10, bottom: 20 })
-      const contentDOM = { getBoundingClientRect: () => ({ left: 1, top: 2, right: 3, bottom: 4 }) }
-      f({ state, requestMeasure() {}, coordsAtPos, contentDOM } as unknown as EditorView)
-    },
-  })
-}
+/** An in-memory editor (`mount.testing.ts`); the last one mounted and its hooks are kept. */
+const mount = fakeMount({
+  mounted: (ed, h) => {
+    lastEd = ed
+    hooks = h
+  },
+  noCaretBox: () => noCaretBox,
+})
 
 /** Commands are recorded and never answered: the test applies outputs itself. */
 const client: Client = {

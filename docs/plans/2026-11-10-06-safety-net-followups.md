@@ -79,7 +79,8 @@ M9, M17, M41, M52 and M54 (`docs/audit/2026-11-10/`).
 
 23. ~~**Closing the date picker on a reload has no automated test** (`clear()` is inline in `App.svelte`, and an
     internal error from a search closes the picker first, so step 127 cannot reach it). Covered when `clear()` moves
-    to `lib/` (audit M39).~~ Closed in plan 12: it needs the reload logic in `lib/` (audit M39).
+    to `lib/` (audit M39).~~ Done in plan 19 (the reload's `clear()` moved into the window's controller, and
+    `app.svelte.test.ts` checks that a reload closes the search, the date picker and the due calendar).
 24. ~~**The `trace git state=…` lines** are not in the form `app/e2e/trace.mjs` parses; it counts them as 12 unparsed
     lines. They predate plan 6.~~ Done in plan 12 (the trace summary counts the Git state lines).
 25. ~~**The `BRECCIA_TEST_PANIC` line in `CLAUDE.md`** is about 165 characters, where the file wraps at about 120.~~ Done in plan 12 (the line in CLAUDE.md is wrapped).

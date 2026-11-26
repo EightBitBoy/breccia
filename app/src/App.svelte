@@ -1,6 +1,5 @@
 <script lang="ts">
   import { onMount, tick, untrack } from 'svelte'
-  import { SvelteSet } from 'svelte/reactivity'
   import { getCurrentWindow } from '@tauri-apps/api/window'
   import { getCurrentWebview } from '@tauri-apps/api/webview'
   import { openUrl } from '@tauri-apps/plugin-opener'
@@ -9,8 +8,6 @@
     invokeRun,
     startupNotices,
     startupOpen,
-    errorMessage,
-    errorCode,
     uiState,
     setUiState,
     setTheme,
@@ -28,91 +25,43 @@
     setHiddenColumns,
   } from './api'
   import { answerOf } from './lib/answer'
-  import { createClient, flushBeforeClose } from './lib/api'
+  import { flushBeforeClose } from './lib/api'
+  import { AppController, type KeptView } from './lib/app.svelte'
   import { closeCheck } from './lib/close'
   import { openingText, startupSequence } from './lib/startup'
   import { autoHideScrollbar } from './lib/scrollFade'
-  import { saveItem } from './lib/saveStatus'
-  import { InFlight, Refreshes } from './lib/external'
-  import { NoticeCenter } from './lib/noticeCenter.svelte'
   import { listenShell } from './lib/shellEvents'
-  import { Recovery } from './lib/recovery'
   import { installDom } from './lib/dom'
   import { headingBlock, linkClick, linkHeading } from './lib/links'
-  import { extendsTo, route, selectionPageOf } from './lib/route'
-  import { Journal } from './lib/journal.svelte'
+  import { extendsTo } from './lib/route'
   import { linkDisplay } from './lib/linkDisplay.svelte'
   import type { LinkDisplay } from './lib/linkDisplay'
   import { everyMidnight } from './lib/feed'
   import { today } from './lib/today.svelte'
-  import { editableBlocks, editablePageOf, walkOrder, type EditableView } from './lib/editable'
+  import { editablePageOf } from './lib/editable'
   import { watchLinkDrops } from './lib/dnd'
   import { linkDrop, type LinkSpot } from './lib/linkDrop'
-  import { ancestorsOf, visible } from './lib/tree'
-  import { isNewer } from './lib/treeVersion'
-  import {
-    addedText,
-    cardFromView,
-    cardBlocks,
-    cardOf,
-    cardRoot,
-    shownAfterDelete,
-  } from './lib/board'
-  import { Boards } from './lib/boards.svelte'
-  import { HiddenColumns } from './lib/hiddenColumns.svelte'
-  import { AutoArchive, hourly } from './lib/autoArchive'
-  import { AllPages } from './lib/allPages.svelte'
-  import { Archive } from './lib/archive.svelte'
-  import { Dailies } from './lib/dailies.svelte'
-  import { Network } from './lib/network.svelte'
-  import { isNewFolder } from './lib/folder'
-  import { RefsRefresh, pageChanged, pageOfBlock, patchRefs } from './lib/refs'
+  import { ancestorsOf } from './lib/tree'
+  import { cardFromView, shownAfterDelete } from './lib/board'
+  import { hourly } from './lib/autoArchive'
   import { clampWidth, loadLayout } from './lib/sidebarLayout'
   import type { JournalsAt } from './lib/treeRows'
   import { applyTheme, storedTheme, type ThemeChoice } from './lib/theme'
-  import { PageFlows } from './lib/pageFlows.svelte'
   import type { Row } from './lib/treeRows'
-  import { StatusItems } from './lib/status.svelte'
-  import { Zoom } from './lib/zoom.svelte'
-  import { WheelSteps, zoomItem, zoomKey } from './lib/zoom'
+  import { WheelSteps, zoomKey } from './lib/zoom'
   import { wheelTheme } from './lib/themeWheel'
-  import { helpItem, indexItem, statusAction, themeItem } from './lib/status'
-  import { GitStatus } from './lib/git.svelte'
+  import { statusAction, themeItem } from './lib/status'
   import { gitClick } from './lib/git'
-  import { historyItem, historyStale } from './lib/gitLog'
-  import { GitLog } from './lib/gitLog.svelte'
-  import { JustRenamed, followRename, removalFor } from './lib/followRename'
-  import { Search } from './lib/search.svelte'
   import type { SearchRow } from './lib/search'
   import { historyKey, isDatePickerKey, isHelpKey, isNewPageKey, isSearchKey, isSettingsKey, navKey } from './lib/keys'
-  import { ViewUndo } from './lib/viewUndo'
-  import { placeOfView, topDayOf, type NavFocus, type NavPlace } from './lib/nav'
-  import { Nav, type NavEntry } from './lib/nav.svelte'
+  import { topDayOf, type NavFocus } from './lib/nav'
+  import type { NavEntry } from './lib/nav.svelte'
   import { folderOf } from './lib/pageOps'
-  import { SettingsScreen, type SettingsSection } from './lib/settings.svelte'
-  import { MainArea } from './lib/mainArea.svelte'
-  import { Overlays } from './lib/overlay.svelte'
-  import { ConfigStore } from './lib/config.svelte'
+  import type { SettingsSection } from './lib/settings.svelte'
   import { missingFolder, pickFolder, recentRows, switchCheck } from './lib/folderSwitch'
   import { watchThemeTokens } from './lib/themeTokens.svelte'
-  import type {
-    BlockId,
-    BoardSummary,
-    CardView,
-    ConfigView,
-    Command,
-    DateView,
-    Notice,
-    Output,
-    PageView as Page,
-    RecentFolder,
-    RefsView,
-    RenameView,
-    TreeView,
-  } from './lib/types'
-  import { EditorHost } from './editor/host.svelte'
-  import type { MenuView } from './editor/menu'
-  import { MultiSelect } from './editor/multiSelect.svelte'
+  import type { BlockId, BoardSummary, CardView, Command, DateView, Notice, RecentFolder } from './lib/types'
+  import { mountEditor } from './editor/blockEditor'
   import Sidebar from './components/Sidebar.svelte'
   import Welcome from './components/Welcome.svelte'
   import PageView from './components/PageView.svelte'
@@ -122,9 +71,6 @@
   import DailiesView from './components/DailiesView.svelte'
   import Notices from './components/Notices.svelte'
   import DuePicker from './components/DuePicker.svelte'
-  import { NOT_A_TASK } from './lib/due'
-  import { duePick } from './lib/duePick.svelte'
-  import { dueKeyAction } from './lib/dueKey'
   import CaretMenu from './components/CaretMenu.svelte'
   import FlowDialog from './components/FlowDialog.svelte'
   import ConfirmDialog from './components/ConfirmDialog.svelte'
@@ -138,13 +84,6 @@
   import NewPageView from './components/NewPageView.svelte'
   import { isMac as mac } from './lib/platform'
 
-  let folder = $state<string | null>(null)
-  let page = $state<Page | null>(null)
-  /** The linked references to the shown page, editable in place; null until loaded. */
-  let refs = $state<RefsView | null>(null)
-  /** Blocks focused while editing in the references (Enter at a root's end): shown there until they reload. */
-  const madeInRefs = new Set<BlockId>()
-  let tree = $state<TreeView | null>(null)
   let sidebarWidth = $state(clampWidth(null))
   let sidebarHidden = $state(false)
   /** The board's column width in px; null lets the columns fill the window. */
@@ -152,24 +91,6 @@
   let ready = $state(false)
   /** The folder the shell opens at startup, while the window waits for it ("Opening ‹folder›…"); null otherwise. */
   let opening = $state<string | null>(null)
-  /** Session-only folding: never written to files. */
-  const folded = new SvelteSet<number>()
-  /**
-   * The dialog open over the window (the search box too); nothing opens without a folder or under the close question,
-   * which is its own layer above every dialog.
-   */
-  const overlays = new Overlays(() => !folder || closing !== null)
-  /** The folder's settings (`config.toml`) and the rules of their writes. */
-  const config: ConfigStore = new ConfigStore({
-    overlays,
-    exec: (cmd, refused) => host.exec(cmd, refused),
-    leave: () => host.leave(),
-    flush: () => client.flush(),
-    notify: (n) => notify(n),
-  })
-  /** The editor's caret menus while open: the slash menu and link completion (which wins). */
-  let slashMenu = $state<MenuView | null>(null)
-  let linkMenu = $state<MenuView | null>(null)
   /** `.main`, which scrolls the page or the feed. */
   let scroller = $state<HTMLElement | undefined>()
   /** The running program's version, fetched when Settings first opens; null until then or if that fails. */
@@ -182,170 +103,68 @@
   let hasGit = $state<boolean | null>(null)
   /** Whether the app lives in the tray (Windows): the close button hides the window, "Exit" in the tray quits. */
   let inTray = false
-  /** A block highlighted briefly after the jump from a card. */
-  let flash = $state<BlockId | null>(null)
   /** The theme chosen on this computer. */
   let theme = $state<ThemeChoice>('system')
   /** Where the sidebar lists Journals, chosen on this computer. */
   let journalsAt = $state<JournalsAt>('bottom')
-  /** Which screen the main area shows; the page, the feed, the board and the six screens register with it. */
-  const mainArea = new MainArea()
-  // The page's part: leaving it drops the page and its references.
-  mainArea.register('page', {
-    left: () => {
-      page = null
-      refs = null
-      madeInRefs.clear()
-    },
-  })
-  /** The Settings screen in the main area (§7.12). */
-  const settings = new SettingsScreen({ area: mainArea, overlays })
   /** The recent folders, newest first; loaded when Settings or the Welcome screen shows and after a switch. */
   let recent = $state.raw<RecentFolder[]>([])
 
-  // ---- the command client -------------------------------------------------
-
-  /** Shell events of outside changes wait while a command runs, so its answer never overwrites a newer view. */
-  const inFlight = new InFlight()
-
-  const client = createClient(inFlight.wrap(invokeRun), {
-    onOutput: apply,
-    onError: (e, cmd) => host.backgroundFailed(e, cmd),
-    onUnsaved: (u) => void (unsavedText = u),
-    // For the e2e test (`settled`): whether any save is pending or queued. Not shown to the user.
-    onBusy: (b) => void (document.documentElement.dataset.busy = String(b)),
-  })
-  document.documentElement.dataset.busy = 'false'
-
-  /** What the editor may touch: the open card on a board, the feed's loaded days, or the page and its references. */
-  const editable = (): EditableView => ({ board: mainArea.is('board'), card: boards.card, feed: journal.feed, page, refs })
-
-  const host = new EditorHost(
-    {
-      client,
-      blocks: () => editableBlocks(editable(), folded),
-      order: (id) => walkOrder(editable(), folded, id),
-      pageOf: (id) => editablePageOf(editable(), id),
-      states: () => config.states,
-      tags: () => (tree?.tags ?? []).map((t) => ({ key: t.key, name: t.name, exists: !t.linkedOnly })),
-      notify: (n) => notify(n),
-      showMenu: (which, m) => (which === 'link' ? (linkMenu = m) : (slashMenu = m)),
-      pickDate: (onpick) => {
-        if (!overlays.may('pickDate')) return
-        if (sidebarHidden) toggleSidebar()
-        pickerInsert = onpick
-        pickerOpen = true
+  /** The window's state, its answers and the changes made outside it (`lib/app.svelte.ts`), over Tauri and the DOM. */
+  const app = new AppController({
+    invoke: invokeRun,
+    mountEditor,
+    dom: {
+      scroller: () => scroller,
+      topDay: () => {
+        if (!scroller) return null
+        const box = scroller.getBoundingClientRect()
+        const edge = box.top + (parseFloat(getComputedStyle(scroller).paddingTop) || 0)
+        const sections = [...scroller.querySelectorAll<HTMLElement>('[data-testid="day"][data-day]')]
+          .map((el) => ({ key: el.dataset.day!, rect: el.getBoundingClientRect() }))
+          .sort((a, b) => a.rect.top - b.rect.top)
+          .map(({ key, rect }) => ({ key, top: rect.top, bottom: rect.bottom }))
+        return topDayOf(sections, edge)
       },
-      // Ctrl D: the due calendar at the caret, on a task only (a plain block gets the note and keeps editing); nothing
-      // while the search or a dialog is open, as Ctrl Shift D (`dueKeyAction`). Esc writes nothing and the calendar
-      // gives the focus back to the editor, the caret where it was; a click outside leaves the focus to that click.
-      pickDue: (id, caret) => {
-        const act = dueKeyAction(host.blockOf(id), !overlays.may('pickDue'))
-        if (act.kind === 'refuse') notify({ kind: 'refused', message: NOT_A_TASK })
-        else if (act.kind === 'open') duePick.show(act.due, caret, (due) => void host.setDue(id, due))
-      },
-      selectWithNeighbour: (id, dir) => sel.selectWithNeighbour(id, dir),
-      card: () => (mainArea.is('board') ? cardBlocks(boards.card) : null),
-      quiet: (code, cmd) => recovery.quiet(code, cmd),
+      scrollToBlock: (id) => document.querySelector(`[data-block-id="${id}"]`)?.scrollIntoView({ block: 'center' }),
+      tick,
+      // For the e2e test (`settled`): whether any save is pending or queued. Not shown to the user.
+      setBusy: (b) => void (document.documentElement.dataset.busy = String(b)),
+      slot: (id) => document.querySelector<HTMLElement>(`[data-block-id="${id}"] .editor-slot`),
     },
-    folded,
-  )
-
-  const sel = new MultiSelect(
-    {
-      order: () => {
-        const p = selectionPage()
-        return p ? visible(p.blocks, folded).map((b) => b.id) : []
-      },
-      page: selectionPage,
-      states: () => config.states,
-      editing: () => host.editingId !== null,
-      leave: () => host.leave(),
-      run: (cmd) => void host.exec(cmd),
-      notify: (message) => notify({ kind: 'refused', message }),
-    },
-    mac,
-  )
-
-  // Short state along the bottom of the window (§7.13).
-  const status = new StatusItems()
-  /** The zoom of the whole window: the webview's own zoom, kept per computer. */
-  const zoom = new Zoom({ apply: (f) => getCurrentWebview().setZoom(f), save: setZoom })
-  status.bind('zoom', () => zoomItem(zoom.percent))
-  /** Typed text not yet written (§7.13): in the typing pause, or sent and not yet answered. */
-  let unsavedText = $state(false)
-  /** Git's state; its item sits on the right of the status bar (§7.9). */
-  const git = new GitStatus({ now: () => Date.now() })
-  status.bind('git', () => git.item)
-  status.bind('save', () =>
-    saveItem({
-      folder: folder !== null,
-      unsaved: unsavedText,
-      failed: new Set(notices.items.flatMap((n) => (n.unsavedPage === undefined ? [] : [n.unsavedPage]))).size,
-    }),
-  )
-
-  const notices = new NoticeCenter({
-    typingMark: () => host.typingMark(),
-    resolveConflict: (block, text, show, since) => void host.resolveConflict(block, text, show, since),
-    exec: (cmd) => void exec(cmd),
-  })
-  /**
-   * After an internal error (`session:recovered`): one notice, the notes shown again from disk, and the refusals that
-   * error caused stay quiet. Typed text still in the editor is sent first, so text the core did not take is shown to
-   * copy.
-   */
-  const recovery = new Recovery({
-    notify: (n) => notices.notify(n),
-    leave: () => host.leave(),
-    // Nothing that names a block of the old session stays shown: the new session numbers its blocks from 1 again.
-    clear: () => {
-      search.close()
-      sel.clear()
-      boards.close() // the open card too; its typed text is pending already (leave)
-      archiveView.close()
-      dailies.close()
-      dailies.forget() // its ids are the old session's; the reload lists them again
-      journal.close()
-      pickerOpen = false // a pick after the reload would name a block of the old session
-      duePick.close() // likewise
-      mainArea.leave('page')
-    },
-    flush: () => client.flush(),
-    reload: async () => {
-      await exec({ type: 'folder.status' })
-      // No folder open any more: the Welcome screen shows.
-      if (folder) await openFolder()
+    // Bound: WebView2 refuses the window's timer functions called as methods of another object.
+    timers: {
+      setTimeout: window.setTimeout.bind(window),
+      clearTimeout: window.clearTimeout.bind(window),
+      setInterval: window.setInterval.bind(window),
+      clearInterval: window.clearInterval.bind(window),
     },
     now: () => Date.now(),
+    shell: { webviewZoom: (f) => getCurrentWebview().setZoom(f), setZoom, hiddenColumns, setHiddenColumns },
+    ui: {
+      chooseRow: (row) => chooseRow(row),
+      showSidebar: () => {
+        if (sidebarHidden) toggleSidebar()
+      },
+    },
   })
-  /** The titles of pages named by Keep mine / Use theirs notices, taken while the page is shown (for a refused switch). */
-  const noticeTitles = new Map<string, string>()
-  function notify(n: Notice) {
-    // Every view's refusals meet here: those an internal error caused say no more than its one notice.
-    if (n.kind === 'refused' && recovery.quietMessage(n.message)) return
-    if (n.kind === 'conflict' && page?.key === n.page) noticeTitles.set(n.page, page.title)
-    notices.notify(n)
+  const { host, sel, client, overlays, config, nav, notices, search, journal, boards, allPages, archiveView } = app
+  const { dailies, network, gitLog, git, zoom, status, settings, flows, hiddenCols, viewUndo, autoArchive } = app
+  const mainArea = app.area
+  const notify = (n: Notice) => app.notify(n)
+  const refuse = (e: unknown) => app.refuse(e)
+  const exec = (cmd: Command) => app.exec(cmd)
+  const closeCard = () => app.closeCard()
+  const openJournal = () => app.openJournal()
+  const leaveMainView = (keep: KeptView) => app.leaveMainView(keep)
+
+  /** The F1 list of keyboard shortcuts: F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
+  function toggleHelp() {
+    if (overlays.is('help')) overlays.close('help')
+    else if (overlays.may('toggleHelp')) overlays.open({ kind: 'help' })
   }
-
-  const exec = (cmd: Command) => host.exec(cmd)
-
-  /** The board's and the journal's own changes, for `Ctrl Z` while no block is edited (spec §7.2). */
-  const viewUndo = new ViewUndo()
-
-  /** The view `Ctrl Z` and `Ctrl Shift Z` step while no block is edited: a board, the journal or a page; none elsewhere. */
-  function undoView(): string | null {
-    switch (mainArea.view.kind) {
-      case 'board':
-        return boards.index === null ? null : `board:${boards.index}`
-      case 'feed':
-        return 'journal'
-      case 'page':
-        return page ? `page:${page.key}` : null
-      default:
-        return null
-    }
-  }
+  /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
+  status.bind('theme', () => (app.folder ? themeItem(theme) : null))
 
   /**
    * `Ctrl Z` / `Ctrl Shift Z` (`Ctrl Y`) with no block edited or selected: on a page its last change, on a board or in
@@ -354,137 +173,19 @@
   function viewHistoryKey(e: KeyboardEvent) {
     if (e.defaultPrevented || e.isComposing || host.editingId !== null || sel.ids.length) return
     const a = historyKey({ key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }, mac)
-    if (a === null || !overlays.may('historyKey') || slashMenu || linkMenu) return
+    if (a === null || !overlays.may('historyKey') || app.slashMenu || app.linkMenu) return
     const t = e.target instanceof Element ? e.target : null
     if (t?.closest('input, textarea, select, [contenteditable="true"], [role="dialog"], [role="alertdialog"], [role="menu"]')) return
     if (document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]')) return
-    const view = undoView()
+    const view = app.undoView()
     if (view === null) return
     e.preventDefault()
     const type = a === 'undo' ? 'history.undo' : 'history.redo'
-    const cmds: Command[] = view.startsWith('page:') ? [{ type, page: page!.key }] : viewUndo.step(view, a)
+    const cmds: Command[] = view.startsWith('page:') ? [{ type, page: app.page!.key }] : viewUndo.step(view, a)
     for (const cmd of cmds) void exec(cmd)
   }
 
-  const journal = new Journal({ area: mainArea, run: (cmd) => client.run(cmd), notify })
-  /** Hidden board columns of the open folder, kept on this PC. */
-  const hiddenCols = new HiddenColumns({ load: hiddenColumns, save: setHiddenColumns })
-  /** The shown board and its open card. */
-  const boards = new Boards({
-    area: mainArea,
-    run: (cmd) => client.run(cmd),
-    notify,
-    flush: () => client.flush(),
-    home: () => void openJournal(),
-  })
-  /**
-   * Breccia archives finished tasks by itself: once a folder is loaded, every hour and after a change of the
-   * setting. The run skips the block being edited and comes after typed text in the command queue.
-   */
-  const autoArchive = new AutoArchive({
-    run: (cmd) => client.run(cmd),
-    editing: () => host.editingId,
-    enabled: () => folder !== null && config.autoArchive,
-  })
-  /** The All pages table; a failed load or reload is a notice (AllPages reports it). */
-  const allPages = new AllPages({ area: mainArea, run: (cmd) => client.run(cmd), notify })
-  /** The Archive view; a failed load or reload is a notice. */
-  const archiveView = new Archive({ area: mainArea, run: (cmd) => client.run(cmd), notify })
-  /** The Dailies: the list (for the view and the status bar) and the timers that start each day afresh. */
-  const dailies = new Dailies({
-    area: mainArea,
-    run: (cmd) => client.run(cmd),
-    notify,
-    now: () => new Date(),
-    // Bound: WebView2 refuses the window's timer functions called as methods of another object.
-    setTimeout: window.setTimeout.bind(window),
-    clearTimeout: window.clearTimeout.bind(window),
-    setInterval: window.setInterval.bind(window),
-    clearInterval: window.clearInterval.bind(window),
-  })
-  /** "Dailies 2 open" or "Dailies ✓" in the status bar; none without dailies. A click opens the view. */
-  status.bind('dailies', () => (folder ? dailies.item : null))
-  /** The F1 list of keyboard shortcuts: F1 and the ? button open it, a second press closes it; not over another dialog or the search box. */
-  function toggleHelp() {
-    if (overlays.is('help')) overlays.close('help')
-    else if (overlays.may('toggleHelp')) overlays.open({ kind: 'help' })
-  }
-  status.bind('help', () => (folder ? helpItem(overlays.is('help')) : null))
-  /** The theme button left of "?": its menu offers the Settings > Themes choices (`chooseTheme`). */
-  status.bind('theme', () => (folder ? themeItem(theme) : null))
-  /** The Git history; `git.log` skips the command queue, so a slow log never holds typed text up. */
-  const gitLog = new GitLog({
-    area: mainArea,
-    log: (skip, limit) => invokeRun({ generation: 0, command: { type: 'git.log', skip, limit } }),
-  })
-  status.bind('gitLog', () => historyItem(git.view, gitLog.shown))
-  /** The Graph screen (§7.11); a failed load is a notice. */
-  const network = new Network({ area: mainArea, run: (cmd) => client.run(cmd), notify })
-  /** The quick search box (§7.8). */
-  const search = new Search({
-    overlays,
-    run: (cmd) => client.run(cmd),
-    notify,
-    choose: (row) => chooseRow(row),
-    back: (id) => host.editAtEnd(id), // nothing when the block is gone
-  })
-
-  /** The feed's loaded days (null while no feed is shown); a new set only when the feed changes. */
-  const days = $derived(journal.loaded())
-
   // ---- back and forward -------------------------------------------------------
-
-  /** The views shown this session, for Back and Forward; cleared with a new folder. */
-  const nav = new Nav()
-  /** The place the main area shows; null between two views and for the untitled new page. */
-  const here = $derived<NavPlace | null>(
-    placeOfView(mainArea.view, {
-      board: boards.index === null ? null : (config.boards[boards.index]?.name ?? null),
-      feedDay: journal.at,
-      page: page?.key ?? null,
-    }),
-  )
-  // Every new place is a step; the same place again is not.
-  $effect(() => {
-    const p = here
-    untrack(() => nav.arrive(p))
-  })
-
-  /**
-   * The edited block or the selection a pointer press just left (a press on a sidebar row leaves it before the page
-   * it opens is shown); null again at the next press or key.
-   */
-  let pressFocus: NavFocus | null = null
-
-  /** The edited block with its caret, else the selection; null when neither. */
-  function focusHere(): NavFocus | null {
-    const id = host.editingId
-    if (id !== null) {
-      const at = host.editor?.id === id ? host.editor.ed.cursor16() : (host.blockOf(id)?.text.length ?? 0)
-      return { kind: 'edit', id, at }
-    }
-    const { anchor, head } = sel
-    return sel.ids.length && anchor !== null && head !== null ? { kind: 'select', anchor, head } : null
-  }
-
-  /**
-   * The view shown is about to be left: its scroll position (in the feed, the day at the top) and its edited or
-   * selected block (`focus`, read before the editor or the selection closes) go into its step.
-   */
-  function rememberHere(focus: NavFocus | null = focusHere() ?? pressFocus) {
-    if (!scroller) return
-    let top: string | null = null
-    if (journal.feed) {
-      const box = scroller.getBoundingClientRect()
-      const edge = box.top + (parseFloat(getComputedStyle(scroller).paddingTop) || 0)
-      const sections = [...scroller.querySelectorAll<HTMLElement>('[data-testid="day"][data-day]')]
-        .map((el) => ({ key: el.dataset.day!, rect: el.getBoundingClientRect() }))
-        .sort((a, b) => a.rect.top - b.rect.top)
-        .map(({ key, rect }) => ({ key, top: rect.top, bottom: rect.bottom }))
-      top = topDayOf(sections, edge)
-    }
-    nav.remember(scroller.scrollTop, top, focus)
-  }
 
   /** A Back or Forward is under way (from the first await on), so a key repeat waits for nothing. */
   let going = false
@@ -494,17 +195,17 @@
    * or the date picker, nor while a restore is still loading.
    */
   async function go(dir: 'back' | 'forward') {
-    if (going || nav.busy || !overlays.may('go') || pickerOpen) return
+    if (going || nav.busy || !overlays.may('go') || app.pickerOpen) return
     going = true
     try {
-      const focus = focusHere() // before the editor and the selection close
+      const focus = app.focusHere() // before the editor and the selection close
       await closeCard() // with the card's own text, as any navigation closes it
       host.leave()
       sel.clear()
       // The typed text's answer lands first: while a restore has the main area empty, it would show its page again.
       await client.flush()
-      rememberHere(focus)
-      const step = () => (dir === 'back' ? nav.back(here) : nav.forward(here))
+      app.rememberHere(focus)
+      const step = () => (dir === 'back' ? nav.back(app.here) : nav.forward(app.here))
       let e = step()
       while (e && !(await restore(e))) {
         nav.drop()
@@ -582,267 +283,30 @@
     return true
   }
 
-  /** Where multi-select works: the shown page, or in the feed the day of the edited or anchored block. */
-  function selectionPage(): Page | null {
-    return selectionPageOf(journal.feed, page, host.editingId ?? sel.anchor)
-  }
-
-  /**
-   * The shown page loaded again after another program changed it, through the command
-   * queue. A page gone meanwhile is reported by its `page:removed`.
-   */
-  const reloads = new Refreshes((key) =>
-    // A reload queued for the old folder is answered `stale` after a switch: nothing to show.
-    host.exec({ type: 'page.get', key }, (code) => code === 'unknownPage' || code === 'stale'),
-  )
-
-  /** Whether `id` is a block in the linked references (not the page's own outline). */
-  const inRefs = (id: BlockId | null) => id !== null && pageOfBlock(null, refs, id) !== null
-  const isGroup = (key: string) => refs?.groups.some((g) => g.page === key) ?? false
-
-  /** Loads the references again, but never under the editor while it is inside them. */
-  const refreshRefs = new RefsRefresh({
-    key: () => page?.key ?? null,
-    busy: () => inRefs(host.editingId),
-    // A page removed meanwhile is reported by its page:removed.
-    run: (key) =>
-      client.run({ type: 'page.refs', key }).catch((e) => {
-        if (errorCode(e) !== 'unknownPage') refuse(e)
-      }),
-  })
-  $effect(() => {
-    void host.editingId // Once the editor leaves the references, a held refresh runs.
-    untrack(() => refreshRefs.pump())
-  })
-
-  const flows = new PageFlows({
-    overlays,
-    run: (cmd) => client.run(cmd),
-    tree: () => tree,
-    shown: () => page?.key ?? null,
-    notify,
-    home: openJournal,
-  })
-
-  // ---- outputs: the one place an Output is applied --------------------------
-
-  /**
-   * The folder's settings: from `config.get`, a Settings change, or a hand edit or Git pull (`config:changed`, then
-   * `foreign`: own writes never come that way).
-   */
-  function applyConfig(c: ConfigView, foreign = false) {
-    const shift = config.apply(c, foreign)
-    if (shift === null) return // a late event: newer settings are shown already
-    host.setKeywords(config.states.map((s) => s.keyword))
-    dailies.setReset(config.dailiesReset)
-    // Task states and board columns are computed when a view is built: what is shown loads again.
-    if (shift.tasks) refreshTasks()
-    if (shift.board && mainArea.is('board')) boards.refresh()
-    // New states are counted at once, so their rows never show a count from before them.
-    if (shift.tasks && settings.shown) void exec({ type: 'states.usage' })
-    // Right after the setting changed (here or by hand), the due tasks are archived.
-    if (shift.archiveNow) void autoArchive.run()
-  }
-
-  /** The shown page, its references, the feed's loaded days and All pages load again, so new task states show. */
-  function refreshTasks() {
-    if (page) {
-      reloads.request(page.key)
-      refreshRefs.request()
-    }
-    const loaded = days
-    if (loaded?.size) void client.run({ type: 'pages.get', keys: [...loaded] }).catch(refuse)
-    if (allPages.shown) allPages.refresh()
-  }
-
-  let lastGeneration: number | null = null
-  function apply(out: Output, cmd: Command) {
-    viewUndo.record(undoView(), cmd, out)
-    const folderAnswer = answerOf(out, 'folder')
-    if (folderAnswer) {
-      // A new notes folder: no old tree while the new one is on its way, no old "show more".
-      if (isNewFolder(lastGeneration, folderAnswer.generation)) {
-        tree = null
-        boards.newFolder()
-        status.clear('index') // the old folder's build; its final emit clears it too
-        config.newFolder() // its first config is not a change of what is shown
-        // Block ids start again: nothing keyed by the old folder's blocks or pages may carry over.
-        host.newFolder()
-        nav.clear() // the old folder's pages and boards
-        mainArea.show({ kind: 'none' }) // whatever it shows names the old folder's pages and blocks
-        dailies.forget() // the old folder's dailies; `openFolder` lists the new ones
-        network.newFolder()
-        search.close()
-        folded.clear()
-        viewUndo.clear()
-        madeInRefs.clear()
-        notices.newFolder() // their actions would run on the old folder's pages
-        reloads.clear()
-        justRenamed.clear()
-        noticeTitles.clear()
-      }
-      lastGeneration = folderAnswer.generation
-      if (folderAnswer.path !== folder) void hiddenCols.open(folderAnswer.path)
-      folder = folderAnswer.path
-      client.setGeneration(folderAnswer.generation)
-    }
-    if (out.config) applyConfig(out.config)
-    const gitView = answerOf(out, 'git')
-    if (gitView) {
-      // An answer can carry a view newer than the last `git:changed` (the shell stores it before emitting).
-      if (gitLog.shown && historyStale(git.view, gitView)) gitLog.refresh()
-      git.set(gitView)
-    }
-    const usage = answerOf(out, 'usage')
-    if (usage) settings.applyUsage(usage.states, usage.skipped)
-    const graph = answerOf(out, 'graph')
-    if (graph) network.applyGraph(graph)
-    const board = answerOf(out, 'board')
-    if (board) boards.applyBoard(board, cmd)
-    if (out.tree && isNewer(tree, out.tree)) tree = out.tree
-    // Before the new notices, so a page that failed again keeps its fresh one.
-    if (out.saved.length) notices.saved(out.saved)
-    out.notices.forEach(notify)
-    // The edited block's text in the view about to be replaced (a refresh compares it).
-    const before = host.editingId === null ? null : (host.blockOf(host.editingId)?.text ?? null)
-    // What the route reads of the page, taken before an applied feed answer shows the feed (and the page leaves).
-    const shownPage = page?.key ?? null
-    const groups = new Set(refs?.groups.map((g) => g.page))
-    const editingInRefs = inRefs(host.editingId)
-    // An applied feed answer is shown: the editor closes if it replaced the page or dropped the edited day.
-    const feed = answerOf(out, 'feed')
-    const feedShown = feed !== null && journal.applyFeed(feed)
-    const asked = answerOf(out, 'pages')
-    if (asked?.length) journal.applyPages(asked)
-    const r = route(
-      out,
-      cmd,
-      {
-        page: shownPage,
-        days,
-        groups,
-        editingInRefs,
-        main: mainArea.view.kind,
-        card: boards.card?.key ?? null,
-      },
-      feedShown,
-    )
-    // Before anything changes the view: the step being left keeps its scroll position.
-    if (r.resetScroll) rememberHere()
-    // Steps follow a rename or a move made here; pages that are gone leave the history.
-    if ((cmd.type === 'page.rename' || cmd.type === 'page.move') && out.page && out.page.key !== cmd.key) {
-      nav.renamed(cmd.key, out.page.key)
-    }
-    out.removed.forEach((k) => nav.removed(k))
-    if (r.leave) mainArea.leave(mainArea.view.kind)
-    const table = answerOf(out, 'table')
-    if (table) allPages.applyTable(table)
-    const archived = answerOf(out, 'archive')
-    if (archived) archiveView.applyArchive(archived)
-    if (out.dailies) dailies.apply(out.dailies)
-    const found = answerOf(out, 'search')
-    if (found) search.applySearch(found)
-    const names = answerOf(out, 'names')
-    if (names) search.applyNames(names)
-    if (r.leavePage) mainArea.leave('page')
-    if (r.clearSelection) sel.clear()
-    if (r.closeFeed) journal.close()
-    if (r.resetScroll && scroller) scroller.scrollTop = scroller.scrollLeft = 0
-    if (r.show) {
-      mainArea.show({ kind: 'page' }) // first: the view it replaces leaves before the page is set
-      page = r.show
-    }
-    if (r.moved) {
-      refs = null
-      madeInRefs.clear()
-    }
-    if (r.days.length) journal.applyPages(r.days)
-    if (out.removed.length) journal.removed(out.removed)
-    if (r.applyRefs) {
-      refs = answerOf(out, 'refs')
-      madeInRefs.clear()
-      if (host.editingId !== null) reconcileShown()
-    }
-    if (r.madeInRefs !== null) madeInRefs.add(r.madeInRefs)
-    for (const p of r.patch) refs = patchRefs(refs!, p, madeInRefs)
-    if (r.refreshRefs) refreshRefs.request()
-    // The open card follows its own edits.
-    for (const p of r.cardPages) boards.patchCard(p, out.focus?.id ?? null)
-    // Opened first, so the board holds its reload until the new card closes.
-    if (r.openAdded && out.page && out.focus && cmd.type === 'journal.append') openAdded(out.page, out.focus.id, cmd.text)
-    // "+ Add" answered after the user left the board: the bare block goes again.
-    if (r.strayAdded !== null) void exec({ type: 'blocks.delete', ids: [r.strayAdded] })
-    if (r.refreshAllPages) allPages.refresh()
-    if (r.refreshBoard) {
-      if (out.removed.length) boards.removed(out.removed)
-      else boards.refresh()
-    }
-    host.apply(cmd, r.dropFocus ? { ...out, focus: null } : out, r.shown, before)
-    // What the shell's events do for a change made outside the window, done from the answer (as their handlers below do).
-    if (r.refreshSearch) search.refresh() // an open search box asks again
-    if (r.refreshNames) search.refreshNames()
-    if (r.refreshGraph) network.refresh()
-    r.journalChanged.forEach((p) => journal.changed(p))
-    // A page changed beside what was applied (an archived block, a rewritten link) is news for the views.
-    r.others.forEach((p) => viewsTake(p))
-  }
-
-  /** "+ Add" was answered: its new block opens as a card, the caret after `KEYWORD `. */
-  function openAdded(day: Page, id: BlockId, text: string) {
-    const card = cardOf(day, id)
-    // Another card opened meanwhile stays open; the new block is deleted again.
-    if (!card || !boards.openAdded(card, text, text)) return
-    // The block's own text below the keyword (its `created::` line) stays.
-    const block = day.blocks.find((b) => b.id === id)
-    void tick().then(() => host.edit(id, text.length + 1, addedText(block?.text ?? text, text)))
-  }
-
-  function refuse(e: unknown) {
-    if (recovery.quiet(errorCode(e), null)) return
-    notify({ kind: 'refused', message: errorMessage(e) })
-  }
-
   // ---- page actions -----------------------------------------------------------
 
   /** A click on a rendered block: Shift extends from the edited or selected block, else edit. */
   function clickBlock(id: BlockId, shift: boolean) {
     const from = host.editingId ?? sel.anchor
     // Multi-select stays within the page's own outline, or within one day of the feed.
-    if (shift && from !== null && extendsTo(journal.feed, page, from, id)) sel.select(from, id)
+    if (shift && from !== null && extendsTo(journal.feed, app.page, from, id)) sel.select(from, id)
     else host.editAtEnd(id)
   }
 
   /** A page dragged from the sidebar was dropped on a block or an empty page: its link goes in (spec §7.2). */
   function dropLink(link: string, spot: LinkSpot, x: number, y: number) {
-    const d = linkDrop(spot, link, host.editingId, (id) => editablePageOf(editable(), id))
+    const d = linkDrop(spot, link, host.editingId, (id) => editablePageOf(app.editable(), id))
     if (d?.kind === 'caret') host.dropText(x, y, d.text)
     else if (d?.kind === 'command') void exec(d.cmd)
   }
 
   function toggle(id: BlockId) {
-    if (folded.has(id)) folded.delete(id)
-    else folded.add(id)
+    if (app.folded.has(id)) app.folded.delete(id)
+    else app.folded.add(id)
   }
 
   function startWriting() {
-    if (page) void exec({ type: 'block.insert', page: page.key, after: null, text: '' })
-  }
-
-  /**
-   * Leaves whatever the main area shows for view `keep`: closes the open card (a bare added card is deleted),
-   * leaves the editor, leaves the shown view unless it is `keep`, clears the selection, and scrolls to the top.
-   */
-  async function leaveMainView(
-    keep: 'feed' | 'board' | 'allPages' | 'archive' | 'dailies' | 'settings' | 'graph' | 'gitLog' | 'newPage',
-  ): Promise<void> {
-    rememberHere() // before the scroll goes to the top
-    await closeCard() // a card closing (Esc, a click outside) finishes on the board it belongs to
-    host.leave()
-    mainArea.leaveFor(keep)
-    // The feed shows only with its answer: one asked for and not yet answered is not wanted any more.
-    if (keep !== 'feed') journal.close()
-    sel.clear()
-    if (scroller) scroller.scrollTop = scroller.scrollLeft = 0
+    if (app.page) void exec({ type: 'block.insert', page: app.page.key, after: null, text: '' })
   }
 
   /**
@@ -851,7 +315,7 @@
    */
   async function startNewPage() {
     if (!overlays.may('startNewPage')) return
-    const inFolder = tree && page ? folderOf(tree, page.key) : ''
+    const inFolder = app.tree && app.page ? folderOf(app.tree, app.page.key) : ''
     await leaveMainView('newPage')
     mainArea.show({ kind: 'newPage', folder: inFolder })
   }
@@ -866,12 +330,6 @@
     }
   }
 
-  /** The home view: the journal feed, scrolled to today. */
-  async function openJournal() {
-    await leaveMainView('feed')
-    await journal.open()
-  }
-
   /** Jump to a date: a day the feed lists is shown in the feed; any other day opens as its page, created only when the user types. */
   async function goToDay(d: DateView): Promise<void> {
     if (d.inFeed) {
@@ -884,35 +342,20 @@
 
   // ---- date picker ------------------------------------------------------------
 
-  /** The date picker by the sidebar's Journal row is open. */
-  let pickerOpen = $state(false)
-  /** Set when the slash menu's "Date…" opened the picker: a pick goes to the editor, not to the journal. */
-  let pickerInsert: ((key: string) => void) | null = null
-
-  $effect(() => {
-    if (!pickerOpen) pickerInsert = null
-  })
-
   /** `Ctrl Shift D` opens it (a hidden sidebar is shown first), a second press closes it; not over a dialog. */
   function togglePicker() {
-    if (pickerOpen) pickerOpen = false
+    if (app.pickerOpen) app.pickerOpen = false
     else if (overlays.may('togglePicker')) {
       if (sidebarHidden) toggleSidebar()
-      pickerOpen = true
+      app.pickerOpen = true
     }
   }
 
-  // A dialog or the search box coming up closes the picker; so do the close question and no folder.
-  overlays.onOpen(() => (pickerOpen = false))
-  $effect(() => {
-    if (!folder || closing !== null) untrack(() => (pickerOpen = false))
-  })
-
   /** A picked day jumps as a typed date does; the edited block's text is sent first. Nothing is written. */
   async function pickDay(key: string) {
-    if (pickerInsert) {
-      const insert = pickerInsert
-      pickerInsert = null
+    if (app.pickerInsert) {
+      const insert = app.pickerInsert
+      app.pickerInsert = null
       insert(key)
       return
     }
@@ -949,20 +392,6 @@
   }
 
   // ---- boards -----------------------------------------------------------------
-
-  /** The editor's text if it is on the open card's root block (`closeCard` then needs no flush). */
-  function cardRootText(): string | undefined {
-    const ed = host.editor
-    return ed && ed.id === cardRoot(boards.card) ? ed.ed.text() : undefined
-  }
-
-  /** Closes the open card; settles once it is closed. */
-  function closeCard(): Promise<void> {
-    if (!boards.card) return Promise.resolve()
-    const rootText = cardRootText() // before `leave` drops the editor
-    host.leave()
-    return boards.closeCard(rootText)
-  }
 
   async function openBoard(i: number) {
     await leaveMainView('board')
@@ -1027,8 +456,8 @@
     await closeCard()
     await exec({ type: 'page.open', name, link: link || undefined })
     const heading = link ? linkHeading(name) : null
-    if (heading === null || !page) return
-    const id = headingBlock(page.blocks, heading)
+    if (heading === null || !app.page) return
+    const id = headingBlock(app.page.blocks, heading)
     if (id !== null) await reveal(id)
   }
 
@@ -1049,19 +478,19 @@
   async function jumpTo(key: string, id: BlockId): Promise<void> {
     await closeCard()
     await exec({ type: 'page.show', key })
-    if (!page?.blocks.some((b) => b.id === id)) return
+    if (!app.page?.blocks.some((b) => b.id === id)) return
     await reveal(id)
   }
 
   /** Block `id` of the shown page: its ancestors unfolded, the block in the middle of the view and highlighted. */
   async function reveal(id: BlockId): Promise<void> {
-    if (!page) return
-    for (const a of ancestorsOf(page.blocks, id)) folded.delete(a)
+    if (!app.page) return
+    for (const a of ancestorsOf(app.page.blocks, id)) app.folded.delete(a)
     await tick()
     document.querySelector(`[data-block-id="${id}"]`)?.scrollIntoView({ block: 'center' })
-    flash = id
+    app.flash = id
     setTimeout(() => {
-      if (flash === id) flash = null
+      if (app.flash === id) app.flash = null
     }, 1500)
   }
 
@@ -1164,72 +593,6 @@
     setTheme(storedTheme(c)).catch(refuse)
   }
 
-  /**
-   * Page `p` changed outside the window, or beside what a command applied (`Route.others`): the shown view takes it.
-   */
-  function viewsTake(p: Page) {
-    switch (mainArea.view.kind) {
-      // The table reloads for another program's change (§6).
-      case 'allPages':
-        allPages.changed()
-        return
-      // The Archive view too: an automatic archive or another program's change shows.
-      case 'archive':
-        archiveView.changed()
-        return
-      // The graph reloads the same way (§6).
-      case 'graph':
-        network.changed()
-        return
-      // The board reloads (held while a card is open); the open card follows its page.
-      case 'board':
-        if (boards.changed(p)) reconcileShown()
-        return
-    }
-    pageChanged(
-      {
-        shows: (key) => key === page?.key || (days?.has(key) ?? false),
-        active: () => mainArea.is('page') || mainArea.is('feed'),
-        isGroup,
-        reload: (key) => reloads.request(key),
-        patch: (q) => (refs = patchRefs(refs!, q, madeInRefs)),
-        refresh: () => refreshRefs.request(),
-        reconcile: () => reconcileShown(),
-      },
-      p,
-    )
-  }
-
-  /** Another program removed page `key`; the window's own removals are handled where its commands are applied. */
-  function pageRemoved(key: string) {
-    nav.removed(key) // skipped from now on
-    allPages.refresh()
-    archiveView.refresh()
-    journal.removed([key])
-    if (mainArea.is('board')) boards.removed([key])
-    if (isGroup(key)) refreshRefs.request()
-    // The shown page renamed a moment ago is on its way to its new key.
-    if (!page || removalFor(page.key, key, justRenamed) !== 'removed') return
-    notify({ kind: 'refused', message: `“${page.title}” was removed on disk.` })
-    void openJournal()
-  }
-
-  /** Keys of pages another program renamed a moment ago; their removal is not news for the shown page. */
-  const justRenamed = new JustRenamed(() => Date.now())
-
-  /** Another program renamed page `r.from`: the shown page follows it, at the same scroll position. */
-  async function pageRenamed(r: RenameView) {
-    // Still on its way to an earlier rename's key (A→B→C fast): the chain is followed.
-    nav.renamed(r.from, r.to) // the history follows the rename
-    const to = followRename(page?.key ?? null, r, justRenamed)
-    justRenamed.add(r.from, r.to)
-    if (to === null) return
-    const top = scroller?.scrollTop ?? 0
-    // Renamed again meanwhile: that rename's own events follow it.
-    await host.exec({ type: 'page.show', key: to }, (code) => code === 'unknownPage')
-    if (page?.key === to && scroller) scroller.scrollTop = top
-  }
-
   // ---- Git ----------------------------------------------------------------------
 
   /** Typed text goes first (§2), then Git commits and syncs at once. */
@@ -1246,11 +609,6 @@
     dailies: () => void openDailies(),
     zoom: () => void zoom.reset(),
     help: () => toggleHelp(),
-  }
-
-  /** Brings the open editor in line with the shown text again. */
-  function reconcileShown() {
-    host.reconcile(null).catch((e) => console.error('editor update failed', e))
   }
 
   /** A click on the Git status: sync, offer set-up, or explain a problem and try again. */
@@ -1286,9 +644,6 @@
     await client.run({ type: 'git.init' }).catch(refuse)
   }
 
-  /** The question asked before closing with unsaved pages, while it is open. */
-  let closing = $state<string | null>(null)
-
   /** "Exit" in the tray menu: the normal close, with its question about unsaved pages shown in the window. */
   async function exitFromTray() {
     host.leave()
@@ -1298,11 +653,11 @@
     await w.show().catch(() => {})
     await w.unminimize().catch(() => {})
     await w.setFocus().catch(() => {})
-    closing = message
+    app.closing = message
   }
 
   function closeAnyway() {
-    closing = null
+    app.closing = null
     getCurrentWindow()
       .destroy()
       .catch((e) => console.error('could not close the window', e))
@@ -1328,12 +683,12 @@
     if (switching) return
     switching = true
     try {
-      if (folder) {
+      if (app.folder) {
         await closeCard()
         host.leave()
         const message = await switchCheck(client, () => ({
           unsent: notices.unsent(),
-          unresolved: notices.unresolved().map(pageTitle),
+          unresolved: notices.unresolved().map((key) => app.pageTitle(key)),
         }))
         if (message !== null) {
           notify({ kind: 'refused', message })
@@ -1342,16 +697,11 @@
       }
       let ok = true
       await host.exec({ type, path }, () => ((ok = false), false))
-      if (ok && folder) await openFolder()
+      if (ok && app.folder) await app.openFolder()
     } finally {
       switching = false
       void loadRecent()
     }
-  }
-
-  /** A page's name for a message: its title when known, else its key (a journal day's key is its date). */
-  function pageTitle(key: string): string {
-    return page?.key === key ? page.title : (noticeTitles.get(key) ?? key)
   }
 
   /** "Open folder…" or "New folder…": the system dialog, then the switch. */
@@ -1379,20 +729,10 @@
 
   // The list is read again whenever the Notes folder section or the Welcome screen comes into view.
   $effect(() => {
-    if (ready && (settings.shown || !folder)) untrack(() => void loadRecent())
+    if (ready && (settings.shown || !app.folder)) untrack(() => void loadRecent())
   })
 
-  async function openFolder() {
-    await exec({ type: 'config.get' })
-    // For the status bar too, so it is there before the view is opened.
-    void dailies.load()
-    await openJournal()
-    await exec({ type: 'folder.tree' })
-    // Once the folder is loaded, the tasks due are archived (the first run may archive many).
-    void autoArchive.run()
-  }
-
-  const folderName = $derived(folder ? (folder.split(/[\\/]/).filter(Boolean).pop() ?? folder) : '')
+  const folderName = $derived(app.folder ? (app.folder.split(/[\\/]/).filter(Boolean).pop() ?? app.folder) : '')
 
   // ---- DOM events -----------------------------------------------------------
 
@@ -1428,7 +768,7 @@
    * A plain press clears a selection; a Shift press on a block extends it (on click).
    */
   function onPointerDown(e: MouseEvent) {
-    pressFocus = null
+    app.pressFocus = null
     const t = e.target as Element | null
     // The search dialog and its backdrop sit over the main area: a press there, even one that dismisses
     // the search, is not a press outside the card or the editor. bits-ui closes it on the click, after this.
@@ -1453,7 +793,7 @@
       e.preventDefault()
       return
     }
-    pressFocus = focusHere() // for Back to this page, should the press open another
+    app.pressFocus = app.focusHere() // for Back to this page, should the press open another
     if (sel.ids.length && !e.shiftKey) sel.clear()
     if (host.editingId === null) return
     if (t.closest('.editor-slot') || onBlock) return
@@ -1488,7 +828,7 @@
         viewHistoryKey(e)
       },
       keyCapture: (e) => {
-        pressFocus = null
+        app.pressFocus = null
         const k = { key: e.key, shift: e.shiftKey, alt: e.altKey, ctrl: e.ctrlKey, meta: e.metaKey }
         if (isHelpKey(k)) {
           // Before the editor and before WebView2's own F1 (its help page).
@@ -1546,63 +886,10 @@
     document.addEventListener('wheel', onWheel, { capture: true, passive: false })
     // Other programs and Git change pages too (§9); the window's own commands send no events.
     const shell = listenShell({
-      pageChanged: (p) =>
-        inFlight.idle.run(() => {
-          search.refresh() // an open search box asks again
-          // An alias may have come or gone, which changes no file name: the open name lists load again.
-          search.refreshNames()
-          host.reloadNames()
-          journal.changed(p)
-          viewsTake(p)
-        }),
-      treeChanged: (t) => {
-        if (isNewer(tree, t)) tree = t
-        search.refresh()
-        search.refreshNames()
-        host.reloadNames()
-        allPages.refresh() // a page added, moved or removed on disk
-        network.refresh()
-      },
-      pageRemoved: (key) =>
-        inFlight.idle.run(() => {
-          search.refresh()
-          network.refresh()
-          pageRemoved(key)
-        }),
-      notices: (ns) => ns.forEach(notify),
-      // Pages a Git retry saved after a failed save: their "could not be saved" notice goes.
-      pagesSaved: (keys) => {
-        if (keys.length) notices.saved(keys)
-      },
-      // Held like the page events, so a command's answer never overwrites a newer view.
-      gitChanged: (v) =>
-        inFlight.idle.run(() => {
-          const moved = git.headChanged(v)
-          // A new commit or a push shows in the open history.
-          if (gitLog.shown && historyStale(git.view, v)) gitLog.refresh()
-          git.set(v)
-          if (moved && allPages.shown) allPages.refresh() // created dates from Git
-        }),
-      // In event order with `page:removed`, which follows it for the old key.
-      pageRenamed: (r) =>
-        inFlight.idle.run(() => {
-          network.refresh()
-          void pageRenamed(r)
-        }),
-      configChanged: (c) => inFlight.idle.run(() => applyConfig(c, true)),
-      // Held like the page events, so a command's answer never overwrites a newer list.
-      dailiesChanged: (list) => inFlight.idle.run(() => dailies.apply(list)),
-      // The shell ends every build with `{done: t, total: t}`, so the item always goes away.
-      indexChanged: (p) => {
-        const item = indexItem(p, lastGeneration)
-        if (item === 'ignore') return
-        if (item) status.set(item)
-        else status.clear('index')
-      },
+      ...app.shellHandlers(),
       // Text typed in the last moment before closing is still in the typing pause;
       // pages that still could not be saved, and text shown in unsent notices, are named before closing.
       trayExit: () => void exitFromTray(),
-      recovered: (e) => void recovery.recovered(e).catch(refuse),
       closeRequested: async (event) => {
         if (inTray) {
           // The close button only hides the window; the text typed a moment ago is saved first.
@@ -1617,7 +904,7 @@
         const message = await closeCheck(client, () => notices.unsent())
         if (message === null) return
         event.preventDefault()
-        closing = message
+        app.closing = message
       },
     })
     // At local midnight the feed reloads, so the new day is at the top.
@@ -1653,10 +940,10 @@
           show: (path) => (opening = path),
           folderStatus: async () => {
             await exec({ type: 'folder.status' })
-            return folder !== null
+            return app.folder !== null
           },
           gitStatus: async () => void (await exec({ type: 'git.status' })),
-          openFolder,
+          openFolder: () => app.openFolder(),
           notices: startupNotices,
           notify,
         })
@@ -1688,10 +975,10 @@
   <div class="shell">
     <Notices items={notices.items} ondismiss={(id) => notices.dismiss(id)} />
     <DuePicker />
-    {#if linkMenu}
-      <CaretMenu menu={linkMenu} testid="link-menu" onchoose={(i) => host.chooseMenu('link', i)} />
-    {:else if slashMenu}
-      <CaretMenu menu={slashMenu} testid="slash-menu" onchoose={(i) => host.chooseMenu('slash', i)} />
+    {#if app.linkMenu}
+      <CaretMenu menu={app.linkMenu} testid="link-menu" onchoose={(i) => host.chooseMenu('link', i)} />
+    {:else if app.slashMenu}
+      <CaretMenu menu={app.slashMenu} testid="slash-menu" onchoose={(i) => host.chooseMenu('slash', i)} />
     {/if}
     <FlowDialog {flows} />
     {#if overlays.current?.kind === 'confirm'}
@@ -1721,8 +1008,8 @@
       <NameDialog title="New board" initial="" onok={(name) => void newBoard(name)} oncancel={() => overlays.close('newBoard')} />
     {/if}
     <!-- The close question: its own layer above every dialog (mounted last, so on top); Cancel gives the dialog back. -->
-    {#if closing}
-      <ConfirmDialog message={closing} ok="Close anyway" onok={closeAnyway} oncancel={() => (closing = null)} />
+    {#if app.closing}
+      <ConfirmDialog message={app.closing} ok="Close anyway" onok={closeAnyway} oncancel={() => (app.closing = null)} />
     {/if}
     {#if opening !== null}
       <!-- The folder opens in the shell: nothing to click yet but the status bar's theme and help. -->
@@ -1734,15 +1021,15 @@
           <div class="opening" data-testid="opening">{openingText(opening)}</div>
         </div>
       </div>
-    {:else if folder}
+    {:else if app.folder}
       <div class="body">
         {#if !sidebarHidden}
           <Sidebar
-            {folder}
+            folder={app.folder}
             {folderName}
-            {tree}
+            tree={app.tree}
             {journalsAt}
-            shown={page?.key ?? null}
+            shown={app.page?.key ?? null}
             journalShown={mainArea.is('feed')}
             dailiesShown={dailies.shown}
             ondailies={() => void openDailies()}
@@ -1768,7 +1055,7 @@
             onnewpage={() => void startNewPage()}
             onresize={(w) => (sidebarWidth = w)}
             onresized={saveLayout}
-            bind:pickerOpen
+            bind:pickerOpen={app.pickerOpen}
             onpickday={(key) => void pickDay(key)}
           />
         {/if}
@@ -1780,7 +1067,7 @@
               data-testid="nav-back"
               aria-label="Back"
               title={mac ? 'Back (Cmd+[)' : 'Back (Alt+←)'}
-              disabled={!nav.canBackFrom(here)}
+              disabled={!nav.canBackFrom(app.here)}
               onclick={() => void go('back')}>←</button
             >
             <button
@@ -1797,8 +1084,8 @@
               <NewPageView onsubmit={(name) => void createUntitled(name)} oncancel={() => void openJournal()} />
             {:else if mainArea.view.kind === 'settings'}
               <SettingsView
-                {folder}
-                recent={recentRows(recent, folder)}
+                folder={app.folder}
+                recent={recentRows(recent, app.folder)}
                 section={settings.section}
                 states={config.states}
                 usage={settings.usage}
@@ -1852,9 +1139,9 @@
                   board={boards.view}
                   card={boards.card}
                   cardColumn={boards.cardColumn}
-                  {folded}
+                  folded={app.folded}
                   editingId={host.editingId}
-                  {flash}
+                  flash={app.flash}
                   expanded={boards.expanded}
                   onmore={(id) => boards.expand(id)}
                   onopencard={(c, column) => void openCard(c, column)}
@@ -1907,7 +1194,7 @@
               <JournalFeed
                 feed={journal.feed}
                 {scroller}
-                {folded}
+                folded={app.folded}
                 editingId={host.editingId}
                 selected={sel.ids}
                 onedit={clickBlock}
@@ -1920,23 +1207,23 @@
                 onsetcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
                 onsetdue={(id, due) => void exec({ type: 'block.setDue', id, due })}
               />
-            {:else if mainArea.view.kind === 'page' && page}
+            {:else if mainArea.view.kind === 'page' && app.page}
               <PageView
-                {page}
-                {refs}
-                {folded}
+                page={app.page}
+                refs={app.refs}
+                folded={app.folded}
                 editingId={host.editingId}
                 selected={sel.ids}
                 onedit={clickBlock}
                 ontoggle={toggle}
                 onstart={startWriting}
-                {flash}
-                onrename={(name) => void flows.rename(page!.key, page!.name, name)}
+                flash={app.flash}
+                onrename={(name) => void flows.rename(app.page!.key, app.page!.name, name)}
                 onopen={(name) => void exec({ type: 'page.open', name })}
-                onsetcolor={(color) => void exec({ type: 'page.setColor', key: page!.key, color })}
+                onsetcolor={(color) => void exec({ type: 'page.setColor', key: app.page!.key, color })}
                 onlinkcolor={(key, color) => void exec({ type: 'page.setColor', key, color })}
                 onsetdue={(id, due) => void exec({ type: 'block.setDue', id, due })}
-                onhistory={(redo) => void exec({ type: redo ? 'history.redo' : 'history.undo', page: page!.key })}
+                onhistory={(redo) => void exec({ type: redo ? 'history.redo' : 'history.undo', page: app.page!.key })}
               />
             {/if}
           </div>
