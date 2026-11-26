@@ -49,3 +49,8 @@ Shared subagent rules: common.md (local).
 - Task 6: decision list done (opus), task-6-decision.md (local). Fix-now candidates: 1a, 1b, 2a, 3, 2b (owner question); #85: 1c, 2c, 2d. Owner items: #102 timing, #103 early search, #104 counter/early journal. Waiting for the owner.
 - Task 6: owner decided (recorded in the plan): build fixes 1-5; #85 gets 1c, 2c, 2d; #102 later; new #103, #104.
 - Ruling: fixes run as three sub-tasks in order — 6a = fixes 1+2 (same pull path, one implementer, opus review), 6b = fixes 3+5 (same git.log file), 6c = fix 4 (index step) plus the #85/#103/#104 backlog edits — fewer review seats on shared code — cost if wrong: a larger diff per review.
+- Task 6a (fixes 1+2): dispatched (sonnet), BASE 0517f51.
+- Task 6a: implementer done, dba6c8b (pushed); lock ms save-during-fetch 362, no-save 358, worst 353. Review dispatched (opus).
+- Task 6a review (opus): APPROVE; I1 (tests pinning the new-untracked-page case) + M1-M4 docs/label; no text loss (read-tree refuses, conflict keeps both). Fix round sent to implementer.
+- Task 6a fix round: 5a8b8aa (pushed), 3 untracked-page tests + docs; git_engine 38 passed. Re-review dispatched (sonnet).
+- Task 6a re-review (sonnet): APPROVE, 38 passed; M4 partly (label only, cosmetic, accepted). Task 6a done.
