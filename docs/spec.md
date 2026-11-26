@@ -679,7 +679,7 @@ medians on a modern laptop. The owner's bars *(owner, 2026-11-25, plan 18 Q3)*:
 
 - Typing: a save (`block.setText`, `block.split`) 16 ms or less, and a keystroke waits 16 ms or less for the notes
   lock, also while the search index is first built (one index step 16 ms or less).
-- Git: a pull holds the notes lock 100 ms or less (500 ms when a save lands just before the lock).
+- Git: a pull holds the notes lock 100 ms or less.
 - Start: the window shows within 500 ms, and the journal is usable within 2 seconds.
 - Long lists: the Git history (200 commits) and the archive open within 200 ms; scrolling them keeps a frame (95th
   percentile) within 20 ms; the caret moves down a 5,000-row page within 16 ms.
@@ -688,7 +688,7 @@ medians on a modern laptop. The owner's bars *(owner, 2026-11-25, plan 18 Q3)*:
 The bars of the scale tests that were there before *(my call)*: the page tree, All pages and the graph 100 ms or
 less; the board 200 ms or less; a changed file reloads within 50 ms (100 files within 500 ms); a search answers within
 100 ms (once the index is built); the first search index build ends within 10 seconds; every "Show more" of the Git
-history within 200 ms.
+history within 200 ms; a pull holds the notes lock 500 ms or less when a save lands just before the lock.
 
 ## 9. Room for plugins later
 
