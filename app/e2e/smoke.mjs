@@ -2297,6 +2297,9 @@ try {
     await page.locator('[data-testid="folder-name"]').click()
     await screen.locator(`[data-testid="recent-folder"][data-path="${folder167.replaceAll('\\', '\\\\')}"]`).click()
     await waitFor('167 scratch folder', () => page.locator('[data-testid="folder-name"]').innerText(), basename(folder167))
+    // The first Git step of a folder commits what is there: let it end before typing, or it takes the typed text.
+    const gitItem167 = page.locator('[data-testid="status-item"][data-id="git"]')
+    await waitFor('167 first Git step', async () => /^Saved to Git /.test(await gitItem167.innerText()), true, 30_000)
 
     // Text typed in a page, committed later by a click on the Git item while the history is shown.
     if ((await side.count()) === 0) await page.getByLabel('Toggle sidebar').click()
@@ -5674,6 +5677,8 @@ try {
     const start166 = page166.locator('[data-testid="day"] [data-testid="start-writing"]')
     await start166.waitFor({ timeout: 30_000 })
     await opening166.waitFor({ state: 'detached' })
+    // The background open remembers the folder for the next start (bytes on disk).
+    await waitFor('166 last_folder', () => jsonAt(join(config166, 'settings.json')).last_folder, folder166)
     await start166.click()
     await page166.locator('.cm-content').waitFor()
     await page166.keyboard.type('opened')
