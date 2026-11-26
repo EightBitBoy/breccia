@@ -210,13 +210,13 @@ click that leaves the calendar open #101. The owner checks review items 137 to 1
 as 1.9.0.
 
 Backlog round 2026-11-24 (interactive, owner decides item by item; stopped by the owner before #87). Built and
-pushed, unreleased: #13 heading links, #14 aliases, #15 drag a page into the text, #17 Back restores the edited block,
+pushed, released in 1.9.1: #13 heading links, #14 aliases, #15 drag a page into the text, #17 Back restores the edited block,
 #21 and #91 undo with no block edited, #47 jump to a heading, #67 Git tests, #86 one undo step across a refused
 command (review items 140 to 146). Closed: #9, #10, #11, #12, #16, #18, #19, #20, #30, #48, #49, #82. Kept open:
 #83, #84. Decided, not built yet: #81 (a "Writing" tab in Help) and #85 (a plan to measure and fix speed at 5,000
 pages).
 
-Backlog round continued 2026-11-25, from #87 to the end (#101). Built and pushed, unreleased: #96 e2e waits for
+Backlog round continued 2026-11-25, from #87 to the end (#101). Built and pushed, released in 1.9.1: #96 e2e waits for
 "nothing left to save", #98 cards with a due date first within a priority, #99 keyboard path to a card's menu,
 #101 a quick click outside the calendar closes it (review items 147 to 149). Closed: #87 (e2e stays local, before each
 release; no GitHub Actions run for it, owner's call), #88, #97 (for now), #100. Kept open: #89, #90, #95. The round
@@ -224,7 +224,7 @@ is through; #81 was built after it (review item 150); #85 became plan 18.
 
 Plan 18 (performance at 5,000 pages, backlog #85) is done (2026-11-26; owner decisions Q1 to Q4, the "Settled
 2026-11-25" and "Owner, 2026-11-26" blocks and the pre-flight rulings in the plan, ledger
-`.superpowers/sdd/2026-11-25-18-performance-at-5000-pages/progress.md`). Built and pushed, unreleased:
+`.superpowers/sdd/2026-11-25-18-performance-at-5000-pages/progress.md`). Built and pushed, released in 1.9.1:
 - `just perf-scale` measures the window at 5,000 pages; the baseline and the after numbers are in `docs/perf/`, and
   the bars are in spec §8.
 - The window shows at once, with "Opening ‹folder›…" while the folder opens.
@@ -238,6 +238,9 @@ Still over their bars, in #85: the lock (bar 100 ms), the Git history's loads (f
 merge spike. Unsettled on a busy machine: caret down, `pages.table` and the window showing. New backlog items: #103
 (an early search answer) and #104 (a counter or an early journal while opening); #102 stays open. The owner checks
 review items 151 to 157.
+
+Released as 1.9.1 (2026-11-26, https://github.com/EightBitBoy/breccia/releases/tag/v1.9.1): the two backlog rounds,
+#81 and plan 18. A patch number by the owner's choice, though it holds new features.
 
 Candidates for the plan after it, to settle with the owner:
 
