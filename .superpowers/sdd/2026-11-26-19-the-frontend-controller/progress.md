@@ -148,3 +148,6 @@ Task -> findings to carry: T1 F9; T2 F12; T3 F6 F11; T4 F10; T5 F3 F5 F8 F9 F10 
 - Task 1 review (sonnet): spec ✅, Approved. Minors (deferred to final review): thin Dailies/Settings pair tests, register overwrites silently, import order dailies.svelte.ts, no reactivity test.
 Task 1: complete (commits 2c0681b..aba5014, review clean)
 - Task 2: dispatched (sonnet implementer a499c4674bdf4f7e1), BASE fa3c98c
+- Task 2 implementer: DONE f4e59ef. Concern: placeOfView returns null for board kind with unknown name (out-of-range index only).
+- Task 2 review (sonnet): spec ✅, Approved. Concern (board null) judged unreachable-harmless. Minors (deferred): 2 stale test names, shownView untested (removed by Task 3), route.ts imports a type from a .svelte.ts module.
+Task 2: complete (commits fa3c98c..f4e59ef, review clean)
