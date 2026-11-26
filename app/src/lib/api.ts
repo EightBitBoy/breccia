@@ -16,6 +16,8 @@ export interface Client {
   setGeneration(n: number): void
   /** Whether anything is left to do: text in the typing pause, or a command queued, running or being applied. */
   busy(): boolean
+  /** The typed text sent (`block.setText`) and not answered yet, in send order. */
+  unanswered(): { id: BlockId; text: string }[]
 }
 
 export interface Hooks {
@@ -45,6 +47,8 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
   let unsaved = false
   let queued = 0
   let busy = false
+  /** The `block.setText` commands sent and not answered yet. */
+  const inFlightText = new Set<{ id: BlockId; text: string }>()
   const pending = new Map<BlockId, { text: string; generation: number; timer: ReturnType<typeof setTimeout> }>()
 
   /** Counts pending text and queued commands; every place that changes either one calls it in the same tick. */
@@ -82,9 +86,12 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
 
   function enqueueBackground(command: Command, gen: number): void {
     sending++
+    const text = command.type === 'block.setText' ? { id: command.id, text: command.text } : null
+    if (text) inFlightText.add(text)
     enqueue(command, gen)
       .catch((e) => safely(() => hooks.onError?.(e, command)))
       .finally(() => {
+        if (text) inFlightText.delete(text)
         sending--
         reportUnsaved()
       })
@@ -132,6 +139,9 @@ export function createClient(invoke: Invoke, hooks: Hooks = {}): Client {
     },
     busy() {
       return pending.size + queued > 0
+    },
+    unanswered() {
+      return [...inFlightText].map((t) => ({ ...t }))
     },
   }
 }

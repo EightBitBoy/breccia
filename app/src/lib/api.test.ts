@@ -338,3 +338,35 @@ test('busy stays true until the answer has been applied, and a cancelled text is
   c.cancel(2)
   expect(c.busy()).toBe(false)
 })
+
+test('unanswered: the typed text sent and not answered yet, in send order', async () => {
+  const answers: (() => void)[] = []
+  const c = createClient(
+    (r) =>
+      new Promise<Output>((resolve, reject) =>
+        answers.push(() => (r.command.type === 'block.setText' && r.command.id === 2 ? reject(new Error('x')) : resolve(emptyOutput()))),
+      ),
+  )
+  c.setTextDebounced(1, 'one')
+  expect(c.unanswered()).toEqual([]) // in the typing pause: not sent yet
+  c.setTextDebounced(2, 'two')
+  void c.run({ type: 'folder.status' }) // sends both first
+  expect(c.unanswered()).toEqual([
+    { id: 1, text: 'one' },
+    { id: 2, text: 'two' },
+  ])
+  c.setTextDebounced(1, 'one more')
+  await vi.advanceTimersByTimeAsync(300)
+  expect(c.unanswered().map((u) => u.text)).toEqual(['one', 'two', 'one more'])
+  answers.shift()!() // the first answers
+  await vi.advanceTimersByTimeAsync(0)
+  expect(c.unanswered().map((u) => u.text)).toEqual(['two', 'one more'])
+  answers.shift()!() // the second is refused: no longer on its way either (its refusal shows it)
+  await vi.advanceTimersByTimeAsync(0)
+  expect(c.unanswered().map((u) => u.text)).toEqual(['one more'])
+  answers.shift()!() // folder.status
+  await vi.advanceTimersByTimeAsync(0)
+  answers.shift()!()
+  await vi.advanceTimersByTimeAsync(0)
+  expect(c.unanswered()).toEqual([])
+})

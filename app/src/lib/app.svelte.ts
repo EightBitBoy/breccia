@@ -391,11 +391,16 @@ export class AppController {
       },
       flush: () => this.client.flush(),
       reload: async () => {
-        await this.exec({ type: 'folder.status' })
+        let refused = false
+        await this.host.exec({ type: 'folder.status' }, () => (refused = true))
+        if (refused) throw new Error('folder.status was refused')
         // No folder open any more: the Welcome screen shows.
         if (this.folder) await this.openFolder()
       },
       now: () => env.now(),
+      unanswered: () => this.client.unanswered(),
+      setTimeout: (f, ms) => env.timers.setTimeout(f, ms),
+      clearTimeout: (t) => env.timers.clearTimeout(t as ReturnType<typeof setTimeout>),
     })
 
     this.journal = new Journal({ area: this.area, run, notify })

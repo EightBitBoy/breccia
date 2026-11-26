@@ -18,7 +18,10 @@ export function addNotice<T extends { key: string }>(items: T[], n: Notice, item
 /** The message of a notice showing text the core never got: copy it from here. */
 export const UNSENT = 'This block is gone, so your text was not saved. Copy it from here:'
 
-/** Whether `n` holds text that exists nowhere else, so closing must ask first. */
+/** The message of a notice showing typed text the core did not answer for in time (after an internal error). */
+export const UNANSWERED = 'Breccia did not answer, so this text may not have been saved. Copy it from here:'
+
+/** Whether `n` holds text that may exist nowhere else, so closing must ask first. */
 export function isUnsent(n: Notice): boolean {
-  return n.kind === 'conflict' && n.theirs === null && n.message === UNSENT
+  return n.kind === 'conflict' && n.theirs === null && (n.message === UNSENT || n.message === UNANSWERED)
 }

@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
-import { AGAIN, NEEDS_RESTART, Recovery } from './recovery'
+import { AGAIN, NEEDS_RESTART, NOT_ANSWERING, RELOAD_WAIT_MS, Recovery } from './recovery'
+import { UNANSWERED } from './notices'
 import type { Command, Notice, RecoveredEvent } from './types'
 
 const RELOADED = 'Breccia hit an internal error and reloaded your notes from disk. Everything saved is safe; undo starts afresh.'
@@ -12,7 +13,10 @@ const reopened: RecoveredEvent = { reopened: true, notice: { kind: 'refused', me
 const kept: RecoveredEvent = { reopened: false, notice: { kind: 'refused', message: KEPT } }
 const typed: Command = { type: 'block.setText', id: 4, text: 'my words' }
 
-/** A fake env with a clock the test moves; `flush` and `reload` finish when the test says so (`finish`), or fail (`fail`). */
+/**
+ * A fake env with a clock and timers the test moves; `flush` and `reload` finish when the test says so (`finish`), or
+ * fail (`fail`), or never (the test does neither).
+ */
 function setup() {
   const s = {
     clock: 1_000_000,
@@ -20,7 +24,12 @@ function setup() {
     calls: [] as string[],
     finish: [] as (() => void)[],
     fail: [] as ((e: Error) => void)[],
+    /** The timers started and not yet run or cleared, by id, with the clock time they are due at. */
+    timers: new Map<number, { f: () => void; due: number }>(),
+    /** The sent `block.setText` texts with no answer yet. */
+    unanswered: [] as { id: number; text: string }[],
   }
+  let nextTimer = 1
   const step = (name: string) => () => {
     s.calls.push(name)
     return new Promise<void>((resolve, reject) => {
@@ -35,6 +44,13 @@ function setup() {
     flush: step('flush'),
     reload: step('reload'),
     now: () => s.clock,
+    unanswered: () => s.unanswered,
+    setTimeout: (f, ms) => {
+      const id = nextTimer++
+      s.timers.set(id, { f, due: s.clock + ms })
+      return id
+    },
+    clearTimeout: (id) => void s.timers.delete(id as number),
   })
   /** Lets every started step finish, until none is left. */
   const settle = async () => {
@@ -46,7 +62,18 @@ function setup() {
   }
   /** One step of the queue: the promises started so far settle their callbacks. */
   const tick = () => new Promise((r) => setTimeout(r, 0))
-  return { s, recovery, settle, tick }
+  /** `ms` pass: the timers due by then run. */
+  const pass = async (ms: number) => {
+    s.clock += ms
+    for (const [id, t] of [...s.timers]) {
+      if (t.due > s.clock) continue
+      s.timers.delete(id)
+      t.f()
+    }
+    await tick()
+    await tick()
+  }
+  return { s, recovery, settle, tick, pass }
 }
 
 test('shows_the_notice_and_reloads_once', async () => {
@@ -192,6 +219,87 @@ test('message_hides_a_stale_answer_only_around_a_reload', async () => {
   expect(recovery.message(null, null, STALE)).toBe(STALE)
 })
 
+test('a_failed_flush_still_reloads', async () => {
+  const { s, recovery, tick, settle } = setup()
+  const run = recovery.recovered(reopened)
+  s.fail.splice(0).forEach((f) => f(new Error('boom')))
+  s.finish.splice(0)
+  await tick()
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  await Promise.all([run, settle()])
+  expect(s.notices).toEqual([reopened.notice])
+})
+
+test('a_flush_that_does_not_answer_in_10_s_reloads_anyway_and_keeps_the_text_to_copy', async () => {
+  const { s, recovery, pass, settle } = setup()
+  s.unanswered = [
+    { id: 4, text: 'my words' },
+    { id: 7, text: 'more words' },
+  ]
+  const run = recovery.recovered(reopened)
+  expect(RELOAD_WAIT_MS).toBe(10_000)
+  s.finish.splice(0) // the flush never answers
+  await pass(RELOAD_WAIT_MS - 1)
+  expect(s.calls).toEqual(['leave', 'clear', 'flush']) // still waiting
+  expect(s.notices).toEqual([reopened.notice])
+  await pass(1)
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  const copy = (block: number, mine: string): Notice => ({ kind: 'conflict', page: '', block, mine, theirs: null, message: UNANSWERED })
+  expect(s.notices).toEqual([reopened.notice, copy(4, 'my words'), copy(7, 'more words')])
+  expect(UNANSWERED).toBe('Breccia did not answer, so this text may not have been saved. Copy it from here:')
+  await Promise.all([run, settle()])
+  expect(s.timers.size).toBe(0) // the reload answered: its timer is gone
+})
+
+test('a_flush_that_answers_in_time_starts_no_copy_notice', async () => {
+  const { s, recovery, settle, pass } = setup()
+  s.unanswered = [{ id: 4, text: 'my words' }]
+  await Promise.all([recovery.recovered(reopened), settle()])
+  await pass(RELOAD_WAIT_MS)
+  expect(s.notices).toEqual([reopened.notice])
+  expect(s.timers.size).toBe(0)
+})
+
+test('a_reload_that_is_refused_shows_NOT_ANSWERING', async () => {
+  const { s, recovery, tick } = setup()
+  const run = recovery.recovered(reopened)
+  s.finish.splice(0).forEach((f) => f()) // the flush answers
+  s.fail.splice(0)
+  await tick()
+  expect(s.calls).toEqual(['leave', 'clear', 'flush', 'reload'])
+  s.fail.splice(0).forEach((f) => f(new Error('refused')))
+  await run // it ends; the notice says what to do
+  expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: NOT_ANSWERING }])
+  expect(NOT_ANSWERING).toBe('Breccia is not answering. Please restart Breccia.')
+  s.clock += 2_001
+  expect(quiet(recovery, 'stale', null)).toBe(false)
+})
+
+test('a_reload_that_does_not_answer_shows_NOT_ANSWERING_after_10_s', async () => {
+  const { s, recovery, tick, pass } = setup()
+  const run = recovery.recovered(reopened)
+  s.finish.splice(0).forEach((f) => f())
+  s.fail.splice(0)
+  await tick()
+  s.finish.splice(0) // the reload never answers
+  await pass(RELOAD_WAIT_MS - 1)
+  await pass(1)
+  await run
+  expect(s.notices).toEqual([reopened.notice, { kind: 'refused', message: NOT_ANSWERING }])
+})
+
+test('a_flush_and_a_reload_that_both_hang_end_in_the_restart_notice_after_20_s', async () => {
+  const { s, recovery, pass } = setup()
+  s.unanswered = [{ id: 4, text: 'my words' }]
+  const run = recovery.recovered(reopened)
+  s.finish.splice(0)
+  await pass(RELOAD_WAIT_MS)
+  s.finish.splice(0)
+  await pass(RELOAD_WAIT_MS)
+  await run
+  expect(s.notices.map((n) => n.message)).toEqual([RELOADED, UNANSWERED, NOT_ANSWERING])
+})
+
 test('after_the_again_notice_a_stale_refusal_says_NEEDS_RESTART', async () => {
   const { s, recovery, settle } = setup()
   await Promise.all([recovery.recovered(reopened), settle()])
@@ -203,6 +311,18 @@ test('after_the_again_notice_a_stale_refusal_says_NEEDS_RESTART', async () => {
   expect(recovery.message(null, null, STALE)).toBe(NEEDS_RESTART) // the same refusal, as a notice's text
   expect(recovery.message('unknownPage', null, 'No such page')).toBe('No such page')
   expect(NEEDS_RESTART).toBe('Not done: Breccia needs a restart after an internal error.')
+})
+
+test('after_NOT_ANSWERING_a_stale_refusal_says_NEEDS_RESTART', async () => {
+  const { s, recovery, tick } = setup()
+  const run = recovery.recovered(reopened)
+  s.finish.splice(0).forEach((f) => f())
+  s.fail.splice(0)
+  await tick()
+  s.fail.splice(0).forEach((f) => f(new Error('refused')))
+  await run
+  s.clock += 2_001
+  expect(recovery.message('stale', null, STALE)).toBe(NEEDS_RESTART)
 })
 
 test('typed_text_keeps_its_notice_in_every_case', async () => {
@@ -245,19 +365,4 @@ test('within_a_minute_a_closed_folder_after_a_kept_session_shows_its_notice', as
   const closed: RecoveredEvent = { reopened: true, notice: { kind: 'refused', message: CLOSED } }
   await Promise.all([recovery.recovered(closed), settle()])
   expect(s.notices).toEqual([kept.notice, closed.notice])
-})
-
-test('a_failed_reload_ends_the_reload_and_rejects', async () => {
-  const s = { clock: 0 }
-  const recovery = new Recovery({
-    notify: () => {},
-    leave: () => {},
-    clear: () => {},
-    flush: () => Promise.resolve(),
-    reload: () => Promise.reject(new Error('boom')),
-    now: () => s.clock,
-  })
-  await expect(recovery.recovered(reopened)).rejects.toThrow('boom')
-  s.clock += 2_001
-  expect(quiet(recovery, 'stale', null)).toBe(false)
 })

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { addNotice, isUnsent, noticeKey, UNSENT } from './notices'
+import { addNotice, isUnsent, noticeKey, UNANSWERED, UNSENT } from './notices'
 import type { Notice } from './types'
 
 const MSG = 'This block changed on disk while you were editing it.'
@@ -41,4 +41,7 @@ test('isUnsent: only the notice holding text the core never got', () => {
   expect(isUnsent({ kind: 'conflict', page: 'p', block: 1, mine: 'x', theirs: null, message: 'kept' })).toBe(false)
   expect(isUnsent(conflict('p', 1, 'a'))).toBe(false)
   expect(isUnsent({ kind: 'refused', message: UNSENT })).toBe(false)
+  // Typed text the core did not answer for in time may be lost too.
+  expect(isUnsent({ kind: 'conflict', page: '', block: 1, mine: 'x', theirs: null, message: UNANSWERED })).toBe(true)
+  expect(isUnsent({ kind: 'refused', message: UNANSWERED })).toBe(false)
 })

@@ -4,7 +4,8 @@ import { AppController } from './app.svelte'
 import { block, configView, fakeWindow, pageView, refusal, settle, type FakeWindow } from './appEnv.testing'
 import { duePick } from './duePick.svelte'
 import { emptyOutput } from './emptyOutput.testing'
-import { AGAIN, NEEDS_RESTART } from './recovery'
+import { UNANSWERED } from './notices'
+import { AGAIN, NEEDS_RESTART, NOT_ANSWERING } from './recovery'
 import type { BlockView, Command, GitView } from './types'
 
 let stop: (() => void) | null = null
@@ -396,6 +397,36 @@ const reopenedEvent = {
   reopened: true,
   notice: { kind: 'refused' as const, message: 'Breccia hit an internal error and reloaded your notes from disk.' },
 }
+
+test('a refused reload says Breccia is not answering', async () => {
+  const { app, w } = await withPage('p')
+  w.core.on['folder.status'] = () => {
+    throw refusal('internal', 'boom')
+  }
+  app.shellHandlers().recovered(reopenedEvent)
+  await settle()
+  expect(app.notices.items.map((n) => n.text)).toContain(NOT_ANSWERING)
+  expect(app.notices.items.map((n) => n.text)).not.toContain('boom')
+})
+
+test('a save that does not answer in 10 s is shown to copy, then a reload that does not answer asks for a restart', async () => {
+  const { app, w } = await withPage('p')
+  vi.useFakeTimers()
+  w.core.on['block.setText'] = () => new Promise(() => {}) // the core is stuck on it
+  app.client.setTextDebounced(1, 'my words')
+  await vi.advanceTimersByTimeAsync(300) // sent
+
+  app.shellHandlers().recovered(reopenedEvent)
+  await vi.advanceTimersByTimeAsync(9_999)
+  expect(app.notices.items.map((n) => n.text)).not.toContain(UNANSWERED)
+  await vi.advanceTimersByTimeAsync(1)
+  const copy = app.notices.items.find((n) => n.text === UNANSWERED)
+  expect(copy?.detail?.mine).toBe('my words')
+  expect(copy?.unsent).toBe(true) // closing asks first
+  expect(w.core.sent.filter((c) => c.type === 'folder.status')).toHaveLength(1) // the reload waits behind the save
+  await vi.advanceTimersByTimeAsync(10_000)
+  expect(app.notices.items.map((n) => n.text)).toContain(NOT_ANSWERING)
+})
 
 test('after the again notice a refused click says a restart is needed', async () => {
   const { app, w } = await withPage('p')
