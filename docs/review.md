@@ -422,8 +422,8 @@ are its questions for you; each answer decides what a later plan does.
    folder of a few thousand pages for the first time): while "Indexing" shows in the status bar, type in a journal day.
    The text appears as usual; the pauses between keystrokes are shorter than before. Search still answers when the
    index is complete, and the build ends as before. Measured at 5,000 pages (`scale::`): one step of the first build
-   went from 20.5 to about 7.5 ms (the goal is one frame, 16 ms); the whole build takes about 0.5 s longer (4.6 to
-   5.1 s, goal 10 s). Two steps per build, about 0.15 s each, are longer (SQLite's full-text merge); that is in
+   went from 20.5 to about 7.5 ms (the goal is one frame, 16 ms); the whole build takes about 0.5 to 1.3 s longer (4.7 to
+   about 6.0 s in the last runs, `docs/perf/2026-11-25-plan-18-after.md`; goal 10 s). Two steps per build, about 0.15 s each, are longer (SQLite's full-text merge); that is in
    backlog #85.
 
 157. [ ] **With a newer Git, a pull no longer undoes the other computer's changes:** Git 2.53 changed the command
