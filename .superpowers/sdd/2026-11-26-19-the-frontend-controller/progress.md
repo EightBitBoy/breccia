@@ -184,3 +184,8 @@ Task 8: complete (commits f350ea0..22e8d3c, review clean)
 Task 9: fix round 1/5 (2 addressed, 0 open — I1 layer pointer-events/z-index 45, reload catch logs; commits 2018c27..3f13f9a)
 - Task 9 re-review out-of-scope (deferred): step 127 simulates the body lock rather than a real open dialog; the restore has no try/finally. Release pause: 3f13f9a fixes the unreleased greyed-window feat — fold into it.
 Task 9: complete (commits 440087f..3f13f9a, review clean after fix round 1)
+- Task 10: dispatched (opus implementer a659ee4edfeffb66d), BASE b54ab51
+- Task 10 implementer: DONE_WITH_CONCERNS 9260c12. Props Board 25->5, SettingsView 43->7, Sidebar 32->3. Screenshots differ by date (same from base), restored, not committed. Board's refused-move reload handler moved into Board.svelte untested.
+- Owner, mid-plan: backlog #105 added (dea5185, set a task's state from its state chip). Task 10 review dispatched (opus).
+- Task 10 review (opus): spec ✅ (⚠️ screenshots date-driven, same from base), Approved. Minors (follow-ups): boardChanged handler in Board.svelte:308 untested (never was) -> tested app.boardCommand; width writes and layout save logic in components; SettingsView/Sidebar/Board get values next to app that app also carries.
+Task 10: complete (commits b54ab51..9260c12, review clean)
