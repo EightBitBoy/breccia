@@ -92,7 +92,10 @@ export class Recovery {
         // A save that fails is shown to copy by the client; one that does not answer is shown here. Either way the
         // reload goes ahead. It queues behind the unanswered save, so a slow save still lands first.
         if (!(await this.answers(this.env.flush()).catch(() => true))) this.showUnanswered()
-        reloaded = await this.answers(this.env.reload()).catch(() => false)
+        reloaded = await this.answers(this.env.reload()).catch((err) => {
+          console.error('the reload after an internal error failed', err)
+          return false
+        })
       } finally {
         this.running = null
         this.reloadEnd = this.env.now()

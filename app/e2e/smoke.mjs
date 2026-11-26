@@ -3748,10 +3748,20 @@ try {
     new MutationObserver((_, o) => {
       const layer = document.querySelector('[data-testid="reload-layer"]')
       if (!layer) return
-      const hit = document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+      const at = () => document.elementFromPoint(box.x + box.width / 2, box.y + box.height / 2)
+      const covers = (hit) => hit !== null && (hit === layer || layer.contains(hit))
+      const hit = at()
+      // A dialog left open through the reload (Move, New board, help…) sets `pointer-events: none` on the body, as
+      // bits-ui does for a modal; the layer must take the clicks then too. Only the panic's search box can be open here
+      // (no other dialog opens over it), so that state is made for one hit test.
+      const before = document.body.style.pointerEvents
+      document.body.style.pointerEvents = 'none'
+      const underModal = at()
+      document.body.style.pointerEvents = before
       window.__e2eLayer127 = {
         busy: document.querySelector('.main')?.getAttribute('aria-busy') ?? null,
-        rowCovered: hit !== null && (hit === layer || layer.contains(hit)),
+        rowCovered: covers(hit),
+        rowCoveredUnderModal: covers(underModal),
         focused: document.activeElement === layer,
       }
       o.disconnect()
@@ -3776,6 +3786,7 @@ try {
   assert(layer127 !== null, '127 no layer greyed the window out during the reload')
   assert(layer127.busy === 'true', `127 the main area was not busy during the reload: ${JSON.stringify(layer127)}`)
   assert(layer127.rowCovered, `127 a click on a sidebar row would have reached the row during the reload: ${JSON.stringify(layer127)}`)
+  assert(layer127.rowCoveredUnderModal, `127 with a dialog open a click would have passed the layer: ${JSON.stringify(layer127)}`)
   assert(layer127.focused, `127 the layer did not take the keyboard focus: ${JSON.stringify(layer127)}`)
   assert((await page.locator('.main').getAttribute('aria-busy')) === 'false', '127 the main area stayed busy after the reload')
   await waitFor('127 the text typed before the error is on disk', () => readAt(journal), typedIn127(' typed before the error'))

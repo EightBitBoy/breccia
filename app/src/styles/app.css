@@ -360,6 +360,8 @@ a.link:focus-visible, a.tag:focus-visible { outline: 2px solid var(--accent); ou
 .reload-layer {
   position: fixed; inset: 0; z-index: 45; display: flex; align-items: center; justify-content: center;
   background: var(--overlay); cursor: progress; outline: none;
+  /* A dialog still open sets `pointer-events: none` on the body (bits-ui); the layer takes the clicks all the same. */
+  pointer-events: auto;
 }
 .reload-layer span {
   padding: 8px 16px; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
