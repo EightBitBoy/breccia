@@ -147,3 +147,4 @@ Task -> findings to carry: T1 F9; T2 F12; T3 F6 F11; T4 F10; T5 F3 F5 F8 F9 F10 
 - Task 1: dispatched (sonnet implementer ad43efcc348ca841a), BASE 2c0681b
 - Task 1 review (sonnet): spec ✅, Approved. Minors (deferred to final review): thin Dailies/Settings pair tests, register overwrites silently, import order dailies.svelte.ts, no reactivity test.
 Task 1: complete (commits 2c0681b..aba5014, review clean)
+- Task 2: dispatched (sonnet implementer a499c4674bdf4f7e1), BASE fa3c98c
