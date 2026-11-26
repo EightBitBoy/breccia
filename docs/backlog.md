@@ -177,3 +177,12 @@ usable at about 1.3 s (bar 2 s) at 5,000 pages, so neither is needed on this mac
 disks there are two options: a count in the status bar ("Opening: 1,200 of 5,000 files"), or today's journal day first,
 typeable while the rest of the folder is read (this one needs the editor to accept edits before the folder is loaded,
 which is the larger change).
+
+## 105. Set a task's state from its state chip (Tasks)
+
+Owner, 2026-11-26: a right-click on a task's state chip (the `TODO`, `DOING`, … keyword) opens a short list "Set to…"
+with every other state, as in the slash menu, so a state can be set directly instead of stepping through the cycle
+with `Ctrl Enter` or retyping the keyword. Today a right-click on a task in a journal day or on a page opens the task
+menu ("Set due date…" and the like, spec §7); to settle in a plan: whether "Set to…" is its own menu on the chip or
+entries in that task menu, whether board cards get it too, and which states are listed (all states from Settings >
+Task states, finished ones included, the current one left out).
