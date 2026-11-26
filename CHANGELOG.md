@@ -2,6 +2,35 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.9.1] - 2026-11-26
+
+### Features
+
+- Drag a page or journal day from the sidebar into a page to insert a link to it
+- Back and Forward give back the block you were editing, with the caret, or the selected blocks
+- Ctrl Z and Ctrl Shift Z undo and redo with no block edited, on a page, in the journal and on a board
+- Heading links: a click on [[Page#Heading]] opens the page at that heading, highlighted
+- Boards: within a priority, cards with a due date come first, soonest first
+- Boards: a focused card opens its menu with Shift F10 and its due date with Ctrl D
+- Help: a Writing tab shows how to write links, tags, tasks and Markdown
+- Startup: the window shows at once and the folder opens inside it
+
+### Fixes
+
+- Heading links: a click on [[Page#Heading]] without a page Page makes Page, not Page#Heading
+- Pages: a new page or a rename can no longer take a name with #, which heading links cannot reach
+- Tags: a tag like #Page#x no longer counts as a link to Page in counts, linked references and the graph
+- Aliases: quotes, colons and mapping-like values are read as Obsidian reads them
+- Aliases: renaming a page with a clashing alias no longer warns about the clash again
+- Aliases: an open Ctrl K or link completion lists an alias added outside Breccia at once
+- Editor: a refused command no longer splits the typing undo step
+- Due dates: a quick click outside the calendar always closes it
+- Git sync: a pull pauses typing much less, also right after typing
+- Long Git histories and archives open and scroll without stutter
+- Git history: the rows you look at stay in place when a new commit arrives
+- Git history: opens a little faster
+- Search: typing pauses less while a large folder is indexed for the first time
+
 ## [1.9.0] - 2026-11-24
 
 ### Features
