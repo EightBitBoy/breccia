@@ -370,6 +370,127 @@ fn commits_the_remote_lacks_are_marked_not_pushed() {
 }
 
 #[test]
+fn marks_are_right_in_a_notes_folder_inside_a_bigger_repository() {
+    let e = env();
+    let top = repo(
+        &e,
+        "bigmarks",
+        &[(
+            "other/x.txt",
+            "x
+",
+        )],
+    );
+    let t = "2026-01-01T10:00:00+00:00";
+    commit_at(
+        &e,
+        &top,
+        t,
+        "notes/pages/A.md",
+        "1
+",
+        "notes one",
+    );
+    commit_at(
+        &e,
+        &top,
+        t,
+        "other/x.txt",
+        "2
+",
+        "outside",
+    );
+    let remote = bare(&e, "bigmarks.git");
+    git(
+        &e,
+        &top,
+        &["remote", "add", "origin", &remote.to_string_lossy()],
+    );
+    let r = open(&e.git, &top.join("notes"));
+    // A remote never pushed to: every shown commit is not pushed.
+    let page = r.log(0, 200).unwrap();
+    assert_eq!(subjects(&page), ["notes one"]);
+    assert!(page.entries.iter().all(|x| !x.pushed));
+    git(&e, &top, &["push", "-q", "-u", "origin", "main"]);
+    commit_at(
+        &e,
+        &top,
+        t,
+        "other/x.txt",
+        "3
+",
+        "outside two",
+    );
+    commit_at(
+        &e,
+        &top,
+        t,
+        "notes/pages/A.md",
+        "4
+",
+        "notes two",
+    );
+    commit_at(
+        &e,
+        &top,
+        t,
+        "other/x.txt",
+        "5
+",
+        "outside three",
+    );
+    let marks: Vec<(String, bool)> = r
+        .log(0, 200)
+        .unwrap()
+        .entries
+        .iter()
+        .map(|x| (x.subject.clone(), x.pushed))
+        .collect();
+    assert_eq!(
+        marks,
+        [
+            ("notes two".to_string(), false),
+            ("notes one".to_string(), true)
+        ]
+    );
+}
+
+#[test]
+fn a_commit_that_changes_no_file_shows_at_the_top_of_a_repository_only() {
+    let e = env();
+    let top = repo(
+        &e,
+        "emptyc",
+        &[(
+            "notes/pages/A.md",
+            "- a
+",
+        )],
+    );
+    let t = "2026-01-01T10:00:00+00:00";
+    commit_at(
+        &e,
+        &top,
+        t,
+        "notes/pages/A.md",
+        "1
+",
+        "real",
+    );
+    git(
+        &e,
+        &top,
+        &["commit", "-q", "--allow-empty", "-m", "nothing"],
+    );
+    // At the top of the repository the history is the plain log.
+    let all = open(&e.git, &top).log(0, 200).unwrap();
+    assert_eq!(subjects(&all), ["nothing", "real", "init"]);
+    // A notes folder inside a bigger repository keeps the folder filter.
+    let sub = open(&e.git, &top.join("notes")).log(0, 200).unwrap();
+    assert_eq!(subjects(&sub), ["real", "init"]);
+}
+
+#[test]
 fn non_ascii_names_are_committed_and_named_intact() {
     let e = env();
     let top = repo(&e, "u", &[("notes/pages/x.md", "- x\n")]);

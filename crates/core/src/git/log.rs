@@ -36,7 +36,8 @@ pub struct GitLogView {
 }
 
 impl Repo {
-    /// The commits that change something in the notes folder, newest first:
+    /// The commits that change something in the notes folder (every commit when
+    /// the folder is the repository's top), newest first:
     /// `limit` of them after skipping `skip`.
     pub fn log(&self, skip: usize, limit: usize) -> Result<GitLogView, GitError> {
         let mut view = GitLogView {
@@ -50,7 +51,7 @@ impl Repo {
         let skip_arg = format!("--skip={skip}");
         // One more than asked for says whether older commits follow.
         let count_arg = format!("--max-count={}", limit.saturating_add(1));
-        let args = [
+        let mut args = vec![
             // The user's `log.follow` would turn the folder pathspec into `--follow`.
             "-c",
             "log.follow=false",
@@ -60,9 +61,14 @@ impl Repo {
             "--format=%H%x00%at%x00%an%x00%s",
             skip_arg.as_str(),
             count_arg.as_str(),
-            "--",
-            ".",
         ];
+        // The folder filter makes Git compare every commit it walks with its
+        // parent. At the top of the repository it filters nothing but commits
+        // that change no file, so it is only used for a folder inside a bigger
+        // repository.
+        if !self.prefix.is_empty() {
+            args.extend(["--", "."]);
+        }
         let out = self.git.ok(&self.folder, &args, LOCAL_LIMIT)?;
         // `-z` ends each commit with a NUL too, so the fields come in fours.
         // Empty fields (an empty subject) keep their place.
@@ -93,9 +99,11 @@ impl Repo {
         Ok(view)
     }
 
-    /// The folder's commits the remote does not have, by the same rule as
-    /// the status bar's "not pushed" count. Empty without a remote, and when
-    /// HEAD is on no branch.
+    /// The commits the remote does not have, by the same rule as the status
+    /// bar's "not pushed" count. No folder filter: the list only marks
+    /// commits that are shown, which are folder commits, and "not on the
+    /// remote" is the same question with or without the filter. Empty
+    /// without a remote, and when HEAD is on no branch.
     fn unpushed(&self) -> Result<HashSet<String>, GitError> {
         let HeadState::Branch(branch) = self.head()? else {
             return Ok(HashSet::new());
@@ -104,7 +112,7 @@ impl Repo {
             return Ok(HashSet::new());
         };
         let remotes = format!("--remotes={}", target.remote);
-        let args = ["rev-list", "HEAD", "--not", &remotes, "--", "."];
+        let args = ["rev-list", "HEAD", "--not", &remotes];
         let out = self.git.ok(&self.folder, &args, LOCAL_LIMIT)?;
         Ok(out
             .text()
