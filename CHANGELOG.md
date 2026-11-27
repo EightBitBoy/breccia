@@ -2,6 +2,18 @@
 
 User-visible changes to Breccia, newest first.
 
+## [1.9.2] - 2026-11-27
+
+### Features
+
+- Recovery: the window is greyed out while the notes reload
+
+### Fixes
+
+- Recovery: a second, different error notice within a minute is shown
+- Recovery: after a second internal error, clicks say a restart is needed
+- Recovery: if Breccia stops answering, your unsaved text shows to copy after 10 s
+
 ## [1.9.1] - 2026-11-26
 
 ### Features
