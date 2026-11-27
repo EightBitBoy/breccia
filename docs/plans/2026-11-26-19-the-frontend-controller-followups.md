@@ -14,6 +14,8 @@ wave. Backlog #89 keeps only its two Git edges. The owner checks review items 15
      restart line.
    - ef2f8ca needs two internal errors in a row to show. Drop it or fold it into the restart line.
 
+   Done at the 1.9.2 release pause (2026-11-27): 3f13f9a and ef2f8ca dropped, 521e21b and a894613 reworded.
+
 ## Code
 
 2. Split `app.svelte.ts` (about 1,650 lines) by area: navigation, boards, folders and closing, outputs (the Task 8

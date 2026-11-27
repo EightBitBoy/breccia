@@ -245,7 +245,7 @@ Released as 1.9.1 (2026-11-26, https://github.com/EightBitBoy/breccia/releases/t
 
 Plan 19 (the frontend controller, audit moves M36 to M40 and M49, backlog #89's window edges) is done (2026-11-26;
 owner decisions Q1 to Q5 and the "Settled" block in the plan, ledger
-`.superpowers/sdd/2026-11-26-19-the-frontend-controller/progress.md`). Not released yet. The window's logic moved out
+`.superpowers/sdd/2026-11-26-19-the-frontend-controller/progress.md`). Released in 1.9.2. The window's logic moved out
 of `App.svelte` into a tested `AppController` (`app/src/lib/app.svelte.ts`) and state classes, so `App.svelte` only
 binds Tauri and the DOM; one value says what the main area shows, one value says which dialog is open, and the folder's
 settings have their own store. Components take the state object instead of long prop lists. What a user can notice is
@@ -258,6 +258,9 @@ the recovery after an internal error:
 Every open dialog now closes on a reload or a folder switch. The owner checks review items 158 to 163 (163: click
 through every view and dialog). Backlog #89 keeps only its two Git edges. The audit's plan 4 is done with this plan;
 its plan 5 still waits. Follow-ups: `docs/plans/2026-11-26-19-the-frontend-controller-followups.md`.
+
+Released as 1.9.2 (2026-11-27, https://github.com/EightBitBoy/breccia/releases/tag/v1.9.2): plan 19. A patch number
+by the owner's choice; the changelog's release-pause edits of the follow-ups file were made.
 
 Candidates for the plan after it, to settle with the owner:
 
